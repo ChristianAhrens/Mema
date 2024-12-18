@@ -157,7 +157,14 @@ void Mema::onConfigUpdated()
 void Mema::lookAndFeelChanged()
 {
     if (m_MemaProcessor)
+    {
         m_MemaProcessor->environmentChanged();
+        
+        if (auto editor = dynamic_cast<MemaEditor*>(m_MemaProcessor->getActiveEditor()))
+        {
+            editor->lookAndFeelChanged();
+        }
+    }
 }
 
 

@@ -461,6 +461,24 @@ void MemaProcessor::setChannelCounts(int inputChannelCount, int outputChannelCou
         postMessage(new ReinitIOCountMessage(m_inputChannelCount, m_outputChannelCount));
 }
 
+bool MemaProcessor::setPlugin(const juce::PluginDescription& pluginDescription)
+{
+	juce::AudioPluginFormatManager formatManager;
+	formatManager.addDefaultFormats();
+	double sampleRate = 48000;
+	int bufferSize = 512;
+	juce::String errorMessage;
+
+	m_pluginInstance = formatManager.getFormat(0)->createInstanceFromDescription(pluginDescription, sampleRate, bufferSize, errorMessage);
+
+	return errorMessage.isEmpty();
+}
+
+void MemaProcessor::setPluginEnabledState(bool enabled)
+{
+	m_pluginEnabled = enabled;
+}
+
 AudioDeviceManager* MemaProcessor::getDeviceManager()
 {
 	if (m_deviceManager)

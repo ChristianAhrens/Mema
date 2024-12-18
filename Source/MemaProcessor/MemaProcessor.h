@@ -84,6 +84,10 @@ public:
     void setChannelCounts(int inputChannelCount, int outputChannelCount);
 
     //==============================================================================
+    bool setPlugin(const juce::PluginDescription& pluginDescription);
+    void setPluginEnabledState(bool enabled);
+
+    //==============================================================================
     AudioDeviceManager* getDeviceManager();
 
     //==============================================================================
@@ -182,6 +186,10 @@ private:
 
     //==============================================================================
     std::unique_ptr<MemaEditor>  m_processorEditor;
+
+    //==============================================================================
+    std::unique_ptr<juce::AudioPluginInstance>  m_pluginInstance;
+    bool m_pluginEnabled = false;
 
     //==============================================================================
 #if JUCE_WINDOWS

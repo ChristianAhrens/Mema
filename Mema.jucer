@@ -33,6 +33,9 @@
               file="Resources/Images/power_settings_24dp.svg"/>
         <FILE id="kgvx8Y" name="question_mark_24dp.svg" compile="0" resource="1"
               file="Resources/Images/question_mark_24dp.svg"/>
+        <FILE id="jedqTJ" name="replay_24dp.svg" compile="0" resource="1" file="Resources/Images/replay_24dp.svg"/>
+        <FILE id="w9Nyvq" name="stat_minus_1_24dp.svg" compile="0" resource="1"
+              file="Resources/Images/stat_minus_1_24dp.svg"/>
         <FILE id="xCV27q" name="tune_24dp.svg" compile="0" resource="1" file="Resources/Images/tune_24dp.svg"/>
       </GROUP>
       <FILE id="pqcvEg" name="Default.config" compile="0" resource="1" file="Resources/Default.config"/>
@@ -103,6 +106,10 @@
               file="Source/MemaEditor/OutputControlComponent.cpp"/>
         <FILE id="DwGxIX" name="OutputControlComponent.h" compile="0" resource="0"
               file="Source/MemaEditor/OutputControlComponent.h"/>
+        <FILE id="TXnix6" name="PluginControlComponent.cpp" compile="1" resource="0"
+              file="Source/MemaEditor/PluginControlComponent.cpp"/>
+        <FILE id="ZmagSZ" name="PluginControlComponent.h" compile="0" resource="0"
+              file="Source/MemaEditor/PluginControlComponent.h"/>
       </GROUP>
       <FILE id="NVRWpP" name="AppConfiguration.cpp" compile="1" resource="0"
             file="Source/AppConfiguration.cpp"/>
@@ -136,7 +143,8 @@
     <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
     <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
   </MODULES>
-  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_PLUGINHOST_VST3="1" JUCE_PLUGINHOST_AU="1"
+               JUCE_PLUGINHOST_LADSPA="1" JUCE_PLUGINHOST_LV2="1"/>
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX" smallIcon="ItJQfF" bigIcon="ItJQfF"
                customPList="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#10;&#10;&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;&#10;&lt;plist&gt;&#10;  &lt;dict&gt;&#10;    &lt;key&gt;NSLocalNetworkUsageDescription&lt;/key&gt;&#10;    &lt;string&gt;Mema uses multicast to anounce its service to Mema.Mo instances on the network.&lt;/string&gt;&#10;  &lt;/dict&gt;&#10;&lt;/plist&gt;"
