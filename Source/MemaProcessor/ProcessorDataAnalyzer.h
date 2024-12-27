@@ -72,7 +72,7 @@ public:
     //==============================================================================
     enum dBRange
     {
-        min = -90,
+        min = -80,
         max = 0,
     };
 
@@ -85,9 +85,6 @@ public:
     {
         return dBRange::max;
     }
-
-    static constexpr int s_maxChannelCount = 64;
-    static constexpr int s_maxNumSamples = 1024;
 
 private:
     void BroadcastData(AbstractProcessorData* data);

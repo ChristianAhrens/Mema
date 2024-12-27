@@ -55,7 +55,7 @@ void TwoDFieldOutputComponent::paint (juce::Graphics& g)
     g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
     juce::String rangeText;
     if (getUsesValuesInDB())
-        rangeText = juce::String(MemaProcessor::getGlobalMindB()) + " ... " + juce::String(MemaProcessor::getGlobalMaxdB()) + " dBFS";
+        rangeText = juce::String(ProcessorDataAnalyzer::getGlobalMindB()) + " ... " + juce::String(ProcessorDataAnalyzer::getGlobalMaxdB()) + " dBFS";
     else
         rangeText = "0 ... 1";
     g.drawText(rangeText, getLocalBounds(), juce::Justification::topRight, true);

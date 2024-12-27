@@ -136,22 +136,6 @@ public:
     void environmentChanged();
 
     //==============================================================================
-    enum dBRange
-    {
-        min = -90,
-        max = 0,
-    };
-
-    static int getGlobalMindB()
-    {
-        return dBRange::min;
-    }
-
-    static int getGlobalMaxdB()
-    {
-        return dBRange::max;
-    }
-
     static constexpr int s_maxChannelCount = 64;
     static constexpr int s_maxNumSamples = 1024;
 
