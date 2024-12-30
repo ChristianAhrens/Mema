@@ -79,128 +79,92 @@ void TwoDFieldOutputComponent::paintCircularLevelIndication(juce::Graphics& g, c
     g.drawRect(getLocalBounds());
 #endif
 
+
     auto circleCenter = circleArea.getCentre();
 
-    // draw level indication areas
+    // prepare max points
     std::map<int, juce::Point<float>> maxPoints;
     for (auto const& channelType : channelsToPaint)
         if (0 < channelLevelMaxPoints.count(channelType))
             maxPoints[channelType] = circleCenter - channelLevelMaxPoints.at(channelType);
 
+    // helper std::function to avoid codeclones below
+    auto calcLevelVals = [=](std::map<int, float>& levels, bool hold, bool peak, bool rms) {
+        for (auto const& channelType : channelsToPaint)
+        {
+            if (hold)
+            {
+                if (getUsesValuesInDB())
+                    levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).GetFactorHOLDdB();
+                else
+                    levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).hold;
+            }
+            else if (peak)
+            {
+                if (getUsesValuesInDB())
+                    levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).GetFactorPEAKdB();
+                else
+                    levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).peak;
+            }
+            else if (rms)
+            {
+                if (getUsesValuesInDB())
+                    levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).GetFactorRMSdB();
+                else
+                    levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).rms;
+            }
+        }
+    };
+
     // calculate hold values
     std::map<int, float> holdLevels;
-    if (getUsesValuesInDB())
-    {
-        for (auto const& channelType : channelsToPaint)
-            holdLevels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).GetFactorHOLDdB();
-    }
-    else
-    {
-        for (auto const& channelType : channelsToPaint)
-            holdLevels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).hold;
-    }
+    calcLevelVals(holdLevels, true, false, false);
 
     // calculate peak values
     std::map<int, float> peakLevels;
-    if (getUsesValuesInDB())
-    {
-        for (auto const& channelType : channelsToPaint)
-            peakLevels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).GetFactorPEAKdB();
-    }
-    else
-    {
-        for (auto const& channelType : channelsToPaint)
-            peakLevels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).peak;
-    }
+    calcLevelVals(peakLevels, false, true, false);
 
     // calculate rms values    
     std::map<int, float> rmsLevels;
-    if (getUsesValuesInDB())
-    {
-        for (auto const& channelType : channelsToPaint)
-            rmsLevels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).GetFactorRMSdB();
-    }
-    else
-    {
-        for (auto const& channelType : channelsToPaint)
-            rmsLevels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).rms;
-    }
+    calcLevelVals(rmsLevels, false, false, true);
 
-    // paint hold values as pathx
-    juce::Path holdPath;
-    auto holdPathStarted = false;
-    for (auto const& channelType : channelsToPaint)
-    {
-        auto channelHoldMaxPoint = maxPoints[channelType] * holdLevels[channelType];
-
-        if (!holdPathStarted)
+    // helper std::function to avoid codeclones below
+    auto createAndPaintLevelPath = [=](std::map<int, juce::Point<float>> points, std::map<int, float>& levels, juce::Graphics& g, const juce::Colour& colour, bool stroke) {
+        juce::Path path;
+        auto pathStarted = false;
+        for (auto const& channelType : channelsToPaint)
         {
-            holdPath.startNewSubPath(circleCenter - juce::Point<float>(channelHoldMaxPoint.getX(), channelHoldMaxPoint.getY() - 4));
-            holdPathStarted = true;
+            auto channelMaxPoint = points[channelType] * levels[channelType];
+
+            if (!pathStarted)
+            {
+                path.startNewSubPath(circleCenter - juce::Point<float>(channelMaxPoint.getX(), channelMaxPoint.getY()));
+                pathStarted = true;
+            }
+            else
+                path.lineTo(circleCenter - juce::Point<float>(channelMaxPoint.getX(), channelMaxPoint.getY()));
         }
+        path.closeSubPath();
+
+        g.setColour(colour);
+        if (stroke)
+            g.strokePath(path, juce::PathStrokeType(1));
         else
-            holdPath.lineTo(circleCenter - juce::Point<float>(channelHoldMaxPoint.getX(), channelHoldMaxPoint.getY() - 4));
-
-        holdPath.lineTo(circleCenter - juce::Point<float>(channelHoldMaxPoint.getX(), channelHoldMaxPoint.getY() + 4));
-    }
-    holdPath.closeSubPath();
-
-    g.setColour(juce::Colours::grey);
-    g.strokePath(holdPath, juce::PathStrokeType(1));
+            g.fillPath(path);
 #if defined DEBUG && defined PAINTINGHELPER
-    g.setColour(juce::Colours::yellow);
-    g.drawRect(holdPath.getBounds());
+        g.setColour(juce::Colours::yellow);
+        g.drawRect(path.getBounds());
 #endif
+    };
+    
+    // paint hold values as path
+    createAndPaintLevelPath(maxPoints, holdLevels, g, juce::Colours::grey, true);
 
     // paint peak values as path
-    juce::Path peakPath;
-    auto peakPathStarted = false;
-    for (auto const& channelType : channelsToPaint)
-    {
-        if (!peakPathStarted)
-        {
-            peakPath.startNewSubPath(circleCenter - maxPoints[channelType] * peakLevels[channelType]);
-            peakPathStarted = true;
-        }
-        else
-            peakPath.lineTo(circleCenter - maxPoints[channelType] * peakLevels[channelType]);
-
-        auto channelPeakMaxPoint = maxPoints[channelType] * peakLevels[channelType];
-        peakPath.addLineSegment(juce::Line<float>(circleCenter, circleCenter - channelPeakMaxPoint), 9.0f);
-    }
-    peakPath.closeSubPath();
-
-    g.setColour(juce::Colours::forestgreen.darker());
-    g.fillPath(peakPath);
-#if defined DEBUG && defined PAINTINGHELPER
-    g.setColour(juce::Colours::orange);
-    g.drawRect(peakPath.getBounds());
-#endif
+    createAndPaintLevelPath(maxPoints, peakLevels, g, juce::Colours::forestgreen.darker(), false);
 
     // paint rms values as path
-    juce::Path rmsPath;
-    auto rmsPathStarted = false;
-    for (auto const& channelType : channelsToPaint)
-    {
-        if (!rmsPathStarted)
-        {
-            rmsPath.startNewSubPath(circleCenter - maxPoints[channelType] * rmsLevels[channelType]);
-            rmsPathStarted = true;
-        }
-        else
-            rmsPath.lineTo(circleCenter - maxPoints[channelType] * rmsLevels[channelType]);
-
-        auto channelRmsMaxPoint = maxPoints[channelType] * rmsLevels[channelType];
-        rmsPath.addLineSegment(juce::Line<float>(circleCenter, circleCenter - channelRmsMaxPoint), 9.0f);
-    }
-    rmsPath.closeSubPath();
-
-    g.setColour(juce::Colours::forestgreen);
-    g.fillPath(rmsPath);
-#if defined DEBUG && defined PAINTINGHELPER
-    g.setColour(juce::Colours::turquoise);
-    g.drawRect(rmsPath.getBounds());
-#endif
+    createAndPaintLevelPath(maxPoints, rmsLevels, g, juce::Colours::forestgreen, false);
 
     // draw a simple circle surrounding
     g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
