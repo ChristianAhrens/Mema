@@ -272,7 +272,7 @@ void TwoDFieldOutputComponent::paintLevelMeterIndication(juce::Graphics& g, cons
         g.setColour(juce::Colours::forestgreen);
         g.fillRect(juce::Rectangle<float>(meterLeft, visuAreaOrigY - rmsMeterLength, meterThickness, rmsMeterLength));
         // hold strip
-        g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
+        g.setColour(juce::Colours::grey);
         g.drawLine(juce::Line<float>(meterLeft, visuAreaOrigY - holdMeterLength, meterLeft + meterThickness, visuAreaOrigY - holdMeterLength));
         // channel # label
         g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));

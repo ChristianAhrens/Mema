@@ -118,7 +118,7 @@ void MeterbridgeComponent::paint(Graphics& g)
             g.setColour(juce::Colours::forestgreen);
             g.fillRect(juce::Rectangle<float>(meterLeft, visuAreaOrigY - rmsMeterLength, meterThickness, rmsMeterLength));
             // hold strip
-            g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
+            g.setColour(juce::Colours::grey);
             g.drawLine(juce::Line<float>(meterLeft, visuAreaOrigY - holdMeterLength, meterLeft + meterThickness, visuAreaOrigY - holdMeterLength));
             // channel # label
             g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
@@ -180,7 +180,7 @@ void MeterbridgeComponent::paint(Graphics& g)
             g.setColour(juce::Colours::forestgreen);
             g.fillRect(juce::Rectangle<float>(visuAreaOrigX, meterTop, rmsMeterLength, meterThickness));
             // hold strip
-            g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
+            g.setColour(juce::Colours::grey);
             g.drawLine(juce::Line<float>(visuAreaOrigX + holdMeterLength, meterTop, visuAreaOrigX + holdMeterLength, meterTop + meterThickness));
             // channel # label
             g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
