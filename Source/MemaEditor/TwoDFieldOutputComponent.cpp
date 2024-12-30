@@ -88,25 +88,26 @@ void TwoDFieldOutputComponent::paintCircularLevelIndication(juce::Graphics& g, c
         if (0 < channelLevelMaxPoints.count(channelType))
             maxPoints[channelType] = circleCenter - channelLevelMaxPoints.at(channelType);
 
+
     // helper std::function to avoid codeclones below
-    auto calcLevelVals = [=](std::map<int, float>& levels, bool hold, bool peak, bool rms) {
+    auto calcLevelVals = [=](std::map<int, float>& levels, bool isHold, bool isPeak, bool isRms) {
         for (auto const& channelType : channelsToPaint)
         {
-            if (hold)
+            if (isHold)
             {
                 if (getUsesValuesInDB())
                     levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).GetFactorHOLDdB();
                 else
                     levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).hold;
             }
-            else if (peak)
+            else if (isPeak)
             {
                 if (getUsesValuesInDB())
                     levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).GetFactorPEAKdB();
                 else
                     levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).peak;
             }
-            else if (rms)
+            else if (isRms)
             {
                 if (getUsesValuesInDB())
                     levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).GetFactorRMSdB();
@@ -115,18 +116,16 @@ void TwoDFieldOutputComponent::paintCircularLevelIndication(juce::Graphics& g, c
             }
         }
     };
-
     // calculate hold values
     std::map<int, float> holdLevels;
     calcLevelVals(holdLevels, true, false, false);
-
     // calculate peak values
     std::map<int, float> peakLevels;
     calcLevelVals(peakLevels, false, true, false);
-
     // calculate rms values    
     std::map<int, float> rmsLevels;
     calcLevelVals(rmsLevels, false, false, true);
+
 
     // helper std::function to avoid codeclones below
     auto createAndPaintLevelPath = [=](std::map<int, juce::Point<float>> points, std::map<int, float>& levels, juce::Graphics& g, const juce::Colour& colour, bool stroke) {
@@ -156,15 +155,32 @@ void TwoDFieldOutputComponent::paintCircularLevelIndication(juce::Graphics& g, c
         g.drawRect(path.getBounds());
 #endif
     };
-    
     // paint hold values as path
     createAndPaintLevelPath(maxPoints, holdLevels, g, juce::Colours::grey, true);
-
     // paint peak values as path
     createAndPaintLevelPath(maxPoints, peakLevels, g, juce::Colours::forestgreen.darker(), false);
-
     // paint rms values as path
     createAndPaintLevelPath(maxPoints, rmsLevels, g, juce::Colours::forestgreen, false);
+
+
+    // helper std::function to avoid codeclones below
+    auto paintLevelMeterLines = [=](std::map<int, juce::Point<float>> points, std::map<int, float>& levels, juce::Graphics& g, const juce::Colour& colour, bool isHoldLine) {
+        g.setColour(colour);
+        for (auto const& channelType : channelsToPaint)
+        {
+            auto channelMaxPoint = points[channelType] * levels[channelType];
+            if (isHoldLine)
+                g.drawLine(juce::Line<float>(circleCenter - channelMaxPoint + juce::Point<float>(3.0f, 0.0f), circleCenter - channelMaxPoint + juce::Point<float>(-3.0f, 0.0f)), 1.0f);
+            else
+                g.drawLine(juce::Line<float>(circleCenter, circleCenter - channelMaxPoint), 7.0f);
+        }
+    };
+    // paint hold values as max line
+    paintLevelMeterLines(maxPoints, holdLevels, g, juce::Colours::grey, true);
+    // paint peak values as line
+    paintLevelMeterLines(maxPoints, peakLevels, g, juce::Colours::forestgreen.darker(), false);
+    // paint rms values as line
+    paintLevelMeterLines(maxPoints, rmsLevels, g, juce::Colours::forestgreen, false);
 
     // draw a simple circle surrounding
     g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
