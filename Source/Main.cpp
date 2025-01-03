@@ -75,14 +75,19 @@ public:
         }
     }
         
-    void updatePositionFromTrayIcon(int topleftX, int topleftY)
+    void updatePositionFromTrayIcon(juce::Point<int> showPosition)
     {
         if (m_mainComponent != nullptr)
         {
             auto const display = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay();
-            if (nullptr != display && nullptr != m_mainComponent && display->totalArea.getHeight() < topleftY + m_mainComponent->getHeight())
-                topleftY -= m_mainComponent->getHeight() + 30;
-            m_mainComponent->setTopLeftPosition(topleftX, topleftY);
+            if (nullptr != display && nullptr != m_mainComponent)
+            {
+                if (display->totalArea.getHeight() < showPosition.getY() + m_mainComponent->getHeight())
+                    showPosition.setY(showPosition.getY() - m_mainComponent->getHeight() - 30);
+                if (display->totalArea.getWidth() < showPosition.getX() + m_mainComponent->getWidth())
+                    showPosition.setX(showPosition.getX() - m_mainComponent->getWidth() - 30);
+            }
+            m_mainComponent->setTopLeftPosition(showPosition);
         }
     }
         
@@ -98,7 +103,7 @@ public:
 
         void mouseDown(const juce::MouseEvent&) override
         {
-            m_appRef.updatePositionFromTrayIcon(juce::Desktop::getMousePosition().x, juce::Desktop::getMousePosition().y);
+            m_appRef.updatePositionFromTrayIcon(juce::Desktop::getMousePosition());
 
             // On OSX, there can be problems launching a menu when we're not the foreground
             // process, so just in case, we'll first make our process active, and then use a
