@@ -80,20 +80,8 @@ void TwoDFieldOutputComponent::paintCircularLevelIndication(juce::Graphics& g, c
 #endif
 
 
-    auto circleCenter = circleArea.getCentre();
-
-    // prepare max points
-    std::map<int, juce::Point<float>> centerToMaxVector;
-    std::map<int, juce::Point<float>> meterWidthOffsetVector;
-    for (auto const& channelType : channelsToPaint)
-    {
-        if (0 < channelLevelMaxPoints.count(channelType))
-        {
-            auto angleRad = juce::degreesToRadians(getAngleForChannelTypeInCurrentConfiguration(channelType));
-            centerToMaxVector[channelType] = circleCenter - channelLevelMaxPoints.at(channelType);
-            meterWidthOffsetVector[channelType] = { cosf(angleRad) * 3.0f, sinf(angleRad) * 3.0f};
-        }
-    }
+    const float meterWidth = 5.0f;
+    const float halfMeterWidth = 2.0f;
 
 
     // helper std::function to avoid codeclones below
@@ -134,6 +122,22 @@ void TwoDFieldOutputComponent::paintCircularLevelIndication(juce::Graphics& g, c
     calcLevelVals(rmsLevels, false, false, true);
 
 
+    auto circleCenter = circleArea.getCentre();
+
+    // prepare max points
+    std::map<int, juce::Point<float>> centerToMaxVectors;
+    std::map<int, juce::Point<float>> meterWidthOffsetVectors;
+    for (int i = 0; i < channelsToPaint.size(); i++)
+    {
+        auto const& channelType = channelsToPaint[i];
+        if (0 < channelLevelMaxPoints.count(channelType))
+        {
+            auto angleRad = juce::degreesToRadians(getAngleForChannelTypeInCurrentConfiguration(channelType));
+            centerToMaxVectors[channelType] = circleCenter - channelLevelMaxPoints.at(channelType);
+            meterWidthOffsetVectors[channelType] = { cosf(angleRad) * halfMeterWidth, sinf(angleRad) * halfMeterWidth };
+        }
+    }
+
     // helper std::function to avoid codeclones below
     auto createAndPaintLevelPath = [=](std::map<int, juce::Point<float>>& centerToMaxPoints, std::map<int, juce::Point<float>>& meterWidthOffsetPoints, std::map<int, float>& levels, juce::Graphics& g, const juce::Colour& colour, bool stroke) {
         juce::Path path;
@@ -165,11 +169,11 @@ void TwoDFieldOutputComponent::paintCircularLevelIndication(juce::Graphics& g, c
 #endif
     };
     // paint hold values as path
-    createAndPaintLevelPath(centerToMaxVector, meterWidthOffsetVector, holdLevels, g, juce::Colours::grey, true);
+    createAndPaintLevelPath(centerToMaxVectors, meterWidthOffsetVectors, holdLevels, g, juce::Colours::grey, true);
     // paint peak values as path
-    createAndPaintLevelPath(centerToMaxVector, meterWidthOffsetVector, peakLevels, g, juce::Colours::forestgreen.darker(), false);
+    createAndPaintLevelPath(centerToMaxVectors, meterWidthOffsetVectors, peakLevels, g, juce::Colours::forestgreen.darker(), false);
     // paint rms values as path
-    createAndPaintLevelPath(centerToMaxVector, meterWidthOffsetVector, rmsLevels, g, juce::Colours::forestgreen, false);
+    createAndPaintLevelPath(centerToMaxVectors, meterWidthOffsetVectors, rmsLevels, g, juce::Colours::forestgreen, false);
 
 
     // helper std::function to avoid codeclones below
@@ -182,15 +186,15 @@ void TwoDFieldOutputComponent::paintCircularLevelIndication(juce::Graphics& g, c
             if (isHoldLine)
                 g.drawLine(juce::Line<float>(channelMaxPoint - meterWidthOffsetPoints[channelType], channelMaxPoint + meterWidthOffsetPoints[channelType]), 1.0f);
             else
-                g.drawLine(juce::Line<float>(circleCenter, channelMaxPoint), 7.0f);
+                g.drawLine(juce::Line<float>(circleCenter, channelMaxPoint), meterWidth);
         }
     };
     // paint hold values as max line
-    paintLevelMeterLines(centerToMaxVector, meterWidthOffsetVector, holdLevels, g, juce::Colours::grey, true);
+    paintLevelMeterLines(centerToMaxVectors, meterWidthOffsetVectors, holdLevels, g, juce::Colours::grey, true);
     // paint peak values as line
-    paintLevelMeterLines(centerToMaxVector, meterWidthOffsetVector, peakLevels, g, juce::Colours::forestgreen.darker(), false);
+    paintLevelMeterLines(centerToMaxVectors, meterWidthOffsetVectors, peakLevels, g, juce::Colours::forestgreen.darker(), false);
     // paint rms values as line
-    paintLevelMeterLines(centerToMaxVector, meterWidthOffsetVector, rmsLevels, g, juce::Colours::forestgreen, false);
+    paintLevelMeterLines(centerToMaxVectors, meterWidthOffsetVectors, rmsLevels, g, juce::Colours::forestgreen, false);
 
     // draw a simple circle surrounding
     g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
