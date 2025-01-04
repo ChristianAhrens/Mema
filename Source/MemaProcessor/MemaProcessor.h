@@ -40,8 +40,35 @@ struct ServiceAdvertiser;
 
 
 //==============================================================================
-/*
-*/
+class ResizeableWindowWithTitleBarAndCloseCallback : public juce::ResizableWindow
+{
+public:
+    ResizeableWindowWithTitleBarAndCloseCallback() = default;
+    ResizeableWindowWithTitleBarAndCloseCallback(const String& name, bool addToDesktop) : juce::ResizableWindow(name, addToDesktop) {};
+    ~ResizeableWindowWithTitleBarAndCloseCallback() { if (onClosed) onClosed(); };
+
+    //==============================================================================
+    int getDesktopWindowStyleFlags() const override
+    {
+        int styleFlags = juce::ComponentPeer::windowAppearsOnTaskbar
+            | juce::ComponentPeer::windowHasDropShadow
+            | juce::ComponentPeer::windowHasTitleBar
+            | juce::ComponentPeer::windowHasCloseButton;
+
+        return styleFlags;
+    }
+
+    void userTriedToCloseWindow() override
+    {
+        if (onClosed)
+            onClosed();
+    };
+
+    //==============================================================================
+    std::function<void()> onClosed;
+};
+
+//==============================================================================
 class MemaProcessor :  public juce::AudioProcessor,
 					            public juce::AudioIODeviceCallback,
                                 public juce::MessageListener,
@@ -87,6 +114,9 @@ public:
     bool setPlugin(const juce::PluginDescription& pluginDescription);
     void setPluginEnabledState(bool enabled);
     void clearPlugin();
+    void openPluginEditor();
+    void closePluginEditor(bool deleteEditorWindow = true);
+    std::function<void(const juce::PluginDescription&)> onPluginSet;
 
     //==============================================================================
     AudioDeviceManager* getDeviceManager();
@@ -189,8 +219,9 @@ private:
     std::unique_ptr<MemaEditor>  m_processorEditor;
 
     //==============================================================================
-    std::unique_ptr<juce::AudioPluginInstance>  m_pluginInstance;
-    bool m_pluginEnabled = false;
+    std::unique_ptr<juce::AudioPluginInstance>                      m_pluginInstance;
+    bool                                                            m_pluginEnabled = false;
+    std::unique_ptr<ResizeableWindowWithTitleBarAndCloseCallback>   m_pluginEditorWindow;
 
     //==============================================================================
 #if JUCE_WINDOWS

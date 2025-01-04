@@ -465,13 +465,28 @@ bool MemaProcessor::setPlugin(const juce::PluginDescription& pluginDescription)
 {
 	juce::AudioPluginFormatManager formatManager;
 	formatManager.addDefaultFormats();
-	double sampleRate = 48000;
-	int bufferSize = 512;
-	juce::String errorMessage;
+	auto registeredFormats = formatManager.getFormats();
 
-	m_pluginInstance = formatManager.getFormat(0)->createInstanceFromDescription(pluginDescription, sampleRate, bufferSize, errorMessage);
+	auto success = false;
+	juce::String errorMessage = "Unsupported plug-in format.";
 
-	return errorMessage.isEmpty();
+	for (auto const& format : registeredFormats)
+	{
+		if (format->getName() == pluginDescription.pluginFormatName)
+		{
+			closePluginEditor();
+			m_pluginInstance = format->createInstanceFromDescription(pluginDescription, getSampleRate(), getBlockSize(), errorMessage);
+			success = errorMessage.isEmpty();
+			break;
+		}
+	}
+
+	if (!success)
+		juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::WarningIcon, "Loading error", "Loading of the selected plug-in " + pluginDescription.name + " failed.\n" + errorMessage);
+	else if (onPluginSet)
+		onPluginSet(pluginDescription);
+
+	return success;
 }
 
 void MemaProcessor::setPluginEnabledState(bool enabled)
@@ -481,7 +496,34 @@ void MemaProcessor::setPluginEnabledState(bool enabled)
 
 void MemaProcessor::clearPlugin()
 {
+	closePluginEditor();
 	m_pluginInstance.reset();
+	if (onPluginSet)
+		onPluginSet(juce::PluginDescription());
+}
+
+void MemaProcessor::openPluginEditor()
+{
+	if (m_pluginInstance)
+	{
+		auto pluginEditorInstance = m_pluginInstance->createEditorIfNeeded();
+		if (pluginEditorInstance && !m_pluginEditorWindow)
+		{
+			m_pluginEditorWindow = std::make_unique<ResizeableWindowWithTitleBarAndCloseCallback>(juce::JUCEApplication::getInstance()->getApplicationName() + " : " + m_pluginInstance->getName(), true);
+			m_pluginEditorWindow->setResizable(false, false);
+			m_pluginEditorWindow->setContentOwned(pluginEditorInstance, true);
+			m_pluginEditorWindow->onClosed = [=]() { closePluginEditor(true); };
+			m_pluginEditorWindow->setVisible(true);
+		}
+	}
+}
+
+void MemaProcessor::closePluginEditor(bool deleteEditorWindow)
+{
+	if (m_pluginInstance)
+		std::unique_ptr<juce::AudioProcessorEditor>(m_pluginInstance->getActiveEditor()).reset();
+	if (deleteEditorWindow)
+		m_pluginEditorWindow.reset();
 }
 
 AudioDeviceManager* MemaProcessor::getDeviceManager()

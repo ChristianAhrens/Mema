@@ -58,6 +58,23 @@ MemaEditor::MemaEditor(AudioProcessor& processor)
     };
 
     m_pluginControl = std::make_unique<PluginControlComponent>();
+    m_pluginControl->onPluginSelected = [=](const juce::PluginDescription& pluginDescription) {
+        auto memaProc = dynamic_cast<MemaProcessor*>(getAudioProcessor());
+        auto success = memaProc->setPlugin(pluginDescription);
+        jassert(success);
+    };
+    m_pluginControl->onPluginEnabledChange = [=](bool enabled) {
+        auto memaProc = dynamic_cast<MemaProcessor*>(getAudioProcessor());
+        memaProc->setPluginEnabledState(enabled);
+    };
+    m_pluginControl->onShowPluginEditor = [=]() {
+        auto memaProc = dynamic_cast<MemaProcessor*>(getAudioProcessor());
+        memaProc->openPluginEditor();
+    };
+    m_pluginControl->onClearPlugin = [=]() {
+        auto memaProc = dynamic_cast<MemaProcessor*>(getAudioProcessor());
+        memaProc->clearPlugin();
+    };
     addAndMakeVisible(m_pluginControl.get());
 
     m_ioLabel = std::make_unique<IOLabelComponent>(IOLabelComponent::Direction::OI);
@@ -75,20 +92,18 @@ MemaEditor::MemaEditor(AudioProcessor& processor)
     m_outputCtrl->onBoundsRequirementChange = boundsRequirementChange;
     addAndMakeVisible(m_outputCtrl.get());
 
-    auto MemaProc = dynamic_cast<MemaProcessor*>(&processor);
-    if (MemaProc)
+    auto memaProc = dynamic_cast<MemaProcessor*>(&processor);
+    if (memaProc)
     {
-        MemaProc->addInputListener(m_inputCtrl.get());
-        MemaProc->addInputCommander(m_inputCtrl.get());
+        memaProc->addInputListener(m_inputCtrl.get());
+        memaProc->addInputCommander(m_inputCtrl.get());
 
-        MemaProc->addCrosspointCommander(m_crosspointCtrl.get());
+        memaProc->addCrosspointCommander(m_crosspointCtrl.get());
         
-        MemaProc->addOutputListener(m_outputCtrl.get());
-        MemaProc->addOutputCommander(m_outputCtrl.get());
+        memaProc->addOutputListener(m_outputCtrl.get());
+        memaProc->addOutputCommander(m_outputCtrl.get());
 
-        m_pluginControl->onPluginSelected = [=](const juce::PluginDescription& pluginDescription) { auto success = MemaProc->setPlugin(pluginDescription); jassert(success); };
-        m_pluginControl->onPluginEnabledChange = [=](bool enabled) { MemaProc->setPluginEnabledState(enabled); };
-        m_pluginControl->onClearPlugin = [=]() { MemaProc->clearPlugin(); };
+        memaProc->onPluginSet = [=](const juce::PluginDescription& pluginDescription) { if (m_pluginControl) m_pluginControl->setSelectedPlugin(pluginDescription); };
     }
 
     m_gridLayout.items = { juce::GridItem(*m_ioLabel), juce::GridItem(*m_inputCtrl), juce::GridItem(*m_outputCtrl), juce::GridItem(*m_crosspointCtrl) };
