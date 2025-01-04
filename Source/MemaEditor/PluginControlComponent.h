@@ -110,6 +110,7 @@ public:
     ~PluginControlComponent();
 
     void showPluginsList(juce::Point<int> showPosition);
+    void setSelectedPlugin(const juce::PluginDescription& pluginDescription);
 
     //==============================================================================
     void paint (Graphics&) override;
@@ -118,8 +119,9 @@ public:
 
     //==============================================================================
     std::function<void(const juce::PluginDescription&)> onPluginSelected;
-    std::function<void()> onShowPluginEditor;
-    std::function<void(bool)> onPluginEnabledChange;
+    std::function<void()>                               onShowPluginEditor;
+    std::function<void(bool)>                           onPluginEnabledChange;
+    std::function<void()>                               onClearPlugin;
 
 private:
     //==============================================================================
@@ -127,8 +129,11 @@ private:
     std::unique_ptr<Spacing>                m_spacing1;
     std::unique_ptr<juce::TextButton>       m_showEditorButton;
     std::unique_ptr<juce::DrawableButton>   m_triggerSelectButton;
+    std::unique_ptr<Spacing>                m_spacing2;
+    std::unique_ptr<juce::DrawableButton>   m_clearButton;
 
-    std::unique_ptr<PluginListAndSelectComponent>  m_pluginSelectionComponent;
+    std::unique_ptr<PluginListAndSelectComponent>   m_pluginSelectionComponent;
+    juce::PluginDescription                         m_selectedPluginDescription;
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginControlComponent)

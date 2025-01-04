@@ -29,23 +29,45 @@ PluginControlComponent::PluginControlComponent()
 	m_enableButton = std::make_unique<juce::DrawableButton>("Enable plug-in", juce::DrawableButton::ButtonStyle::ImageOnButtonBackground);
 	m_enableButton->setTooltip("Enable plug-in");
 	m_enableButton->setClickingTogglesState(true);
-	m_enableButton->onClick = [this] { if (onPluginEnabledChange) onPluginEnabledChange(m_enableButton->getState()); };
+	m_enableButton->onClick = [this] { 
+		if (onPluginEnabledChange)
+			onPluginEnabledChange(m_enableButton->getState());
+	};
 	addAndMakeVisible(m_enableButton.get());
 
 	m_spacing1 = std::make_unique<Spacing>();
 	addAndMakeVisible(m_spacing1.get());
 
 	m_showEditorButton = std::make_unique<juce::TextButton>("None", "Show plug-in editor");
-	m_showEditorButton->onClick = [this] { if (onShowPluginEditor) onShowPluginEditor(); };
+	m_showEditorButton->onClick = [this] {
+		if (onShowPluginEditor)
+			onShowPluginEditor();
+	};
 	addAndMakeVisible(m_showEditorButton.get());
 
 	m_triggerSelectButton = std::make_unique<juce::DrawableButton>("Show plug-in selection menu", juce::DrawableButton::ButtonStyle::ImageOnButtonBackground);
 	m_triggerSelectButton->setTooltip("Show plug-in selection menu");
-	m_triggerSelectButton->onClick = [this] { showPluginsList(juce::Desktop::getMousePosition()); };
+	m_triggerSelectButton->onClick = [this] {
+		showPluginsList(juce::Desktop::getMousePosition());
+	};
 	addAndMakeVisible(m_triggerSelectButton.get());
+	
+	m_spacing2 = std::make_unique<Spacing>();
+	addAndMakeVisible(m_spacing2.get());
+
+	m_clearButton = std::make_unique<juce::DrawableButton>("Clear current plug-in", juce::DrawableButton::ButtonStyle::ImageOnButtonBackground);
+	m_clearButton->setTooltip("Clear current plug-in");
+	m_clearButton->onClick = [this] {
+		if (onClearPlugin)
+			onClearPlugin();
+	};
+	addAndMakeVisible(m_clearButton.get());
 
 	m_pluginSelectionComponent = std::make_unique<PluginListAndSelectComponent>();
-	m_pluginSelectionComponent->onPluginSelected = [=](const juce::PluginDescription& pluginDescription) { if (onPluginSelected) onPluginSelected(pluginDescription); };
+	m_pluginSelectionComponent->onPluginSelected = [=](const juce::PluginDescription& pluginDescription) {
+		if (onPluginSelected)
+			onPluginSelected(pluginDescription);
+	};
 }
 
 PluginControlComponent::~PluginControlComponent()
@@ -69,6 +91,19 @@ void PluginControlComponent::showPluginsList(juce::Point<int> showPosition)
 	m_pluginSelectionComponent->setTopLeftPosition(showPosition);
 }
 
+void PluginControlComponent::setSelectedPlugin(const juce::PluginDescription& pluginDescription)
+{
+	m_selectedPluginDescription = pluginDescription;
+
+	if (m_showEditorButton)
+	{
+		if (m_selectedPluginDescription.name.isEmpty())
+			m_showEditorButton->setButtonText("None");
+		else
+			m_showEditorButton->setButtonText(m_selectedPluginDescription.name);
+	}
+}
+
 void PluginControlComponent::resized()
 {
     auto bounds = getLocalBounds();
@@ -78,6 +113,10 @@ void PluginControlComponent::resized()
 		m_enableButton->setBounds(bounds.removeFromLeft(bounds.getHeight()));
 	if (m_spacing1)
 		m_spacing1->setBounds(bounds.removeFromLeft(margin));
+	if (m_clearButton)
+		m_clearButton->setBounds(bounds.removeFromRight(bounds.getHeight()));
+	if (m_spacing2)
+		m_spacing2->setBounds(bounds.removeFromRight(margin));
 	if (m_triggerSelectButton)
 		m_triggerSelectButton->setBounds(bounds.removeFromRight(bounds.getHeight()));
 	if (m_showEditorButton)
@@ -99,6 +138,10 @@ void PluginControlComponent::lookAndFeelChanged()
 	auto triggerSelectDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::stat_minus_1_24dp_svg).get());
 	triggerSelectDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
 	m_triggerSelectButton->setImages(triggerSelectDrawable.get());
+
+	auto clearButtonDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::replay_24dp_svg).get());
+	clearButtonDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
+	m_clearButton->setImages(clearButtonDrawable.get());
 
 	juce::Component::lookAndFeelChanged();
 }

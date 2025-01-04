@@ -88,6 +88,7 @@ MemaEditor::MemaEditor(AudioProcessor& processor)
 
         m_pluginControl->onPluginSelected = [=](const juce::PluginDescription& pluginDescription) { auto success = MemaProc->setPlugin(pluginDescription); jassert(success); };
         m_pluginControl->onPluginEnabledChange = [=](bool enabled) { MemaProc->setPluginEnabledState(enabled); };
+        m_pluginControl->onClearPlugin = [=]() { MemaProc->clearPlugin(); };
     }
 
     m_gridLayout.items = { juce::GridItem(*m_ioLabel), juce::GridItem(*m_inputCtrl), juce::GridItem(*m_outputCtrl), juce::GridItem(*m_crosspointCtrl) };

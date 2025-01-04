@@ -86,6 +86,7 @@ public:
     //==============================================================================
     bool setPlugin(const juce::PluginDescription& pluginDescription);
     void setPluginEnabledState(bool enabled);
+    void clearPlugin();
 
     //==============================================================================
     AudioDeviceManager* getDeviceManager();

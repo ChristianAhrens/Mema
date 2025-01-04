@@ -479,6 +479,11 @@ void MemaProcessor::setPluginEnabledState(bool enabled)
 	m_pluginEnabled = enabled;
 }
 
+void MemaProcessor::clearPlugin()
+{
+	m_pluginInstance.reset();
+}
+
 AudioDeviceManager* MemaProcessor::getDeviceManager()
 {
 	if (m_deviceManager)
