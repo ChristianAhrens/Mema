@@ -11,6 +11,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+## [0.4.0] 2025-01-05
+### Added
+- Added support for optional VST/VST3/AU/LADSPA/LV2 plugin processing of audio signal before handing over to in routing matrix to Mema
+
+### Changed
+- Changed Mema.Mo 2D Field visualization to use a 5px levelmeter basewith for when singled out channel levels would otherwise remain invisible
+
+### Fixed
+- Fixed Mema main UI popup positioning to avoid offscreen area for large routing matrix sizes
+- Fixed and streamlined levelmetering to consistent -80dBFS...0dBFS
+
 ## [0.3.2] 2024-12-05
 ### Added
 - Added configurable 2D surround field visualization to Mema.Mo
