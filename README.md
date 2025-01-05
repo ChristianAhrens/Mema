@@ -36,6 +36,8 @@ See [LATEST RELEASE](https://github.com/ChristianAhrens/Mema/releases/latest) fo
 
 Mema (MenubarMatrix) is a project initially created to try out if a macOS menubar tool based on JUCE C++ framework can be created, that provides audio matrix routing functionality - e.g. to route [BlackHole](https://github.com/ExistentialAudio/BlackHole) 16ch virtual device to system output to overcome AppleMusic behaviour on macOS to only play out higher order surround sound formats when exactly 16 output channels are presented by selected system audio output device.
 
+Since version 0.4.0 the optional loading of an audio processing plug-in is supported to process the incoming audio before it is feed into the routing matrix. Platform dependant, the usual VST, VST3, AU, LADSPA, LV2 plug-in formats are supported and their respective editor user interfaces can be used as a separate window. _A usecase for this could be an n-input to m-output upmix plug-in that in combination with BlackHole can serve to process stereo macOS system audio output to a 7.1.4 speaker system._
+
 It is accompanied by a separate tool Mema.Mo (MenubarMatrixMonitor) to monitor the audio IO as levelmeters via network. It connects to Mema through a TCP connection and supports discovering the available instances through a multicast service announcement done by Mema.
 
 Its sourcecode and prebuilt binaries are made publicly available to enable interested users to experiment, extend and create own adaptations.
@@ -54,13 +56,19 @@ Use what is provided here at your own risk!
 
 ![Showreel.004.png](Resources/Documentation/Showreel/Showreel.004.png "Mema UI")
 
+#### Mema UI plug-in handling details
+
+![Showreel.005.png](Resources/Documentation/Showreel/Showreel.005.png "Mema UI plug-in handling")
+
 <a name="MemaMoUI" />
 
 ### Mema.Mo UI details
 
-![Showreel.005.png](Resources/Documentation/Showreel/Showreel.005.png "Mema.Mo UI")
+![Showreel.006.png](Resources/Documentation/Showreel/Showreel.006.png "Mema.Mo UI")
 
-![Showreel.006.png](Resources/Documentation/Showreel/Showreel.006.png "Mema.Mo UI output formats")
+#### Mema.Mo UI output format visualization details
+
+![Showreel.007.png](Resources/Documentation/Showreel/Showreel.007.png "Mema.Mo UI output formats")
 
 
 <a name="howtobuild" />
@@ -119,9 +127,9 @@ This does only work up to Raspberry Pi OS Bullseye versions, that use X server a
 
 ## Usecase: Studio rack monitoring
 
-![Showreel.007.png](Resources/Documentation/Showreel/Showreel.007.png "Homestudio setup")
+![Showreel.008.png](Resources/Documentation/Showreel/Showreel.008.png "Homestudio setup")
 
-![Showreel.008.png](Resources/Documentation/Showreel/Showreel.008.png "RaspberryPi rack DIY device")
+![Showreel.009.png](Resources/Documentation/Showreel/Showreel.009.png "RaspberryPi rack DIY device")
 
 * Mema on macOS
   * BlackHole 16ch used to route signal from LogicPro, Apple Music, etc. to Mema
@@ -135,7 +143,7 @@ This does only work up to Raspberry Pi OS Bullseye versions, that use X server a
 
 ## Usecase: Mobile recording monitoring
 
-![Showreel.009.png](Resources/Documentation/Showreel/Showreel.009.png "Mobile rig")
+![Showreel.010.png](Resources/Documentation/Showreel/Showreel.010.png "Mobile rig")
 
 * Mema on macOS
   * BlackHole 16ch used to route signal from LogicPro, Apple Music, etc. to Mema
