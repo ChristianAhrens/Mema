@@ -622,10 +622,11 @@ void MemaProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMes
 		}
 	}
 
-	if (m_pluginInstance && m_pluginEnabled)
+	if (m_pluginInstance)
 	{
 		const ScopedLock sl(m_pluginProcessingLock);
-		m_pluginInstance->processBlock(buffer, midiMessages);
+		if (m_pluginEnabled)
+			m_pluginInstance->processBlock(buffer, midiMessages);
 	}
 
 	postMessage(std::make_unique<AudioInputBufferMessage>(buffer).release());
