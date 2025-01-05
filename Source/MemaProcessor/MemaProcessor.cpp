@@ -451,6 +451,12 @@ void MemaProcessor::setChannelCounts(int inputChannelCount, int outputChannelCou
     {
         m_inputChannelCount = inputChannelCount;
         reinitRequired = true;
+        
+        if (m_pluginInstance)
+        {
+            const ScopedLock sl(m_pluginProcessingLock);
+            m_pluginInstance->setPlayConfigDetails(m_inputChannelCount, m_inputChannelCount, getSampleRate(), getBlockSize());
+        }
     }
     if (m_outputChannelCount != outputChannelCount)
     {
