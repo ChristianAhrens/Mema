@@ -154,8 +154,8 @@ public:
             if (currentPluginDescriptionListContents.size() > m_lastRowSelected)
                 return currentPluginDescriptionListContents[m_lastRowSelected];
         }
-        else
-            return {};
+        
+        return {};
     }
 
     std::function<void(int)> onSelectionChanged;

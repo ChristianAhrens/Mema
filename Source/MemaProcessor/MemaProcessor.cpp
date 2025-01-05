@@ -479,7 +479,10 @@ bool MemaProcessor::setPlugin(const juce::PluginDescription& pluginDescription)
 				const ScopedLock sl(m_pluginProcessingLock);
 				m_pluginInstance = format->createInstanceFromDescription(pluginDescription, getSampleRate(), getBlockSize(), errorMessage);
 				if (m_pluginInstance)
-					m_pluginInstance->prepareToPlay(getSampleRate(), getBlockSize());
+                {
+                    m_pluginInstance->setPlayConfigDetails(m_inputChannelCount, m_inputChannelCount, getSampleRate(), getBlockSize());
+                    m_pluginInstance->prepareToPlay(getSampleRate(), getBlockSize());
+                }
 			}
 			success = errorMessage.isEmpty();
 			break;
