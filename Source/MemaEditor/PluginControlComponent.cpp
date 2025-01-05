@@ -31,7 +31,7 @@ PluginControlComponent::PluginControlComponent()
 	m_enableButton->setClickingTogglesState(true);
 	m_enableButton->onClick = [this] { 
 		if (onPluginEnabledChange)
-			onPluginEnabledChange(m_enableButton->getState());
+			onPluginEnabledChange(m_enableButton->getToggleState());
 	};
 	addAndMakeVisible(m_enableButton.get());
 
