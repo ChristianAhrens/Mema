@@ -20,6 +20,7 @@
 
 #include <JuceHeader.h>
 
+#include "../MemaEditor/PluginControlComponent.h"
 #include "../MemaEditor/InputControlComponent.h"
 #include "../MemaEditor/CrosspointsControlComponent.h"
 #include "../MemaEditor/OutputControlComponent.h"
@@ -49,12 +50,32 @@ MemaEditor::MemaEditor(AudioProcessor& processor)
 
             // expand the required size with IO component 'framing' with
             requiredSize.setWidth(requiredSize.getWidth() + requiredOutputCtrlSize.getWidth() + 1);
-            requiredSize.setHeight(requiredSize.getHeight() + requiredInputCtrlSize.getHeight() + 1);
+            requiredSize.setHeight(requiredSize.getHeight() + requiredInputCtrlSize.getHeight() + 1 + sc_pluginControlHeight + 2);
 
             if (onSizeChangeRequested)
                 onSizeChangeRequested(requiredSize);
         }
     };
+
+    m_pluginControl = std::make_unique<PluginControlComponent>();
+    m_pluginControl->onPluginSelected = [=](const juce::PluginDescription& pluginDescription) {
+        auto memaProc = dynamic_cast<MemaProcessor*>(getAudioProcessor());
+        auto success = memaProc->setPlugin(pluginDescription);
+        jassert(success);
+    };
+    m_pluginControl->onPluginEnabledChange = [=](bool enabled) {
+        auto memaProc = dynamic_cast<MemaProcessor*>(getAudioProcessor());
+        memaProc->setPluginEnabledState(enabled);
+    };
+    m_pluginControl->onShowPluginEditor = [=]() {
+        auto memaProc = dynamic_cast<MemaProcessor*>(getAudioProcessor());
+        memaProc->openPluginEditor();
+    };
+    m_pluginControl->onClearPlugin = [=]() {
+        auto memaProc = dynamic_cast<MemaProcessor*>(getAudioProcessor());
+        memaProc->clearPlugin();
+    };
+    addAndMakeVisible(m_pluginControl.get());
 
     m_ioLabel = std::make_unique<IOLabelComponent>(IOLabelComponent::Direction::OI);
     addAndMakeVisible(m_ioLabel.get());
@@ -71,16 +92,18 @@ MemaEditor::MemaEditor(AudioProcessor& processor)
     m_outputCtrl->onBoundsRequirementChange = boundsRequirementChange;
     addAndMakeVisible(m_outputCtrl.get());
 
-    auto MemaProc = dynamic_cast<MemaProcessor*>(&processor);
-    if (MemaProc)
+    auto memaProc = dynamic_cast<MemaProcessor*>(&processor);
+    if (memaProc)
     {
-        MemaProc->addInputListener(m_inputCtrl.get());
-        MemaProc->addInputCommander(m_inputCtrl.get());
+        memaProc->addInputListener(m_inputCtrl.get());
+        memaProc->addInputCommander(m_inputCtrl.get());
 
-        MemaProc->addCrosspointCommander(m_crosspointCtrl.get());
+        memaProc->addCrosspointCommander(m_crosspointCtrl.get());
         
-        MemaProc->addOutputListener(m_outputCtrl.get());
-        MemaProc->addOutputCommander(m_outputCtrl.get());
+        memaProc->addOutputListener(m_outputCtrl.get());
+        memaProc->addOutputCommander(m_outputCtrl.get());
+
+        memaProc->onPluginSet = [=](const juce::PluginDescription& pluginDescription) { if (m_pluginControl) m_pluginControl->setSelectedPlugin(pluginDescription); };
     }
 
     m_gridLayout.items = { juce::GridItem(*m_ioLabel), juce::GridItem(*m_inputCtrl), juce::GridItem(*m_outputCtrl), juce::GridItem(*m_crosspointCtrl) };
@@ -107,17 +130,24 @@ void MemaEditor::paint (Graphics& g)
 
 void MemaEditor::resized()
 {
+    auto bounds = getLocalBounds();
+    m_pluginControl->setBounds(bounds.removeFromTop(sc_pluginControlHeight + 1));
+    bounds.removeFromTop(1);
+
     auto requiredInputsHeight = m_inputCtrl->getRequiredSize().getHeight();
     auto requiredOutputsWidth = m_outputCtrl->getRequiredSize().getWidth();
     
     m_gridLayout.templateRows = { juce::Grid::TrackInfo(juce::Grid::Px(requiredInputsHeight)), juce::Grid::TrackInfo(juce::Grid::Fr(1)) };
     m_gridLayout.templateColumns = { juce::Grid::TrackInfo(juce::Grid::Px(requiredOutputsWidth)), juce::Grid::TrackInfo(juce::Grid::Fr(1)) };
-    m_gridLayout.performLayout(getLocalBounds());
+    m_gridLayout.performLayout(bounds);
 }
 
 void MemaEditor::lookAndFeelChanged()
 {
-    AudioProcessorEditor::lookAndFeelChanged();
+    if (m_pluginControl)
+        m_pluginControl->lookAndFeelChanged();
+
+    juce::AudioProcessorEditor::lookAndFeelChanged();
 }
 
 std::unique_ptr<XmlElement> MemaEditor::createStateXml()

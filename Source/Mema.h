@@ -67,12 +67,12 @@ public:
     void lookAndFeelChanged() override;
 
 private:
-    std::unique_ptr<MemaProcessor>        m_MemaProcessor;
+    std::unique_ptr<MemaProcessor>          m_MemaProcessor;
 
-    std::unique_ptr<MemaEditor>           m_audioVisuComponent;
-    std::unique_ptr<AudioSelectComponent>          m_audioDeviceSelectComponent;
+    std::unique_ptr<MemaEditor>             m_audioVisuComponent;
+    std::unique_ptr<AudioSelectComponent>   m_audioDeviceSelectComponent;
 
-    std::unique_ptr<AppConfiguration>               m_config;
+    std::unique_ptr<AppConfiguration>       m_config;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Mema)
 };

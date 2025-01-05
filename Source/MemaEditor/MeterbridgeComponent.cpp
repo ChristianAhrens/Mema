@@ -27,6 +27,33 @@ MeterbridgeComponent::MeterbridgeComponent()
 {
     setUsesValuesInDB(true);
     setRefreshFrequency(15);
+
+#ifdef DEBUG_LEVELDATA
+    auto p = 0.001f;
+    auto r = 0.01f;
+    auto h = 0.1f;
+
+    Mema::ProcessorLevelData::LevelVal l1(p, r, h, -90.0f);
+    Mema::ProcessorLevelData::LevelVal l2(p, r, h, -10.0f);
+    Mema::ProcessorLevelData::LevelVal l3(p, r, h, -70.0f);
+    Mema::ProcessorLevelData::LevelVal l4(p, r, h, -50.0f);
+
+    auto p1 = l1.GetFactorPEAKdB();
+    auto r1 = l1.GetFactorRMSdB();
+    auto h1 = l1.GetFactorHOLDdB();
+
+    auto p2 = l2.GetFactorPEAKdB();
+    auto r2 = l2.GetFactorRMSdB();
+    auto h2 = l2.GetFactorHOLDdB();
+
+    auto p3 = l3.GetFactorPEAKdB();
+    auto r3 = l3.GetFactorRMSdB();
+    auto h3 = l3.GetFactorHOLDdB();
+
+    auto p4 = l4.GetFactorPEAKdB();
+    auto r4 = l4.GetFactorRMSdB();
+    auto h4 = l4.GetFactorHOLDdB();
+#endif
 }
 
 MeterbridgeComponent::MeterbridgeComponent(Direction direction)
@@ -91,7 +118,7 @@ void MeterbridgeComponent::paint(Graphics& g)
             g.setColour(juce::Colours::forestgreen);
             g.fillRect(juce::Rectangle<float>(meterLeft, visuAreaOrigY - rmsMeterLength, meterThickness, rmsMeterLength));
             // hold strip
-            g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
+            g.setColour(juce::Colours::grey);
             g.drawLine(juce::Line<float>(meterLeft, visuAreaOrigY - holdMeterLength, meterLeft + meterThickness, visuAreaOrigY - holdMeterLength));
             // channel # label
             g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
@@ -108,7 +135,7 @@ void MeterbridgeComponent::paint(Graphics& g)
         g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
         juce::String rangeText;
         if (getUsesValuesInDB())
-            rangeText = juce::String(MemaProcessor::getGlobalMindB()) + " ... " + juce::String(MemaProcessor::getGlobalMaxdB()) + " dBFS";
+            rangeText = juce::String(ProcessorDataAnalyzer::getGlobalMindB()) + " ... " + juce::String(ProcessorDataAnalyzer::getGlobalMaxdB()) + " dBFS";
         else
             rangeText = "0 ... 1";
         g.drawText(rangeText, visuArea, juce::Justification::topRight, true);
@@ -153,7 +180,7 @@ void MeterbridgeComponent::paint(Graphics& g)
             g.setColour(juce::Colours::forestgreen);
             g.fillRect(juce::Rectangle<float>(visuAreaOrigX, meterTop, rmsMeterLength, meterThickness));
             // hold strip
-            g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
+            g.setColour(juce::Colours::grey);
             g.drawLine(juce::Line<float>(visuAreaOrigX + holdMeterLength, meterTop, visuAreaOrigX + holdMeterLength, meterTop + meterThickness));
             // channel # label
             g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
@@ -170,7 +197,7 @@ void MeterbridgeComponent::paint(Graphics& g)
         g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
         juce::String rangeText;
         if (getUsesValuesInDB())
-            rangeText = juce::String(MemaProcessor::getGlobalMindB()) + " ... " + juce::String(MemaProcessor::getGlobalMaxdB()) + " dBFS";
+            rangeText = juce::String(ProcessorDataAnalyzer::getGlobalMindB()) + " ... " + juce::String(ProcessorDataAnalyzer::getGlobalMaxdB()) + " dBFS";
         else
             rangeText = "0 ... 1";
 

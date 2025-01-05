@@ -225,7 +225,7 @@ void ProcessorDataAnalyzer::FlushHold()
 	auto channelCount = static_cast<int>(m_level.GetChannelCount());
 	for (auto i = 0; i < channelCount; ++i)
 	{
-		m_level.SetLevel(i + 1, ProcessorLevelData::LevelVal(0.0f, 0.0f, 0.0f));
+		m_level.SetLevel(i + 1, ProcessorLevelData::LevelVal(0.0f, 0.0f, 0.0f, static_cast<float>(getGlobalMindB())));
 	}
 
 	// clear spectrum hold values	auto channelCount = m_level.GetChannelCount();

@@ -55,15 +55,17 @@ public:
     std::function<void()> onFocusLostWhileVisible;
 
 private:
-    std::unique_ptr<Mema::Mema>   m_mbm;
-    std::unique_ptr<juce::DrawableButton>           m_setupButton;
-    std::unique_ptr<juce::DrawableButton>           m_aboutButton;
-    std::unique_ptr<juce::DrawableButton>           m_powerButton;
-    std::unique_ptr<EmptySpace>                     m_emptySpace;
-    std::unique_ptr<LoadBar>                        m_sysLoadBar;
-    std::unique_ptr<LoadBar>                        m_netHealthBar;
-    std::unique_ptr<juce::LookAndFeel>              m_lookAndFeel;
-    std::unique_ptr<AboutComponent>                 m_aboutComponent;
+    std::unique_ptr<Mema::Mema>             m_mbm;
+    std::unique_ptr<juce::DrawableButton>   m_setupButton;
+    std::unique_ptr<juce::DrawableButton>   m_aboutButton;
+    std::unique_ptr<juce::DrawableButton>   m_powerButton;
+    std::unique_ptr<EmptySpace>             m_emptySpace;
+    std::unique_ptr<LoadBar>                m_sysLoadBar;
+    std::unique_ptr<LoadBar>                m_netHealthBar;
+    std::unique_ptr<juce::LookAndFeel>      m_lookAndFeel;
+    std::unique_ptr<AboutComponent>         m_aboutComponent;
+
+    std::unique_ptr<TooltipWindow>          m_toolTipWindowInstance;
     
     static constexpr int sc_buttonSize = 26;
     static constexpr int sc_loadNetWidth = 70;

@@ -122,7 +122,7 @@ void MemaMoComponent::resized()
         if (boundsAspect >= 1 / fieldAspect)
         {
             // landscape
-            auto outputsBounds = bounds.removeFromRight(bounds.getHeight() / fieldAspect);
+            auto outputsBounds = bounds.removeFromRight(int(bounds.getHeight() / fieldAspect));
             outputsBounds.removeFromLeft(margin / 2);
             auto inputsBounds = bounds;
             inputsBounds.removeFromRight(margin / 2);
@@ -133,7 +133,7 @@ void MemaMoComponent::resized()
         else
         {
             // portrait
-            auto outputBounds = bounds.removeFromBottom(bounds.getWidth() * fieldAspect);
+            auto outputBounds = bounds.removeFromBottom(int(bounds.getWidth() * fieldAspect));
             outputBounds.removeFromTop(margin / 2);
             auto inputBounds = bounds;
             inputBounds.removeFromBottom(margin / 2);
