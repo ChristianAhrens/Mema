@@ -69,11 +69,11 @@ public:
 };
 
 //==============================================================================
-class MemaProcessor :  public juce::AudioProcessor,
-					            public juce::AudioIODeviceCallback,
-                                public juce::MessageListener,
-                                public juce::ChangeListener,
-                                public AppConfiguration::XmlConfigurableElement
+class MemaProcessor :   public juce::AudioProcessor,
+					    public juce::AudioIODeviceCallback,
+                        public juce::MessageListener,
+                        public juce::ChangeListener,
+                        public AppConfiguration::XmlConfigurableElement
 {
 public:
     MemaProcessor(XmlElement* stateXml);
@@ -186,11 +186,9 @@ private:
     juce::String    m_Name;
 
     //==============================================================================
-    juce::CriticalSection   m_readLock;
+    juce::CriticalSection   m_audioDeviceIOCallbackLock;
 
     float** m_processorChannels;
-    double m_sampleRate = 0.0;
-    int m_bufferSize = 0;
 
     //==============================================================================
     std::unique_ptr<AudioDeviceManager> m_deviceManager;
@@ -219,6 +217,7 @@ private:
     std::unique_ptr<MemaEditor>  m_processorEditor;
 
     //==============================================================================
+    juce::CriticalSection                                           m_pluginProcessingLock;
     std::unique_ptr<juce::AudioPluginInstance>                      m_pluginInstance;
     bool                                                            m_pluginEnabled = false;
     std::unique_ptr<ResizeableWindowWithTitleBarAndCloseCallback>   m_pluginEditorWindow;

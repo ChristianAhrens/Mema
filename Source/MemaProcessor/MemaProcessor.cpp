@@ -161,7 +161,7 @@ MemaProcessor::MemaProcessor(XmlElement* stateXml) :
 				if (m_networkServer && m_networkServer->hasActiveConnections())
 				{
 					auto success = true;
-					success = success && m_networkServer->enqueueMessage(std::make_unique<AnalyzerParametersMessage>(int(m_sampleRate), m_bufferSize)->getSerializedMessage());
+					success = success && m_networkServer->enqueueMessage(std::make_unique<AnalyzerParametersMessage>(int(getSampleRate()), getBlockSize())->getSerializedMessage());
 					success = success && m_networkServer->enqueueMessage(std::make_unique<ReinitIOCountMessage>(m_inputChannelCount, m_outputChannelCount)->getSerializedMessage());
 					success = success && m_networkServer->enqueueMessage(std::make_unique<EnvironmentParametersMessage>(juce::Desktop::getInstance().isDarkModeActive() ? JUCEAppBasics::CustomLookAndFeel::PS_Dark : JUCEAppBasics::CustomLookAndFeel::PS_Light)->getSerializedMessage());
 					if (!success)
@@ -289,7 +289,7 @@ void MemaProcessor::initializeInputCommander(MemaInputCommander* commander)
 {
 	if (nullptr != commander)
 	{
-        const ScopedLock sl(m_readLock);
+        const ScopedLock sl(m_audioDeviceIOCallbackLock);
         for (auto const& inputMuteStatesKV : m_inputMuteStates)
             commander->setInputMute(inputMuteStatesKV.first, inputMuteStatesKV.second);
 	}
@@ -323,7 +323,7 @@ void MemaProcessor::initializeOutputCommander(MemaOutputCommander* commander)
 {
 	if (nullptr != commander)
 	{
-        const ScopedLock sl(m_readLock);
+        const ScopedLock sl(m_audioDeviceIOCallbackLock);
         for (auto const& outputMuteStatesKV : m_outputMuteStates)
             commander->setOutputMute(outputMuteStatesKV.first, outputMuteStatesKV.second);
 	}
@@ -357,7 +357,7 @@ void MemaProcessor::initializeCrosspointCommander(MemaCrosspointCommander* comma
 {
 	if (nullptr != commander)
 	{
-		const ScopedLock sl(m_readLock);
+		const ScopedLock sl(m_audioDeviceIOCallbackLock);
 		for (auto const& matrixCrosspointEnabledKV : m_matrixCrosspointEnabledValues)
 		{
 			for (auto const& matrixCrosspointEnabledNodeKV : matrixCrosspointEnabledKV.second)
@@ -384,7 +384,7 @@ void MemaProcessor::removeCrosspointCommander(MemaCrosspointCommander* commander
 bool MemaProcessor::getInputMuteState(int inputChannelNumber)
 {
 	jassert(inputChannelNumber > 0);
-	const ScopedLock sl(m_readLock);
+	const ScopedLock sl(m_audioDeviceIOCallbackLock);
 	return m_inputMuteStates[inputChannelNumber];
 }
 
@@ -398,14 +398,14 @@ void MemaProcessor::setInputMuteState(int inputChannelNumber, bool muted, MemaCh
 			inputCommander->setInputMute(inputChannelNumber, muted);
 	}
 
-	const ScopedLock sl(m_readLock);
+	const ScopedLock sl(m_audioDeviceIOCallbackLock);
 	m_inputMuteStates[inputChannelNumber] = muted;
 }
 
 bool MemaProcessor::getMatrixCrosspointEnabledValue(int inputNumber, int outputNumber)
 {
     jassert(inputNumber > 0 && outputNumber > 0);
-    const ScopedLock sl(m_readLock);
+    const ScopedLock sl(m_audioDeviceIOCallbackLock);
     return m_matrixCrosspointEnabledValues[inputNumber][outputNumber];
 }
 
@@ -419,14 +419,14 @@ void MemaProcessor::setMatrixCrosspointEnabledValue(int inputNumber, int outputN
             crosspointCommander->setCrosspointEnabledValue(inputNumber, outputNumber, enabled);
     }
 
-    const ScopedLock sl(m_readLock);
+    const ScopedLock sl(m_audioDeviceIOCallbackLock);
     m_matrixCrosspointEnabledValues[inputNumber][outputNumber] = enabled;
 }
 
 bool MemaProcessor::getOutputMuteState(int outputChannelNumber)
 {
 	jassert(outputChannelNumber > 0);
-	const ScopedLock sl(m_readLock);
+	const ScopedLock sl(m_audioDeviceIOCallbackLock);
 	return m_outputMuteStates[outputChannelNumber];
 }
 
@@ -440,7 +440,7 @@ void MemaProcessor::setOutputMuteState(int outputChannelNumber, bool muted, Mema
 			outputCommander->setOutputMute(outputChannelNumber, muted);
 	}
 
-	const ScopedLock sl(m_readLock);
+	const ScopedLock sl(m_audioDeviceIOCallbackLock);
 	m_outputMuteStates[outputChannelNumber] = muted;
 }
 
@@ -475,7 +475,12 @@ bool MemaProcessor::setPlugin(const juce::PluginDescription& pluginDescription)
 		if (format->getName() == pluginDescription.pluginFormatName)
 		{
 			closePluginEditor();
-			m_pluginInstance = format->createInstanceFromDescription(pluginDescription, getSampleRate(), getBlockSize(), errorMessage);
+			{
+				const ScopedLock sl(m_pluginProcessingLock);
+				m_pluginInstance = format->createInstanceFromDescription(pluginDescription, getSampleRate(), getBlockSize(), errorMessage);
+				if (m_pluginInstance)
+					m_pluginInstance->prepareToPlay(getSampleRate(), getBlockSize());
+			}
 			success = errorMessage.isEmpty();
 			break;
 		}
@@ -491,13 +496,17 @@ bool MemaProcessor::setPlugin(const juce::PluginDescription& pluginDescription)
 
 void MemaProcessor::setPluginEnabledState(bool enabled)
 {
+	const ScopedLock sl(m_pluginProcessingLock);
 	m_pluginEnabled = enabled;
 }
 
 void MemaProcessor::clearPlugin()
 {
 	closePluginEditor();
-	m_pluginInstance.reset();
+	{
+		const ScopedLock sl(m_pluginProcessingLock);
+		m_pluginInstance.reset();
+	}
 	if (onPluginSet)
 		onPluginSet(juce::PluginDescription());
 }
@@ -550,8 +559,13 @@ const String MemaProcessor::getName() const
 
 void MemaProcessor::prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock)
 {
-	m_sampleRate = sampleRate;
-	m_bufferSize = maximumExpectedSamplesPerBlock;
+	setRateAndBufferSizeDetails(sampleRate, maximumExpectedSamplesPerBlock);
+
+	if (m_pluginInstance)
+	{
+		const ScopedLock sl(m_pluginProcessingLock);
+		m_pluginInstance->prepareToPlay(sampleRate, maximumExpectedSamplesPerBlock);
+	}
 
 	if (m_inputDataAnalyzer)
 		m_inputDataAnalyzer->initializeParameters(sampleRate, maximumExpectedSamplesPerBlock);
@@ -563,6 +577,12 @@ void MemaProcessor::prepareToPlay(double sampleRate, int maximumExpectedSamplesP
 
 void MemaProcessor::releaseResources()
 {
+	if (m_pluginInstance)
+	{
+		const ScopedLock sl(m_pluginProcessingLock);
+		m_pluginInstance->releaseResources();
+	}
+
 	if (m_inputDataAnalyzer)
 		m_inputDataAnalyzer->clearParameters();
 	if (m_outputDataAnalyzer)
@@ -574,7 +594,7 @@ void MemaProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMes
 	ignoreUnused(midiMessages);
 
 	// the lock is currently gloablly taken in audioDeviceIOCallback which is calling this method
-	//const ScopedLock sl(m_readLock);
+	//const ScopedLock sl(m_audioDeviceIOCallbackLock);
 
 	auto reinitRequired = false;
 
@@ -591,6 +611,12 @@ void MemaProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMes
 			auto channelIdx = input - 1;
 			buffer.clear(channelIdx, 0, buffer.getNumSamples());
 		}
+	}
+
+	if (m_pluginInstance && m_pluginEnabled)
+	{
+		const ScopedLock sl(m_pluginProcessingLock);
+		m_pluginInstance->processBlock(buffer, midiMessages);
 	}
 
 	postMessage(std::make_unique<AudioInputBufferMessage>(buffer).release());
@@ -747,7 +773,7 @@ void MemaProcessor::audioDeviceIOCallbackWithContext(const float* const* inputCh
 {
     ignoreUnused(context);
     
-	const juce::ScopedLock sl(m_readLock);
+	const juce::ScopedLock sl(m_audioDeviceIOCallbackLock);
 
 	if (m_inputChannelCount != numInputChannels || m_outputChannelCount != numOutputChannels)
 	{
@@ -799,6 +825,7 @@ void MemaProcessor::audioDeviceAboutToStart(AudioIODevice* device)
         auto bufferSize = device->getCurrentBufferSizeSamples();
         //auto bitDepth = device->getCurrentBitDepth();
         
+		setPlayConfigDetails(inputChannelCnt, outputChannelCnt, sampleRate, bufferSize); // redundant to what happens in prepareToPlay to some extent...harmful?
         setChannelCounts(inputChannelCnt, outputChannelCnt);
         prepareToPlay(sampleRate, bufferSize);
     }
