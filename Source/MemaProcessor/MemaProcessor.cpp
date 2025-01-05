@@ -451,11 +451,12 @@ void MemaProcessor::setChannelCounts(int inputChannelCount, int outputChannelCou
     {
         m_inputChannelCount = inputChannelCount;
         reinitRequired = true;
-        
-        if (m_pluginInstance)
+
+		// threadsafe locking in scope to access plugin
         {
             const ScopedLock sl(m_pluginProcessingLock);
-            m_pluginInstance->setPlayConfigDetails(m_inputChannelCount, m_inputChannelCount, getSampleRate(), getBlockSize());
+			if (m_pluginInstance)
+	            m_pluginInstance->setPlayConfigDetails(m_inputChannelCount, m_inputChannelCount, getSampleRate(), getBlockSize());
         }
     }
     if (m_outputChannelCount != outputChannelCount)
@@ -481,6 +482,8 @@ bool MemaProcessor::setPlugin(const juce::PluginDescription& pluginDescription)
 		if (format->getName() == pluginDescription.pluginFormatName)
 		{
 			closePluginEditor();
+
+			// threadsafe locking in scope to access plugin
 			{
 				const ScopedLock sl(m_pluginProcessingLock);
 				m_pluginInstance = format->createInstanceFromDescription(pluginDescription, getSampleRate(), getBlockSize(), errorMessage);
@@ -512,10 +515,13 @@ void MemaProcessor::setPluginEnabledState(bool enabled)
 void MemaProcessor::clearPlugin()
 {
 	closePluginEditor();
+
+	// threadsafe locking in scope to access plugin
 	{
 		const ScopedLock sl(m_pluginProcessingLock);
 		m_pluginInstance.reset();
 	}
+
 	if (onPluginSet)
 		onPluginSet(juce::PluginDescription());
 }
@@ -570,10 +576,11 @@ void MemaProcessor::prepareToPlay(double sampleRate, int maximumExpectedSamplesP
 {
 	setRateAndBufferSizeDetails(sampleRate, maximumExpectedSamplesPerBlock);
 
-	if (m_pluginInstance)
+	// threadsafe locking in scope to access plugin
 	{
 		const ScopedLock sl(m_pluginProcessingLock);
-		m_pluginInstance->prepareToPlay(sampleRate, maximumExpectedSamplesPerBlock);
+		if (m_pluginInstance)
+			m_pluginInstance->prepareToPlay(sampleRate, maximumExpectedSamplesPerBlock);
 	}
 
 	if (m_inputDataAnalyzer)
@@ -586,10 +593,11 @@ void MemaProcessor::prepareToPlay(double sampleRate, int maximumExpectedSamplesP
 
 void MemaProcessor::releaseResources()
 {
-	if (m_pluginInstance)
+	// threadsafe locking in scope to access plugin
 	{
 		const ScopedLock sl(m_pluginProcessingLock);
-		m_pluginInstance->releaseResources();
+		if (m_pluginInstance)
+			m_pluginInstance->releaseResources();
 	}
 
 	if (m_inputDataAnalyzer)
@@ -622,10 +630,10 @@ void MemaProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMes
 		}
 	}
 
-	if (m_pluginInstance)
+	// threadsafe locking in scope to access plugin
 	{
 		const ScopedLock sl(m_pluginProcessingLock);
-		if (m_pluginEnabled)
+		if (m_pluginInstance && m_pluginEnabled)
 			m_pluginInstance->processBlock(buffer, midiMessages);
 	}
 
