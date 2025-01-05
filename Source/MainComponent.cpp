@@ -153,6 +153,9 @@ public:
 MainComponent::MainComponent()
     : juce::Component()
 {
+    // a single instance of tooltip window is required and used by JUCE everywhere a tooltip is required.
+    m_toolTipWindowInstance = std::make_unique<TooltipWindow>();
+
     m_mbm = std::make_unique<Mema::Mema>();
     m_mbm->onSizeChangeRequested = [=](juce::Rectangle<int> requestedSize) {
         auto width = requestedSize.getWidth();
