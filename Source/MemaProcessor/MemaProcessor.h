@@ -40,13 +40,40 @@ struct ServiceAdvertiser;
 
 
 //==============================================================================
-/*
-*/
-class MemaProcessor :  public juce::AudioProcessor,
-					            public juce::AudioIODeviceCallback,
-                                public juce::MessageListener,
-                                public juce::ChangeListener,
-                                public AppConfiguration::XmlConfigurableElement
+class ResizeableWindowWithTitleBarAndCloseCallback : public juce::ResizableWindow
+{
+public:
+    ResizeableWindowWithTitleBarAndCloseCallback() = default;
+    ResizeableWindowWithTitleBarAndCloseCallback(const String& name, bool addToDesktop) : juce::ResizableWindow(name, addToDesktop) {};
+    ~ResizeableWindowWithTitleBarAndCloseCallback() { if (onClosed) onClosed(); };
+
+    //==============================================================================
+    int getDesktopWindowStyleFlags() const override
+    {
+        int styleFlags = juce::ComponentPeer::windowAppearsOnTaskbar
+            | juce::ComponentPeer::windowHasDropShadow
+            | juce::ComponentPeer::windowHasTitleBar
+            | juce::ComponentPeer::windowHasCloseButton;
+
+        return styleFlags;
+    }
+
+    void userTriedToCloseWindow() override
+    {
+        if (onClosed)
+            onClosed();
+    };
+
+    //==============================================================================
+    std::function<void()> onClosed;
+};
+
+//==============================================================================
+class MemaProcessor :   public juce::AudioProcessor,
+					    public juce::AudioIODeviceCallback,
+                        public juce::MessageListener,
+                        public juce::ChangeListener,
+                        public AppConfiguration::XmlConfigurableElement
 {
 public:
     MemaProcessor(XmlElement* stateXml);
@@ -82,6 +109,14 @@ public:
     void setOutputMuteState(int channelNumber, bool muted, MemaChannelCommander* sender = nullptr);
 
     void setChannelCounts(int inputChannelCount, int outputChannelCount);
+
+    //==============================================================================
+    bool setPlugin(const juce::PluginDescription& pluginDescription);
+    void setPluginEnabledState(bool enabled);
+    void clearPlugin();
+    void openPluginEditor();
+    void closePluginEditor(bool deleteEditorWindow = true);
+    std::function<void(const juce::PluginDescription&)> onPluginSet;
 
     //==============================================================================
     AudioDeviceManager* getDeviceManager();
@@ -151,11 +186,9 @@ private:
     juce::String    m_Name;
 
     //==============================================================================
-    juce::CriticalSection   m_readLock;
+    juce::CriticalSection   m_audioDeviceIOCallbackLock;
 
     float** m_processorChannels;
-    double m_sampleRate = 0.0;
-    int m_bufferSize = 0;
 
     //==============================================================================
     std::unique_ptr<AudioDeviceManager> m_deviceManager;
@@ -182,6 +215,12 @@ private:
 
     //==============================================================================
     std::unique_ptr<MemaEditor>  m_processorEditor;
+
+    //==============================================================================
+    juce::CriticalSection                                           m_pluginProcessingLock;
+    std::unique_ptr<juce::AudioPluginInstance>                      m_pluginInstance;
+    bool                                                            m_pluginEnabled = false;
+    std::unique_ptr<ResizeableWindowWithTitleBarAndCloseCallback>   m_pluginEditorWindow;
 
     //==============================================================================
 #if JUCE_WINDOWS

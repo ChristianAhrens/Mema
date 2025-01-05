@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="ja98xe" name="Mema" projectType="guiapp" useAppConfig="0"
-              jucerFormatVersion="1" version="0.3.3" companyWebsite="github.com/ChristianAhrens/Mema"
+              jucerFormatVersion="1" version="0.4.0" companyWebsite="github.com/ChristianAhrens/Mema"
               bundleIdentifier="com.ChristianAhrens.Mema" headerPath="../../submodules/JUCE-AppBasics/Source"
               defines="JUCE_USE_LAME_AUDIO_FORMAT=1,&#10;JUCE_USE_MP3AUDIOFORMAT=1,&#10;JUCE_DISPLAY_SPLASH_SCREEN=0"
               companyName="ChristianAhrens" companyCopyright="Copyright (c) 2024 Christian Ahrens.">
@@ -24,16 +24,24 @@
     </GROUP>
     <GROUP id="{72AB56DC-8637-938F-3846-2BD91435687D}" name="Resources">
       <GROUP id="{5418C8BA-AFDC-83EF-A716-D3FB9CE9A772}" name="Images">
+        <FILE id="CR0ajf" name="close_24dp.svg" compile="0" resource="1" file="submodules/JUCE-AppBasics/Resources/Images/close_24dp.svg"/>
+        <FILE id="l2RF9e" name="delete_forever_24dp.svg" compile="0" resource="1"
+              file="submodules/JUCE-AppBasics/Resources/Images/delete_forever_24dp.svg"/>
         <FILE id="UGfTIl" name="grid_4x4_24dp.png" compile="0" resource="1"
               file="Resources/Images/grid_4x4_24dp.png"/>
         <FILE id="MIm0Wj" name="Mema.png" compile="0" resource="1" file="Resources/Images/Mema.png"/>
         <FILE id="MVNcTE" name="MemaCanvas.png" compile="0" resource="1" file="Resources/Images/MemaCanvas.png"/>
         <FILE id="ItJQfF" name="MemaRect.png" compile="0" resource="1" file="Resources/Images/MemaRect.png"/>
-        <FILE id="EwG2UG" name="power_settings_24dp.svg" compile="0" resource="1"
-              file="Resources/Images/power_settings_24dp.svg"/>
-        <FILE id="kgvx8Y" name="question_mark_24dp.svg" compile="0" resource="1"
-              file="Resources/Images/question_mark_24dp.svg"/>
-        <FILE id="xCV27q" name="tune_24dp.svg" compile="0" resource="1" file="Resources/Images/tune_24dp.svg"/>
+        <FILE id="WExlzd" name="power_settings_24dp.svg" compile="0" resource="1"
+              file="submodules/JUCE-AppBasics/Resources/Images/power_settings_24dp.svg"/>
+        <FILE id="D2kv3R" name="question_mark_24dp.svg" compile="0" resource="1"
+              file="submodules/JUCE-AppBasics/Resources/Images/question_mark_24dp.svg"/>
+        <FILE id="kIZuGS" name="remove_selection_24dp.svg" compile="0" resource="1"
+              file="submodules/JUCE-AppBasics/Resources/Images/remove_selection_24dp.svg"/>
+        <FILE id="wiuhZ6" name="replay_24dp.svg" compile="0" resource="1" file="submodules/JUCE-AppBasics/Resources/Images/replay_24dp.svg"/>
+        <FILE id="pIfxne" name="stat_minus_1_24dp.svg" compile="0" resource="1"
+              file="submodules/JUCE-AppBasics/Resources/Images/stat_minus_1_24dp.svg"/>
+        <FILE id="rqbjLo" name="tune_24dp.svg" compile="0" resource="1" file="submodules/JUCE-AppBasics/Resources/Images/tune_24dp.svg"/>
       </GROUP>
       <FILE id="pqcvEg" name="Default.config" compile="0" resource="1" file="Resources/Default.config"/>
     </GROUP>
@@ -103,6 +111,10 @@
               file="Source/MemaEditor/OutputControlComponent.cpp"/>
         <FILE id="DwGxIX" name="OutputControlComponent.h" compile="0" resource="0"
               file="Source/MemaEditor/OutputControlComponent.h"/>
+        <FILE id="TXnix6" name="PluginControlComponent.cpp" compile="1" resource="0"
+              file="Source/MemaEditor/PluginControlComponent.cpp"/>
+        <FILE id="ZmagSZ" name="PluginControlComponent.h" compile="0" resource="0"
+              file="Source/MemaEditor/PluginControlComponent.h"/>
       </GROUP>
       <FILE id="NVRWpP" name="AppConfiguration.cpp" compile="1" resource="0"
             file="Source/AppConfiguration.cpp"/>
@@ -136,14 +148,15 @@
     <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
     <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
   </MODULES>
-  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_PLUGINHOST_VST3="1" JUCE_PLUGINHOST_AU="1"
+               JUCE_PLUGINHOST_LADSPA="1" JUCE_PLUGINHOST_LV2="1"/>
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX" smallIcon="ItJQfF" bigIcon="ItJQfF"
                customPList="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#10;&#10;&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;&#10;&lt;plist&gt;&#10;  &lt;dict&gt;&#10;    &lt;key&gt;NSLocalNetworkUsageDescription&lt;/key&gt;&#10;    &lt;string&gt;Mema uses multicast to anounce its service to Mema.Mo instances on the network.&lt;/string&gt;&#10;  &lt;/dict&gt;&#10;&lt;/plist&gt;"
                applicationCategory="public.app-category.utilities" hardenedRuntime="1"
-               hardenedRuntimeOptions="com.apple.security.device.audio-input"
+               hardenedRuntimeOptions="com.apple.security.cs.disable-library-validation,com.apple.security.device.audio-input"
                microphonePermissionNeeded="1" networkingMulticast="1" microphonePermissionsText="MenuBarMatrix uses audio input to route it via matrix settings to audio output."
-               appSandbox="1" appSandboxOptions="com.apple.security.device.microphone,com.apple.security.network.client,com.apple.security.network.server"
+               appSandbox="1" appSandboxOptions="com.apple.security.device.microphone,com.apple.security.network.client,com.apple.security.network.server,com.apple.security.temporary-exception.audio-unit-host"
                iosDevelopmentTeamID="SB7Q3PP4FQ">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug"/>

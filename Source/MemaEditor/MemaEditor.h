@@ -27,6 +27,7 @@
 namespace Mema
 {
 
+class PluginControlComponent;
 class InputControlComponent;
 class CrosspointsControlComponent;
 class OutputControlComponent;
@@ -115,7 +116,10 @@ public:
     //==========================================================================
     std::function<void(juce::Rectangle<int>)> onSizeChangeRequested;
 
+    static constexpr int sc_pluginControlHeight = 20;
+
 private:
+    std::unique_ptr<PluginControlComponent>         m_pluginControl;
     std::unique_ptr<IOLabelComponent>               m_ioLabel;
     std::unique_ptr<InputControlComponent>          m_inputCtrl;
     std::unique_ptr<CrosspointsControlComponent>    m_crosspointCtrl;
