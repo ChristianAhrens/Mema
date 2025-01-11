@@ -19,7 +19,7 @@ init:
 
     yes | sudo apt install libcurl4-openssl-dev
 
-    yes | sudo apt install libfreetype6-dev
+    yes | sudo apt install libfreetype6-dev libfontconfig1-dev
 
     yes | sudo apt install libasound2-dev libjack-jackd2-dev
 
