@@ -35,9 +35,10 @@ public:
     {
         PROCESSORCONFIG,
         DEVCONFIG,
-        EDITORCONFIG
+        EDITORCONFIG,
+        PLUGINCONFIG
     };
-    static String getTagName(TagID ID)
+    static juce::String getTagName(TagID ID)
     {
         switch(ID)
         {
@@ -47,8 +48,25 @@ public:
             return "DEVICECONFIG";
         case EDITORCONFIG:
             return "EDITORCONFIG";
+        case PLUGINCONFIG:
+            return "PLUGINCONFIG";
         default:
             return "INVALID";
+        }
+    };
+
+    enum AttributeID
+    {
+        ENABLED
+    };
+    static juce::String getAttributeName(AttributeID ID)
+    {
+        switch (ID)
+        {
+        case ENABLED:
+            return "ENABLED";
+        default:
+            return "-";
         }
     };
 

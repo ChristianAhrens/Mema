@@ -185,31 +185,36 @@ MemaProcessor::~MemaProcessor()
 	delete[] m_processorChannels;
 }
 
-std::unique_ptr<XmlElement> MemaProcessor::createStateXml()
+std::unique_ptr<juce::XmlElement> MemaProcessor::createStateXml()
 {
-	auto stateXml = std::make_unique<XmlElement>(AppConfiguration::getTagName(AppConfiguration::TagID::PROCESSORCONFIG));
+	auto stateXml = std::make_unique<juce::XmlElement>(AppConfiguration::getTagName(AppConfiguration::TagID::PROCESSORCONFIG));
+
+	auto devConfElm = std::make_unique<juce::XmlElement>(AppConfiguration::getTagName(AppConfiguration::TagID::DEVCONFIG));
 	if (m_deviceManager)
-	{
-		auto devConfElm = std::make_unique<XmlElement>(AppConfiguration::getTagName(AppConfiguration::TagID::DEVCONFIG));
 		devConfElm->addChildElement(m_deviceManager->createStateXml().release());
-		stateXml->addChildElement(devConfElm.release());
-	}
-	else
-		return nullptr;
+	stateXml->addChildElement(devConfElm.release());
+
+	auto plgConfElm = std::make_unique<juce::XmlElement>(AppConfiguration::getTagName(AppConfiguration::TagID::PLUGINCONFIG));
+	plgConfElm->setAttribute(AppConfiguration::getAttributeName(AppConfiguration::AttributeID::ENABLED), m_pluginEnabled ? 1 : 0);
+	if (m_pluginInstance)
+		plgConfElm->addChildElement(m_pluginInstance->getPluginDescription().createXml().release());
+	stateXml->addChildElement(plgConfElm.release());
 
 	return std::move(stateXml);
 }
 
-bool MemaProcessor::setStateXml(XmlElement* stateXml)
+bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
 {
+	if (nullptr == stateXml || stateXml->getTagName() != AppConfiguration::getTagName(AppConfiguration::TagID::PROCESSORCONFIG))
+	{
+		jassertfalse;
+		return false;
+	}
+
     juce::XmlElement* deviceSetupXml = nullptr;
-    
-	if (nullptr != stateXml && stateXml->getTagName() == AppConfiguration::getTagName(AppConfiguration::TagID::PROCESSORCONFIG))
-    {
-        auto devConfElm = stateXml->getChildByName(AppConfiguration::getTagName(AppConfiguration::TagID::DEVCONFIG));
-        if (nullptr != devConfElm)
-            deviceSetupXml = devConfElm->getChildByName("DEVICESETUP");
-    }
+    auto devConfElm = stateXml->getChildByName(AppConfiguration::getTagName(AppConfiguration::TagID::DEVCONFIG));
+    if (nullptr != devConfElm)
+        deviceSetupXml = devConfElm->getChildByName("DEVICESETUP");
     
 	if (m_deviceManager)
 	{
@@ -235,11 +240,26 @@ bool MemaProcessor::setStateXml(XmlElement* stateXml)
                 audioDeviceSetup.bufferSize = 512; // temp. workaround for iOS where buffersizes <512 lead to no sample data being delivered?
 			m_deviceManager->setAudioDeviceSetup(audioDeviceSetup, true);
 #endif
-            return true;
         }
 	}
 	else
 		return false;
+
+
+	auto plgConfElm = stateXml->getChildByName(AppConfiguration::getTagName(AppConfiguration::TagID::PLUGINCONFIG));
+	if (nullptr != plgConfElm)
+	{
+		setPluginEnabledState(plgConfElm->getBoolAttribute(AppConfiguration::getAttributeName(AppConfiguration::AttributeID::ENABLED)));
+		auto pluginDescriptionXml = plgConfElm->getChildByName("PLUGIN");
+		if (nullptr != pluginDescriptionXml)
+		{
+			auto pluginDescription = juce::PluginDescription();
+			pluginDescription.loadFromXml(*pluginDescriptionXml);
+			setPlugin(pluginDescription);
+		}
+	}
+
+	return true;
 }
 
 void MemaProcessor::environmentChanged()
@@ -503,13 +523,33 @@ bool MemaProcessor::setPlugin(const juce::PluginDescription& pluginDescription)
 	else if (onPluginSet)
 		onPluginSet(pluginDescription);
 
+	triggerConfigurationUpdate(false);
+
 	return success;
+}
+
+juce::PluginDescription MemaProcessor::getPluginDescription()
+{
+	if (m_pluginInstance)
+		return m_pluginInstance->getPluginDescription();
+
+	return {};
 }
 
 void MemaProcessor::setPluginEnabledState(bool enabled)
 {
-	const ScopedLock sl(m_pluginProcessingLock);
-	m_pluginEnabled = enabled;
+	// threadsafe locking in scope to access plugin enabled
+	{
+		const ScopedLock sl(m_pluginProcessingLock);
+		m_pluginEnabled = enabled;
+	}
+
+	triggerConfigurationUpdate(false);
+}
+
+bool MemaProcessor::isPluginEnabled()
+{
+	return m_pluginEnabled;
 }
 
 void MemaProcessor::clearPlugin()
@@ -524,6 +564,8 @@ void MemaProcessor::clearPlugin()
 
 	if (onPluginSet)
 		onPluginSet(juce::PluginDescription());
+
+	setPluginEnabledState(false);
 }
 
 void MemaProcessor::openPluginEditor()

@@ -267,6 +267,7 @@ public:
     ~PluginControlComponent();
 
     void showPluginsList(juce::Point<int> showPosition);
+    void setPluginEnabled(bool enabled = true);
     void setSelectedPlugin(const juce::PluginDescription& pluginDescription);
 
     //==============================================================================

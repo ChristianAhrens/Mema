@@ -42,7 +42,7 @@ public:
         m_mainComponent->addToDesktop(juce::ComponentPeer::windowHasDropShadow);
         m_mainComponent->setTopLeftPosition(m_taskbarComponent->getX(), 50);
         m_mainComponent->onFocusLostWhileVisible = [=]() { toggleVisibilty(); };
-        m_mainComponent->setName("Mema content component");
+        m_mainComponent->setName(ProjectInfo::projectName);
     }
 
     void shutdown() override
