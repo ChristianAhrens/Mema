@@ -38,7 +38,7 @@ public:
     MainComponent();
     ~MainComponent() override;
 
-    void toggleStandaloneWindow();
+    void toggleStandaloneWindow(std::optional<bool> standalone);
     bool isStandaloneWindow();
 
     //==============================================================================

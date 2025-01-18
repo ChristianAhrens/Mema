@@ -170,9 +170,9 @@ MainComponent::MainComponent()
     };
     addAndMakeVisible(m_mbm->getUIComponent());
 
-    m_toggleStandaloneWindowButton = std::make_unique<juce::DrawableButton>("Undock to standalone window", juce::DrawableButton::ButtonStyle::ImageFitted);
-    m_toggleStandaloneWindowButton->setTooltip("Toggle standalone window");
-    m_toggleStandaloneWindowButton->onClick = [this] { toggleStandaloneWindow(); };
+    m_toggleStandaloneWindowButton = std::make_unique<juce::DrawableButton>("Show as standalone window", juce::DrawableButton::ButtonStyle::ImageFitted);
+    m_toggleStandaloneWindowButton->setTooltip("Show as standalone window");
+    m_toggleStandaloneWindowButton->onClick = [this] { toggleStandaloneWindow({}); };
     addAndMakeVisible(m_toggleStandaloneWindowButton.get());
 
     m_setupButton = std::make_unique<juce::DrawableButton>("Audio Device Setup", juce::DrawableButton::ButtonStyle::ImageFitted);
@@ -229,9 +229,12 @@ MainComponent::~MainComponent()
 }
 
 
-void MainComponent::toggleStandaloneWindow()
+void MainComponent::toggleStandaloneWindow(std::optional<bool> standalone)
 {
-    m_isStandaloneWindow = !m_isStandaloneWindow;
+    if (!standalone.has_value())
+        m_isStandaloneWindow = !m_isStandaloneWindow;
+    else
+        m_isStandaloneWindow = standalone.value();
 
     int styleFlags = juce::ComponentPeer::windowHasDropShadow;
     if (m_isStandaloneWindow)
