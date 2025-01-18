@@ -51,7 +51,8 @@ public:
         OutputVisuType_7point0,
         OutputVisuType_7point1,
         OutputVisuType_7point1point4,
-        OutputVisuType_Last = OutputVisuType_7point1point4
+        OutputVisuType_9point1point6,
+        OutputVisuType_Last = OutputVisuType_9point1point6
     };
 
 public:

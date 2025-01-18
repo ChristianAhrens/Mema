@@ -122,6 +122,7 @@ MainComponent::MainComponent()
     m_settingsItems[SettingsOption::OutputVisuType_7point0] = std::make_pair(juce::AudioChannelSet::create7point0().getDescription().toStdString(), 0);
     m_settingsItems[SettingsOption::OutputVisuType_7point1] = std::make_pair(juce::AudioChannelSet::create7point1().getDescription().toStdString(), 0);
     m_settingsItems[SettingsOption::OutputVisuType_7point1point4] = std::make_pair(juce::AudioChannelSet::create7point1point4().getDescription().toStdString(), 0);
+    m_settingsItems[SettingsOption::OutputVisuType_9point1point6] = std::make_pair(juce::AudioChannelSet::create9point1point6().getDescription().toStdString(), 0);
     m_settingsButton = std::make_unique<juce::DrawableButton>("Settings", juce::DrawableButton::ButtonStyle::ImageFitted);
     m_settingsButton->setTooltip(juce::String("Settings for") + juce::JUCEApplication::getInstance()->getApplicationName());
     m_settingsButton->onClick = [this] {
@@ -385,7 +386,7 @@ void MainComponent::handleSettingsLookAndFeelMenuResult(int selectedId)
 void MainComponent::handleSettingsOutputVisuTypeMenuResult(int selectedId)
 {
     // helper internal function to avoid code clones
-    std::function<void(int, int, int, int, int, int, int, int, int)> setSettingsItemsCheckState = [=](int a, int b, int c, int d, int e, int f, int g, int h, int i) {
+    std::function<void(int, int, int, int, int, int, int, int, int, int)> setSettingsItemsCheckState = [=](int a, int b, int c, int d, int e, int f, int g, int h, int i, int j) {
         m_settingsItems[SettingsOption::OutputVisuType_Meterbridge].second = a;
         m_settingsItems[SettingsOption::OutputVisuType_LRS].second = b;
         m_settingsItems[SettingsOption::OutputVisuType_LCRS].second = c;
@@ -395,54 +396,60 @@ void MainComponent::handleSettingsOutputVisuTypeMenuResult(int selectedId)
         m_settingsItems[SettingsOption::OutputVisuType_7point0].second = g;
         m_settingsItems[SettingsOption::OutputVisuType_7point1].second = h;
         m_settingsItems[SettingsOption::OutputVisuType_7point1point4].second = i;
+        m_settingsItems[SettingsOption::OutputVisuType_9point1point6].second = j;
     };
 
     switch (selectedId)
     {
     case SettingsOption::OutputVisuType_Meterbridge:
-        setSettingsItemsCheckState(1, 0, 0, 0, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputMeteringVisuActive();
         break;
     case SettingsOption::OutputVisuType_LRS:
-        setSettingsItemsCheckState(0, 1, 0, 0, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::createLRS());
         break;
     case SettingsOption::OutputVisuType_LCRS:
-        setSettingsItemsCheckState(0, 0, 1, 0, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 1, 0, 0, 0, 0, 0, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::createLCRS());
         break;
     case SettingsOption::OutputVisuType_5point0:
-        setSettingsItemsCheckState(0, 0, 0, 1, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 1, 0, 0, 0, 0, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::create5point0());
         break;
     case SettingsOption::OutputVisuType_5point1:
-        setSettingsItemsCheckState(0, 0, 0, 0, 1, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 1, 0, 0, 0, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::create5point1());
         break;
     case SettingsOption::OutputVisuType_5point1point2:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 1, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 1, 0, 0, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::create5point1point2());
         break;
     case SettingsOption::OutputVisuType_7point0:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 1, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 1, 0, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::create7point0());
         break;
     case SettingsOption::OutputVisuType_7point1:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 1, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 1, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::create7point1());
         break;
     case SettingsOption::OutputVisuType_7point1point4:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 1);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 1, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::create7point1point4());
+        break;
+    case SettingsOption::OutputVisuType_9point1point6:
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 1);
+        if (m_monitorComponent)
+            m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::create9point1point6());
         break;
     default:
         jassertfalse; // unknown id fed in unintentionally ?!
