@@ -131,6 +131,8 @@ This does only work up to Raspberry Pi OS Bullseye versions, that use X server a
 
 ![Showreel.009.png](Resources/Documentation/Showreel/Showreel.009.png "RaspberryPi rack DIY device")
 
+![Studio_rack_monitoring_usecase.png](Resources/Documentation/Studio_rack_monitoring_usecase.png "Homestudio setup signalflow schematic")
+
 * Mema on macOS
   * BlackHole 16ch used to route signal from LogicPro, Apple Music, etc. to Mema
   * Output to Allen&Heath QU-16 22ch audio driver interface
