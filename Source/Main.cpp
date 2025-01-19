@@ -118,6 +118,10 @@ public:
         m_macMainMenu->addMenu(0, "Options", optionsPopupMenu);
         
         juce::MenuBarModel::setMacMainMenu(m_macMainMenu.get());
+#elif JUCE_LINUX
+        m_mainComponent->toggleStandaloneWindow(true);
+        toggleVisibilty();
+        updatePositionFromTrayIcon(juce::Desktop::getMousePosition());
 #endif
     }
 

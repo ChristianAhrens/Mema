@@ -173,6 +173,9 @@ MainComponent::MainComponent()
     m_toggleStandaloneWindowButton = std::make_unique<juce::DrawableButton>("Show as standalone window", juce::DrawableButton::ButtonStyle::ImageFitted);
     m_toggleStandaloneWindowButton->setTooltip("Show as standalone window");
     m_toggleStandaloneWindowButton->onClick = [this] { toggleStandaloneWindow({}); };
+#if JUCE_LINUX
+    m_toggleStandaloneWindowButton->setEnabled(false);
+#endif
     addAndMakeVisible(m_toggleStandaloneWindowButton.get());
 
     m_setupButton = std::make_unique<juce::DrawableButton>("Audio Device Setup", juce::DrawableButton::ButtonStyle::ImageFitted);
@@ -345,8 +348,11 @@ void MainComponent::globalFocusChanged(Component* focusedComponent)
 {
     if(nullptr == focusedComponent)
     {
+#ifdef JUCE_LINUX
+#else
         if (onFocusLostWhileVisible && isVisible() && (m_mbm && !m_mbm->getDeviceSetupComponent()->isVisible()))
             onFocusLostWhileVisible();
+#endif
     }
     else
     {
