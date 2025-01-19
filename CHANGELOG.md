@@ -4,12 +4,20 @@ All notable changes to Mema will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.4.1] 2025-01-19
 ### Added
+- Added saving/loading active plugin information to/from configuration file
+- Added button to toggle showing Mema as standalone window
+- Added macOS taskbar options menu to toggle showing mema as standalone window
+- Added 9.1.6 channel layout to supported monitoring formats of Mema.Mo
 
 ### Changed
+- Changed Mema.Mo default style to dark
+- Changed JUCE framework version to tag 8.0.6
 
 ### Fixed
+- Fixed Mema visibility toggling by fixing grabbing keyboard focus when shown
+- Fixed Mema on Linux by always showing as standalone window
 
 ## [0.4.0] 2025-01-05
 ### Added
