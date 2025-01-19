@@ -20,6 +20,64 @@
 #include "MainComponent.h"
 
 //==============================================================================
+class MacMainMenuMenuBarModel : public juce::MenuBarModel
+{
+public:
+    //==============================================================================
+    void addMenu (int topLevelMenuIndex, const String& menuName, const juce::PopupMenu& popupMenu)
+    {
+        m_popupMenus[topLevelMenuIndex] = popupMenu;
+        m_popupMenuNames[topLevelMenuIndex] = menuName;
+    }
+    
+    juce::String getMenuNameForIndex(int topLevelMenuIndex)
+    {
+        jassert(m_popupMenuNames.count(topLevelMenuIndex) != 0);
+        
+        return m_popupMenuNames[topLevelMenuIndex];
+    }
+    
+    juce::PopupMenu& getMenuRefForIndex(int topLevelMenuIndex)
+    {
+        jassert(m_popupMenus.count(topLevelMenuIndex) != 0);
+        
+        return m_popupMenus[topLevelMenuIndex];
+    }
+    
+    //==============================================================================
+    juce::StringArray getMenuBarNames() override
+    {
+        juce::StringArray menuBarNames;
+        for (auto const& menuName : m_popupMenuNames)
+            menuBarNames.add(menuName.second);
+            
+        return menuBarNames;
+    }
+    
+    juce::PopupMenu getMenuForIndex (int topLevelMenuIndex, const String& menuName) override
+    {
+        if (m_popupMenus.count(topLevelMenuIndex) == 0) { jassertfalse; return {}; }
+        if (m_popupMenuNames.count(topLevelMenuIndex) == 0) { jassertfalse; return {}; }
+        
+        return m_popupMenus[topLevelMenuIndex];
+    }
+
+    void menuItemSelected (int menuItemID, int topLevelMenuIndex) override
+    {
+        if (onMenuItemSelected)
+            onMenuItemSelected(menuItemID, topLevelMenuIndex);
+    }
+
+    //==============================================================================
+    std::function<void(int, int)> onMenuItemSelected;
+    
+private:
+    //==============================================================================
+    std::map<int, juce::PopupMenu>  m_popupMenus;
+    std::map<int, juce::String>  m_popupMenuNames;
+};
+
+//==============================================================================
 class MemaApplication  : public juce::JUCEApplication
 {
 public:
@@ -42,11 +100,37 @@ public:
         m_mainComponent->addToDesktop(juce::ComponentPeer::windowHasDropShadow);
         m_mainComponent->setTopLeftPosition(m_taskbarComponent->getX(), 50);
         m_mainComponent->onFocusLostWhileVisible = [=]() { toggleVisibilty(); };
-        m_mainComponent->setName("Mema content component");
+        m_mainComponent->setName(ProjectInfo::projectName);
+        
+#if JUCE_MAC
+        m_macMainMenu = std::make_unique<MacMainMenuMenuBarModel>();
+        auto optionsPopupMenu = juce::PopupMenu();
+        optionsPopupMenu.addItem("Show as standalone window", true, false, [=]() {
+            if (m_mainComponent)
+            {
+                m_isMainComponentVisible = false;
+                m_mainComponent->setVisible(false);
+                m_mainComponent->toggleStandaloneWindow(true);
+                toggleVisibilty();
+                updatePositionFromTrayIcon(juce::Desktop::getMousePosition());
+            }
+        });
+        m_macMainMenu->addMenu(0, "Options", optionsPopupMenu);
+        
+        juce::MenuBarModel::setMacMainMenu(m_macMainMenu.get());
+#elif JUCE_LINUX
+        m_mainComponent->toggleStandaloneWindow(true);
+        toggleVisibilty();
+        updatePositionFromTrayIcon(juce::Desktop::getMousePosition());
+#endif
     }
 
     void shutdown() override
     {
+#if JUCE_MAC
+        juce::MenuBarModel::setMacMainMenu(nullptr);
+#endif
+        
         m_mainComponent.reset();
     }
 
@@ -67,11 +151,11 @@ public:
     {
         if (m_mainComponent != nullptr)
         {
-            if (!m_isMainComponentVisible)
-                m_mainComponent->grabKeyboardFocus();
-
             m_mainComponent->setVisible(!m_mainComponent->isVisible());
             m_isMainComponentVisible = m_mainComponent->isVisible();
+
+            if (m_isMainComponentVisible)
+                m_mainComponent->grabKeyboardFocus();
         }
     }
         
@@ -122,6 +206,10 @@ private:
     bool m_isMainComponentVisible = false;
     std::unique_ptr<MainComponent> m_mainComponent;
     std::unique_ptr<juce::Component> m_taskbarComponent;
+    
+#if JUCE_MAC
+    std::unique_ptr<MacMainMenuMenuBarModel>    m_macMainMenu;
+#endif
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MemaApplication)
 };

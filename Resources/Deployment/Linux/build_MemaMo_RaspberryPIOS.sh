@@ -8,6 +8,7 @@ yes | sudo apt install	clang \
 						ladspa-sdk \
 						libcurl4-openssl-dev \
 						libfreetype6-dev \
+						libfontconfig1-dev \
 						libx11-dev \
 						libxcomposite-dev \
 						libxcursor-dev \

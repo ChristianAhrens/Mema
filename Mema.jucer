@@ -32,6 +32,10 @@
         <FILE id="MIm0Wj" name="Mema.png" compile="0" resource="1" file="Resources/Images/Mema.png"/>
         <FILE id="MVNcTE" name="MemaCanvas.png" compile="0" resource="1" file="Resources/Images/MemaCanvas.png"/>
         <FILE id="ItJQfF" name="MemaRect.png" compile="0" resource="1" file="Resources/Images/MemaRect.png"/>
+        <FILE id="OsSVEQ" name="open_in_new-24px.svg" compile="0" resource="1"
+              file="submodules/JUCE-AppBasics/Resources/Images/open_in_new-24px.svg"/>
+        <FILE id="uJOJX3" name="open_in_new_down_24dp.svg" compile="0" resource="1"
+              file="submodules/JUCE-AppBasics/Resources/Images/open_in_new_down_24dp.svg"/>
         <FILE id="WExlzd" name="power_settings_24dp.svg" compile="0" resource="1"
               file="submodules/JUCE-AppBasics/Resources/Images/power_settings_24dp.svg"/>
         <FILE id="D2kv3R" name="question_mark_24dp.svg" compile="0" resource="1"

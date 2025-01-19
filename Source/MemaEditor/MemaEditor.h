@@ -94,8 +94,8 @@ private:
 //==============================================================================
 /*
 */
-class MemaEditor : public juce::AudioProcessorEditor,
-                            public JUCEAppBasics::AppConfigurationBase::XmlConfigurableElement
+class MemaEditor :  public juce::AudioProcessorEditor,
+                    public JUCEAppBasics::AppConfigurationBase::XmlConfigurableElement
 {
 public:
     MemaEditor(juce::AudioProcessor& processor);

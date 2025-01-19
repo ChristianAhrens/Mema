@@ -112,7 +112,9 @@ public:
 
     //==============================================================================
     bool setPlugin(const juce::PluginDescription& pluginDescription);
+    juce::PluginDescription getPluginDescription();
     void setPluginEnabledState(bool enabled);
+    bool isPluginEnabled();
     void clearPlugin();
     void openPluginEditor();
     void closePluginEditor(bool deleteEditorWindow = true);

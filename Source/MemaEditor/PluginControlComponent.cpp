@@ -91,6 +91,12 @@ void PluginControlComponent::showPluginsList(juce::Point<int> showPosition)
 	m_pluginSelectionComponent->setTopLeftPosition(showPosition);
 }
 
+void PluginControlComponent::setPluginEnabled(bool enabled)
+{
+	if (m_enableButton)
+		m_enableButton->setToggleState(enabled, juce::dontSendNotification);
+}
+
 void PluginControlComponent::setSelectedPlugin(const juce::PluginDescription& pluginDescription)
 {
 	m_selectedPluginDescription = pluginDescription;

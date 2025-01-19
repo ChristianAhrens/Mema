@@ -83,7 +83,8 @@ private:
         juce::AudioChannelSet::create5point1point2(),
         juce::AudioChannelSet::create7point0(),
         juce::AudioChannelSet::create7point1(),
-        juce::AudioChannelSet::create7point1point4() };
+        juce::AudioChannelSet::create7point1point4(),
+        juce::AudioChannelSet::create9point1point6() };
 
     ProcessorLevelData  m_levelData;
     

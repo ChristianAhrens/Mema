@@ -153,6 +153,8 @@ public:
 MainComponent::MainComponent()
     : juce::Component()
 {
+    setOpaque(true);
+
     // a single instance of tooltip window is required and used by JUCE everywhere a tooltip is required.
     m_toolTipWindowInstance = std::make_unique<TooltipWindow>();
 
@@ -161,12 +163,20 @@ MainComponent::MainComponent()
         auto width = requestedSize.getWidth();
         auto height = requestedSize.getHeight() + sc_buttonSize;
         
-        if (width < (2 * sc_loadNetWidth + 3 * sc_buttonSize))
-            width = 2 * sc_loadNetWidth + 3 * sc_buttonSize;
+        if (width < (2 * sc_loadNetWidth + 4 * sc_buttonSize))
+            width = 2 * sc_loadNetWidth + 4 * sc_buttonSize;
         
         setSize(width, height);
     };
     addAndMakeVisible(m_mbm->getUIComponent());
+
+    m_toggleStandaloneWindowButton = std::make_unique<juce::DrawableButton>("Show as standalone window", juce::DrawableButton::ButtonStyle::ImageFitted);
+    m_toggleStandaloneWindowButton->setTooltip("Show as standalone window");
+    m_toggleStandaloneWindowButton->onClick = [this] { toggleStandaloneWindow({}); };
+#if JUCE_LINUX
+    m_toggleStandaloneWindowButton->setEnabled(false);
+#endif
+    addAndMakeVisible(m_toggleStandaloneWindowButton.get());
 
     m_setupButton = std::make_unique<juce::DrawableButton>("Audio Device Setup", juce::DrawableButton::ButtonStyle::ImageFitted);
     m_setupButton->setTooltip("Audio Device Setup");
@@ -221,6 +231,35 @@ MainComponent::~MainComponent()
 {
 }
 
+
+void MainComponent::toggleStandaloneWindow(std::optional<bool> standalone)
+{
+    if (!standalone.has_value())
+        m_isStandaloneWindow = !m_isStandaloneWindow;
+    else
+        m_isStandaloneWindow = standalone.value();
+
+    int styleFlags = juce::ComponentPeer::windowHasDropShadow;
+    if (m_isStandaloneWindow)
+    {
+        styleFlags = styleFlags
+            | juce::ComponentPeer::windowAppearsOnTaskbar
+            | juce::ComponentPeer::windowHasTitleBar;
+    }
+
+    addToDesktop(styleFlags);
+
+    if (!m_isStandaloneWindow && onFocusLostWhileVisible)
+        onFocusLostWhileVisible();
+
+    lookAndFeelChanged(); // trigger lookandfeel change to update icon (dock vs undock)
+}
+
+bool MainComponent::isStandaloneWindow()
+{
+    return m_isStandaloneWindow;
+}
+
 void MainComponent::paint(Graphics &g)
 {
     g.fillAll(getLookAndFeel().findColour(juce::LookAndFeel_V4::ColourScheme::defaultFill));
@@ -235,6 +274,7 @@ void MainComponent::resized()
     auto contentAreaBounds = safeBounds;
     contentAreaBounds.removeFromTop(1);
 
+    // buttons from right
     if (m_powerButton)
         m_powerButton->setBounds(setupElementArea.removeFromRight(setupElementArea.getHeight()));
     setupElementArea.removeFromRight(margin);
@@ -244,12 +284,19 @@ void MainComponent::resized()
     if (m_setupButton)
         m_setupButton->setBounds(setupElementArea.removeFromRight(setupElementArea.getHeight()));
     setupElementArea.removeFromRight(margin);
+    if (m_toggleStandaloneWindowButton)
+        m_toggleStandaloneWindowButton->setBounds(setupElementArea.removeFromRight(setupElementArea.getHeight()));
+    setupElementArea.removeFromRight(margin);
+
+    // load bars from left
     if (m_sysLoadBar)
         m_sysLoadBar->setBounds(setupElementArea.removeFromLeft(sc_loadNetWidth));
     setupElementArea.removeFromLeft(margin);
     if (m_netHealthBar)
         m_netHealthBar->setBounds(setupElementArea.removeFromLeft(sc_loadNetWidth));
     setupElementArea.removeFromLeft(margin);
+
+    // correct-background spacing inbetween
     if (m_emptySpace)
         m_emptySpace->setBounds(setupElementArea);
 
@@ -289,6 +336,10 @@ void MainComponent::lookAndFeelChanged()
     auto aboutButtonDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::question_mark_24dp_svg).get());
     aboutButtonDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
     m_aboutButton->setImages(aboutButtonDrawable.get());
+
+    auto standaloneWindowDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse((isStandaloneWindow() ? BinaryData::open_in_new_down_24dp_svg : BinaryData::open_in_new24px_svg)).get());
+    standaloneWindowDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
+    m_toggleStandaloneWindowButton->setImages(standaloneWindowDrawable.get());
     
     m_mbm->lookAndFeelChanged();
 }
@@ -297,8 +348,11 @@ void MainComponent::globalFocusChanged(Component* focusedComponent)
 {
     if(nullptr == focusedComponent)
     {
+#ifdef JUCE_LINUX
+#else
         if (onFocusLostWhileVisible && isVisible() && (m_mbm && !m_mbm->getDeviceSetupComponent()->isVisible()))
             onFocusLostWhileVisible();
+#endif
     }
     else
     {

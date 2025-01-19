@@ -34,7 +34,7 @@ public:
         Monitoring
     };
 
-    enum SettingsOptions
+    enum SettingsOption
     {
         LookAndFeel_First = 1,
         LookAndFeel_FollowHost = LookAndFeel_First,
@@ -51,7 +51,8 @@ public:
         OutputVisuType_7point0,
         OutputVisuType_7point1,
         OutputVisuType_7point1point4,
-        OutputVisuType_Last = OutputVisuType_7point1point4
+        OutputVisuType_9point1point6,
+        OutputVisuType_Last = OutputVisuType_9point1point6
     };
 
 public:
@@ -62,6 +63,8 @@ public:
     void resized() override;
     void paint(juce::Graphics& g) override;
     void lookAndFeelChanged() override;
+
+    void applySettingsOption(const SettingsOption& option);
 
     //========================================================================*
     std::function<void(int, bool)> onPaletteStyleChange;

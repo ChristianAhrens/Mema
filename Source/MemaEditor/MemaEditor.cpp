@@ -31,7 +31,7 @@ namespace Mema
 
 //==============================================================================
 MemaEditor::MemaEditor(AudioProcessor& processor)
-    : AudioProcessorEditor(processor)
+    : juce::AudioProcessorEditor(processor)
 {
     std::function<void()> boundsRequirementChange = [=]() {
         if(m_crosspointCtrl && m_outputCtrl && m_inputCtrl)
@@ -60,20 +60,26 @@ MemaEditor::MemaEditor(AudioProcessor& processor)
     m_pluginControl = std::make_unique<PluginControlComponent>();
     m_pluginControl->onPluginSelected = [=](const juce::PluginDescription& pluginDescription) {
         auto memaProc = dynamic_cast<MemaProcessor*>(getAudioProcessor());
-        auto success = memaProc->setPlugin(pluginDescription);
-        jassert(success);
+        if (memaProc)
+        {
+            auto success = memaProc->setPlugin(pluginDescription);
+            jassert(success);
+        }
     };
     m_pluginControl->onPluginEnabledChange = [=](bool enabled) {
         auto memaProc = dynamic_cast<MemaProcessor*>(getAudioProcessor());
-        memaProc->setPluginEnabledState(enabled);
+        if (memaProc)
+            memaProc->setPluginEnabledState(enabled);
     };
     m_pluginControl->onShowPluginEditor = [=]() {
         auto memaProc = dynamic_cast<MemaProcessor*>(getAudioProcessor());
-        memaProc->openPluginEditor();
+        if (memaProc)
+            memaProc->openPluginEditor();
     };
     m_pluginControl->onClearPlugin = [=]() {
         auto memaProc = dynamic_cast<MemaProcessor*>(getAudioProcessor());
-        memaProc->clearPlugin();
+        if (memaProc)
+            memaProc->clearPlugin();
     };
     addAndMakeVisible(m_pluginControl.get());
 
@@ -104,6 +110,9 @@ MemaEditor::MemaEditor(AudioProcessor& processor)
         memaProc->addOutputCommander(m_outputCtrl.get());
 
         memaProc->onPluginSet = [=](const juce::PluginDescription& pluginDescription) { if (m_pluginControl) m_pluginControl->setSelectedPlugin(pluginDescription); };
+
+        m_pluginControl->setPluginEnabled(memaProc->isPluginEnabled());
+        m_pluginControl->setSelectedPlugin(memaProc->getPluginDescription());
     }
 
     m_gridLayout.items = { juce::GridItem(*m_ioLabel), juce::GridItem(*m_inputCtrl), juce::GridItem(*m_outputCtrl), juce::GridItem(*m_crosspointCtrl) };
