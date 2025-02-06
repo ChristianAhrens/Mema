@@ -19,6 +19,10 @@
 #include <JuceHeader.h>
 #include "MainComponent.h"
 
+#if JUCE_MAC
+#include <signal.h>
+#endif
+
 //==============================================================================
 class MacMainMenuMenuBarModel : public juce::MenuBarModel
 {
@@ -92,6 +96,13 @@ public:
     //==============================================================================
     void initialise (const juce::String& /*commandLine*/) override
     {
+#if JUCE_MAC
+        // Ignore SIGPIPE globally, to prevent occasional unexpected app
+        // termination when Mema.Mo instances disconnect while sending by
+        // writing to socket is ongoing
+        signal(SIGPIPE, SIG_IGN);
+#endif
+        
         m_taskbarComponent = std::make_unique<TaskbarComponent>(*this);
         m_taskbarComponent->setName("Mema taskbar icon");
 
