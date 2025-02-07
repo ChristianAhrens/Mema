@@ -18,6 +18,8 @@
 
 #include "MeterbridgeComponent.h"
 
+#include <CustomLookAndFeel.h>
+
 namespace Mema
 {
 
@@ -112,13 +114,13 @@ void MeterbridgeComponent::paint(Graphics& g)
             }
 
             // peak bar
-            g.setColour(juce::Colours::forestgreen.darker());
+            g.setColour(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId));
             g.fillRect(juce::Rectangle<float>(meterLeft, visuAreaOrigY - peakMeterLength, meterThickness, peakMeterLength));
             // rms bar
-            g.setColour(juce::Colours::forestgreen);
+            g.setColour(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
             g.fillRect(juce::Rectangle<float>(meterLeft, visuAreaOrigY - rmsMeterLength, meterThickness, rmsMeterLength));
             // hold strip
-            g.setColour(juce::Colours::grey);
+            g.setColour(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringHoldColourId));
             g.drawLine(juce::Line<float>(meterLeft, visuAreaOrigY - holdMeterLength, meterLeft + meterThickness, visuAreaOrigY - holdMeterLength));
             // channel # label
             g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
@@ -174,13 +176,13 @@ void MeterbridgeComponent::paint(Graphics& g)
             }
 
             // peak bar
-            g.setColour(juce::Colours::forestgreen.darker());
+            g.setColour(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId));
             g.fillRect(juce::Rectangle<float>(visuAreaOrigX, meterTop, peakMeterLength, meterThickness));
             // rms bar
-            g.setColour(juce::Colours::forestgreen);
+            g.setColour(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
             g.fillRect(juce::Rectangle<float>(visuAreaOrigX, meterTop, rmsMeterLength, meterThickness));
             // hold strip
-            g.setColour(juce::Colours::grey);
+            g.setColour(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringHoldColourId));
             g.drawLine(juce::Line<float>(visuAreaOrigX + holdMeterLength, meterTop, visuAreaOrigX + holdMeterLength, meterTop + meterThickness));
             // channel # label
             g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));

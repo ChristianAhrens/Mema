@@ -110,7 +110,7 @@ MainComponent::MainComponent()
 
     // default lookandfeel is follow local, therefor none selected
     m_settingsItems[SettingsOption::LookAndFeel_FollowHost] = std::make_pair("Follow host", 0);
-    m_settingsItems[SettingsOption::LookAndFeel_Dark] = std::make_pair("Dark", 0);
+    m_settingsItems[SettingsOption::LookAndFeel_Dark] = std::make_pair("Dark", 1);
     m_settingsItems[SettingsOption::LookAndFeel_Light] = std::make_pair("Light", 0);
     // default output visu is normal meterbridge
     m_settingsItems[SettingsOption::OutputVisuType_Meterbridge] = std::make_pair("Meterbridge", 1);
@@ -123,6 +123,11 @@ MainComponent::MainComponent()
     m_settingsItems[SettingsOption::OutputVisuType_7point1] = std::make_pair(juce::AudioChannelSet::create7point1().getDescription().toStdString(), 0);
     m_settingsItems[SettingsOption::OutputVisuType_7point1point4] = std::make_pair(juce::AudioChannelSet::create7point1point4().getDescription().toStdString(), 0);
     m_settingsItems[SettingsOption::OutputVisuType_9point1point6] = std::make_pair(juce::AudioChannelSet::create9point1point6().getDescription().toStdString(), 0);
+    // default metering colour is green
+    m_settingsItems[SettingsOption::MeteringColour_Green] = std::make_pair("Green", 1);
+    m_settingsItems[SettingsOption::MeteringColour_Red] = std::make_pair("Red", 0);
+    m_settingsItems[SettingsOption::MeteringColour_Blue] = std::make_pair("Blue", 0);
+    m_settingsItems[SettingsOption::MeteringColour_Pink] = std::make_pair("Anni Pink", 0);
     m_settingsButton = std::make_unique<juce::DrawableButton>("Settings", juce::DrawableButton::ButtonStyle::ImageFitted);
     m_settingsButton->setTooltip(juce::String("Settings for") + juce::JUCEApplication::getInstance()->getApplicationName());
     m_settingsButton->onClick = [this] {
@@ -134,9 +139,14 @@ MainComponent::MainComponent()
         for (int i = SettingsOption::OutputVisuType_First; i <= SettingsOption::OutputVisuType_Last; i++)
             outputVisuTypeSubMenu.addItem(i, m_settingsItems[i].first, true, m_settingsItems[i].second == 1);
 
+        juce::PopupMenu meteringColourSubMenu;
+        for (int i = SettingsOption::MeteringColour_First; i <= SettingsOption::MeteringColour_Last; i++)
+            meteringColourSubMenu.addItem(i, m_settingsItems[i].first, true, m_settingsItems[i].second == 1);
+
         juce::PopupMenu settingsMenu;
         settingsMenu.addSubMenu("LookAndFeel", lookAndFeelSubMenu);
         settingsMenu.addSubMenu("Output monitoring", outputVisuTypeSubMenu);
+        settingsMenu.addSubMenu("Metering colour", meteringColourSubMenu);
         settingsMenu.showMenuAsync(juce::PopupMenu::Options(), [=](int selectedId) { handleSettingsMenuResult(selectedId); });
     };
     m_settingsButton->setAlwaysOnTop(true);
@@ -331,6 +341,8 @@ void MainComponent::lookAndFeelChanged()
     auto disconnectDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::link_off_24dp_svg).get());
     disconnectDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
     m_disconnectButton->setImages(disconnectDrawable.get());
+
+    applyMeteringColour();
 }
 
 void MainComponent::applySettingsOption(const SettingsOption& option)
@@ -347,6 +359,8 @@ void MainComponent::handleSettingsMenuResult(int selectedId)
         handleSettingsLookAndFeelMenuResult(selectedId);
     else if (SettingsOption::OutputVisuType_First <= selectedId && SettingsOption::OutputVisuType_Last >= selectedId)
         handleSettingsOutputVisuTypeMenuResult(selectedId);
+    else if (SettingsOption::MeteringColour_First <= selectedId && SettingsOption::MeteringColour_Last >= selectedId)
+        handleSettingsMeteringColourMenuResult(selectedId);
     else
         jassertfalse; // unhandled menu entry!?
 }
@@ -457,5 +471,65 @@ void MainComponent::handleSettingsOutputVisuTypeMenuResult(int selectedId)
     }
 
     resized();
+}
+
+void MainComponent::handleSettingsMeteringColourMenuResult(int selectedId)
+{
+    // helper internal function to avoid code clones
+    std::function<void(int, int, int, int)> setSettingsItemsCheckState = [=](int green, int red, int blue, int pink) {
+        m_settingsItems[SettingsOption::MeteringColour_Green].second = green;
+        m_settingsItems[SettingsOption::MeteringColour_Red].second = red;
+        m_settingsItems[SettingsOption::MeteringColour_Blue].second = blue;
+        m_settingsItems[SettingsOption::MeteringColour_Pink].second = pink;
+    };
+
+    switch (selectedId)
+    {
+    case SettingsOption::MeteringColour_Green:
+        setSettingsItemsCheckState(1, 0, 0, 0);
+        setMeteringColour(juce::Colours::forestgreen);
+        break;
+    case SettingsOption::MeteringColour_Red:
+        setSettingsItemsCheckState(0, 1, 0, 0);
+        setMeteringColour(juce::Colours::orangered);
+        break;
+    case SettingsOption::MeteringColour_Blue:
+        setSettingsItemsCheckState(0, 0, 1, 0);
+        setMeteringColour(juce::Colours::dodgerblue);
+        break;
+    case SettingsOption::MeteringColour_Pink:
+        setSettingsItemsCheckState(0, 0, 0, 1);
+        setMeteringColour(juce::Colours::deeppink);
+        break;
+    default:
+        break;
+    }
+}
+
+void MainComponent::setMeteringColour(const juce::Colour& meteringColour)
+{
+    m_meteringColour = meteringColour;
+
+    applyMeteringColour();
+}
+
+void MainComponent::applyMeteringColour()
+{
+    auto customLookAndFeel = dynamic_cast<JUCEAppBasics::CustomLookAndFeel*>(&getLookAndFeel());
+    if (customLookAndFeel)
+    {
+        switch (customLookAndFeel->getPaletteStyle())
+        {
+        case JUCEAppBasics::CustomLookAndFeel::PS_Light:
+            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId, m_meteringColour.brighter());
+            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId, m_meteringColour);
+            break;
+        case JUCEAppBasics::CustomLookAndFeel::PS_Dark:
+        default:
+            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId, m_meteringColour.darker());
+            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId, m_meteringColour);
+            break;
+        }
+    }
 }
 
