@@ -20,6 +20,8 @@
 
 #include <JuceHeader.h>
 
+#include <CustomLookAndFeel.h>
+
 namespace Mema
 {
     class Mema;
@@ -34,6 +36,22 @@ class MainComponent :   public juce::Component,
                         public juce::DarkModeSettingListener,
                         public juce::FocusChangeListener
 {
+public:
+    enum MemaSettingsOption
+    {
+        LookAndFeel_First = 1,
+        LookAndFeel_Automatic = LookAndFeel_First,
+        LookAndFeel_Dark,
+        LookAndFeel_Light,
+        LookAndFeel_Last = LookAndFeel_Light,
+        MeteringColour_First,
+        MeteringColour_Green = MeteringColour_First,
+        MeteringColour_Red,
+        MeteringColour_Blue,
+        MeteringColour_Pink,
+        MeteringColour_Last = MeteringColour_Pink
+    };
+
 public:
     MainComponent();
     ~MainComponent() override;
@@ -58,22 +76,38 @@ public:
     std::function<void()> onFocusLostWhileVisible;
 
 private:
-    std::unique_ptr<Mema::Mema>             m_mbm;
+    //========================================================================*
+    void handleSettingsMenuResult(int selectedId);
+    void handleSettingsLookAndFeelMenuResult(int selectedId);
+    void handleSettingsMeteringColourMenuResult(int selectedId);
+
+    //========================================================================*
+    void setMeteringColour(const juce::Colour& meteringColour);
+    void applyMeteringColour();
+
+    //========================================================================*
+    std::unique_ptr<Mema::Mema>                 m_mbm;
     
-    std::unique_ptr<juce::DrawableButton>   m_toggleStandaloneWindowButton;
-    std::unique_ptr<juce::DrawableButton>   m_setupButton;
-    std::unique_ptr<juce::DrawableButton>   m_aboutButton;
-    std::unique_ptr<juce::DrawableButton>   m_powerButton;
-    std::unique_ptr<EmptySpace>             m_emptySpace;
-    std::unique_ptr<LoadBar>                m_sysLoadBar;
-    std::unique_ptr<LoadBar>                m_netHealthBar;
+    std::unique_ptr<juce::DrawableButton>       m_toggleStandaloneWindowButton;
+    std::unique_ptr<juce::DrawableButton>       m_appSettingsButton;
+    std::unique_ptr<juce::DrawableButton>       m_audioSettingsButton;
+    std::unique_ptr<juce::DrawableButton>       m_aboutButton;
+    std::unique_ptr<juce::DrawableButton>       m_powerButton;
+    std::unique_ptr<EmptySpace>                 m_emptySpace;
+    std::unique_ptr<LoadBar>                    m_sysLoadBar;
+    std::unique_ptr<LoadBar>                    m_netHealthBar;
 
-    std::unique_ptr<juce::LookAndFeel>      m_lookAndFeel;
-    std::unique_ptr<AboutComponent>         m_aboutComponent;
+    std::unique_ptr<AboutComponent>             m_aboutComponent;
 
-    std::unique_ptr<TooltipWindow>          m_toolTipWindowInstance;
+    std::unique_ptr<TooltipWindow>              m_toolTipWindowInstance;
+
+    std::map<int, std::pair<std::string, int>>  m_settingsItems;
+
+    std::unique_ptr<juce::LookAndFeel>          m_lookAndFeel;
 
     bool m_isStandaloneWindow = false;
+
+    juce::Colour m_meteringColour = juce::Colours::forestgreen;
     
     static constexpr int sc_buttonSize = 26;
     static constexpr int sc_loadNetWidth = 70;

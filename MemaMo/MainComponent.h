@@ -34,7 +34,7 @@ public:
         Monitoring
     };
 
-    enum SettingsOption
+    enum MemaMoSettingsOption
     {
         LookAndFeel_First = 1,
         LookAndFeel_FollowHost = LookAndFeel_First,
@@ -65,12 +65,12 @@ public:
     MainComponent();
     ~MainComponent() override;
 
+    void applySettingsOption(const MemaMoSettingsOption& option);
+
     //========================================================================*
     void resized() override;
     void paint(juce::Graphics& g) override;
     void lookAndFeelChanged() override;
-
-    void applySettingsOption(const SettingsOption& option);
 
     //========================================================================*
     std::function<void(int, bool)> onPaletteStyleChange;

@@ -43,6 +43,8 @@
         <FILE id="kIZuGS" name="remove_selection_24dp.svg" compile="0" resource="1"
               file="submodules/JUCE-AppBasics/Resources/Images/remove_selection_24dp.svg"/>
         <FILE id="wiuhZ6" name="replay_24dp.svg" compile="0" resource="1" file="submodules/JUCE-AppBasics/Resources/Images/replay_24dp.svg"/>
+        <FILE id="mtdiSY" name="settings_24dp.svg" compile="0" resource="1"
+              file="submodules/JUCE-AppBasics/Resources/Images/settings_24dp.svg"/>
         <FILE id="pIfxne" name="stat_minus_1_24dp.svg" compile="0" resource="1"
               file="submodules/JUCE-AppBasics/Resources/Images/stat_minus_1_24dp.svg"/>
         <FILE id="rqbjLo" name="tune_24dp.svg" compile="0" resource="1" file="submodules/JUCE-AppBasics/Resources/Images/tune_24dp.svg"/>
