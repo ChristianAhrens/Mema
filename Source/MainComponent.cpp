@@ -336,20 +336,27 @@ void MainComponent::resized()
 
 void MainComponent::darkModeSettingChanged()
 {
+    if (!m_followLocalStyle)
+        return;
+
     if (juce::Desktop::getInstance().isDarkModeActive())
     {
         // go dark
-        m_lookAndFeel = std::make_unique<JUCEAppBasics::CustomLookAndFeel>(JUCEAppBasics::CustomLookAndFeel::PS_Dark);
-        juce::Desktop::getInstance().setDefaultLookAndFeel(m_lookAndFeel.get());
+        applyPaletteStyle(JUCEAppBasics::CustomLookAndFeel::PS_Dark);
     }
     else
     {
         // go light
-        m_lookAndFeel = std::make_unique<JUCEAppBasics::CustomLookAndFeel>(JUCEAppBasics::CustomLookAndFeel::PS_Light);
-        juce::Desktop::getInstance().setDefaultLookAndFeel(m_lookAndFeel.get());
+        applyPaletteStyle(JUCEAppBasics::CustomLookAndFeel::PS_Light);
     }
 
     lookAndFeelChanged();
+}
+
+void MainComponent::applyPaletteStyle(const JUCEAppBasics::CustomLookAndFeel::PaletteStyle& paletteStyle)
+{
+    m_lookAndFeel = std::make_unique<JUCEAppBasics::CustomLookAndFeel>(paletteStyle);
+    juce::Desktop::getInstance().setDefaultLookAndFeel(m_lookAndFeel.get());
 }
 
 void MainComponent::lookAndFeelChanged()

@@ -85,6 +85,8 @@ private:
     void setMeteringColour(const juce::Colour& meteringColour);
     void applyMeteringColour();
 
+    void applyPaletteStyle(const JUCEAppBasics::CustomLookAndFeel::PaletteStyle& paletteStyle);
+
     //========================================================================*
     std::unique_ptr<Mema::Mema>                 m_mbm;
     
@@ -104,6 +106,7 @@ private:
     std::map<int, std::pair<std::string, int>>  m_settingsItems;
 
     std::unique_ptr<juce::LookAndFeel>          m_lookAndFeel;
+    bool m_followLocalStyle = true;
 
     bool m_isStandaloneWindow = false;
 

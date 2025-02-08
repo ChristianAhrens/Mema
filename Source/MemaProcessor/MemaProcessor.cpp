@@ -264,7 +264,12 @@ bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
 
 void MemaProcessor::environmentChanged()
 {
-	postMessage(std::make_unique<EnvironmentParametersMessage>(juce::Desktop::getInstance().isDarkModeActive() ? JUCEAppBasics::CustomLookAndFeel::PS_Dark : JUCEAppBasics::CustomLookAndFeel::PS_Light).release());
+	auto paletteStyle = JUCEAppBasics::CustomLookAndFeel::PaletteStyle::PS_Dark;
+	if (getActiveEditor())
+		if (auto claf = dynamic_cast<JUCEAppBasics::CustomLookAndFeel*>(&getActiveEditor()->getLookAndFeel()))
+			paletteStyle = claf->getPaletteStyle();
+
+	postMessage(std::make_unique<EnvironmentParametersMessage>(paletteStyle).release());
 }
 
 void MemaProcessor::addInputListener(ProcessorDataAnalyzer::Listener* listener)

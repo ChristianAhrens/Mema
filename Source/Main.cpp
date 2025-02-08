@@ -60,6 +60,8 @@ public:
     
     juce::PopupMenu getMenuForIndex (int topLevelMenuIndex, const String& menuName) override
     {
+        ignoreUnused(menuName);
+
         if (m_popupMenus.count(topLevelMenuIndex) == 0) { jassertfalse; return {}; }
         if (m_popupMenuNames.count(topLevelMenuIndex) == 0) { jassertfalse; return {}; }
         
