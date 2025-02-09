@@ -54,6 +54,15 @@ void CrosspointsControlComponent::setCrosspointEnabledValue(int input, int outpu
     repaint();
 }
 
+void CrosspointsControlComponent::setCrosspointFactorValue(int input, int output, float factor)
+{
+    m_crosspointFactorValues[input][output] = factor;
+    if (1 == m_crosspointComponent.count(input) && 1 == m_crosspointComponent.at(input).count(output) && m_crosspointComponent.at(input).at(output))
+        m_crosspointComponent.at(input).at(output)->setFactor(factor);
+
+    repaint();
+}
+
 void CrosspointsControlComponent::setIOCount(int inputCount, int outputCount)
 {
     if (m_ioCount != std::make_pair(inputCount, outputCount))
@@ -64,11 +73,16 @@ void CrosspointsControlComponent::setIOCount(int inputCount, int outputCount)
         std::function<void(int, int)> initCrosspoint = [=](int input, int output) {
             DBG(__FUNCTION__ << " " << input << " " << output);
             m_crosspointEnabledValues[input][output] = false;
+            m_crosspointFactorValues[input][output] = 1.0f;
             m_crosspointComponent[input][output] = std::make_unique<CrosspointComponent>(std::make_pair(input, output));
             m_crosspointComponent[input][output]->onCheckedChanged = [=](bool checkedState, CrosspointComponent* sender) {
                 if (nullptr != sender)
                     crosspointEnabledChange(sender->getIdent().first, sender->getIdent().second, checkedState);
-                };
+            };
+            m_crosspointComponent[input][output]->onFactorChanged = [=](float factor, CrosspointComponent* sender) {
+                if (nullptr != sender)
+                    crosspointFactorChange(sender->getIdent().first, sender->getIdent().second, factor);
+            };
             addAndMakeVisible(m_crosspointComponent[input][output].get());
 
             for (int j = m_matrixGrid.templateColumns.size(); j < input; j++)
