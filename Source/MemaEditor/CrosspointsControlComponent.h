@@ -21,6 +21,9 @@
 #include <JuceHeader.h>
 
 #include "../MemaProcessor/MemaCommanders.h"
+#include "../MemaProcessor/ProcessorDataAnalyzer.h"
+
+#include <CustomLookAndFeel.h>
 
 
 namespace Mema
@@ -62,6 +65,15 @@ public:
         }
         
         g.drawEllipse(bounds, 1.0f);
+
+#if !funktioniertnochtnicht
+        if (m_isDragging)
+        {
+            g.setColour(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
+            g.setFont(g.getCurrentFont().withStyle(juce::Font::FontStyleFlags::bold).withHeight(0.4f * getHeight()));
+            g.drawFittedText(juce::String(juce::Decibels::gainToDecibels(m_factor, static_cast<float>(ProcessorDataAnalyzer::getGlobalMindB())), 1) + " dB", getLocalBounds(), juce::Justification::centred, 1);
+        }
+#endif
     };
 
     //==============================================================================
@@ -105,10 +117,12 @@ public:
             if (onFactorChanged)
                 onFactorChanged(m_factor, this);
             m_isDragging = false;
-        }
 
-        if (getLocalBounds().contains(e.getPosition()))
-            toggleChecked();
+#if funktioniertnochnicht
+            if (auto claf = dynamic_cast<JUCEAppBasics::CustomLookAndFeel*>(&getLookAndFeel()))
+                claf->setMouseCursor(juce::MouseCursor(juce::MouseCursor::StandardCursorType::NoCursor));
+#endif
+        }
     };
     void mouseDrag(const MouseEvent& e) override
     {
@@ -117,8 +131,18 @@ public:
         {
             m_isDragging = true;
 
-
             m_tempFactorWhileDragging = jlimit(0.0f, 1.0f, m_factor - (offset.getY() / 320.0f));
+
+#if funktioniertnochnicht
+            if (auto claf = dynamic_cast<JUCEAppBasics::CustomLookAndFeel*>(&getLookAndFeel()))
+            {
+                juce::Image cursorImage(juce::Image::PixelFormat::ARGB, 35, 15, true);
+                juce::Graphics g(cursorImage);
+                g.setColour(getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
+                g.drawSingleLineText(juce::String(juce::Decibels::gainToDecibels(m_factor, static_cast<float>(ProcessorDataAnalyzer::getGlobalMindB()))) + " dB", 0, 0);
+                claf->setMouseCursor(juce::MouseCursor(cursorImage, 0, 0));
+            }
+#endif
 
             DBG(juce::String(__FUNCTION__) << " " << m_ident.first << "/" << m_ident.second << " new factor: " << m_tempFactorWhileDragging);
 
