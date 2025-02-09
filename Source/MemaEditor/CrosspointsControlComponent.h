@@ -113,17 +113,12 @@ public:
     void mouseDrag(const MouseEvent& e) override
     {
         auto offset = e.getOffsetFromDragStart();
-        auto dist = float(e.getDistanceFromDragStart());
-        if (dist > 0)
+        if (std::abs(offset.getY()) > 1)
         {
             m_isDragging = true;
 
-            if (offset.getY() > 0)
-                m_tempFactorWhileDragging = m_factor - (dist / 320.0f);
-            else
-                m_tempFactorWhileDragging = m_factor + (dist / 320.0f);
 
-            m_tempFactorWhileDragging = jlimit(0.0f, 1.0f, m_tempFactorWhileDragging);
+            m_tempFactorWhileDragging = jlimit(0.0f, 1.0f, m_factor - (offset.getY() / 320.0f));
 
             DBG(juce::String(__FUNCTION__) << " " << m_ident.first << "/" << m_ident.second << " new factor: " << m_tempFactorWhileDragging);
 
