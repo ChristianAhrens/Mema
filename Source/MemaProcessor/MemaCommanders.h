@@ -106,8 +106,11 @@ public:
 
     void setCrosspointEnabledChangeCallback(const std::function<void(MemaCrosspointCommander* sender, int, int, bool)>& callback);
     void setCrosspointEnabledPollCallback(const std::function<void(MemaCrosspointCommander* sender, int, int)>& callback);
-
     virtual void setCrosspointEnabledValue(int input, int output, bool enabledState) = 0;
+
+    void setCrosspointFactorChangeCallback(const std::function<void(MemaCrosspointCommander* sender, int, int, float)>& callback);
+    void setCrosspointFactorPollCallback(const std::function<void(MemaCrosspointCommander* sender, int, int)>& callback);
+    virtual void setCrosspointFactorValue(int input, int output, float factor) = 0;
 
     virtual void setIOCount(int inputCount, int outputCount) = 0;
 
@@ -115,11 +118,17 @@ protected:
     void crosspointEnabledChange(int input, int output, bool enabledState);
     void crosspointEnabledPoll(int input, int output);
 
+    void crosspointFactorChange(int input, int output, float factor);
+    void crosspointFactorPoll(int input, int output);
+
 private:
     void setChannelCount(int channelCount) override { ignoreUnused(channelCount); };
 
     std::function<void(MemaCrosspointCommander* sender, int, int, bool)> m_crosspointEnabledChangeCallback{ nullptr };
     std::function<void(MemaCrosspointCommander* sender, int, int)>       m_crosspointEnabledPollCallback{ nullptr };
+
+    std::function<void(MemaCrosspointCommander* sender, int, int, float)>   m_crosspointFactorChangeCallback{ nullptr };
+    std::function<void(MemaCrosspointCommander* sender, int, int)>          m_crosspointFactorPollCallback{ nullptr };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MemaCrosspointCommander)
 };

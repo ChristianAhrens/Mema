@@ -200,7 +200,7 @@ std::unique_ptr<juce::XmlElement> MemaProcessor::createStateXml()
 		plgConfElm->addChildElement(m_pluginInstance->getPluginDescription().createXml().release());
 	stateXml->addChildElement(plgConfElm.release());
 
-	return std::move(stateXml);
+	return stateXml;
 }
 
 bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
@@ -264,7 +264,12 @@ bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
 
 void MemaProcessor::environmentChanged()
 {
-	postMessage(std::make_unique<EnvironmentParametersMessage>(juce::Desktop::getInstance().isDarkModeActive() ? JUCEAppBasics::CustomLookAndFeel::PS_Dark : JUCEAppBasics::CustomLookAndFeel::PS_Light).release());
+	auto paletteStyle = JUCEAppBasics::CustomLookAndFeel::PaletteStyle::PS_Dark;
+	if (getActiveEditor())
+		if (auto claf = dynamic_cast<JUCEAppBasics::CustomLookAndFeel*>(&getActiveEditor()->getLookAndFeel()))
+			paletteStyle = claf->getPaletteStyle();
+
+	postMessage(std::make_unique<EnvironmentParametersMessage>(paletteStyle).release());
 }
 
 void MemaProcessor::addInputListener(ProcessorDataAnalyzer::Listener* listener)
@@ -370,6 +375,7 @@ void MemaProcessor::addCrosspointCommander(MemaCrosspointCommander* commander)
 
 		m_crosspointCommanders.push_back(commander);
 		commander->setCrosspointEnabledChangeCallback([=](MemaChannelCommander* sender, int input, int output, bool state) { return setMatrixCrosspointEnabledValue(input, output, state, sender); });
+		commander->setCrosspointFactorChangeCallback([=](MemaChannelCommander* sender, int input, int output, float factor) { return setMatrixCrosspointFactorValue(input, output, factor, sender); });
 	}
 }
 
@@ -378,14 +384,17 @@ void MemaProcessor::initializeCrosspointCommander(MemaCrosspointCommander* comma
 	if (nullptr != commander)
 	{
 		const ScopedLock sl(m_audioDeviceIOCallbackLock);
-		for (auto const& matrixCrosspointEnabledKV : m_matrixCrosspointEnabledValues)
+		for (auto const& matrixCrosspointValKV : m_matrixCrosspointValues)
 		{
-			for (auto const& matrixCrosspointEnabledNodeKV : matrixCrosspointEnabledKV.second)
+			for (auto const& matrixCrosspointValNodeKV : matrixCrosspointValKV.second)
 			{
-				auto& input = matrixCrosspointEnabledKV.first;
-				auto& output = matrixCrosspointEnabledNodeKV.first;
-				auto& state = matrixCrosspointEnabledNodeKV.second;
-				commander->setCrosspointEnabledValue(input, output, state);
+				auto& input = matrixCrosspointValKV.first;
+				auto& output = matrixCrosspointValNodeKV.first;
+				auto& val = matrixCrosspointValNodeKV.second;
+				auto& enabled = val.first;
+				auto& factor = val.second;
+				commander->setCrosspointEnabledValue(input, output, enabled);
+				commander->setCrosspointFactorValue(input, output, factor);
 			}
 		}
 	}
@@ -426,7 +435,7 @@ bool MemaProcessor::getMatrixCrosspointEnabledValue(int inputNumber, int outputN
 {
     jassert(inputNumber > 0 && outputNumber > 0);
     const ScopedLock sl(m_audioDeviceIOCallbackLock);
-    return m_matrixCrosspointEnabledValues[inputNumber][outputNumber];
+    return m_matrixCrosspointValues[inputNumber][outputNumber].first;
 }
 
 void MemaProcessor::setMatrixCrosspointEnabledValue(int inputNumber, int outputNumber, bool enabled, MemaChannelCommander* sender)
@@ -440,7 +449,28 @@ void MemaProcessor::setMatrixCrosspointEnabledValue(int inputNumber, int outputN
     }
 
     const ScopedLock sl(m_audioDeviceIOCallbackLock);
-    m_matrixCrosspointEnabledValues[inputNumber][outputNumber] = enabled;
+    m_matrixCrosspointValues[inputNumber][outputNumber].first = enabled;
+}
+
+float MemaProcessor::getMatrixCrosspointFactorValue(int inputNumber, int outputNumber)
+{
+	jassert(inputNumber > 0 && outputNumber > 0);
+	const ScopedLock sl(m_audioDeviceIOCallbackLock);
+	return m_matrixCrosspointValues[inputNumber][outputNumber].second;
+}
+
+void MemaProcessor::setMatrixCrosspointFactorValue(int inputNumber, int outputNumber, float factor, MemaChannelCommander* sender)
+{
+	jassert(inputNumber > 0 && outputNumber > 0);
+
+	for (auto const& crosspointCommander : m_crosspointCommanders)
+	{
+		if (crosspointCommander != reinterpret_cast<MemaCrosspointCommander*>(sender))
+			crosspointCommander->setCrosspointFactorValue(inputNumber, outputNumber, factor);
+	}
+
+	const ScopedLock sl(m_audioDeviceIOCallbackLock);
+	m_matrixCrosspointValues[inputNumber][outputNumber].second = factor;
 }
 
 bool MemaProcessor::getOutputMuteState(int outputChannelNumber)
@@ -688,7 +718,10 @@ void MemaProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMes
 	{
 		for (auto outputIdx = 0; outputIdx < m_outputChannelCount; outputIdx++)
 		{
-            auto gain = m_matrixCrosspointEnabledValues[inputIdx + 1][outputIdx + 1] ? 1.0f : 0.0f;
+			auto& crosspointValues = m_matrixCrosspointValues[inputIdx + 1][outputIdx + 1];
+			auto& enabled = crosspointValues.first;
+			auto& factor = crosspointValues.second;
+            auto gain = !enabled ? 0.0f : factor;
 			processedBuffer.addFrom(outputIdx, 0, buffer.getReadPointer(inputIdx), buffer.getNumSamples(), gain);
 		}
 	}
@@ -917,8 +950,13 @@ void MemaProcessor::initializeCtrlValues(int inputCount, int outputCount)
         setOutputMuteState(channel, false);
 
     for (auto in = 1; in <= inputChannelCount; in++)
-        for (auto out = 1; out <= outputChannelCount; out++)
-            setMatrixCrosspointEnabledValue(in, out, in == out);
+	{
+		for (auto out = 1; out <= outputChannelCount; out++)
+		{
+			setMatrixCrosspointEnabledValue(in, out, in == out);
+			setMatrixCrosspointFactorValue(in, out, 1.0f);
+		}
+	}
 }
 
 

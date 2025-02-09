@@ -167,5 +167,27 @@ void MemaCrosspointCommander::crosspointEnabledPoll(int input, int output)
 		m_crosspointEnabledPollCallback(nullptr, input, output);
 }
 
+void MemaCrosspointCommander::setCrosspointFactorChangeCallback(const std::function<void(MemaCrosspointCommander* sender, int, int, float)>& callback)
+{
+	m_crosspointFactorChangeCallback = callback;
+}
+
+void MemaCrosspointCommander::setCrosspointFactorPollCallback(const std::function<void(MemaCrosspointCommander* sender, int, int)>& callback)
+{
+	m_crosspointFactorPollCallback = callback;
+}
+
+void MemaCrosspointCommander::crosspointFactorChange(int input, int output, float factor)
+{
+	if (m_crosspointFactorChangeCallback)
+		m_crosspointFactorChangeCallback(nullptr, input, output, factor);
+}
+
+void MemaCrosspointCommander::crosspointFactorPoll(int input, int output)
+{
+	if (m_crosspointFactorPollCallback)
+		m_crosspointFactorPollCallback(nullptr, input, output);
+}
+
 
 } // namespace Mema

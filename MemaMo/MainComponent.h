@@ -34,7 +34,7 @@ public:
         Monitoring
     };
 
-    enum SettingsOption
+    enum MemaMoSettingsOption
     {
         LookAndFeel_First = 1,
         LookAndFeel_FollowHost = LookAndFeel_First,
@@ -52,19 +52,25 @@ public:
         OutputVisuType_7point1,
         OutputVisuType_7point1point4,
         OutputVisuType_9point1point6,
-        OutputVisuType_Last = OutputVisuType_9point1point6
+        OutputVisuType_Last = OutputVisuType_9point1point6,
+        MeteringColour_First,
+        MeteringColour_Green = MeteringColour_First,
+        MeteringColour_Red,
+        MeteringColour_Blue,
+        MeteringColour_Pink,
+        MeteringColour_Last = MeteringColour_Pink
     };
 
 public:
     MainComponent();
     ~MainComponent() override;
 
+    void applySettingsOption(const MemaMoSettingsOption& option);
+
     //========================================================================*
     void resized() override;
     void paint(juce::Graphics& g) override;
     void lookAndFeelChanged() override;
-
-    void applySettingsOption(const SettingsOption& option);
 
     //========================================================================*
     std::function<void(int, bool)> onPaletteStyleChange;
@@ -95,6 +101,10 @@ private:
     void handleSettingsMenuResult(int selectedId);
     void handleSettingsLookAndFeelMenuResult(int selectedId);
     void handleSettingsOutputVisuTypeMenuResult(int selectedId);
+    void handleSettingsMeteringColourMenuResult(int selectedId);
+
+    void setMeteringColour(const juce::Colour& meteringColour);
+    void applyMeteringColour();
 
     //========================================================================*
     std::unique_ptr<juce::NetworkServiceDiscovery::AvailableServiceList>    m_availableServices;
@@ -113,6 +123,8 @@ private:
     std::unique_ptr<AboutComponent>                                         m_aboutComponent;
 
     Status m_currentStatus = Status::Discovering;
+
+    juce::Colour m_meteringColour = juce::Colours::forestgreen;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

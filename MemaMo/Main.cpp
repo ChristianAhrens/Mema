@@ -96,7 +96,7 @@ public:
 
             // use the settings menu item call infrastructure to activate dark mode per default
             if (auto mc = dynamic_cast<MainComponent*>(getContentComponent()))
-                mc->applySettingsOption(MainComponent::SettingsOption::LookAndFeel_Dark);
+                mc->applySettingsOption(MainComponent::MemaMoSettingsOption::LookAndFeel_Dark);
         }
 
         void closeButtonPressed() override

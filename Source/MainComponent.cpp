@@ -22,7 +22,6 @@
 #include "CustomPopupMenuComponent.h"
 #include "Mema.h"
 
-#include <CustomLookAndFeel.h>
 #include <AppConfigurationBase.h>
 
 //==============================================================================
@@ -163,8 +162,8 @@ MainComponent::MainComponent()
         auto width = requestedSize.getWidth();
         auto height = requestedSize.getHeight() + sc_buttonSize;
         
-        if (width < (2 * sc_loadNetWidth + 4 * sc_buttonSize))
-            width = 2 * sc_loadNetWidth + 4 * sc_buttonSize;
+        if (width < (2 * sc_loadNetWidth + 5 * sc_buttonSize))
+            width = 2 * sc_loadNetWidth + 5 * sc_buttonSize;
         
         setSize(width, height);
     };
@@ -178,14 +177,41 @@ MainComponent::MainComponent()
 #endif
     addAndMakeVisible(m_toggleStandaloneWindowButton.get());
 
-    m_setupButton = std::make_unique<juce::DrawableButton>("Audio Device Setup", juce::DrawableButton::ButtonStyle::ImageFitted);
-    m_setupButton->setTooltip("Audio Device Setup");
-    m_setupButton->onClick = [this] {
+    m_audioSettingsButton = std::make_unique<juce::DrawableButton>("Audio Device Setup", juce::DrawableButton::ButtonStyle::ImageFitted);
+    m_audioSettingsButton->setTooltip("Audio Device Setup");
+    m_audioSettingsButton->onClick = [this] {
         juce::PopupMenu setupMenu;
-        setupMenu.addCustomItem(1, std::make_unique<CustomAboutItem>(m_mbm->getDeviceSetupComponent(), juce::Rectangle<int>(300,350)), nullptr, juce::String("Info about") + juce::JUCEApplication::getInstance()->getApplicationName());
+        setupMenu.addCustomItem(1, std::make_unique<CustomAboutItem>(m_mbm->getDeviceSetupComponent(), juce::Rectangle<int>(300,350)), nullptr, "Audio Device Setup");
         setupMenu.showMenuAsync(juce::PopupMenu::Options());
     };
-    addAndMakeVisible(m_setupButton.get());
+    addAndMakeVisible(m_audioSettingsButton.get());
+
+    // default lookandfeel is follow local, therefor none selected
+    m_settingsItems[MemaSettingsOption::LookAndFeel_Automatic] = std::make_pair("Automatic", 1);
+    m_settingsItems[MemaSettingsOption::LookAndFeel_Dark] = std::make_pair("Dark", 0);
+    m_settingsItems[MemaSettingsOption::LookAndFeel_Light] = std::make_pair("Light", 0);
+    // default metering colour is green
+    m_settingsItems[MemaSettingsOption::MeteringColour_Green] = std::make_pair("Green", 1);
+    m_settingsItems[MemaSettingsOption::MeteringColour_Red] = std::make_pair("Red", 0);
+    m_settingsItems[MemaSettingsOption::MeteringColour_Blue] = std::make_pair("Blue", 0);
+    m_settingsItems[MemaSettingsOption::MeteringColour_Pink] = std::make_pair("Anni Pink", 0);
+    m_appSettingsButton = std::make_unique<juce::DrawableButton>("Application settings", juce::DrawableButton::ButtonStyle::ImageFitted);
+    m_appSettingsButton->setTooltip("Application settings");
+    m_appSettingsButton->onClick = [this] {
+        juce::PopupMenu lookAndFeelSubMenu;
+        for (int i = MemaSettingsOption::LookAndFeel_First; i <= MemaSettingsOption::LookAndFeel_Last; i++)
+            lookAndFeelSubMenu.addItem(i, m_settingsItems[i].first, true, m_settingsItems[i].second == 1);
+
+        juce::PopupMenu meteringColourSubMenu;
+        for (int i = MemaSettingsOption::MeteringColour_First; i <= MemaSettingsOption::MeteringColour_Last; i++)
+            meteringColourSubMenu.addItem(i, m_settingsItems[i].first, true, m_settingsItems[i].second == 1);
+
+        juce::PopupMenu settingsMenu;
+        settingsMenu.addSubMenu("LookAndFeel", lookAndFeelSubMenu);
+        settingsMenu.addSubMenu("Metering colour", meteringColourSubMenu);
+        settingsMenu.showMenuAsync(juce::PopupMenu::Options(), [=](int selectedId) { handleSettingsMenuResult(selectedId); });
+    };
+    addAndMakeVisible(m_appSettingsButton.get());
 
     m_aboutComponent = std::make_unique<AboutComponent>(BinaryData::MemaRect_png, BinaryData::MemaRect_pngSize);
     m_aboutButton = std::make_unique<juce::DrawableButton>("About", juce::DrawableButton::ButtonStyle::ImageFitted);
@@ -281,8 +307,11 @@ void MainComponent::resized()
     if (m_aboutButton)
         m_aboutButton->setBounds(setupElementArea.removeFromRight(setupElementArea.getHeight()));
     setupElementArea.removeFromRight(margin);
-    if (m_setupButton)
-        m_setupButton->setBounds(setupElementArea.removeFromRight(setupElementArea.getHeight()));
+    if (m_appSettingsButton)
+        m_appSettingsButton->setBounds(setupElementArea.removeFromRight(setupElementArea.getHeight()));
+    setupElementArea.removeFromRight(margin);
+    if (m_audioSettingsButton)
+        m_audioSettingsButton->setBounds(setupElementArea.removeFromRight(setupElementArea.getHeight()));
     setupElementArea.removeFromRight(margin);
     if (m_toggleStandaloneWindowButton)
         m_toggleStandaloneWindowButton->setBounds(setupElementArea.removeFromRight(setupElementArea.getHeight()));
@@ -307,20 +336,27 @@ void MainComponent::resized()
 
 void MainComponent::darkModeSettingChanged()
 {
+    if (!m_followLocalStyle)
+        return;
+
     if (juce::Desktop::getInstance().isDarkModeActive())
     {
         // go dark
-        m_lookAndFeel = std::make_unique<JUCEAppBasics::CustomLookAndFeel>(JUCEAppBasics::CustomLookAndFeel::PS_Dark);
-        juce::Desktop::getInstance().setDefaultLookAndFeel(m_lookAndFeel.get());
+        applyPaletteStyle(JUCEAppBasics::CustomLookAndFeel::PS_Dark);
     }
     else
     {
         // go light
-        m_lookAndFeel = std::make_unique<JUCEAppBasics::CustomLookAndFeel>(JUCEAppBasics::CustomLookAndFeel::PS_Light);
-        juce::Desktop::getInstance().setDefaultLookAndFeel(m_lookAndFeel.get());
+        applyPaletteStyle(JUCEAppBasics::CustomLookAndFeel::PS_Light);
     }
 
     lookAndFeelChanged();
+}
+
+void MainComponent::applyPaletteStyle(const JUCEAppBasics::CustomLookAndFeel::PaletteStyle& paletteStyle)
+{
+    m_lookAndFeel = std::make_unique<JUCEAppBasics::CustomLookAndFeel>(paletteStyle);
+    juce::Desktop::getInstance().setDefaultLookAndFeel(m_lookAndFeel.get());
 }
 
 void MainComponent::lookAndFeelChanged()
@@ -329,9 +365,13 @@ void MainComponent::lookAndFeelChanged()
     powerDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
     m_powerButton->setImages(powerDrawable.get());
 
-    auto setupButtonDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::tune_24dp_svg).get());
-    setupButtonDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
-    m_setupButton->setImages(setupButtonDrawable.get());
+    auto appSettingsButtonDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::settings_24dp_svg).get());
+    appSettingsButtonDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
+    m_appSettingsButton->setImages(appSettingsButtonDrawable.get());
+
+    auto audioSettingsButtonDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::tune_24dp_svg).get());
+    audioSettingsButtonDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
+    m_audioSettingsButton->setImages(audioSettingsButtonDrawable.get());
 
     auto aboutButtonDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::question_mark_24dp_svg).get());
     aboutButtonDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
@@ -342,6 +382,8 @@ void MainComponent::lookAndFeelChanged()
     m_toggleStandaloneWindowButton->setImages(standaloneWindowDrawable.get());
     
     m_mbm->lookAndFeelChanged();
+
+    applyMeteringColour();
 }
 
 void MainComponent::globalFocusChanged(Component* focusedComponent)
@@ -350,12 +392,117 @@ void MainComponent::globalFocusChanged(Component* focusedComponent)
     {
 #ifdef JUCE_LINUX
 #else
-        if (onFocusLostWhileVisible && isVisible() && (m_mbm && !m_mbm->getDeviceSetupComponent()->isVisible()))
+        if (!m_isStandaloneWindow && onFocusLostWhileVisible && isVisible() && (m_mbm && !m_mbm->getDeviceSetupComponent()->isVisible()))
             onFocusLostWhileVisible();
 #endif
     }
     else
     {
+    }
+}
+
+
+void MainComponent::handleSettingsMenuResult(int selectedId)
+{
+    if (0 == selectedId)
+        return; // nothing selected, dismiss
+    else if (MemaSettingsOption::LookAndFeel_First <= selectedId && MemaSettingsOption::LookAndFeel_Last >= selectedId)
+        handleSettingsLookAndFeelMenuResult(selectedId);
+    else if (MemaSettingsOption::MeteringColour_First <= selectedId && MemaSettingsOption::MeteringColour_Last >= selectedId)
+        handleSettingsMeteringColourMenuResult(selectedId);
+    else
+        jassertfalse; // unhandled menu entry!?
+}
+
+void MainComponent::handleSettingsLookAndFeelMenuResult(int selectedId)
+{
+    // helper internal function to avoid code clones
+    std::function<void(int, int, int)> setSettingsItemsCheckState = [=](int a, int b, int c) {
+        m_settingsItems[MemaSettingsOption::LookAndFeel_Automatic].second = a;
+        m_settingsItems[MemaSettingsOption::LookAndFeel_Dark].second = b;
+        m_settingsItems[MemaSettingsOption::LookAndFeel_Light].second = c;
+        };
+
+    switch (selectedId)
+    {
+    case MemaSettingsOption::LookAndFeel_Automatic:
+        setSettingsItemsCheckState(1, 0, 0);
+        m_followLocalStyle = true;
+        darkModeSettingChanged();
+        break;
+    case MemaSettingsOption::LookAndFeel_Dark:
+        setSettingsItemsCheckState(0, 1, 0);
+        m_followLocalStyle = false;
+        applyPaletteStyle(JUCEAppBasics::CustomLookAndFeel::PaletteStyle::PS_Dark);
+        break;
+    case MemaSettingsOption::LookAndFeel_Light:
+        setSettingsItemsCheckState(0, 0, 1);
+        m_followLocalStyle = false;
+        applyPaletteStyle(JUCEAppBasics::CustomLookAndFeel::PaletteStyle::PS_Light);
+        break;
+    default:
+        jassertfalse; // unknown id fed in unintentionally ?!
+        break;
+    }
+}
+
+void MainComponent::handleSettingsMeteringColourMenuResult(int selectedId)
+{
+    // helper internal function to avoid code clones
+    std::function<void(int, int, int, int)> setSettingsItemsCheckState = [=](int green, int red, int blue, int pink) {
+        m_settingsItems[MemaSettingsOption::MeteringColour_Green].second = green;
+        m_settingsItems[MemaSettingsOption::MeteringColour_Red].second = red;
+        m_settingsItems[MemaSettingsOption::MeteringColour_Blue].second = blue;
+        m_settingsItems[MemaSettingsOption::MeteringColour_Pink].second = pink;
+        };
+
+    switch (selectedId)
+    {
+    case MemaSettingsOption::MeteringColour_Green:
+        setSettingsItemsCheckState(1, 0, 0, 0);
+        setMeteringColour(juce::Colours::forestgreen);
+        break;
+    case MemaSettingsOption::MeteringColour_Red:
+        setSettingsItemsCheckState(0, 1, 0, 0);
+        setMeteringColour(juce::Colours::orangered);
+        break;
+    case MemaSettingsOption::MeteringColour_Blue:
+        setSettingsItemsCheckState(0, 0, 1, 0);
+        setMeteringColour(juce::Colours::dodgerblue);
+        break;
+    case MemaSettingsOption::MeteringColour_Pink:
+        setSettingsItemsCheckState(0, 0, 0, 1);
+        setMeteringColour(juce::Colours::deeppink);
+        break;
+    default:
+        break;
+    }
+}
+
+void MainComponent::setMeteringColour(const juce::Colour& meteringColour)
+{
+    m_meteringColour = meteringColour;
+
+    applyMeteringColour();
+}
+
+void MainComponent::applyMeteringColour()
+{
+    auto customLookAndFeel = dynamic_cast<JUCEAppBasics::CustomLookAndFeel*>(&getLookAndFeel());
+    if (customLookAndFeel)
+    {
+        switch (customLookAndFeel->getPaletteStyle())
+        {
+        case JUCEAppBasics::CustomLookAndFeel::PS_Light:
+            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId, m_meteringColour.brighter());
+            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId, m_meteringColour);
+            break;
+        case JUCEAppBasics::CustomLookAndFeel::PS_Dark:
+        default:
+            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId, m_meteringColour.darker());
+            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId, m_meteringColour);
+            break;
+        }
     }
 }
 

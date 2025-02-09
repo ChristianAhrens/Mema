@@ -43,7 +43,7 @@ struct ServiceAdvertiser;
 class ResizeableWindowWithTitleBarAndCloseCallback : public juce::ResizableWindow
 {
 public:
-    ResizeableWindowWithTitleBarAndCloseCallback() = default;
+    ResizeableWindowWithTitleBarAndCloseCallback() : juce::ResizableWindow("", false) {};
     ResizeableWindowWithTitleBarAndCloseCallback(const String& name, bool addToDesktop) : juce::ResizableWindow(name, addToDesktop) {};
     ~ResizeableWindowWithTitleBarAndCloseCallback() { if (onClosed) onClosed(); };
 
@@ -104,6 +104,9 @@ public:
     
     bool getMatrixCrosspointEnabledValue(int inputNumber, int outputNumber);
     void setMatrixCrosspointEnabledValue(int inputNumber, int outputNumber, bool enabled, MemaChannelCommander* sender = nullptr);
+
+    float getMatrixCrosspointFactorValue(int inputNumber, int outputNumber);
+    void setMatrixCrosspointFactorValue(int inputNumber, int outputNumber, float factor, MemaChannelCommander* sender = nullptr);
 
     bool getOutputMuteState(int channelNumber);
     void setOutputMuteState(int channelNumber, bool muted, MemaChannelCommander* sender = nullptr);
@@ -213,7 +216,7 @@ private:
     int m_outputChannelCount{ 1 };
 
     //==============================================================================
-    std::map<int, std::map<int, bool>>  m_matrixCrosspointEnabledValues;
+    std::map<int, std::map<int, std::pair<bool, float>>>  m_matrixCrosspointValues;
 
     //==============================================================================
     std::unique_ptr<MemaEditor>  m_processorEditor;

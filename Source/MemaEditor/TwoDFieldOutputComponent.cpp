@@ -18,6 +18,8 @@
 
 #include "TwoDFieldOutputComponent.h"
 
+#include <CustomLookAndFeel.h>
+
 
 namespace Mema
 {
@@ -169,11 +171,11 @@ void TwoDFieldOutputComponent::paintCircularLevelIndication(juce::Graphics& g, c
 #endif
     };
     // paint hold values as path
-    createAndPaintLevelPath(centerToMaxVectors, meterWidthOffsetVectors, holdLevels, g, juce::Colours::grey, true);
+    createAndPaintLevelPath(centerToMaxVectors, meterWidthOffsetVectors, holdLevels, g, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringHoldColourId), true);
     // paint peak values as path
-    createAndPaintLevelPath(centerToMaxVectors, meterWidthOffsetVectors, peakLevels, g, juce::Colours::forestgreen.darker(), false);
+    createAndPaintLevelPath(centerToMaxVectors, meterWidthOffsetVectors, peakLevels, g, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId), false);
     // paint rms values as path
-    createAndPaintLevelPath(centerToMaxVectors, meterWidthOffsetVectors, rmsLevels, g, juce::Colours::forestgreen, false);
+    createAndPaintLevelPath(centerToMaxVectors, meterWidthOffsetVectors, rmsLevels, g, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId), false);
 
 
     // helper std::function to avoid codeclones below
@@ -190,11 +192,11 @@ void TwoDFieldOutputComponent::paintCircularLevelIndication(juce::Graphics& g, c
         }
     };
     // paint hold values as max line
-    paintLevelMeterLines(centerToMaxVectors, meterWidthOffsetVectors, holdLevels, g, juce::Colours::grey, true);
+    paintLevelMeterLines(centerToMaxVectors, meterWidthOffsetVectors, holdLevels, g, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringHoldColourId), true);
     // paint peak values as line
-    paintLevelMeterLines(centerToMaxVectors, meterWidthOffsetVectors, peakLevels, g, juce::Colours::forestgreen.darker(), false);
+    paintLevelMeterLines(centerToMaxVectors, meterWidthOffsetVectors, peakLevels, g, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId), false);
     // paint rms values as line
-    paintLevelMeterLines(centerToMaxVectors, meterWidthOffsetVectors, rmsLevels, g, juce::Colours::forestgreen, false);
+    paintLevelMeterLines(centerToMaxVectors, meterWidthOffsetVectors, rmsLevels, g, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId), false);
 
     // draw a simple circle surrounding
     g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
@@ -280,13 +282,13 @@ void TwoDFieldOutputComponent::paintLevelMeterIndication(juce::Graphics& g, cons
         }
 
         // peak bar
-        g.setColour(juce::Colours::forestgreen.darker());
+        g.setColour(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId));
         g.fillRect(juce::Rectangle<float>(meterLeft, visuAreaOrigY - peakMeterLength, meterThickness, peakMeterLength));
         // rms bar
-        g.setColour(juce::Colours::forestgreen);
+        g.setColour(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
         g.fillRect(juce::Rectangle<float>(meterLeft, visuAreaOrigY - rmsMeterLength, meterThickness, rmsMeterLength));
         // hold strip
-        g.setColour(juce::Colours::grey);
+        g.setColour(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringHoldColourId));
         g.drawLine(juce::Line<float>(meterLeft, visuAreaOrigY - holdMeterLength, meterLeft + meterThickness, visuAreaOrigY - holdMeterLength));
         // channel # label
         g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));

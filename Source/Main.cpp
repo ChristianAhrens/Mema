@@ -19,6 +19,10 @@
 #include <JuceHeader.h>
 #include "MainComponent.h"
 
+#if JUCE_MAC
+#include <signal.h>
+#endif
+
 //==============================================================================
 class MacMainMenuMenuBarModel : public juce::MenuBarModel
 {
@@ -56,6 +60,8 @@ public:
     
     juce::PopupMenu getMenuForIndex (int topLevelMenuIndex, const String& menuName) override
     {
+        ignoreUnused(menuName);
+
         if (m_popupMenus.count(topLevelMenuIndex) == 0) { jassertfalse; return {}; }
         if (m_popupMenuNames.count(topLevelMenuIndex) == 0) { jassertfalse; return {}; }
         
@@ -92,6 +98,13 @@ public:
     //==============================================================================
     void initialise (const juce::String& /*commandLine*/) override
     {
+#if JUCE_MAC
+        // Ignore SIGPIPE globally, to prevent occasional unexpected app
+        // termination when Mema.Mo instances disconnect while sending by
+        // writing to socket is ongoing
+        signal(SIGPIPE, SIG_IGN);
+#endif
+        
         m_taskbarComponent = std::make_unique<TaskbarComponent>(*this);
         m_taskbarComponent->setName("Mema taskbar icon");
 
