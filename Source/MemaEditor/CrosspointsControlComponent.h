@@ -131,7 +131,7 @@ public:
         {
             m_isDragging = true;
 
-            m_tempFactorWhileDragging = jlimit(0.0f, 1.0f, m_factor - (offset.getY() / 320.0f));
+            m_tempFactorWhileDragging = jlimit(0.0f, 1.0f, m_factor - (offset.getY() / 800.0f));
 
 #if funktioniertnochnicht
             if (auto claf = dynamic_cast<JUCEAppBasics::CustomLookAndFeel*>(&getLookAndFeel()))
