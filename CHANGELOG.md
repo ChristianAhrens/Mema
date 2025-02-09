@@ -4,12 +4,17 @@ All notable changes to Mema will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.4.2] 2025-02-09
 ### Added
+- Added metering colour selection to Mema and Mema.Mo
+- Added manual LookAndFeel selection to Mema in addtion to automatic
+- Added level processing to Mema routing matrix
+- Added routing matrix level control to Mema UI
 
 ### Changed
 
 ### Fixed
+- Fixed occasional unexpected Mema app termination on macOS when Mema.Mo instances disconnect
 
 ## [0.4.1] 2025-01-19
 ### Added
