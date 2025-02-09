@@ -200,7 +200,7 @@ std::unique_ptr<juce::XmlElement> MemaProcessor::createStateXml()
 		plgConfElm->addChildElement(m_pluginInstance->getPluginDescription().createXml().release());
 	stateXml->addChildElement(plgConfElm.release());
 
-	return std::move(stateXml);
+	return stateXml;
 }
 
 bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)

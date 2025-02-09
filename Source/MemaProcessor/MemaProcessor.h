@@ -43,7 +43,7 @@ struct ServiceAdvertiser;
 class ResizeableWindowWithTitleBarAndCloseCallback : public juce::ResizableWindow
 {
 public:
-    ResizeableWindowWithTitleBarAndCloseCallback() = default;
+    ResizeableWindowWithTitleBarAndCloseCallback() : juce::ResizableWindow("", false) {};
     ResizeableWindowWithTitleBarAndCloseCallback(const String& name, bool addToDesktop) : juce::ResizableWindow(name, addToDesktop) {};
     ~ResizeableWindowWithTitleBarAndCloseCallback() { if (onClosed) onClosed(); };
 
