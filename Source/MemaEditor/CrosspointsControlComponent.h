@@ -96,6 +96,9 @@ public:
     //==============================================================================
     void mouseUp(const MouseEvent& e) override
     {
+        if (!m_isDragging && getLocalBounds().contains(e.getPosition()))
+            toggleChecked();
+
         if (m_isDragging)
         {
             m_factor = m_tempFactorWhileDragging;
