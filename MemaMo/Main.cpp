@@ -82,6 +82,7 @@ public:
 
 #if JUCE_IOS || JUCE_ANDROID
             setFullScreen(true);
+            juce::Desktop::getInstance().setScreenSaverEnabled(false);
 #elif JUCE_LINUX
             juce::Desktop::getInstance().setKioskModeComponent(getTopLevelComponent());
 #else
