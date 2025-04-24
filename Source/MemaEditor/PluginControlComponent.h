@@ -268,6 +268,7 @@ public:
 
     void showPluginsList(juce::Point<int> showPosition);
     void setPluginEnabled(bool enabled = true);
+    void setPluginPrePost(bool post = false);
     void setSelectedPlugin(const juce::PluginDescription& pluginDescription);
 
     //==============================================================================
@@ -279,15 +280,18 @@ public:
     std::function<void(const juce::PluginDescription&)> onPluginSelected;
     std::function<void()>                               onShowPluginEditor;
     std::function<void(bool)>                           onPluginEnabledChange;
+    std::function<void(bool)>                           onPluginPrePostChange;
     std::function<void()>                               onClearPlugin;
 
 private:
     //==============================================================================
     std::unique_ptr<juce::DrawableButton>   m_enableButton;
     std::unique_ptr<Spacing>                m_spacing1;
+    std::unique_ptr<juce::TextButton>       m_postButton;
+    std::unique_ptr<Spacing>                m_spacing2;
     std::unique_ptr<juce::TextButton>       m_showEditorButton;
     std::unique_ptr<juce::DrawableButton>   m_triggerSelectButton;
-    std::unique_ptr<Spacing>                m_spacing2;
+    std::unique_ptr<Spacing>                m_spacing3;
     std::unique_ptr<juce::DrawableButton>   m_clearButton;
 
     std::unique_ptr<PluginListAndSelectComponent>   m_pluginSelectionComponent;

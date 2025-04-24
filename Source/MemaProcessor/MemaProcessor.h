@@ -118,6 +118,8 @@ public:
     juce::PluginDescription getPluginDescription();
     void setPluginEnabledState(bool enabled);
     bool isPluginEnabled();
+    void setPluginPrePostState(bool post);
+    bool isPluginPost();
     void clearPlugin();
     void openPluginEditor();
     void closePluginEditor(bool deleteEditorWindow = true);
@@ -225,6 +227,7 @@ private:
     juce::CriticalSection                                           m_pluginProcessingLock;
     std::unique_ptr<juce::AudioPluginInstance>                      m_pluginInstance;
     bool                                                            m_pluginEnabled = false;
+    bool                                                            m_pluginPost = false;
     std::unique_ptr<ResizeableWindowWithTitleBarAndCloseCallback>   m_pluginEditorWindow;
 
     //==============================================================================

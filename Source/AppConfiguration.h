@@ -57,7 +57,8 @@ public:
 
     enum AttributeID
     {
-        ENABLED
+        ENABLED,
+        POST
     };
     static juce::String getAttributeName(AttributeID ID)
     {
@@ -65,6 +66,8 @@ public:
         {
         case ENABLED:
             return "ENABLED";
+        case POST:
+            return "POST";
         default:
             return "-";
         }

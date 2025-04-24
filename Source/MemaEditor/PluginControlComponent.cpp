@@ -38,6 +38,17 @@ PluginControlComponent::PluginControlComponent()
 	m_spacing1 = std::make_unique<Spacing>();
 	addAndMakeVisible(m_spacing1.get());
 
+	m_postButton = std::make_unique<juce::TextButton>("Post", "Toggle plug-in pre/post");
+	m_postButton->setClickingTogglesState(true);
+	m_postButton->onClick = [this] {
+		if (onPluginPrePostChange)
+			onPluginPrePostChange(m_postButton->getToggleState());
+		};
+	addAndMakeVisible(m_postButton.get());
+
+	m_spacing2 = std::make_unique<Spacing>();
+	addAndMakeVisible(m_spacing2.get());
+
 	m_showEditorButton = std::make_unique<juce::TextButton>("None", "Show plug-in editor");
 	m_showEditorButton->onClick = [this] {
 		if (onShowPluginEditor)
@@ -51,9 +62,9 @@ PluginControlComponent::PluginControlComponent()
 		showPluginsList(juce::Desktop::getMousePosition());
 	};
 	addAndMakeVisible(m_triggerSelectButton.get());
-	
-	m_spacing2 = std::make_unique<Spacing>();
-	addAndMakeVisible(m_spacing2.get());
+
+	m_spacing3 = std::make_unique<Spacing>();
+	addAndMakeVisible(m_spacing3.get());
 
 	m_clearButton = std::make_unique<juce::DrawableButton>("Clear current plug-in", juce::DrawableButton::ButtonStyle::ImageOnButtonBackground);
 	m_clearButton->setTooltip("Clear current plug-in");
@@ -97,6 +108,12 @@ void PluginControlComponent::setPluginEnabled(bool enabled)
 		m_enableButton->setToggleState(enabled, juce::dontSendNotification);
 }
 
+void PluginControlComponent::setPluginPrePost(bool post)
+{
+	if (m_postButton)
+		m_postButton->setToggleState(post, juce::dontSendNotification);
+}
+
 void PluginControlComponent::setSelectedPlugin(const juce::PluginDescription& pluginDescription)
 {
 	m_selectedPluginDescription = pluginDescription;
@@ -119,10 +136,14 @@ void PluginControlComponent::resized()
 		m_enableButton->setBounds(bounds.removeFromLeft(bounds.getHeight()));
 	if (m_spacing1)
 		m_spacing1->setBounds(bounds.removeFromLeft(margin));
+	if (m_postButton)
+		m_postButton->setBounds(bounds.removeFromLeft(int(1.5f * bounds.getHeight())));
+	if (m_spacing2)
+		m_spacing2->setBounds(bounds.removeFromLeft(margin));
 	if (m_clearButton)
 		m_clearButton->setBounds(bounds.removeFromRight(bounds.getHeight()));
-	if (m_spacing2)
-		m_spacing2->setBounds(bounds.removeFromRight(margin));
+	if (m_spacing3)
+		m_spacing3->setBounds(bounds.removeFromRight(margin));
 	if (m_triggerSelectButton)
 		m_triggerSelectButton->setBounds(bounds.removeFromRight(bounds.getHeight()));
 	if (m_showEditorButton)

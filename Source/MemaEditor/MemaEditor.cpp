@@ -71,6 +71,11 @@ MemaEditor::MemaEditor(AudioProcessor& processor)
         if (memaProc)
             memaProc->setPluginEnabledState(enabled);
     };
+    m_pluginControl->onPluginPrePostChange = [=](bool post) {
+        auto memaProc = dynamic_cast<MemaProcessor*>(getAudioProcessor());
+        if (memaProc)
+            memaProc->setPluginPrePostState(post);
+        };
     m_pluginControl->onShowPluginEditor = [=]() {
         auto memaProc = dynamic_cast<MemaProcessor*>(getAudioProcessor());
         if (memaProc)
@@ -112,6 +117,7 @@ MemaEditor::MemaEditor(AudioProcessor& processor)
         memaProc->onPluginSet = [=](const juce::PluginDescription& pluginDescription) { if (m_pluginControl) m_pluginControl->setSelectedPlugin(pluginDescription); };
 
         m_pluginControl->setPluginEnabled(memaProc->isPluginEnabled());
+        m_pluginControl->setPluginPrePost(memaProc->isPluginPost());
         m_pluginControl->setSelectedPlugin(memaProc->getPluginDescription());
     }
 

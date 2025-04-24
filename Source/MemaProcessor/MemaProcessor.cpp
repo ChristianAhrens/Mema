@@ -196,6 +196,7 @@ std::unique_ptr<juce::XmlElement> MemaProcessor::createStateXml()
 
 	auto plgConfElm = std::make_unique<juce::XmlElement>(AppConfiguration::getTagName(AppConfiguration::TagID::PLUGINCONFIG));
 	plgConfElm->setAttribute(AppConfiguration::getAttributeName(AppConfiguration::AttributeID::ENABLED), m_pluginEnabled ? 1 : 0);
+	plgConfElm->setAttribute(AppConfiguration::getAttributeName(AppConfiguration::AttributeID::POST), m_pluginPost ? 1 : 0);
 	if (m_pluginInstance)
 		plgConfElm->addChildElement(m_pluginInstance->getPluginDescription().createXml().release());
 	stateXml->addChildElement(plgConfElm.release());
@@ -250,6 +251,7 @@ bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
 	if (nullptr != plgConfElm)
 	{
 		setPluginEnabledState(plgConfElm->getBoolAttribute(AppConfiguration::getAttributeName(AppConfiguration::AttributeID::ENABLED)));
+		setPluginPrePostState(plgConfElm->getBoolAttribute(AppConfiguration::getAttributeName(AppConfiguration::AttributeID::POST)));
 		auto pluginDescriptionXml = plgConfElm->getChildByName("PLUGIN");
 		if (nullptr != pluginDescriptionXml)
 		{
@@ -582,6 +584,22 @@ bool MemaProcessor::isPluginEnabled()
 	return m_pluginEnabled;
 }
 
+void MemaProcessor::setPluginPrePostState(bool post)
+{
+	// threadsafe locking in scope to access plugin enabled
+	{
+		const ScopedLock sl(m_pluginProcessingLock);
+		m_pluginPost = post;
+	}
+
+	triggerConfigurationUpdate(false);
+}
+
+bool MemaProcessor::isPluginPost()
+{
+	return m_pluginPost;
+}
+
 void MemaProcessor::clearPlugin()
 {
 	closePluginEditor();
@@ -702,10 +720,10 @@ void MemaProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMes
 		}
 	}
 
-	// threadsafe locking in scope to access plugin
+	// threadsafe locking in scope to access plugin - processing only takes place if NOT set to post matrix
 	{
 		const ScopedLock sl(m_pluginProcessingLock);
-		if (m_pluginInstance && m_pluginEnabled)
+		if (m_pluginInstance && m_pluginEnabled && !m_pluginPost)
 			m_pluginInstance->processBlock(buffer, midiMessages);
 	}
 
@@ -729,6 +747,13 @@ void MemaProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMes
 
 	if (m_outputChannelCount > m_outputMuteStates.size())
 		reinitRequired = true;
+
+	// threadsafe locking in scope to access plugin - processing only takes place if set to post matrix
+	{
+		const ScopedLock sl(m_pluginProcessingLock);
+		if (m_pluginInstance && m_pluginEnabled && m_pluginPost)
+			m_pluginInstance->processBlock(buffer, midiMessages);
+	}
 
 	for (auto output = 1; output <= m_outputChannelCount; output++)
 	{
