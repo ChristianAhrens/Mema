@@ -198,7 +198,13 @@ std::unique_ptr<juce::XmlElement> MemaProcessor::createStateXml()
 	plgConfElm->setAttribute(AppConfiguration::getAttributeName(AppConfiguration::AttributeID::ENABLED), m_pluginEnabled ? 1 : 0);
 	plgConfElm->setAttribute(AppConfiguration::getAttributeName(AppConfiguration::AttributeID::POST), m_pluginPost ? 1 : 0);
 	if (m_pluginInstance)
+	{
 		plgConfElm->addChildElement(m_pluginInstance->getPluginDescription().createXml().release());
+
+		juce::MemoryBlock destData;
+		m_pluginInstance->getStateInformation(destData);
+		plgConfElm->addTextElement(juce::Base64::toBase64(destData.getData(), destData.getSize()));
+	}
 	stateXml->addChildElement(plgConfElm.release());
 
 	return stateXml;
@@ -258,6 +264,12 @@ bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
 			auto pluginDescription = juce::PluginDescription();
 			pluginDescription.loadFromXml(*pluginDescriptionXml);
 			setPlugin(pluginDescription);
+			if (m_pluginInstance)
+			{
+				juce::MemoryOutputStream destDataStream;
+				juce::Base64::convertFromBase64(destDataStream, pluginDescriptionXml->getAllSubText());
+				m_pluginInstance->setStateInformation(destDataStream.getData(), int(destDataStream.getDataSize()));
+			}
 		}
 	}
 
