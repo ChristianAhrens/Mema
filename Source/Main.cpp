@@ -112,32 +112,7 @@ public:
         m_taskbarComponent->setName("Mema taskbar icon");
 
         m_mema = std::make_unique<Mema::Mema>();
-        m_memaUIComponent = std::make_unique<Mema::MemaUIComponent>();
-        m_mema->onSizeChangeRequested = [=](juce::Rectangle<int> requestedSize) {
-            if (m_memaUIComponent) m_memaUIComponent->handleSizeChangeRequest(requestedSize);
-        };
-        m_mema->onCpuUsageUpdate = [=](int loadPercent) {
-            if (m_memaUIComponent) m_memaUIComponent->updateCpuUsageBar(loadPercent);
-        };
-        m_mema->onNetworkUsageUpdate = [=](std::map<int, std::pair<double, bool>> netLoads) {
-            if (m_memaUIComponent) m_memaUIComponent->updateNetworkUsage(netLoads);
-        };
-        m_memaUIComponent->setEditorComponent(m_mema->getMemaProcessorEditor());
-        m_memaUIComponent->setVisible(m_isMainComponentVisible);
-        m_memaUIComponent->addToDesktop(juce::ComponentPeer::windowHasDropShadow);
-        m_memaUIComponent->setTopLeftPosition(m_taskbarComponent->getX(), 50);
-        m_memaUIComponent->setName(ProjectInfo::projectName);
-        m_memaUIComponent->onFocusLostWhileVisible = [=]() {
-            toggleVisibilty();
-        };
-        m_memaUIComponent->onLookAndFeelChanged = [=]() {
-            if (m_mema) m_mema->propagateLookAndFeelChanged();
-        };
-        m_memaUIComponent->onSetupMenuClicked = [=]() {
-            juce::PopupMenu setupMenu;
-            setupMenu.addCustomItem(1, std::make_unique<CustomAboutItem>(m_mema->getDeviceSetupComponent(), juce::Rectangle<int>(300, 350)), nullptr, "Audio Device Setup");
-            setupMenu.showMenuAsync(juce::PopupMenu::Options());
-        };
+        m_memaUIComponent = createAndConnectMemaUIComponent();
         
 #if JUCE_MAC
         m_macMainMenu = std::make_unique<MacMainMenuMenuBarModel>();
@@ -161,7 +136,6 @@ public:
         updatePositionFromTrayIcon(juce::Desktop::getMousePosition());
 #endif
 
-        m_memaUIComponent->lookAndFeelChanged();
     }
 
     void shutdown() override
@@ -184,6 +158,44 @@ public:
         // When another instance of the app is launched while this one is running,
         // this method is invoked, and the commandLine parameter tells you what
         // the other instance's command-line arguments were.
+    }
+
+    std::unique_ptr < Mema::MemaUIComponent> createAndConnectMemaUIComponent()
+    {
+        auto memaUIComponent = std::make_unique<Mema::MemaUIComponent>();
+        m_mema->onSizeChangeRequested = [=](juce::Rectangle<int> requestedSize) {
+            if (m_memaUIComponent) m_memaUIComponent->handleSizeChangeRequest(requestedSize);
+        };
+        m_mema->onCpuUsageUpdate = [=](int loadPercent) {
+            if (m_memaUIComponent) m_memaUIComponent->updateCpuUsageBar(loadPercent);
+        };
+        m_mema->onNetworkUsageUpdate = [=](std::map<int, std::pair<double, bool>> netLoads) {
+            if (m_memaUIComponent) m_memaUIComponent->updateNetworkUsage(netLoads);
+        };
+        memaUIComponent->setEditorComponent(m_mema->getMemaProcessorEditor());
+        memaUIComponent->setVisible(m_isMainComponentVisible);
+        memaUIComponent->addToDesktop(juce::ComponentPeer::windowHasDropShadow);
+        memaUIComponent->setTopLeftPosition(m_taskbarComponent->getX(), 50);
+        memaUIComponent->setName(ProjectInfo::projectName);
+        memaUIComponent->onFocusLostWhileVisible = [=]() {
+            toggleVisibilty();
+        };
+        memaUIComponent->onLookAndFeelChanged = [=]() {
+            if (m_mema) m_mema->propagateLookAndFeelChanged();
+        };
+        memaUIComponent->onSetupMenuClicked = [=]() {
+            juce::PopupMenu setupMenu;
+            setupMenu.addCustomItem(1, std::make_unique<CustomAboutItem>(m_mema->getDeviceSetupComponent(), juce::Rectangle<int>(300, 350)), nullptr, "Audio Device Setup");
+            setupMenu.showMenuAsync(juce::PopupMenu::Options());
+        };
+        memaUIComponent->onDeleted = [=]() {
+            m_memaUIComponent.release();
+            m_memaUIComponent = nullptr;
+        };
+
+        memaUIComponent->lookAndFeelChanged();
+
+        return std::move(memaUIComponent);
     }
         
     void toggleVisibilty()
@@ -211,9 +223,9 @@ public:
                     showPosition.setX(showPosition.getX() - m_memaUIComponent->getWidth() - 30);
             }
             m_memaUIComponent->setTopLeftPosition(showPosition);
-
-            //juce::CallOutBox::launchAsynchronously(std::move(m_memaUIComponent), { showPosition, showPosition }, nullptr);
         }
+
+        //juce::CallOutBox::launchAsynchronously(std::move(m_memaUIComponent), { showPosition, showPosition }, nullptr);
     }
         
     // Just add a simple icon to the Window system tray area or Mac menu bar..

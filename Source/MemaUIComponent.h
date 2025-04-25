@@ -54,7 +54,7 @@ public:
     MemaUIComponent();
     ~MemaUIComponent() override;
 
-    void toggleStandaloneWindow(std::optional<bool> standalone);
+    void setStandaloneWindow(bool standalone);
     bool isStandaloneWindow();
 
     void setEditorComponent(juce::Component* editorComponent);
@@ -81,6 +81,7 @@ public:
     std::function<void()> onFocusLostWhileVisible;
     std::function<void()> onSetupMenuClicked;
     std::function<void()> onLookAndFeelChanged;
+    std::function<void()> onDeleted;
 
 private:
     //========================================================================*

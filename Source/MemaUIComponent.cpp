@@ -161,7 +161,7 @@ MemaUIComponent::MemaUIComponent()
 
     m_toggleStandaloneWindowButton = std::make_unique<juce::DrawableButton>("Show as standalone window", juce::DrawableButton::ButtonStyle::ImageFitted);
     m_toggleStandaloneWindowButton->setTooltip("Show as standalone window");
-    m_toggleStandaloneWindowButton->onClick = [this] { toggleStandaloneWindow({}); };
+    m_toggleStandaloneWindowButton->onClick = [this] { setStandaloneWindow(!isStandaloneWindow()); };
 #if JUCE_LINUX
     m_toggleStandaloneWindowButton->setEnabled(false);
 #endif
@@ -235,15 +235,13 @@ MemaUIComponent::MemaUIComponent()
 
 MemaUIComponent::~MemaUIComponent()
 {
+    if (onDeleted) onDeleted();
 }
 
 
-void MemaUIComponent::toggleStandaloneWindow(std::optional<bool> standalone)
+void MemaUIComponent::setStandaloneWindow(bool standalone)
 {
-    if (!standalone.has_value())
-        m_isStandaloneWindow = !m_isStandaloneWindow;
-    else
-        m_isStandaloneWindow = standalone.value();
+    m_isStandaloneWindow = standalone;
 
     int styleFlags = juce::ComponentPeer::windowHasDropShadow;
     if (m_isStandaloneWindow)
