@@ -21,7 +21,7 @@
 #include <JuceHeader.h>
 
 #include "ProcessorDataAnalyzer.h"
-#include "../MemaEditor/MemaEditor.h"
+#include "../MemaProcessorEditor/MemaProcessorEditor.h"
 #include "../AppConfiguration.h"
 
 
@@ -221,7 +221,7 @@ private:
     std::map<int, std::map<int, std::pair<bool, float>>>  m_matrixCrosspointValues;
 
     //==============================================================================
-    std::unique_ptr<MemaEditor>  m_processorEditor;
+    std::unique_ptr<MemaProcessorEditor>  m_processorEditor;
 
     //==============================================================================
     juce::CriticalSection                                           m_pluginProcessingLock;

@@ -30,7 +30,7 @@ namespace Mema
  * Fwd. decls
  */
 class AudioSelectComponent;
-class MemaEditor;
+class MemaProcessorEditor;
 class MemaProcessor;
 class MemaRemoteWrapper;
 
@@ -38,10 +38,9 @@ class MemaRemoteWrapper;
 /*
  *
  */
-class Mema   : public juce::Component,
-                        public juce::Timer,
-                        public AppConfiguration::Dumper,
-                        public AppConfiguration::Watcher
+class Mema   :  public juce::Timer,
+                public AppConfiguration::Dumper,
+                public AppConfiguration::Watcher
 {
 public:
     Mema();
@@ -51,7 +50,7 @@ public:
     void timerCallback() override;
 
     //==========================================================================
-    juce::Component* getUIComponent();
+    juce::Component* getMemaProcessorEditor();
     juce::Component* getDeviceSetupComponent();
 
     //==========================================================================
@@ -64,12 +63,12 @@ public:
     void onConfigUpdated() override;
 
     //==========================================================================
-    void lookAndFeelChanged() override;
+    void propagateLookAndFeelChanged();
 
 private:
     std::unique_ptr<MemaProcessor>          m_MemaProcessor;
 
-    std::unique_ptr<MemaEditor>             m_audioVisuComponent;
+    std::unique_ptr<MemaProcessorEditor>             m_audioVisuComponent;
     std::unique_ptr<AudioSelectComponent>   m_audioDeviceSelectComponent;
 
     std::unique_ptr<AppConfiguration>       m_config;

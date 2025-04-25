@@ -167,7 +167,7 @@ MainComponent::MainComponent()
         
         setSize(width, height);
     };
-    addAndMakeVisible(m_mbm->getUIComponent());
+    addAndMakeVisible(m_mbm->getMemaProcessorEditor());
 
     m_toggleStandaloneWindowButton = std::make_unique<juce::DrawableButton>("Show as standalone window", juce::DrawableButton::ButtonStyle::ImageFitted);
     m_toggleStandaloneWindowButton->setTooltip("Show as standalone window");
@@ -329,9 +329,9 @@ void MainComponent::resized()
     if (m_emptySpace)
         m_emptySpace->setBounds(setupElementArea);
 
-    auto MemaComponent = m_mbm->getUIComponent();
-    if (MemaComponent)
-        MemaComponent->setBounds(contentAreaBounds);
+    auto memaComponent = m_mbm->getMemaProcessorEditor();
+    if (memaComponent)
+        memaComponent->setBounds(contentAreaBounds);
 }
 
 void MainComponent::darkModeSettingChanged()
@@ -381,7 +381,7 @@ void MainComponent::lookAndFeelChanged()
     standaloneWindowDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
     m_toggleStandaloneWindowButton->setImages(standaloneWindowDrawable.get());
     
-    m_mbm->lookAndFeelChanged();
+    if (m_mbm) m_mbm->propagateLookAndFeelChanged();
 
     applyMeteringColour();
 }

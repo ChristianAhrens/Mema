@@ -850,7 +850,7 @@ bool MemaProcessor::producesMidi() const
 AudioProcessorEditor* MemaProcessor::createEditor()
 {
 	if (!m_processorEditor)
-		m_processorEditor = std::make_unique<MemaEditor>(this);
+		m_processorEditor = std::make_unique<MemaProcessorEditor>(this);
 
 	return m_processorEditor.get();
 }
