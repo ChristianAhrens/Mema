@@ -17,7 +17,10 @@
  */
 
 #include <JuceHeader.h>
-#include "MainComponent.h"
+
+#include "Mema.h"
+#include "MemaUIComponent.h"
+#include "CustomPopupMenuComponent.h"
 
 #if JUCE_MAC
 #include <signal.h>
@@ -108,22 +111,43 @@ public:
         m_taskbarComponent = std::make_unique<TaskbarComponent>(*this);
         m_taskbarComponent->setName("Mema taskbar icon");
 
-        m_mainComponent = (std::make_unique<MainComponent>());
-        m_mainComponent->setVisible(m_isMainComponentVisible);
-        m_mainComponent->addToDesktop(juce::ComponentPeer::windowHasDropShadow);
-        m_mainComponent->setTopLeftPosition(m_taskbarComponent->getX(), 50);
-        m_mainComponent->onFocusLostWhileVisible = [=]() { toggleVisibilty(); };
-        m_mainComponent->setName(ProjectInfo::projectName);
+        m_mema = std::make_unique<Mema::Mema>();
+        m_memaUIComponent = std::make_unique<Mema::MemaUIComponent>();
+        m_mema->onSizeChangeRequested = [=](juce::Rectangle<int> requestedSize) {
+            if (m_memaUIComponent) m_memaUIComponent->handleSizeChangeRequest(requestedSize);
+        };
+        m_mema->onCpuUsageUpdate = [=](int loadPercent) {
+            if (m_memaUIComponent) m_memaUIComponent->updateCpuUsageBar(loadPercent);
+        };
+        m_mema->onNetworkUsageUpdate = [=](std::map<int, std::pair<double, bool>> netLoads) {
+            if (m_memaUIComponent) m_memaUIComponent->updateNetworkUsage(netLoads);
+        };
+        m_memaUIComponent->setEditorComponent(m_mema->getMemaProcessorEditor());
+        m_memaUIComponent->setVisible(m_isMainComponentVisible);
+        m_memaUIComponent->addToDesktop(juce::ComponentPeer::windowHasDropShadow);
+        m_memaUIComponent->setTopLeftPosition(m_taskbarComponent->getX(), 50);
+        m_memaUIComponent->setName(ProjectInfo::projectName);
+        m_memaUIComponent->onFocusLostWhileVisible = [=]() {
+            toggleVisibilty();
+        };
+        m_memaUIComponent->onLookAndFeelChanged = [=]() {
+            if (m_mema) m_mema->propagateLookAndFeelChanged();
+        };
+        m_memaUIComponent->onSetupMenuClicked = [=]() {
+            juce::PopupMenu setupMenu;
+            setupMenu.addCustomItem(1, std::make_unique<CustomAboutItem>(m_mema->getDeviceSetupComponent(), juce::Rectangle<int>(300, 350)), nullptr, "Audio Device Setup");
+            setupMenu.showMenuAsync(juce::PopupMenu::Options());
+        };
         
 #if JUCE_MAC
         m_macMainMenu = std::make_unique<MacMainMenuMenuBarModel>();
         auto optionsPopupMenu = juce::PopupMenu();
         optionsPopupMenu.addItem("Show as standalone window", true, false, [=]() {
-            if (m_mainComponent)
+            if (m_memaUIComponent)
             {
                 m_isMainComponentVisible = false;
-                m_mainComponent->setVisible(false);
-                m_mainComponent->toggleStandaloneWindow(true);
+                m_memaUIComponent->setVisible(false);
+                m_memaUIComponent->toggleStandaloneWindow(true);
                 toggleVisibilty();
                 updatePositionFromTrayIcon(juce::Desktop::getMousePosition());
             }
@@ -132,10 +156,12 @@ public:
         
         juce::MenuBarModel::setMacMainMenu(m_macMainMenu.get());
 #elif JUCE_LINUX
-        m_mainComponent->toggleStandaloneWindow(true);
+        m_memaUIComponent->toggleStandaloneWindow(true);
         toggleVisibilty();
         updatePositionFromTrayIcon(juce::Desktop::getMousePosition());
 #endif
+
+        m_memaUIComponent->lookAndFeelChanged();
     }
 
     void shutdown() override
@@ -144,7 +170,7 @@ public:
         juce::MenuBarModel::setMacMainMenu(nullptr);
 #endif
         
-        m_mainComponent.reset();
+        m_memaUIComponent.reset();
     }
 
     //==============================================================================
@@ -162,29 +188,31 @@ public:
         
     void toggleVisibilty()
     {
-        if (m_mainComponent != nullptr)
+        if (m_memaUIComponent != nullptr)
         {
-            m_mainComponent->setVisible(!m_mainComponent->isVisible());
-            m_isMainComponentVisible = m_mainComponent->isVisible();
+            m_memaUIComponent->setVisible(!m_memaUIComponent->isVisible());
+            m_isMainComponentVisible = m_memaUIComponent->isVisible();
 
             if (m_isMainComponentVisible)
-                m_mainComponent->grabKeyboardFocus();
+                m_memaUIComponent->grabKeyboardFocus();
         }
     }
         
     void updatePositionFromTrayIcon(juce::Point<int> showPosition)
     {
-        if (m_mainComponent != nullptr)
+        if (m_memaUIComponent != nullptr)
         {
             auto const display = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay();
-            if (nullptr != display && nullptr != m_mainComponent)
+            if (nullptr != display && nullptr != m_memaUIComponent)
             {
-                if (display->totalArea.getHeight() < showPosition.getY() + m_mainComponent->getHeight())
-                    showPosition.setY(showPosition.getY() - m_mainComponent->getHeight() - 30);
-                if (display->totalArea.getWidth() < showPosition.getX() + m_mainComponent->getWidth())
-                    showPosition.setX(showPosition.getX() - m_mainComponent->getWidth() - 30);
+                if (display->totalArea.getHeight() < showPosition.getY() + m_memaUIComponent->getHeight())
+                    showPosition.setY(showPosition.getY() - m_memaUIComponent->getHeight() - 30);
+                if (display->totalArea.getWidth() < showPosition.getX() + m_memaUIComponent->getWidth())
+                    showPosition.setX(showPosition.getX() - m_memaUIComponent->getWidth() - 30);
             }
-            m_mainComponent->setTopLeftPosition(showPosition);
+            m_memaUIComponent->setTopLeftPosition(showPosition);
+
+            //juce::CallOutBox::launchAsynchronously(std::move(m_memaUIComponent), { showPosition, showPosition }, nullptr);
         }
     }
         
@@ -217,8 +245,9 @@ public:
 private:
 
     bool m_isMainComponentVisible = false;
-    std::unique_ptr<MainComponent> m_mainComponent;
-    std::unique_ptr<juce::Component> m_taskbarComponent;
+    std::unique_ptr<Mema::Mema>             m_mema;
+    std::unique_ptr<Mema::MemaUIComponent>  m_memaUIComponent;
+    std::unique_ptr<juce::Component>        m_taskbarComponent;
     
 #if JUCE_MAC
     std::unique_ptr<MacMainMenuMenuBarModel>    m_macMainMenu;

@@ -16,11 +16,10 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "MainComponent.h"
+#include "MemaUIComponent.h"
 
 #include "AboutComponent.h"
 #include "CustomPopupMenuComponent.h"
-#include "Mema.h"
 
 #include <AppConfigurationBase.h>
 
@@ -149,25 +148,16 @@ public:
     };
 };
 
-MainComponent::MainComponent()
+namespace Mema
+{
+
+MemaUIComponent::MemaUIComponent()
     : juce::Component()
 {
     setOpaque(true);
 
     // a single instance of tooltip window is required and used by JUCE everywhere a tooltip is required.
     m_toolTipWindowInstance = std::make_unique<TooltipWindow>();
-
-    m_mbm = std::make_unique<Mema::Mema>();
-    m_mbm->onSizeChangeRequested = [=](juce::Rectangle<int> requestedSize) {
-        auto width = requestedSize.getWidth();
-        auto height = requestedSize.getHeight() + sc_buttonSize;
-        
-        if (width < (2 * sc_loadNetWidth + 5 * sc_buttonSize))
-            width = 2 * sc_loadNetWidth + 5 * sc_buttonSize;
-        
-        setSize(width, height);
-    };
-    addAndMakeVisible(m_mbm->getMemaProcessorEditor());
 
     m_toggleStandaloneWindowButton = std::make_unique<juce::DrawableButton>("Show as standalone window", juce::DrawableButton::ButtonStyle::ImageFitted);
     m_toggleStandaloneWindowButton->setTooltip("Show as standalone window");
@@ -180,9 +170,7 @@ MainComponent::MainComponent()
     m_audioSettingsButton = std::make_unique<juce::DrawableButton>("Audio Device Setup", juce::DrawableButton::ButtonStyle::ImageFitted);
     m_audioSettingsButton->setTooltip("Audio Device Setup");
     m_audioSettingsButton->onClick = [this] {
-        juce::PopupMenu setupMenu;
-        setupMenu.addCustomItem(1, std::make_unique<CustomAboutItem>(m_mbm->getDeviceSetupComponent(), juce::Rectangle<int>(300,350)), nullptr, "Audio Device Setup");
-        setupMenu.showMenuAsync(juce::PopupMenu::Options());
+        if (onSetupMenuClicked) onSetupMenuClicked();
     };
     addAndMakeVisible(m_audioSettingsButton.get());
 
@@ -234,17 +222,9 @@ MainComponent::MainComponent()
     addAndMakeVisible(m_emptySpace.get());
 
     m_sysLoadBar = std::make_unique<LoadBar>("PLoad");
-    m_mbm->onCpuUsageUpdate = [=](int loadPercent) { m_sysLoadBar->setLoadPercent(loadPercent); };
     addAndMakeVisible(m_sysLoadBar.get());
 
     m_netHealthBar = std::make_unique<LoadBar>("NLoad");
-    m_mbm->onNetworkUsageUpdate = [=](std::map<int, std::pair<double, bool>> netLoads) {
-        for (auto const& netLoad : netLoads)
-        {
-            m_netHealthBar->setLoadPercent(int(netLoad.second.first * 100.0), netLoad.first);
-            m_netHealthBar->setAlert(netLoad.second.second, netLoad.first);
-        }
-    };
     addAndMakeVisible(m_netHealthBar.get());
 
     juce::Desktop::getInstance().addDarkModeSettingListener(this);
@@ -253,12 +233,12 @@ MainComponent::MainComponent()
     juce::Desktop::getInstance().addFocusChangeListener(this);
 }
 
-MainComponent::~MainComponent()
+MemaUIComponent::~MemaUIComponent()
 {
 }
 
 
-void MainComponent::toggleStandaloneWindow(std::optional<bool> standalone)
+void MemaUIComponent::toggleStandaloneWindow(std::optional<bool> standalone)
 {
     if (!standalone.has_value())
         m_isStandaloneWindow = !m_isStandaloneWindow;
@@ -281,17 +261,56 @@ void MainComponent::toggleStandaloneWindow(std::optional<bool> standalone)
     lookAndFeelChanged(); // trigger lookandfeel change to update icon (dock vs undock)
 }
 
-bool MainComponent::isStandaloneWindow()
+bool MemaUIComponent::isStandaloneWindow()
 {
     return m_isStandaloneWindow;
 }
 
-void MainComponent::paint(Graphics &g)
+void MemaUIComponent::setEditorComponent(juce::Component* editorComponent)
+{
+    if (m_editorComponent)
+        removeChildComponent(m_editorComponent);
+
+    m_editorComponent = editorComponent;
+
+    addAndMakeVisible(editorComponent);
+}
+
+void MemaUIComponent::handleSizeChangeRequest(const juce::Rectangle<int>& requestedSize)
+{
+    auto width = requestedSize.getWidth();
+    auto height = requestedSize.getHeight() + sc_buttonSize;
+
+    if (width < (2 * sc_loadNetWidth + 5 * sc_buttonSize))
+        width = 2 * sc_loadNetWidth + 5 * sc_buttonSize;
+
+    setSize(width, height);
+}
+
+void MemaUIComponent::updateCpuUsageBar(int loadPercent)
+{
+    if (m_sysLoadBar)
+        m_sysLoadBar->setLoadPercent(loadPercent);
+}
+
+void MemaUIComponent::updateNetworkUsage(std::map<int, std::pair<double, bool>> netLoads)
+{
+    if (m_netHealthBar)
+    {
+        for (auto const& netLoad : netLoads)
+        {
+            m_netHealthBar->setLoadPercent(int(netLoad.second.first * 100.0), netLoad.first);
+            m_netHealthBar->setAlert(netLoad.second.second, netLoad.first);
+        }
+    }
+}
+
+void MemaUIComponent::paint(Graphics &g)
 {
     g.fillAll(getLookAndFeel().findColour(juce::LookAndFeel_V4::ColourScheme::defaultFill));
 }
 
-void MainComponent::resized()
+void MemaUIComponent::resized()
 {
     auto safeBounds = getLocalBounds();
 
@@ -329,12 +348,11 @@ void MainComponent::resized()
     if (m_emptySpace)
         m_emptySpace->setBounds(setupElementArea);
 
-    auto memaComponent = m_mbm->getMemaProcessorEditor();
-    if (memaComponent)
-        memaComponent->setBounds(contentAreaBounds);
+    if (m_editorComponent)
+        m_editorComponent->setBounds(contentAreaBounds);
 }
 
-void MainComponent::darkModeSettingChanged()
+void MemaUIComponent::darkModeSettingChanged()
 {
     if (!m_followLocalStyle)
         return;
@@ -353,13 +371,13 @@ void MainComponent::darkModeSettingChanged()
     lookAndFeelChanged();
 }
 
-void MainComponent::applyPaletteStyle(const JUCEAppBasics::CustomLookAndFeel::PaletteStyle& paletteStyle)
+void MemaUIComponent::applyPaletteStyle(const JUCEAppBasics::CustomLookAndFeel::PaletteStyle& paletteStyle)
 {
     m_lookAndFeel = std::make_unique<JUCEAppBasics::CustomLookAndFeel>(paletteStyle);
     juce::Desktop::getInstance().setDefaultLookAndFeel(m_lookAndFeel.get());
 }
 
-void MainComponent::lookAndFeelChanged()
+void MemaUIComponent::lookAndFeelChanged()
 {
     auto powerDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::power_settings_24dp_svg).get());
     powerDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
@@ -381,19 +399,20 @@ void MainComponent::lookAndFeelChanged()
     standaloneWindowDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
     m_toggleStandaloneWindowButton->setImages(standaloneWindowDrawable.get());
     
-    if (m_mbm) m_mbm->propagateLookAndFeelChanged();
+    if (onLookAndFeelChanged)
+        onLookAndFeelChanged();
 
     applyMeteringColour();
 }
 
-void MainComponent::globalFocusChanged(Component* focusedComponent)
+void MemaUIComponent::globalFocusChanged(Component* focusedComponent)
 {
     if(nullptr == focusedComponent)
     {
 #ifdef JUCE_LINUX
 #else
-        if (!m_isStandaloneWindow && onFocusLostWhileVisible && isVisible() && (m_mbm && !m_mbm->getDeviceSetupComponent()->isVisible()))
-            onFocusLostWhileVisible();
+        //if (!m_isStandaloneWindow && onFocusLostWhileVisible && isVisible() && (m_mbm && !m_mbm->getDeviceSetupComponent()->isVisible()))
+        //    onFocusLostWhileVisible();
 #endif
     }
     else
@@ -402,7 +421,7 @@ void MainComponent::globalFocusChanged(Component* focusedComponent)
 }
 
 
-void MainComponent::handleSettingsMenuResult(int selectedId)
+void MemaUIComponent::handleSettingsMenuResult(int selectedId)
 {
     if (0 == selectedId)
         return; // nothing selected, dismiss
@@ -414,7 +433,7 @@ void MainComponent::handleSettingsMenuResult(int selectedId)
         jassertfalse; // unhandled menu entry!?
 }
 
-void MainComponent::handleSettingsLookAndFeelMenuResult(int selectedId)
+void MemaUIComponent::handleSettingsLookAndFeelMenuResult(int selectedId)
 {
     // helper internal function to avoid code clones
     std::function<void(int, int, int)> setSettingsItemsCheckState = [=](int a, int b, int c) {
@@ -446,7 +465,7 @@ void MainComponent::handleSettingsLookAndFeelMenuResult(int selectedId)
     }
 }
 
-void MainComponent::handleSettingsMeteringColourMenuResult(int selectedId)
+void MemaUIComponent::handleSettingsMeteringColourMenuResult(int selectedId)
 {
     // helper internal function to avoid code clones
     std::function<void(int, int, int, int)> setSettingsItemsCheckState = [=](int green, int red, int blue, int pink) {
@@ -479,14 +498,14 @@ void MainComponent::handleSettingsMeteringColourMenuResult(int selectedId)
     }
 }
 
-void MainComponent::setMeteringColour(const juce::Colour& meteringColour)
+void MemaUIComponent::setMeteringColour(const juce::Colour& meteringColour)
 {
     m_meteringColour = meteringColour;
 
     applyMeteringColour();
 }
 
-void MainComponent::applyMeteringColour()
+void MemaUIComponent::applyMeteringColour()
 {
     auto customLookAndFeel = dynamic_cast<JUCEAppBasics::CustomLookAndFeel*>(&getLookAndFeel());
     if (customLookAndFeel)
@@ -506,3 +525,4 @@ void MainComponent::applyMeteringColour()
     }
 }
 
+} // namespace Mema

@@ -68,7 +68,7 @@ public:
 private:
     std::unique_ptr<MemaProcessor>          m_MemaProcessor;
 
-    std::unique_ptr<MemaProcessorEditor>             m_audioVisuComponent;
+    std::unique_ptr<MemaProcessorEditor>    m_audioVisuComponent;
     std::unique_ptr<AudioSelectComponent>   m_audioDeviceSelectComponent;
 
     std::unique_ptr<AppConfiguration>       m_config;
