@@ -31,8 +31,7 @@ namespace Mema
 {
 
 class MemaUIComponent : public juce::Component,
-    public juce::DarkModeSettingListener,
-    public juce::FocusChangeListener
+    public juce::DarkModeSettingListener
 {
 public:
     enum MemaSettingsOption
@@ -59,7 +58,7 @@ public:
 
     void setEditorComponent(juce::Component* editorComponent);
 
-    void handleSizeChangeRequest(const juce::Rectangle<int>& requestedSize);
+    void handleEditorSizeChangeRequest(const juce::Rectangle<int>& requestedSize);
 
     void updateCpuUsageBar(int loadPercent);
     void updateNetworkUsage(std::map<int, std::pair<double, bool>> netLoads);
@@ -75,10 +74,7 @@ public:
     void lookAndFeelChanged() override;
 
     //========================================================================*
-    void globalFocusChanged(Component* focusedComponent) override;
-
-    //========================================================================*
-    std::function<void()> onFocusLostWhileVisible;
+    std::function<void()> onStandaloneWindowRequested;
     std::function<void()> onSetupMenuClicked;
     std::function<void()> onLookAndFeelChanged;
     std::function<void()> onDeleted;
@@ -108,8 +104,6 @@ private:
     juce::Component* m_editorComponent = nullptr;
 
     std::unique_ptr<AboutComponent>             m_aboutComponent;
-
-    std::unique_ptr<TooltipWindow>              m_toolTipWindowInstance;
 
     std::map<int, std::pair<std::string, int>>  m_settingsItems;
 

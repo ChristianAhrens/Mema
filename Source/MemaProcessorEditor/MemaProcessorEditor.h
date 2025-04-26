@@ -114,7 +114,7 @@ public:
     bool setStateXml(juce::XmlElement* stateXml) override;
 
     //==========================================================================
-    std::function<void(juce::Rectangle<int>)> onSizeChangeRequested;
+    std::function<void(juce::Rectangle<int>)> onEditorSizeChangeRequested;
 
     static constexpr int sc_pluginControlHeight = 20;
 

@@ -156,12 +156,9 @@ MemaUIComponent::MemaUIComponent()
 {
     setOpaque(true);
 
-    // a single instance of tooltip window is required and used by JUCE everywhere a tooltip is required.
-    m_toolTipWindowInstance = std::make_unique<TooltipWindow>();
-
     m_toggleStandaloneWindowButton = std::make_unique<juce::DrawableButton>("Show as standalone window", juce::DrawableButton::ButtonStyle::ImageFitted);
     m_toggleStandaloneWindowButton->setTooltip("Show as standalone window");
-    m_toggleStandaloneWindowButton->onClick = [this] { setStandaloneWindow(!isStandaloneWindow()); };
+    m_toggleStandaloneWindowButton->onClick = [this] { if (onStandaloneWindowRequested) onStandaloneWindowRequested(); };
 #if JUCE_LINUX
     m_toggleStandaloneWindowButton->setEnabled(false);
 #endif
@@ -230,17 +227,21 @@ MemaUIComponent::MemaUIComponent()
     juce::Desktop::getInstance().addDarkModeSettingListener(this);
     darkModeSettingChanged(); // initially trigger correct colourscheme
 
-    juce::Desktop::getInstance().addFocusChangeListener(this);
+    DBG(__FUNCTION__);
 }
 
 MemaUIComponent::~MemaUIComponent()
 {
+    DBG(__FUNCTION__);
+
     if (onDeleted) onDeleted();
 }
 
 
 void MemaUIComponent::setStandaloneWindow(bool standalone)
 {
+    DBG(__FUNCTION__);
+
     m_isStandaloneWindow = standalone;
 
     int styleFlags = juce::ComponentPeer::windowHasDropShadow;
@@ -252,9 +253,6 @@ void MemaUIComponent::setStandaloneWindow(bool standalone)
     }
 
     addToDesktop(styleFlags);
-
-    if (!m_isStandaloneWindow && onFocusLostWhileVisible)
-        onFocusLostWhileVisible();
 
     lookAndFeelChanged(); // trigger lookandfeel change to update icon (dock vs undock)
 }
@@ -274,13 +272,15 @@ void MemaUIComponent::setEditorComponent(juce::Component* editorComponent)
     addAndMakeVisible(editorComponent);
 }
 
-void MemaUIComponent::handleSizeChangeRequest(const juce::Rectangle<int>& requestedSize)
+void MemaUIComponent::handleEditorSizeChangeRequest(const juce::Rectangle<int>& requestedSize)
 {
     auto width = requestedSize.getWidth();
     auto height = requestedSize.getHeight() + sc_buttonSize;
 
     if (width < (2 * sc_loadNetWidth + 5 * sc_buttonSize))
         width = 2 * sc_loadNetWidth + 5 * sc_buttonSize;
+
+    DBG(juce::String(__FUNCTION__) << " " << width << " " << height);
 
     setSize(width, height);
 }
@@ -311,6 +311,8 @@ void MemaUIComponent::paint(Graphics &g)
 void MemaUIComponent::resized()
 {
     auto safeBounds = getLocalBounds();
+
+    DBG(juce::String(__FUNCTION__) << " " << safeBounds.getWidth() << " " << safeBounds.getHeight());
 
     auto margin = 1;
     auto setupElementArea = safeBounds.removeFromTop(sc_buttonSize);
@@ -402,22 +404,6 @@ void MemaUIComponent::lookAndFeelChanged()
 
     applyMeteringColour();
 }
-
-void MemaUIComponent::globalFocusChanged(Component* focusedComponent)
-{
-    if(nullptr == focusedComponent)
-    {
-#ifdef JUCE_LINUX
-#else
-        //if (!m_isStandaloneWindow && onFocusLostWhileVisible && isVisible() && (m_mbm && !m_mbm->getDeviceSetupComponent()->isVisible()))
-        //    onFocusLostWhileVisible();
-#endif
-    }
-    else
-    {
-    }
-}
-
 
 void MemaUIComponent::handleSettingsMenuResult(int selectedId)
 {

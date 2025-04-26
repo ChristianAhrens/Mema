@@ -99,8 +99,8 @@ juce::Component* Mema::getMemaProcessorEditor()
 
         if (auto editor = dynamic_cast<MemaProcessorEditor*>(m_MemaProcessor->getActiveEditor()))
         {
-            jassert(onSizeChangeRequested); // should be set before handling the ui component!
-            editor->onSizeChangeRequested = onSizeChangeRequested;
+            jassert(onEditorSizeChangeRequested); // should be set before handling the ui component!
+            editor->onEditorSizeChangeRequested = onEditorSizeChangeRequested;
         }
 
         return m_MemaProcessor->getActiveEditor();

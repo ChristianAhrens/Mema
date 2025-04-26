@@ -51,9 +51,9 @@ MemaProcessorEditor::MemaProcessorEditor(AudioProcessor& processor)
             // expand the required size with IO component 'framing' with
             requiredSize.setWidth(requiredSize.getWidth() + requiredOutputCtrlSize.getWidth() + 1);
             requiredSize.setHeight(requiredSize.getHeight() + requiredInputCtrlSize.getHeight() + 1 + sc_pluginControlHeight + 2);
-
-            if (onSizeChangeRequested)
-                onSizeChangeRequested(requiredSize);
+            DBG(__FUNCTION__);
+            if (onEditorSizeChangeRequested)
+                onEditorSizeChangeRequested(requiredSize);
         }
     };
 
