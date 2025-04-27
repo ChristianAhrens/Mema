@@ -123,20 +123,16 @@ public:
         optionsPopupMenu.addItem("Show as standalone window", true, false, [=]() {
             if (m_memaUIComponent)
             {
-                m_isMainComponentVisible = false;
-                m_memaUIComponent->setVisible(false);
-                m_memaUIComponent->toggleStandaloneWindow(true);
-                toggleVisibilty();
-                updatePositionFromTrayIcon(juce::Desktop::getMousePosition());
+                //m_isMainComponentVisible = false;
+                //m_memaUIComponent->setVisible(false);
+                showUiAsStandaloneWindow();
             }
         });
         m_macMainMenu->addMenu(0, "Options", optionsPopupMenu);
         
         juce::MenuBarModel::setMacMainMenu(m_macMainMenu.get());
 #elif JUCE_LINUX
-        m_memaUIComponent->toggleStandaloneWindow(true);
-        toggleVisibilty();
-        updatePositionFromTrayIcon(juce::Desktop::getMousePosition());
+        showUiAsStandaloneWindow();
 #endif
 
     }
