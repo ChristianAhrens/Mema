@@ -91,12 +91,8 @@ class MemaApplication  : public juce::JUCEApplication
 {
 public:
     //==============================================================================
-    MemaApplication() {
-        DBG(__FUNCTION__);
-    };
+    MemaApplication() {};
     ~MemaApplication() {
-        DBG(__FUNCTION__);
-
         disconnectAndDeleteMemaUIComponent();
 
         Mema::Mema::deleteInstance();
@@ -109,7 +105,6 @@ public:
     //==============================================================================
     void initialise (const juce::String& /*commandLine*/) override
     {
-        DBG(__FUNCTION__);
 #if JUCE_MAC
         // Ignore SIGPIPE globally, to prevent occasional unexpected app
         // termination when Mema.Mo instances disconnect while sending by
@@ -142,7 +137,6 @@ public:
 
     void shutdown() override
     {
-        DBG(__FUNCTION__);
 #if JUCE_MAC
         juce::MenuBarModel::setMacMainMenu(nullptr);
 #endif
@@ -151,14 +145,11 @@ public:
     //==============================================================================
     std::unique_ptr<Mema::MemaUIComponent> createAndConnectMemaUIComponent()
     {
-        DBG(__FUNCTION__);
-
         if (!Mema::Mema::getInstanceWithoutCreating())
             return {};
 
         auto memaUIComponent = std::make_unique<Mema::MemaUIComponent>().release();
         Mema::Mema::getInstance()->onEditorSizeChangeRequested = [memaUIComponent, this](juce::Rectangle<int> requestedSize) {
-            DBG("onEditorSizeChangeRequested");
             m_lastRequestedEditorSize = requestedSize;
             jassert(memaUIComponent);
             if (memaUIComponent) memaUIComponent->handleEditorSizeChangeRequest(requestedSize);
@@ -177,7 +168,6 @@ public:
         memaUIComponent->setTopLeftPosition(m_taskbarComponent->getX(), 50);
         memaUIComponent->setName(ProjectInfo::projectName);
         memaUIComponent->onToggleStandaloneWindow = [=](bool standalone) {
-            DBG("onStandaloneWindowRequested");
             if (standalone)
             {
                 if (auto callout = memaUIComponent->findParentComponentOfClass<CallOutBox>())
@@ -192,11 +182,9 @@ public:
             }
         };
         memaUIComponent->onLookAndFeelChanged = [=]() {
-            DBG("onLookAndFeelChanged");
             if (Mema::Mema::getInstanceWithoutCreating()) Mema::Mema::getInstance()->propagateLookAndFeelChanged();
         };
         memaUIComponent->onSetupMenuClicked = [=]() {
-            DBG("onSetupMenuClicked");
             if (Mema::Mema::getInstanceWithoutCreating())
             {
                 juce::PopupMenu setupMenu;
@@ -205,7 +193,6 @@ public:
             }
         };
         memaUIComponent->onDeleted = [this]() {
-            DBG("onDeleted");
             if (Mema::Mema::getInstanceWithoutCreating())
             {
                 Mema::Mema::getInstance()->onEditorSizeChangeRequested = nullptr;
@@ -226,8 +213,6 @@ public:
 
     void disconnectAndDeleteMemaUIComponent()
     {
-        DBG(__FUNCTION__);
-
         if (Mema::Mema::getInstanceWithoutCreating())
         {
             Mema::Mema::getInstance()->onEditorSizeChangeRequested = nullptr;
@@ -240,8 +225,6 @@ public:
 
     void showUiAsCalloutBox(juce::Point<int> mousePosition)
     {
-        DBG(__FUNCTION__);
-
         // On OSX, there can be problems launching a menu when we're not the foreground
         // process, so just in case, we'll first make our process active,
         // and bring our windows to the front.
@@ -255,8 +238,6 @@ public:
 
     void showUiAsStandaloneWindow()
     {
-        DBG(__FUNCTION__);
-
         m_memaUIComponent.reset();
         m_memaUIComponent = createAndConnectMemaUIComponent();
         jassert(m_memaUIComponent);
@@ -278,8 +259,6 @@ public:
 
         void mouseDown(const juce::MouseEvent&) override
         {
-            DBG(__FUNCTION__);
-
             if (onMouseDownWithPosition)
                 onMouseDownWithPosition(juce::Desktop::getMousePosition());
         }

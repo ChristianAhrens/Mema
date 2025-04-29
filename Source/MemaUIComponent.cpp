@@ -154,8 +154,6 @@ namespace Mema
 MemaUIComponent::MemaUIComponent()
     : juce::Component()
 {
-    DBG(juce::String(__FUNCTION__) << " 0x" << juce::String::toHexString(int(this)));
-
     setOpaque(true);
 
     m_toggleStandaloneWindowButton = std::make_unique<juce::DrawableButton>("Show as standalone window", juce::DrawableButton::ButtonStyle::ImageFitted);
@@ -233,16 +231,12 @@ MemaUIComponent::MemaUIComponent()
 
 MemaUIComponent::~MemaUIComponent()
 {
-    DBG(juce::String(__FUNCTION__) << " 0x" << juce::String::toHexString(int(this)));
-
     if (onDeleted) onDeleted();
 }
 
 
 void MemaUIComponent::setStandaloneWindow(bool standalone)
 {
-    DBG(__FUNCTION__);
-
     m_isStandaloneWindow = standalone;
 
     if (standalone)
@@ -286,8 +280,6 @@ void MemaUIComponent::handleEditorSizeChangeRequest(const juce::Rectangle<int>& 
     if (width < (2 * sc_loadNetWidth + 5 * sc_buttonSize))
         width = 2 * sc_loadNetWidth + 5 * sc_buttonSize;
 
-    DBG(juce::String(__FUNCTION__) << " " << width << " " << height);
-
     setSize(width, height);
 }
 
@@ -317,8 +309,6 @@ void MemaUIComponent::paint(Graphics &g)
 void MemaUIComponent::resized()
 {
     auto safeBounds = getLocalBounds();
-
-    DBG(juce::String(__FUNCTION__) << " " << safeBounds.getWidth() << " " << safeBounds.getHeight());
 
     auto margin = 1;
     auto setupElementArea = safeBounds.removeFromTop(sc_buttonSize);
