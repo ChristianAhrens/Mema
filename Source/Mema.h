@@ -53,6 +53,8 @@ public:
     juce::Component* getMemaProcessorEditor();
     juce::Component* getDeviceSetupComponent();
 
+    void triggerMemaProcessorIOUpdate();
+
     //==========================================================================
     std::function<void(int)> onCpuUsageUpdate;
     std::function<void(std::map<int, std::pair<double, bool>>)> onNetworkUsageUpdate;
@@ -65,6 +67,8 @@ public:
     //==========================================================================
     void propagateLookAndFeelChanged();
 
+    JUCE_DECLARE_SINGLETON(Mema, false)
+
 private:
     std::unique_ptr<MemaProcessor>          m_MemaProcessor;
 
@@ -73,7 +77,7 @@ private:
 
     std::unique_ptr<AppConfiguration>       m_config;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Mema)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Mema)
 };
 
 };

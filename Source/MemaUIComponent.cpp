@@ -154,11 +154,13 @@ namespace Mema
 MemaUIComponent::MemaUIComponent()
     : juce::Component()
 {
+    DBG(juce::String(__FUNCTION__) << " 0x" << juce::String::toHexString(int(this)));
+
     setOpaque(true);
 
     m_toggleStandaloneWindowButton = std::make_unique<juce::DrawableButton>("Show as standalone window", juce::DrawableButton::ButtonStyle::ImageFitted);
     m_toggleStandaloneWindowButton->setTooltip("Show as standalone window");
-    m_toggleStandaloneWindowButton->onClick = [this] { if (onStandaloneWindowRequested) onStandaloneWindowRequested(); };
+    m_toggleStandaloneWindowButton->onClick = [this] { if (onToggleStandaloneWindow) onToggleStandaloneWindow(!m_isStandaloneWindow); };
 #if JUCE_LINUX
     m_toggleStandaloneWindowButton->setEnabled(false);
 #endif
@@ -227,12 +229,11 @@ MemaUIComponent::MemaUIComponent()
     juce::Desktop::getInstance().addDarkModeSettingListener(this);
     darkModeSettingChanged(); // initially trigger correct colourscheme
 
-    DBG(__FUNCTION__);
 }
 
 MemaUIComponent::~MemaUIComponent()
 {
-    DBG(__FUNCTION__);
+    DBG(juce::String(__FUNCTION__) << " 0x" << juce::String::toHexString(int(this)));
 
     if (onDeleted) onDeleted();
 }
@@ -244,17 +245,22 @@ void MemaUIComponent::setStandaloneWindow(bool standalone)
 
     m_isStandaloneWindow = standalone;
 
-    int styleFlags = juce::ComponentPeer::windowHasDropShadow;
-    if (m_isStandaloneWindow)
+    if (standalone)
     {
-        styleFlags = styleFlags
+        int styleFlags = juce::ComponentPeer::windowHasDropShadow
             | juce::ComponentPeer::windowAppearsOnTaskbar
             | juce::ComponentPeer::windowHasTitleBar;
+
+        setVisible(true);
+        addToDesktop(styleFlags);
+
+        lookAndFeelChanged(); // trigger lookandfeel change to update icon (dock vs undock)
     }
-
-    addToDesktop(styleFlags);
-
-    lookAndFeelChanged(); // trigger lookandfeel change to update icon (dock vs undock)
+    else
+    {
+        removeFromDesktop();
+        setVisible(false);
+    }
 }
 
 bool MemaUIComponent::isStandaloneWindow()

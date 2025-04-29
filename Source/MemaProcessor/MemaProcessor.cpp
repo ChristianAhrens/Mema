@@ -286,6 +286,11 @@ void MemaProcessor::environmentChanged()
 	postMessage(std::make_unique<EnvironmentParametersMessage>(paletteStyle).release());
 }
 
+void MemaProcessor::triggerIOUpdate()
+{
+	postMessage(std::make_unique<ReinitIOCountMessage>(m_inputChannelCount, m_outputChannelCount).release());
+}
+
 void MemaProcessor::addInputListener(ProcessorDataAnalyzer::Listener* listener)
 {
 	if (m_inputDataAnalyzer)

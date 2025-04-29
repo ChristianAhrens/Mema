@@ -91,8 +91,16 @@ class MemaApplication  : public juce::JUCEApplication
 {
 public:
     //==============================================================================
-    MemaApplication() {};
-    ~MemaApplication() {};
+    MemaApplication() {
+        DBG(__FUNCTION__);
+    };
+    ~MemaApplication() {
+        DBG(__FUNCTION__);
+
+        disconnectAndDeleteMemaUIComponent();
+
+        Mema::Mema::deleteInstance();
+    };
 
     const juce::String getApplicationName() override       { return ProjectInfo::projectName; }
     const juce::String getApplicationVersion() override    { return ProjectInfo::versionString; }
@@ -101,6 +109,7 @@ public:
     //==============================================================================
     void initialise (const juce::String& /*commandLine*/) override
     {
+        DBG(__FUNCTION__);
 #if JUCE_MAC
         // Ignore SIGPIPE globally, to prevent occasional unexpected app
         // termination when Mema.Mo instances disconnect while sending by
@@ -114,19 +123,13 @@ public:
         m_taskbarComponent = std::make_unique<TaskbarComponent>([=](juce::Point<int> mousePosition) { showUiAsCalloutBox(mousePosition); });
         m_taskbarComponent->setName("Mema taskbar icon");
 
-        m_mema = std::make_unique<Mema::Mema>();
-        m_memaUIComponent = createAndConnectMemaUIComponent();
+        Mema::Mema::getInstance();
         
 #if JUCE_MAC
         m_macMainMenu = std::make_unique<MacMainMenuMenuBarModel>();
         auto optionsPopupMenu = juce::PopupMenu();
         optionsPopupMenu.addItem("Show as standalone window", true, false, [=]() {
-            if (m_memaUIComponent)
-            {
-                //m_isMainComponentVisible = false;
-                //m_memaUIComponent->setVisible(false);
-                showUiAsStandaloneWindow();
-            }
+            if (m_memaUIComponent) showUiAsStandaloneWindow();
         });
         m_macMainMenu->addMenu(0, "Options", optionsPopupMenu);
         
@@ -139,69 +142,75 @@ public:
 
     void shutdown() override
     {
+        DBG(__FUNCTION__);
 #if JUCE_MAC
         juce::MenuBarModel::setMacMainMenu(nullptr);
 #endif
-        
-        m_memaUIComponent.reset();
     }
 
     //==============================================================================
-    void systemRequestedQuit() override
-    {
-        quit();
-    }
-
-    void anotherInstanceStarted (const juce::String& commandLine) override
-    {
-        juce::AlertWindow::showAsync(juce::MessageBoxOptions().withMessage(juce::String("Multiple instances of ") + juce::JUCEApplication::getInstance()->getApplicationName() + " (" + commandLine + ") are not supported"), nullptr);
-    }
-
     std::unique_ptr<Mema::MemaUIComponent> createAndConnectMemaUIComponent()
     {
         DBG(__FUNCTION__);
 
+        if (!Mema::Mema::getInstanceWithoutCreating())
+            return {};
+
         auto memaUIComponent = std::make_unique<Mema::MemaUIComponent>().release();
-        m_mema->onEditorSizeChangeRequested = [memaUIComponent, this](juce::Rectangle<int> requestedSize) {
+        Mema::Mema::getInstance()->onEditorSizeChangeRequested = [memaUIComponent, this](juce::Rectangle<int> requestedSize) {
             DBG("onEditorSizeChangeRequested");
             m_lastRequestedEditorSize = requestedSize;
             jassert(memaUIComponent);
             if (memaUIComponent) memaUIComponent->handleEditorSizeChangeRequest(requestedSize);
         };
-        m_mema->onCpuUsageUpdate = [=](int loadPercent) {
+        Mema::Mema::getInstance()->onCpuUsageUpdate = [=](int loadPercent) {
             jassert(memaUIComponent);
             if (memaUIComponent) memaUIComponent->updateCpuUsageBar(loadPercent);
         };
-        m_mema->onNetworkUsageUpdate = [=](std::map<int, std::pair<double, bool>> netLoads) {
+        Mema::Mema::getInstance()->onNetworkUsageUpdate = [=](std::map<int, std::pair<double, bool>> netLoads) {
             jassert(memaUIComponent);
             if (memaUIComponent) memaUIComponent->updateNetworkUsage(netLoads);
         };
-        memaUIComponent->setEditorComponent(m_mema->getMemaProcessorEditor());
+        memaUIComponent->setEditorComponent(Mema::Mema::getInstance()->getMemaProcessorEditor());
         memaUIComponent->setVisible(m_isMainComponentVisible);
         memaUIComponent->addToDesktop(juce::ComponentPeer::windowHasDropShadow);
         memaUIComponent->setTopLeftPosition(m_taskbarComponent->getX(), 50);
         memaUIComponent->setName(ProjectInfo::projectName);
-        memaUIComponent->onStandaloneWindowRequested = [=]() {
+        memaUIComponent->onToggleStandaloneWindow = [=](bool standalone) {
             DBG("onStandaloneWindowRequested");
-            showUiAsStandaloneWindow();
+            if (standalone)
+            {
+                if (auto callout = memaUIComponent->findParentComponentOfClass<CallOutBox>())
+                    callout->exitModalState(0);
+                juce::MessageManager::callAsync([=]() { showUiAsStandaloneWindow(); });
+            }
+            else
+            {
+                if (m_memaUIComponent)
+                    m_memaUIComponent->setStandaloneWindow(false);
+                disconnectAndDeleteMemaUIComponent();
+            }
         };
         memaUIComponent->onLookAndFeelChanged = [=]() {
             DBG("onLookAndFeelChanged");
-            if (m_mema) m_mema->propagateLookAndFeelChanged();
+            if (Mema::Mema::getInstanceWithoutCreating()) Mema::Mema::getInstance()->propagateLookAndFeelChanged();
         };
         memaUIComponent->onSetupMenuClicked = [=]() {
             DBG("onSetupMenuClicked");
-            juce::PopupMenu setupMenu;
-            setupMenu.addCustomItem(1, std::make_unique<CustomAboutItem>(m_mema->getDeviceSetupComponent(), juce::Rectangle<int>(300, 350)), nullptr, "Audio Device Setup");
-            setupMenu.showMenuAsync(juce::PopupMenu::Options());
-        };
-        memaUIComponent->onDeleted = [=]() {
-            DBG("onDeleted");
-            if (m_mema)
+            if (Mema::Mema::getInstanceWithoutCreating())
             {
-                m_mema->onEditorSizeChangeRequested = nullptr;
-                m_mema->onCpuUsageUpdate = nullptr;
-                m_mema->onNetworkUsageUpdate = nullptr;
+                juce::PopupMenu setupMenu;
+                setupMenu.addCustomItem(1, std::make_unique<CustomAboutItem>(Mema::Mema::getInstance()->getDeviceSetupComponent(), juce::Rectangle<int>(300, 350)), nullptr, "Audio Device Setup");
+                setupMenu.showMenuAsync(juce::PopupMenu::Options());
+            }
+        };
+        memaUIComponent->onDeleted = [this]() {
+            DBG("onDeleted");
+            if (Mema::Mema::getInstanceWithoutCreating())
+            {
+                Mema::Mema::getInstance()->onEditorSizeChangeRequested = nullptr;
+                Mema::Mema::getInstance()->onCpuUsageUpdate = nullptr;
+                Mema::Mema::getInstance()->onNetworkUsageUpdate = nullptr;
             }
 
             m_memaUIComponent.release();
@@ -219,9 +228,12 @@ public:
     {
         DBG(__FUNCTION__);
 
-        m_mema->onEditorSizeChangeRequested = nullptr;
-        m_mema->onCpuUsageUpdate = nullptr;
-        m_mema->onNetworkUsageUpdate = nullptr;
+        if (Mema::Mema::getInstanceWithoutCreating())
+        {
+            Mema::Mema::getInstance()->onEditorSizeChangeRequested = nullptr;
+            Mema::Mema::getInstance()->onCpuUsageUpdate = nullptr;
+            Mema::Mema::getInstance()->onNetworkUsageUpdate = nullptr;
+        }
 
         m_memaUIComponent.reset();
     }
@@ -236,14 +248,22 @@ public:
         juce::Process::makeForegroundProcess();
 
         juce::CallOutBox::launchAsynchronously(createAndConnectMemaUIComponent(), { mousePosition, mousePosition }, nullptr);
+
+        if (Mema::Mema::getInstanceWithoutCreating())
+            Mema::Mema::getInstanceWithoutCreating()->triggerMemaProcessorIOUpdate();
     }
 
     void showUiAsStandaloneWindow()
     {
         DBG(__FUNCTION__);
 
+        m_memaUIComponent.reset();
         m_memaUIComponent = createAndConnectMemaUIComponent();
+        jassert(m_memaUIComponent);
         m_memaUIComponent->setStandaloneWindow(true);
+
+        if (Mema::Mema::getInstanceWithoutCreating())
+            Mema::Mema::getInstanceWithoutCreating()->triggerMemaProcessorIOUpdate();
     }
         
     // Just add a simple icon to the Window system tray area or Mac menu bar..
@@ -272,7 +292,6 @@ private:
     bool m_isMainComponentVisible = false;
     juce::Rectangle<int> m_lastRequestedEditorSize;
 
-    std::unique_ptr<Mema::Mema>             m_mema;
     std::unique_ptr<Mema::MemaUIComponent>  m_memaUIComponent;
     std::unique_ptr<juce::Component>        m_taskbarComponent;
     std::unique_ptr<TooltipWindow>          m_toolTipWindowInstance;

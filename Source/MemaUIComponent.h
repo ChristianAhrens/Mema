@@ -74,10 +74,10 @@ public:
     void lookAndFeelChanged() override;
 
     //========================================================================*
-    std::function<void()> onStandaloneWindowRequested;
-    std::function<void()> onSetupMenuClicked;
-    std::function<void()> onLookAndFeelChanged;
-    std::function<void()> onDeleted;
+    std::function<void(bool)>   onToggleStandaloneWindow;
+    std::function<void()>       onSetupMenuClicked;
+    std::function<void()>       onLookAndFeelChanged;
+    std::function<void()>       onDeleted;
 
 private:
     //========================================================================*

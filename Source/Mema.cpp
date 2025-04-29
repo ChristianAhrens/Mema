@@ -26,9 +26,13 @@
 namespace Mema
 {
 
+
+JUCE_IMPLEMENT_SINGLETON(Mema)
+
 //==============================================================================
 Mema::Mema() :  juce::Timer()
 {
+    DBG(__FUNCTION__);
     // create the configuration object (is being initialized from disk automatically)
     m_config = std::make_unique<AppConfiguration>(JUCEAppBasics::AppConfigurationBase::getDefaultConfigFilePath());
     m_config->addDumper(this);
@@ -75,6 +79,7 @@ Mema::Mema() :  juce::Timer()
 
 Mema::~Mema()
 {
+    DBG(__FUNCTION__);
     if (m_MemaProcessor)
         m_MemaProcessor->editorBeingDeleted(m_MemaProcessor->getActiveEditor());
 }
@@ -107,6 +112,11 @@ juce::Component* Mema::getMemaProcessorEditor()
     }
     else
         return nullptr;
+}
+
+void Mema::triggerMemaProcessorIOUpdate()
+{
+    m_MemaProcessor->triggerIOUpdate();
 }
 
 juce::Component* Mema::getDeviceSetupComponent()

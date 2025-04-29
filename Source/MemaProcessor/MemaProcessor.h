@@ -177,6 +177,8 @@ public:
     //==============================================================================
     void environmentChanged();
 
+    void triggerIOUpdate();
+
     //==============================================================================
     static constexpr int s_maxChannelCount = 64;
     static constexpr int s_maxNumSamples = 1024;
