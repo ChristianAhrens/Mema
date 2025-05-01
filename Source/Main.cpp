@@ -246,6 +246,17 @@ public:
         m_memaUIComponent = createAndConnectMemaUIComponent();
         jassert(m_memaUIComponent);
         m_memaUIComponent->setStandaloneWindow(true);
+        
+        auto showPosition = juce::Desktop::getInstance().getMousePosition();
+        auto const display = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay();
+        if (nullptr != display && nullptr != m_memaUIComponent)
+        {
+            if (display->userArea.getHeight() < showPosition.getY() + m_memaUIComponent->getHeight())
+                showPosition.setY(showPosition.getY() - m_memaUIComponent->getHeight() - 30);
+            if (display->userArea.getWidth() < showPosition.getX() + m_memaUIComponent->getWidth())
+                showPosition.setX(showPosition.getX() - m_memaUIComponent->getWidth() - 30);
+        }
+        m_memaUIComponent->setTopLeftPosition(showPosition);
 
         if (Mema::Mema::getInstanceWithoutCreating())
             Mema::Mema::getInstanceWithoutCreating()->triggerMemaProcessorIOUpdate();
