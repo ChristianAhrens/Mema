@@ -223,14 +223,18 @@ public:
         m_memaUIComponent.reset();
     }
 
-    void showUiAsCalloutBox(juce::Point<int> mousePosition)
+    void showUiAsCalloutBox(const juce::Point<int>& positionToPointTo)
     {
+        auto const display = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay();
+        jassert(display);
+        auto position = display->userArea.getConstrainedPoint(positionToPointTo);
+        
         // On OSX, there can be problems launching a menu when we're not the foreground
         // process, so just in case, we'll first make our process active,
         // and bring our windows to the front.
         juce::Process::makeForegroundProcess();
 
-        juce::CallOutBox::launchAsynchronously(createAndConnectMemaUIComponent(), { mousePosition, mousePosition }, nullptr);
+        juce::CallOutBox::launchAsynchronously(createAndConnectMemaUIComponent(), { position, position }, nullptr);
 
         if (Mema::Mema::getInstanceWithoutCreating())
             Mema::Mema::getInstanceWithoutCreating()->triggerMemaProcessorIOUpdate();
