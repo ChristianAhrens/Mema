@@ -29,7 +29,7 @@
 #endif
 
 //==============================================================================
-class MacMainMenuMenuBarModel : public juce::MenuBarModel
+class MemaMacMainMenuMenuBarModel : public juce::MenuBarModel
 {
 public:
     //==============================================================================
@@ -117,16 +117,19 @@ public:
         // a single instance of tooltip window is required and used by JUCE everywhere a tooltip is required.
         m_toolTipWindowInstance = std::make_unique<TooltipWindow>();
         
-        m_taskbarComponent = std::make_unique<TaskbarComponent>([=](juce::Point<int> mousePosition) { showUiAsCalloutBox(mousePosition); });
-        m_taskbarComponent->setName("Mema taskbar icon");
+        m_taskbarComponent = std::make_unique<MemaTaskbarComponent>([=](juce::Point<int> mousePosition) { showUiAsCalloutBox(mousePosition); });
+        m_taskbarComponent->setName(getApplicationName() + " taskbar icon");
 
         Mema::Mema::getInstance();
         
 #if JUCE_MAC
-        m_macMainMenu = std::make_unique<MacMainMenuMenuBarModel>();
+        m_macMainMenu = std::make_unique<MemaMacMainMenuMenuBarModel>();
         auto optionsPopupMenu = juce::PopupMenu();
         optionsPopupMenu.addItem("Show as standalone window", true, false, [=]() {
-            if (m_memaUIComponent) showUiAsStandaloneWindow();
+            if (auto currentProcEditor = Mema::Mema::getInstance()->getMemaProcessorEditor())
+                if (auto callout = currentProcEditor->findParentComponentOfClass<juce::CallOutBox>())
+                    callout->exitModalState(0);
+            juce::MessageManager::callAsync([=]() { showUiAsStandaloneWindow(); });
         });
         m_macMainMenu->addMenu(0, "Options", optionsPopupMenu);
         
@@ -172,7 +175,7 @@ public:
         memaUIComponent->onToggleStandaloneWindow = [=](bool standalone) {
             if (standalone)
             {
-                if (auto callout = memaUIComponent->findParentComponentOfClass<CallOutBox>())
+                if (auto callout = memaUIComponent->findParentComponentOfClass<juce::CallOutBox>())
                     callout->exitModalState(0);
                 juce::MessageManager::callAsync([=]() { showUiAsStandaloneWindow(); });
             }
@@ -217,8 +220,8 @@ public:
         memaUIComponent->handleEditorSizeChangeRequest(m_lastRequestedEditorSize);
         memaUIComponent->lookAndFeelChanged();
         memaUIComponent->setStateXml(Mema::Mema::getInstance()->getUIConfigState().get());
-        memaUIComponent->grabKeyboardFocus();
         memaUIComponent->resized();
+        memaUIComponent->grabKeyboardFocus();
 
         return std::unique_ptr<Mema::MemaUIComponent>(memaUIComponent);
     }
@@ -269,9 +272,9 @@ public:
     }
         
     // Just add a simple icon to the Window system tray area or Mac menu bar..
-    struct TaskbarComponent : public juce::SystemTrayIconComponent
+    struct MemaTaskbarComponent : public juce::SystemTrayIconComponent
     {
-        TaskbarComponent(std::function<void(juce::Point<int>)> callback) : onMouseDownWithPosition(callback)
+        MemaTaskbarComponent(std::function<void(juce::Point<int>)> callback) : onMouseDownWithPosition(callback)
         {
             setIconImage(juce::ImageFileFormat::loadFrom(BinaryData::grid_4x4_24dp_png, BinaryData::grid_4x4_24dp_pngSize),
                 juce::ImageFileFormat::loadFrom(BinaryData::grid_4x4_24dp_png, BinaryData::grid_4x4_24dp_pngSize));
@@ -294,10 +297,10 @@ private:
 
     std::unique_ptr<Mema::MemaUIComponent>  m_memaUIComponent;
     std::unique_ptr<juce::Component>        m_taskbarComponent;
-    std::unique_ptr<TooltipWindow>          m_toolTipWindowInstance;
+    std::unique_ptr<juce::TooltipWindow>    m_toolTipWindowInstance;
     
 #if JUCE_MAC
-    std::unique_ptr<MacMainMenuMenuBarModel>    m_macMainMenu;
+    std::unique_ptr<MemaMacMainMenuMenuBarModel>    m_macMainMenu;
 #endif
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MemaApplication)
