@@ -18,8 +18,8 @@
 
 #include "MemaMoComponent.h"
 
-#include "MemaEditor/MeterbridgeComponent.h"
-#include "MemaEditor/TwoDFieldOutputComponent.h"
+#include "MemaProcessorEditor/MeterbridgeComponent.h"
+#include "MemaProcessorEditor/TwoDFieldOutputComponent.h"
 #include "MemaProcessor/MemaMessages.h"
 #include "MemaProcessor/MemaProcessor.h"
 #include "MemaProcessor/ProcessorDataAnalyzer.h"

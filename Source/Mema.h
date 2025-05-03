@@ -30,7 +30,7 @@ namespace Mema
  * Fwd. decls
  */
 class AudioSelectComponent;
-class MemaEditor;
+class MemaProcessorEditor;
 class MemaProcessor;
 class MemaRemoteWrapper;
 
@@ -38,10 +38,9 @@ class MemaRemoteWrapper;
 /*
  *
  */
-class Mema   : public juce::Component,
-                        public juce::Timer,
-                        public AppConfiguration::Dumper,
-                        public AppConfiguration::Watcher
+class Mema   :  public juce::Timer,
+                public AppConfiguration::Dumper,
+                public AppConfiguration::Watcher
 {
 public:
     Mema();
@@ -51,30 +50,32 @@ public:
     void timerCallback() override;
 
     //==========================================================================
-    juce::Component* getUIComponent();
+    juce::Component* getMemaProcessorEditor();
     juce::Component* getDeviceSetupComponent();
 
     //==========================================================================
     std::function<void(int)> onCpuUsageUpdate;
     std::function<void(std::map<int, std::pair<double, bool>>)> onNetworkUsageUpdate;
-    std::function<void(juce::Rectangle<int>)> onSizeChangeRequested;
+    std::function<void(juce::Rectangle<int>)> onEditorSizeChangeRequested;
 
     //==========================================================================
     void performConfigurationDump() override;
     void onConfigUpdated() override;
 
     //==========================================================================
-    void lookAndFeelChanged() override;
+    void propagateLookAndFeelChanged();
+
+    JUCE_DECLARE_SINGLETON(Mema, false)
 
 private:
     std::unique_ptr<MemaProcessor>          m_MemaProcessor;
 
-    std::unique_ptr<MemaEditor>             m_audioVisuComponent;
+    std::unique_ptr<MemaProcessorEditor>    m_audioVisuComponent;
     std::unique_ptr<AudioSelectComponent>   m_audioDeviceSelectComponent;
 
     std::unique_ptr<AppConfiguration>       m_config;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (Mema)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Mema)
 };
 
 };

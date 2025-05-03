@@ -18,7 +18,7 @@
 
 #include "Mema.h"
 
-#include "MemaEditor/MemaEditor.h"
+#include "MemaProcessorEditor/MemaProcessorEditor.h"
 #include "MemaProcessor/MemaProcessor.h"
 
 #include <WebUpdateDetector.h>
@@ -26,10 +26,13 @@
 namespace Mema
 {
 
+
+JUCE_IMPLEMENT_SINGLETON(Mema)
+
 //==============================================================================
-Mema::Mema() :
-    juce::Component(), juce::Timer()
+Mema::Mema() :  juce::Timer()
 {
+    DBG(__FUNCTION__);
     // create the configuration object (is being initialized from disk automatically)
     m_config = std::make_unique<AppConfiguration>(JUCEAppBasics::AppConfigurationBase::getDefaultConfigFilePath());
     m_config->addDumper(this);
@@ -76,6 +79,7 @@ Mema::Mema() :
 
 Mema::~Mema()
 {
+    DBG(__FUNCTION__);
     if (m_MemaProcessor)
         m_MemaProcessor->editorBeingDeleted(m_MemaProcessor->getActiveEditor());
 }
@@ -91,18 +95,20 @@ void Mema::timerCallback()
     }
 }
 
-juce::Component* Mema::getUIComponent()
+juce::Component* Mema::getMemaProcessorEditor()
 {
     if (m_MemaProcessor)
     {
         if (nullptr == m_MemaProcessor->getActiveEditor())
             m_MemaProcessor->createEditorIfNeeded();
 
-        if (auto editor = dynamic_cast<MemaEditor*>(m_MemaProcessor->getActiveEditor()))
+        if (auto editor = dynamic_cast<MemaProcessorEditor*>(m_MemaProcessor->getActiveEditor()))
         {
-            jassert(onSizeChangeRequested); // should be set before handling the ui component!
-            editor->onSizeChangeRequested = onSizeChangeRequested;
+            jassert(onEditorSizeChangeRequested); // should be set before handling the ui component!
+            editor->onEditorSizeChangeRequested = onEditorSizeChangeRequested;
         }
+
+        m_MemaProcessor->updateCommanders();
 
         return m_MemaProcessor->getActiveEditor();
     }
@@ -128,7 +134,7 @@ void Mema::performConfigurationDump()
         {
             m_config->setConfigState(m_MemaProcessor->createStateXml(), AppConfiguration::getTagName(AppConfiguration::TagID::PROCESSORCONFIG));
 
-            if (auto editor = dynamic_cast<MemaEditor*>(m_MemaProcessor->getActiveEditor()))
+            if (auto editor = dynamic_cast<MemaProcessorEditor*>(m_MemaProcessor->getActiveEditor()))
             {
                 m_config->setConfigState(editor->createStateXml(), AppConfiguration::getTagName(AppConfiguration::TagID::EDITORCONFIG));
             }
@@ -147,20 +153,20 @@ void Mema::onConfigUpdated()
     auto editorConfigState = m_config->getConfigState(AppConfiguration::getTagName(AppConfiguration::TagID::EDITORCONFIG));
     if (editorConfigState && m_MemaProcessor && m_MemaProcessor->getActiveEditor())
     {
-        if (auto editor = dynamic_cast<MemaEditor*>(m_MemaProcessor->getActiveEditor()))
+        if (auto editor = dynamic_cast<MemaProcessorEditor*>(m_MemaProcessor->getActiveEditor()))
         {
             editor->setStateXml(editorConfigState.get());
         }
     }
 }
 
-void Mema::lookAndFeelChanged()
+void Mema::propagateLookAndFeelChanged()
 {
     if (m_MemaProcessor)
     {
         m_MemaProcessor->environmentChanged();
         
-        if (auto editor = dynamic_cast<MemaEditor*>(m_MemaProcessor->getActiveEditor()))
+        if (auto editor = dynamic_cast<MemaProcessorEditor*>(m_MemaProcessor->getActiveEditor()))
         {
             editor->lookAndFeelChanged();
         }

@@ -94,13 +94,13 @@ private:
 //==============================================================================
 /*
 */
-class MemaEditor :  public juce::AudioProcessorEditor,
+class MemaProcessorEditor :  public juce::AudioProcessorEditor,
                     public JUCEAppBasics::AppConfigurationBase::XmlConfigurableElement
 {
 public:
-    MemaEditor(juce::AudioProcessor& processor);
-    MemaEditor(juce::AudioProcessor* processor);
-    ~MemaEditor();
+    MemaProcessorEditor(juce::AudioProcessor& processor);
+    MemaProcessorEditor(juce::AudioProcessor* processor);
+    ~MemaProcessorEditor();
 
     //==============================================================================
     void paint(juce::Graphics&) override;
@@ -114,7 +114,7 @@ public:
     bool setStateXml(juce::XmlElement* stateXml) override;
 
     //==========================================================================
-    std::function<void(juce::Rectangle<int>)> onSizeChangeRequested;
+    std::function<void(juce::Rectangle<int>)> onEditorSizeChangeRequested;
 
     static constexpr int sc_pluginControlHeight = 20;
 
@@ -127,7 +127,7 @@ private:
 
     juce::Grid  m_gridLayout;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MemaEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MemaProcessorEditor)
 };
 
 }

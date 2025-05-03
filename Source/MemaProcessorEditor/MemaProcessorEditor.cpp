@@ -16,21 +16,21 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "MemaEditor.h"
+#include "MemaProcessorEditor.h"
 
 #include <JuceHeader.h>
 
-#include "../MemaEditor/PluginControlComponent.h"
-#include "../MemaEditor/InputControlComponent.h"
-#include "../MemaEditor/CrosspointsControlComponent.h"
-#include "../MemaEditor/OutputControlComponent.h"
+#include "../MemaProcessorEditor/PluginControlComponent.h"
+#include "../MemaProcessorEditor/InputControlComponent.h"
+#include "../MemaProcessorEditor/CrosspointsControlComponent.h"
+#include "../MemaProcessorEditor/OutputControlComponent.h"
 
 
 namespace Mema
 {
 
 //==============================================================================
-MemaEditor::MemaEditor(AudioProcessor& processor)
+MemaProcessorEditor::MemaProcessorEditor(AudioProcessor& processor)
     : juce::AudioProcessorEditor(processor)
 {
     std::function<void()> boundsRequirementChange = [=]() {
@@ -51,9 +51,9 @@ MemaEditor::MemaEditor(AudioProcessor& processor)
             // expand the required size with IO component 'framing' with
             requiredSize.setWidth(requiredSize.getWidth() + requiredOutputCtrlSize.getWidth() + 1);
             requiredSize.setHeight(requiredSize.getHeight() + requiredInputCtrlSize.getHeight() + 1 + sc_pluginControlHeight + 2);
-
-            if (onSizeChangeRequested)
-                onSizeChangeRequested(requiredSize);
+            DBG(__FUNCTION__);
+            if (onEditorSizeChangeRequested)
+                onEditorSizeChangeRequested(requiredSize);
         }
     };
 
@@ -128,22 +128,22 @@ MemaEditor::MemaEditor(AudioProcessor& processor)
     setSize(800, 800);
 }
 
-MemaEditor::MemaEditor(AudioProcessor* processor)
-    : MemaEditor(*processor)
+MemaProcessorEditor::MemaProcessorEditor(AudioProcessor* processor)
+    : MemaProcessorEditor(*processor)
 {
 }
 
-MemaEditor::~MemaEditor()
+MemaProcessorEditor::~MemaProcessorEditor()
 {
 }
 
-void MemaEditor::paint (Graphics& g)
+void MemaProcessorEditor::paint (Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.setColour(getLookAndFeel().findColour(juce::AlertWindow::backgroundColourId));
 }
 
-void MemaEditor::resized()
+void MemaProcessorEditor::resized()
 {
     auto bounds = getLocalBounds();
     m_pluginControl->setBounds(bounds.removeFromTop(sc_pluginControlHeight + 1));
@@ -157,7 +157,7 @@ void MemaEditor::resized()
     m_gridLayout.performLayout(bounds);
 }
 
-void MemaEditor::lookAndFeelChanged()
+void MemaProcessorEditor::lookAndFeelChanged()
 {
     if (m_pluginControl)
         m_pluginControl->lookAndFeelChanged();
@@ -165,7 +165,7 @@ void MemaEditor::lookAndFeelChanged()
     juce::AudioProcessorEditor::lookAndFeelChanged();
 }
 
-std::unique_ptr<XmlElement> MemaEditor::createStateXml()
+std::unique_ptr<XmlElement> MemaProcessorEditor::createStateXml()
 {
     //auto activeVisuTypes = getActiveVisuTypes();
     //
@@ -196,7 +196,7 @@ std::unique_ptr<XmlElement> MemaEditor::createStateXml()
     return std::make_unique<XmlElement>(AppConfiguration::getTagName(AppConfiguration::TagID::EDITORCONFIG));
 }
 
-bool MemaEditor::setStateXml(XmlElement* stateXml)
+bool MemaProcessorEditor::setStateXml(XmlElement* stateXml)
 {
     if (!stateXml || (stateXml->getTagName() != AppConfiguration::getTagName(AppConfiguration::TagID::EDITORCONFIG)))
         return false;

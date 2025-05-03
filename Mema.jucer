@@ -90,37 +90,43 @@
         <FILE id="R3HepV" name="ProcessorSpectrumData.h" compile="0" resource="0"
               file="Source/MemaProcessor/ProcessorSpectrumData.h"/>
       </GROUP>
-      <GROUP id="{8DA5B668-7F22-30F9-D696-7F07195D47EB}" name="MemaEditor">
-        <FILE id="GGK2oy" name="AbstractAudioVisualizer.cpp" compile="1" resource="0"
-              file="Source/MemaEditor/AbstractAudioVisualizer.cpp"/>
-        <FILE id="gJNLuj" name="AbstractAudioVisualizer.h" compile="0" resource="0"
-              file="Source/MemaEditor/AbstractAudioVisualizer.h"/>
-        <FILE id="X75DWk" name="AudioSelectComponent.cpp" compile="1" resource="0"
-              file="Source/MemaEditor/AudioSelectComponent.cpp"/>
-        <FILE id="Se9U3i" name="AudioSelectComponent.h" compile="0" resource="0"
-              file="Source/MemaEditor/AudioSelectComponent.h"/>
-        <FILE id="wnrH1u" name="CrosspointsControlComponent.cpp" compile="1"
-              resource="0" file="Source/MemaEditor/CrosspointsControlComponent.cpp"/>
-        <FILE id="azPXj8" name="CrosspointsControlComponent.h" compile="0"
-              resource="0" file="Source/MemaEditor/CrosspointsControlComponent.h"/>
-        <FILE id="IPx5VD" name="InputControlComponent.cpp" compile="1" resource="0"
-              file="Source/MemaEditor/InputControlComponent.cpp"/>
-        <FILE id="JoML4I" name="InputControlComponent.h" compile="0" resource="0"
-              file="Source/MemaEditor/InputControlComponent.h"/>
-        <FILE id="OjxDPb" name="MemaEditor.cpp" compile="1" resource="0" file="Source/MemaEditor/MemaEditor.cpp"/>
-        <FILE id="UMfzVb" name="MemaEditor.h" compile="0" resource="0" file="Source/MemaEditor/MemaEditor.h"/>
-        <FILE id="IXTbm9" name="MeterbridgeComponent.cpp" compile="1" resource="0"
-              file="Source/MemaEditor/MeterbridgeComponent.cpp"/>
-        <FILE id="AsWCe8" name="MeterbridgeComponent.h" compile="0" resource="0"
-              file="Source/MemaEditor/MeterbridgeComponent.h"/>
-        <FILE id="X8TArw" name="OutputControlComponent.cpp" compile="1" resource="0"
-              file="Source/MemaEditor/OutputControlComponent.cpp"/>
-        <FILE id="DwGxIX" name="OutputControlComponent.h" compile="0" resource="0"
-              file="Source/MemaEditor/OutputControlComponent.h"/>
-        <FILE id="TXnix6" name="PluginControlComponent.cpp" compile="1" resource="0"
-              file="Source/MemaEditor/PluginControlComponent.cpp"/>
-        <FILE id="ZmagSZ" name="PluginControlComponent.h" compile="0" resource="0"
-              file="Source/MemaEditor/PluginControlComponent.h"/>
+      <GROUP id="{8DA5B668-7F22-30F9-D696-7F07195D47EB}" name="MemaProcessorEditor">
+        <FILE id="Uz7QgZ" name="AbstractAudioVisualizer.cpp" compile="1" resource="0"
+              file="Source/MemaProcessorEditor/AbstractAudioVisualizer.cpp"/>
+        <FILE id="gshGz9" name="AbstractAudioVisualizer.h" compile="0" resource="0"
+              file="Source/MemaProcessorEditor/AbstractAudioVisualizer.h"/>
+        <FILE id="bzU5pI" name="AudioSelectComponent.cpp" compile="1" resource="0"
+              file="Source/MemaProcessorEditor/AudioSelectComponent.cpp"/>
+        <FILE id="N07cDu" name="AudioSelectComponent.h" compile="0" resource="0"
+              file="Source/MemaProcessorEditor/AudioSelectComponent.h"/>
+        <FILE id="TmxtCi" name="CrosspointsControlComponent.cpp" compile="1"
+              resource="0" file="Source/MemaProcessorEditor/CrosspointsControlComponent.cpp"/>
+        <FILE id="Q6aF4m" name="CrosspointsControlComponent.h" compile="0"
+              resource="0" file="Source/MemaProcessorEditor/CrosspointsControlComponent.h"/>
+        <FILE id="lww0Or" name="InputControlComponent.cpp" compile="1" resource="0"
+              file="Source/MemaProcessorEditor/InputControlComponent.cpp"/>
+        <FILE id="Wh1dwV" name="InputControlComponent.h" compile="0" resource="0"
+              file="Source/MemaProcessorEditor/InputControlComponent.h"/>
+        <FILE id="MQhUpi" name="MemaProcessorEditor.cpp" compile="1" resource="0"
+              file="Source/MemaProcessorEditor/MemaProcessorEditor.cpp"/>
+        <FILE id="F7TlV2" name="MemaProcessorEditor.h" compile="0" resource="0"
+              file="Source/MemaProcessorEditor/MemaProcessorEditor.h"/>
+        <FILE id="o0eznl" name="MeterbridgeComponent.cpp" compile="1" resource="0"
+              file="Source/MemaProcessorEditor/MeterbridgeComponent.cpp"/>
+        <FILE id="NboFhn" name="MeterbridgeComponent.h" compile="0" resource="0"
+              file="Source/MemaProcessorEditor/MeterbridgeComponent.h"/>
+        <FILE id="Ugiea8" name="OutputControlComponent.cpp" compile="1" resource="0"
+              file="Source/MemaProcessorEditor/OutputControlComponent.cpp"/>
+        <FILE id="NEgHIv" name="OutputControlComponent.h" compile="0" resource="0"
+              file="Source/MemaProcessorEditor/OutputControlComponent.h"/>
+        <FILE id="nGy1bM" name="PluginControlComponent.cpp" compile="1" resource="0"
+              file="Source/MemaProcessorEditor/PluginControlComponent.cpp"/>
+        <FILE id="IDwnpl" name="PluginControlComponent.h" compile="0" resource="0"
+              file="Source/MemaProcessorEditor/PluginControlComponent.h"/>
+        <FILE id="nK48z9" name="TwoDFieldOutputComponent.cpp" compile="1" resource="0"
+              file="Source/MemaProcessorEditor/TwoDFieldOutputComponent.cpp"/>
+        <FILE id="SpQ1vS" name="TwoDFieldOutputComponent.h" compile="0" resource="0"
+              file="Source/MemaProcessorEditor/TwoDFieldOutputComponent.h"/>
       </GROUP>
       <FILE id="NVRWpP" name="AppConfiguration.cpp" compile="1" resource="0"
             file="Source/AppConfiguration.cpp"/>
@@ -129,9 +135,10 @@
       <FILE id="jTXcC7" name="Mema.cpp" compile="1" resource="0" file="Source/Mema.cpp"/>
       <FILE id="eleQrX" name="Mema.h" compile="0" resource="0" file="Source/Mema.h"/>
       <FILE id="xmecvf" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
-      <FILE id="svDZvt" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
-      <FILE id="F1bdYR" name="MainComponent.cpp" compile="1" resource="0"
-            file="Source/MainComponent.cpp"/>
+      <FILE id="svDZvt" name="MemaUIComponent.h" compile="0" resource="0"
+            file="Source/MemaUIComponent.h"/>
+      <FILE id="F1bdYR" name="MemaUIComponent.cpp" compile="1" resource="0"
+            file="Source/MemaUIComponent.cpp"/>
       <FILE id="M0Uva0" name="AboutComponent.cpp" compile="1" resource="0"
             file="Source/AboutComponent.cpp"/>
       <FILE id="IZplXz" name="AboutComponent.h" compile="0" resource="0"
