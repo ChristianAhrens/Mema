@@ -192,6 +192,7 @@ public:
 protected:
     //==============================================================================
     void initializeCtrlValues(int inputCount, int outputCount);
+    void initializeCtrlValuesToUnity(int inputCount, int outputCount);
 
 private:
     //==============================================================================

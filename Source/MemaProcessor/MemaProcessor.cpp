@@ -207,6 +207,39 @@ std::unique_ptr<juce::XmlElement> MemaProcessor::createStateXml()
 	}
 	stateXml->addChildElement(plgConfElm.release());
 
+	std::map<int, bool> inputMuteStates;
+	std::map<int, bool> outputMuteStates;
+	std::map<int, std::map<int, std::pair<bool, float>>> matrixCrosspointValues;
+	{
+		// copy the processing relevant variables to not block audio thread during all the xml handling
+		const ScopedLock sl(m_audioDeviceIOCallbackLock);
+		inputMuteStates = m_inputMuteStates;
+		outputMuteStates = m_outputMuteStates;
+		matrixCrosspointValues = m_matrixCrosspointValues;
+	}
+
+	auto inputMutesElm = std::make_unique<juce::XmlElement>(AppConfiguration::getTagName(AppConfiguration::TagID::INPUTMUTES));
+	juce::StringArray imutestatestr;
+	for (auto const& mutestate : inputMuteStates)
+		imutestatestr.add(juce::String(mutestate.first) + "," + juce::String(mutestate.second ? 1 : 0));
+	inputMutesElm->addTextElement(imutestatestr.joinIntoString(";"));
+	stateXml->addChildElement(inputMutesElm.release());
+
+	auto outputMutesElm = std::make_unique<juce::XmlElement>(AppConfiguration::getTagName(AppConfiguration::TagID::OUTPUTMUTES));
+	juce::StringArray omutestatestr;
+	for (auto const& mutestate : outputMuteStates)
+		omutestatestr.add(juce::String(mutestate.first) + "," + juce::String(mutestate.second ? 1 : 0));
+	outputMutesElm->addTextElement(omutestatestr.joinIntoString(";"));
+	stateXml->addChildElement(outputMutesElm.release());
+
+	auto crosspointGainsElm = std::make_unique<juce::XmlElement>(AppConfiguration::getTagName(AppConfiguration::TagID::CROSSPOINTGAINS));
+	juce::StringArray cgainstatestr;
+	for (auto const& insKV : matrixCrosspointValues)
+		for (auto const& outsKV : insKV.second)
+			cgainstatestr.add(juce::String(insKV.first) + "," + juce::String(outsKV.first) + "," + juce::String(outsKV.second.first ? 1 : 0) + "," + juce::String(outsKV.second.second)); // "in,out,enabled,gain;"
+	crosspointGainsElm->addTextElement(cgainstatestr.joinIntoString(";"));
+	stateXml->addChildElement(crosspointGainsElm.release());
+
 	return stateXml;
 }
 
@@ -271,6 +304,59 @@ bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
 				m_pluginInstance->setStateInformation(destDataStream.getData(), int(destDataStream.getDataSize()));
 			}
 		}
+	}
+
+	std::map<int, bool> inputMuteStates;
+	std::map<int, bool> outputMuteStates;
+	std::map<int, std::map<int, std::pair<bool, float>>> matrixCrosspointValues;
+	auto inputMutesElm = stateXml->getChildByName(AppConfiguration::getTagName(AppConfiguration::TagID::INPUTMUTES));
+	if (nullptr != inputMutesElm)
+	{
+		juce::StringArray imutestatestrs;
+		imutestatestrs.addTokens(inputMutesElm->getAllSubText(), ";", "");
+		for (auto const& imutestatestr : imutestatestrs)
+		{
+			juce::StringArray imutestatestra;
+			imutestatestra.addTokens(imutestatestr, ",", "");
+			jassert(2 == imutestatestra.size());
+			if (2 == imutestatestra.size())
+				inputMuteStates[imutestatestra[0].getIntValue()] = (1 == imutestatestra[1].getIntValue());
+		}
+	}
+	auto outputMutesElm = stateXml->getChildByName(AppConfiguration::getTagName(AppConfiguration::TagID::OUTPUTMUTES));
+	if (nullptr != outputMutesElm)
+	{
+		juce::StringArray omutestatestrs;
+		omutestatestrs.addTokens(outputMutesElm->getAllSubText(), ";", "");
+		for (auto const& omutestatestr : omutestatestrs)
+		{
+			juce::StringArray omutestatestra;
+			omutestatestra.addTokens(omutestatestr, ",", "");
+			jassert(2 == omutestatestra.size());
+			if (2 == omutestatestra.size())
+				outputMuteStates[omutestatestra[0].getIntValue()] = (1 == omutestatestra[1].getIntValue());
+		}
+	}
+	auto crosspointGainsElm = stateXml->getChildByName(AppConfiguration::getTagName(AppConfiguration::TagID::CROSSPOINTGAINS));
+	if (nullptr != crosspointGainsElm)
+	{
+		juce::StringArray cgainstatestrs;
+		cgainstatestrs.addTokens(crosspointGainsElm->getAllSubText(), ";", "");
+		for (auto const& cgainstatestr : cgainstatestrs)
+		{
+			juce::StringArray cgainstatestra;
+			cgainstatestra.addTokens(cgainstatestr, ",", "");
+			jassert(4 == cgainstatestra.size());
+			if (4 == cgainstatestra.size())
+				matrixCrosspointValues[cgainstatestra[0].getIntValue()][cgainstatestra[1].getIntValue()] = std::make_pair(1 == cgainstatestra[2].getIntValue(), cgainstatestra[3].getFloatValue());
+		}
+	}
+	{
+		// copy the processing relevant variables from temp vars here to not block audio thread during all the xml handling above
+		const ScopedLock sl(m_audioDeviceIOCallbackLock);
+		m_inputMuteStates = inputMuteStates;
+		m_outputMuteStates = outputMuteStates;
+		m_matrixCrosspointValues = matrixCrosspointValues;
 	}
 
 	return true;
@@ -472,8 +558,12 @@ void MemaProcessor::setInputMuteState(int inputChannelNumber, bool muted, MemaCh
 			inputCommander->setInputMute(inputChannelNumber, muted);
 	}
 
-	const ScopedLock sl(m_audioDeviceIOCallbackLock);
-	m_inputMuteStates[inputChannelNumber] = muted;
+	{
+		const ScopedLock sl(m_audioDeviceIOCallbackLock);
+		m_inputMuteStates[inputChannelNumber] = muted;
+	}
+
+	triggerConfigurationDump();
 }
 
 bool MemaProcessor::getMatrixCrosspointEnabledValue(int inputNumber, int outputNumber)
@@ -493,8 +583,12 @@ void MemaProcessor::setMatrixCrosspointEnabledValue(int inputNumber, int outputN
             crosspointCommander->setCrosspointEnabledValue(inputNumber, outputNumber, enabled);
     }
 
-    const ScopedLock sl(m_audioDeviceIOCallbackLock);
-    m_matrixCrosspointValues[inputNumber][outputNumber].first = enabled;
+	{
+		const ScopedLock sl(m_audioDeviceIOCallbackLock);
+		m_matrixCrosspointValues[inputNumber][outputNumber].first = enabled;
+	}
+
+	triggerConfigurationDump();
 }
 
 float MemaProcessor::getMatrixCrosspointFactorValue(int inputNumber, int outputNumber)
@@ -514,8 +608,12 @@ void MemaProcessor::setMatrixCrosspointFactorValue(int inputNumber, int outputNu
 			crosspointCommander->setCrosspointFactorValue(inputNumber, outputNumber, factor);
 	}
 
-	const ScopedLock sl(m_audioDeviceIOCallbackLock);
-	m_matrixCrosspointValues[inputNumber][outputNumber].second = factor;
+	{
+		const ScopedLock sl(m_audioDeviceIOCallbackLock);
+		m_matrixCrosspointValues[inputNumber][outputNumber].second = factor;
+	}
+
+	triggerConfigurationDump();
 }
 
 bool MemaProcessor::getOutputMuteState(int outputChannelNumber)
@@ -535,8 +633,12 @@ void MemaProcessor::setOutputMuteState(int outputChannelNumber, bool muted, Mema
 			outputCommander->setOutputMute(outputChannelNumber, muted);
 	}
 
-	const ScopedLock sl(m_audioDeviceIOCallbackLock);
-	m_outputMuteStates[outputChannelNumber] = muted;
+	{
+		const ScopedLock sl(m_audioDeviceIOCallbackLock);
+		m_outputMuteStates[outputChannelNumber] = muted;
+	}
+
+	triggerConfigurationDump();
 }
 
 void MemaProcessor::setChannelCounts(int inputChannelCount, int outputChannelCount)
@@ -1004,6 +1106,56 @@ void MemaProcessor::changeListenerCallback(ChangeBroadcaster* source)
 }
 
 void MemaProcessor::initializeCtrlValues(int inputCount, int outputCount)
+{
+	DBG(__FUNCTION__);
+	std::map<int, bool> inputMuteStates;
+	std::map<int, bool> outputMuteStates;
+	std::map<int, std::map<int, std::pair<bool, float>>> matrixCrosspointValues;
+	{
+		// copy the processing relevant variables to not block audio thread during all the xml handling
+		const ScopedLock sl(m_audioDeviceIOCallbackLock);
+		inputMuteStates = m_inputMuteStates;
+		outputMuteStates = m_outputMuteStates;
+		matrixCrosspointValues = m_matrixCrosspointValues;
+	}
+
+	auto inputChannelCount = (inputCount > s_minInputsCount) ? inputCount : s_minInputsCount;
+	for (auto channel = 1; channel <= inputChannelCount; channel++)
+	{
+		for (auto& inputCommander : m_inputCommanders)
+		{
+			if (inputCommander != reinterpret_cast<MemaInputCommander*>(&inputCommander))
+				inputCommander->setInputMute(channel, inputMuteStates[channel]);
+		}
+	}
+
+	auto outputChannelCount = (outputCount > s_minOutputsCount) ? outputCount : s_minOutputsCount;
+	for (auto channel = 1; channel <= outputChannelCount; channel++)
+	{
+		for (auto& outputCommander : m_outputCommanders)
+		{
+			if (outputCommander != reinterpret_cast<MemaOutputCommander*>(&outputCommander))
+				outputCommander->setOutputMute(channel, outputMuteStates[channel]);
+		}
+	}
+
+	for (auto in = 1; in <= inputChannelCount; in++)
+	{
+		for (auto out = 1; out <= outputChannelCount; out++)
+		{
+			for (auto& crosspointCommander : m_crosspointCommanders)
+			{
+				if (crosspointCommander != reinterpret_cast<MemaCrosspointCommander*>(&crosspointCommander))
+				{
+					crosspointCommander->setCrosspointEnabledValue(in, out, matrixCrosspointValues[in][out].first);
+					crosspointCommander->setCrosspointFactorValue(in, out, matrixCrosspointValues[in][out].second);
+				}
+			}
+		}
+	}
+}
+
+void MemaProcessor::initializeCtrlValuesToUnity(int inputCount, int outputCount)
 {
 	auto inputChannelCount = (inputCount > s_minInputsCount) ? inputCount : s_minInputsCount;
 	for (auto channel = 1; channel <= inputChannelCount; channel++)
