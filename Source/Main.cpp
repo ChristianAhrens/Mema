@@ -207,6 +207,7 @@ public:
         memaUIComponent->handleEditorSizeChangeRequest(m_lastRequestedEditorSize);
         memaUIComponent->lookAndFeelChanged();
         memaUIComponent->grabKeyboardFocus();
+        memaUIComponent->resized();
 
         return std::unique_ptr<Mema::MemaUIComponent>(memaUIComponent);
     }
@@ -235,9 +236,6 @@ public:
         juce::Process::makeForegroundProcess();
 
         juce::CallOutBox::launchAsynchronously(createAndConnectMemaUIComponent(), { position, position }, nullptr);
-
-        if (Mema::Mema::getInstanceWithoutCreating())
-            Mema::Mema::getInstanceWithoutCreating()->triggerMemaProcessorIOUpdate();
     }
 
     void showUiAsStandaloneWindow()
@@ -257,9 +255,6 @@ public:
                 showPosition.setX(showPosition.getX() - m_memaUIComponent->getWidth() - 30);
         }
         m_memaUIComponent->setTopLeftPosition(showPosition);
-
-        if (Mema::Mema::getInstanceWithoutCreating())
-            Mema::Mema::getInstanceWithoutCreating()->triggerMemaProcessorIOUpdate();
     }
         
     // Just add a simple icon to the Window system tray area or Mac menu bar..

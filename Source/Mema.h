@@ -53,8 +53,6 @@ public:
     juce::Component* getMemaProcessorEditor();
     juce::Component* getDeviceSetupComponent();
 
-    void triggerMemaProcessorIOUpdate();
-
     //==========================================================================
     std::function<void(int)> onCpuUsageUpdate;
     std::function<void(std::map<int, std::pair<double, bool>>)> onNetworkUsageUpdate;

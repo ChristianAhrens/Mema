@@ -179,7 +179,7 @@ MemaProcessor::~MemaProcessor()
 
 	m_deviceManager->removeAudioCallback(this);
 
-	// cleanup processing data buffer (do this elsewhere in productive code to avoid excessive mem alloc/free)
+	// cleanup processing data buffer
 	for (auto i = 0; i < s_maxChannelCount; i++)
 		delete[] m_processorChannels[i];
 	delete[] m_processorChannels;
@@ -289,6 +289,13 @@ void MemaProcessor::environmentChanged()
 void MemaProcessor::triggerIOUpdate()
 {
 	postMessage(std::make_unique<ReinitIOCountMessage>(m_inputChannelCount, m_outputChannelCount).release());
+}
+
+void MemaProcessor::triggerConfigurationDump()
+{
+	auto config = JUCEAppBasics::AppConfigurationBase::getInstance();
+	if (config != nullptr)
+		config->triggerConfigurationDump(false);
 }
 
 void MemaProcessor::addInputListener(ProcessorDataAnalyzer::Listener* listener)
@@ -427,6 +434,25 @@ void MemaProcessor::removeCrosspointCommander(MemaCrosspointCommander* commander
 	auto existingCrosspointCommander = std::find(m_crosspointCommanders.begin(), m_crosspointCommanders.end(), commander);
 	if (existingCrosspointCommander != m_crosspointCommanders.end())
 		m_crosspointCommanders.erase(existingCrosspointCommander);
+}
+
+void MemaProcessor::updateCommanders()
+{
+	for (auto const& ic : m_inputCommanders)
+	{
+		ic->setChannelCount(m_inputChannelCount);
+		initializeInputCommander(ic);
+	}
+	for (auto const& cc : m_crosspointCommanders)
+	{
+		cc->setIOCount(m_inputChannelCount, m_outputChannelCount);
+		initializeCrosspointCommander(cc);
+	}
+	for (auto const& oc : m_outputCommanders)
+	{
+		oc->setChannelCount(m_outputChannelCount);
+		initializeOutputCommander(oc);
+	}
 }
 
 bool MemaProcessor::getInputMuteState(int inputChannelNumber)
@@ -974,11 +1000,7 @@ void MemaProcessor::audioDeviceStopped()
 void MemaProcessor::changeListenerCallback(ChangeBroadcaster* source)
 {
 	if (source == m_deviceManager.get())
-	{
-		auto config = JUCEAppBasics::AppConfigurationBase::getInstance();
-		if (config != nullptr)
-			config->triggerConfigurationDump(false);
-	}
+		triggerConfigurationDump();
 }
 
 void MemaProcessor::initializeCtrlValues(int inputCount, int outputCount)

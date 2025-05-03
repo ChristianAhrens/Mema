@@ -98,6 +98,8 @@ public:
     void initializeCrosspointCommander(MemaCrosspointCommander* commander);
     void removeCrosspointCommander(MemaCrosspointCommander* comander);
 
+    void updateCommanders();
+
     //==============================================================================
     bool getInputMuteState(int channelNumber);
     void setInputMuteState(int channelNumber, bool muted, MemaChannelCommander* sender = nullptr);
@@ -178,6 +180,7 @@ public:
     void environmentChanged();
 
     void triggerIOUpdate();
+    void triggerConfigurationDump();
 
     //==============================================================================
     static constexpr int s_maxChannelCount = 64;

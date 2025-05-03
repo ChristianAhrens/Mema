@@ -41,7 +41,7 @@ public:
     CrosspointComponent(const crosspointIdent& ident) : juce::Component::Component() { m_ident = ident; }
     ~CrosspointComponent() {}
 
-    const crosspointIdent& getIdent() { return m_ident; };
+    const crosspointIdent& getIdent() { return m_ident; }
 
     //==============================================================================
     void paint(Graphics& g) override
@@ -74,7 +74,7 @@ public:
             g.drawFittedText(juce::String(juce::Decibels::gainToDecibels(m_factor, static_cast<float>(ProcessorDataAnalyzer::getGlobalMindB())), 1) + " dB", getLocalBounds(), juce::Justification::centred, 1);
         }
 #endif
-    };
+    }
 
     //==============================================================================
     void setChecked(bool checked)
@@ -85,13 +85,15 @@ public:
             m_checked = checked;
         }
         repaint();
-    };
+    }
     void toggleChecked()
     {
         setChecked(!m_checked);
         
         if (onCheckedChanged)
             onCheckedChanged(m_checked, this);
+        if (onFactorChanged)
+            onFactorChanged(m_factor, this);
     }
 
     //==============================================================================
@@ -99,7 +101,7 @@ public:
     {
         m_factor = factor;
         repaint();
-    };
+    }
     float getFactor()
     {
         return m_factor;
@@ -123,7 +125,7 @@ public:
                 claf->setMouseCursor(juce::MouseCursor(juce::MouseCursor::StandardCursorType::NoCursor));
 #endif
         }
-    };
+    }
     void mouseDrag(const MouseEvent& e) override
     {
         auto offset = e.getOffsetFromDragStart();
@@ -151,7 +153,7 @@ public:
             if (onFactorChanged)
                 onFactorChanged(m_tempFactorWhileDragging, this);
         }
-    };
+    }
 
     std::function<void(bool, CrosspointComponent*)> onCheckedChanged;
     std::function<void(float, CrosspointComponent*)> onFactorChanged;

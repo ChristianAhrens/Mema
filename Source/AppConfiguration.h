@@ -36,7 +36,10 @@ public:
         PROCESSORCONFIG,
         DEVCONFIG,
         EDITORCONFIG,
-        PLUGINCONFIG
+        PLUGINCONFIG,
+        INPUTMUTES,
+        OUTPUTMUTES,
+        CROSSPOINTGAINS
     };
     static juce::String getTagName(TagID ID)
     {
@@ -50,6 +53,12 @@ public:
             return "EDITORCONFIG";
         case PLUGINCONFIG:
             return "PLUGINCONFIG";
+        case INPUTMUTES:
+            return "INPUTMUTES";
+        case OUTPUTMUTES:
+            return "OUTPUTMUTES";
+        case CROSSPOINTGAINS:
+            return "CROSSPOINTGAINS";
         default:
             return "INVALID";
         }

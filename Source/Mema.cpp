@@ -108,15 +108,12 @@ juce::Component* Mema::getMemaProcessorEditor()
             editor->onEditorSizeChangeRequested = onEditorSizeChangeRequested;
         }
 
+        m_MemaProcessor->updateCommanders();
+
         return m_MemaProcessor->getActiveEditor();
     }
     else
         return nullptr;
-}
-
-void Mema::triggerMemaProcessorIOUpdate()
-{
-    m_MemaProcessor->triggerIOUpdate();
 }
 
 juce::Component* Mema::getDeviceSetupComponent()
