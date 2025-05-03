@@ -91,6 +91,11 @@ MemaProcessorEditor::MemaProcessorEditor(AudioProcessor& processor)
     m_ioLabel = std::make_unique<IOLabelComponent>(IOLabelComponent::Direction::OI);
     addAndMakeVisible(m_ioLabel.get());
 
+    m_resetToUnityButton = std::make_unique<juce::DrawableButton>("UnityReset", juce::DrawableButton::ButtonStyle::ImageOnButtonBackground);
+    m_resetToUnityButton->setTooltip("Reset to unity patch and unmute all");
+    m_resetToUnityButton->onClick = [this] { if (onResetToUnity) onResetToUnity(); };
+    addAndMakeVisible(m_resetToUnityButton.get());
+
     m_inputCtrl = std::make_unique<InputControlComponent>();
     m_inputCtrl->onBoundsRequirementChange = boundsRequirementChange;
     addAndMakeVisible(m_inputCtrl.get());
@@ -155,10 +160,21 @@ void MemaProcessorEditor::resized()
     m_gridLayout.templateRows = { juce::Grid::TrackInfo(juce::Grid::Px(requiredInputsHeight)), juce::Grid::TrackInfo(juce::Grid::Fr(1)) };
     m_gridLayout.templateColumns = { juce::Grid::TrackInfo(juce::Grid::Px(requiredOutputsWidth)), juce::Grid::TrackInfo(juce::Grid::Fr(1)) };
     m_gridLayout.performLayout(bounds);
+
+    // reset to unity button shall hover centered above iolabel
+    auto resetButtonBounds = m_ioLabel->getBounds();
+    auto wMargin = (resetButtonBounds.getWidth() - sc_resetButtonSize) / 2;
+    auto hMargin = (resetButtonBounds.getHeight() - sc_resetButtonSize) / 2;
+    resetButtonBounds.reduce(wMargin, hMargin);
+    m_resetToUnityButton->setBounds(resetButtonBounds);
 }
 
 void MemaProcessorEditor::lookAndFeelChanged()
 {
+    auto resetToUnityDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::replay_24dp_svg).get());
+    resetToUnityDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
+    m_resetToUnityButton->setImages(resetToUnityDrawable.get());
+
     if (m_pluginControl)
         m_pluginControl->lookAndFeelChanged();
 

@@ -985,6 +985,8 @@ AudioProcessorEditor* MemaProcessor::createEditor()
 	if (!m_processorEditor)
 		m_processorEditor = std::make_unique<MemaProcessorEditor>(this);
 
+	m_processorEditor->onResetToUnity = [=]() { initializeCtrlValuesToUnity(m_inputChannelCount, m_outputChannelCount); };
+
 	return m_processorEditor.get();
 }
 
@@ -1107,7 +1109,6 @@ void MemaProcessor::changeListenerCallback(ChangeBroadcaster* source)
 
 void MemaProcessor::initializeCtrlValues(int inputCount, int outputCount)
 {
-	DBG(__FUNCTION__);
 	std::map<int, bool> inputMuteStates;
 	std::map<int, bool> outputMuteStates;
 	std::map<int, std::map<int, std::pair<bool, float>>> matrixCrosspointValues;
