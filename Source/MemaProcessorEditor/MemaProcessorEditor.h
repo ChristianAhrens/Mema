@@ -20,7 +20,6 @@
 
 #include <JuceHeader.h>
 
-#include "AppConfigurationBase.h"
 #include "AudioSelectComponent.h"
 
 
@@ -94,8 +93,7 @@ private:
 //==============================================================================
 /*
 */
-class MemaProcessorEditor :  public juce::AudioProcessorEditor,
-                    public JUCEAppBasics::AppConfigurationBase::XmlConfigurableElement
+class MemaProcessorEditor :  public juce::AudioProcessorEditor
 {
 public:
     MemaProcessorEditor(juce::AudioProcessor& processor);
@@ -108,10 +106,6 @@ public:
 
     //==========================================================================
     void lookAndFeelChanged() override;
-
-    //==========================================================================
-    std::unique_ptr<juce::XmlElement> createStateXml() override;
-    bool setStateXml(juce::XmlElement* stateXml) override;
 
     //==========================================================================
     std::function<void(juce::Rectangle<int>)> onEditorSizeChangeRequested;

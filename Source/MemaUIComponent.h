@@ -20,6 +20,8 @@
 
 #include <JuceHeader.h>
 
+#include "AppConfiguration.h"
+
 #include <CustomLookAndFeel.h>
 
 class LoadBar;
@@ -31,7 +33,8 @@ namespace Mema
 {
 
 class MemaUIComponent : public juce::Component,
-    public juce::DarkModeSettingListener
+                        public juce::DarkModeSettingListener,
+                        public JUCEAppBasics::AppConfigurationBase::XmlConfigurableElement
 {
 public:
     enum MemaSettingsOption
@@ -73,11 +76,16 @@ public:
     //========================================================================*
     void lookAndFeelChanged() override;
 
+    //==========================================================================
+    std::unique_ptr<juce::XmlElement> createStateXml() override;
+    bool setStateXml(juce::XmlElement* stateXml) override;
+
     //========================================================================*
     std::function<void(bool)>   onToggleStandaloneWindow;
     std::function<void()>       onSetupMenuClicked;
     std::function<void()>       onLookAndFeelChanged;
     std::function<void()>       onDeleted;
+    std::function<void()>       onSettingsChanged;
 
 private:
     //========================================================================*

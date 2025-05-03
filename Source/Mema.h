@@ -65,10 +65,14 @@ public:
     //==========================================================================
     void propagateLookAndFeelChanged();
 
+    void setUIConfigState(const std::unique_ptr<juce::XmlElement>& uiConfigState);
+    const std::unique_ptr<juce::XmlElement>& getUIConfigState();
+
     JUCE_DECLARE_SINGLETON(Mema, false)
 
 private:
     std::unique_ptr<MemaProcessor>          m_MemaProcessor;
+    std::unique_ptr<juce::XmlElement>       m_MemaUIConfigCache;
 
     std::unique_ptr<MemaProcessorEditor>    m_audioVisuComponent;
     std::unique_ptr<AudioSelectComponent>   m_audioDeviceSelectComponent;

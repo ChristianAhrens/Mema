@@ -22,6 +22,8 @@
 #include "MemaUIComponent.h"
 #include "CustomPopupMenuComponent.h"
 
+#include <AppConfigurationBase.h>
+
 #if JUCE_MAC
 #include <signal.h>
 #endif
@@ -203,9 +205,18 @@ public:
             m_memaUIComponent.release();
             m_memaUIComponent = nullptr;
         };
+        memaUIComponent->onSettingsChanged = [=]() {
+            jassert(memaUIComponent);
+            if (memaUIComponent && Mema::Mema::getInstanceWithoutCreating())
+            {
+                Mema::Mema::getInstance()->setUIConfigState(memaUIComponent->createStateXml());
+                JUCEAppBasics::AppConfigurationBase::getInstance()->triggerConfigurationDump();
+            }
+        };
 
         memaUIComponent->handleEditorSizeChangeRequest(m_lastRequestedEditorSize);
         memaUIComponent->lookAndFeelChanged();
+        memaUIComponent->setStateXml(Mema::Mema::getInstance()->getUIConfigState().get());
         memaUIComponent->grabKeyboardFocus();
         memaUIComponent->resized();
 

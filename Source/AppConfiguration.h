@@ -35,7 +35,7 @@ public:
     {
         PROCESSORCONFIG,
         DEVCONFIG,
-        EDITORCONFIG,
+        UICONFIG,
         PLUGINCONFIG,
         INPUTMUTES,
         OUTPUTMUTES,
@@ -49,8 +49,8 @@ public:
             return "PROCESSORCONFIG";
         case DEVCONFIG:
             return "DEVICECONFIG";
-        case EDITORCONFIG:
-            return "EDITORCONFIG";
+        case UICONFIG:
+            return "UICONFIG";
         case PLUGINCONFIG:
             return "PLUGINCONFIG";
         case INPUTMUTES:
@@ -67,7 +67,9 @@ public:
     enum AttributeID
     {
         ENABLED,
-        POST
+        POST,
+        PALETTESTYLE,
+        METERINGCOLOR
     };
     static juce::String getAttributeName(AttributeID ID)
     {
@@ -77,6 +79,10 @@ public:
             return "ENABLED";
         case POST:
             return "POST";
+        case PALETTESTYLE:
+            return "PALETTESTYLE";
+        case METERINGCOLOR:
+            return "METERINGCOLOR";
         default:
             return "-";
         }
