@@ -31,7 +31,7 @@ namespace Mema
 //==============================================================================
 /*
 */
-class ProcessorDataAnalyzer :    public Timer
+class ProcessorDataAnalyzer :   public juce::Timer
 {
 public:
     class Listener
@@ -55,7 +55,7 @@ public:
     ProcessorAudioSignalData& GetCentiSecondBuffer() { return m_centiSecondBuffer; };
     ProcessorLevelData& GetLevel() { return m_level; };
     ProcessorSpectrumData& GetSpectrum() { return m_spectrum; };
-    String& GetName() { return m_Name; };
+    juce::String& GetName() { return m_Name; };
 
     bool IsInitialized() { return (m_bufferSize != 0 && m_sampleRate != 0); };
 
@@ -64,7 +64,7 @@ public:
     void removeListener(Listener* listener);
 
     //==============================================================================
-    void analyzeData(const AudioBuffer<float>& buffer);
+    void analyzeData(const juce::AudioBuffer<float>& buffer);
 
     //==============================================================================
     void timerCallback() override;
@@ -99,7 +99,7 @@ private:
     std::mutex                  m_callbackListenersMutex;
 
     //==============================================================================
-    CriticalSection     m_readLock;
+    juce::CriticalSection   m_readLock;
 
     float**             m_processorChannels;
 
