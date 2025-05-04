@@ -18,7 +18,7 @@
 
 #include "Mema.h"
 
-#include "MemaEditor/MemaEditor.h"
+#include "MemaProcessorEditor/MemaProcessorEditor.h"
 #include "MemaProcessor/MemaProcessor.h"
 
 #include <WebUpdateDetector.h>
@@ -26,10 +26,13 @@
 namespace Mema
 {
 
+
+JUCE_IMPLEMENT_SINGLETON(Mema)
+
 //==============================================================================
-Mema::Mema() :
-    juce::Component(), juce::Timer()
+Mema::Mema() :  juce::Timer()
 {
+    DBG(__FUNCTION__);
     // create the configuration object (is being initialized from disk automatically)
     m_config = std::make_unique<AppConfiguration>(JUCEAppBasics::AppConfigurationBase::getDefaultConfigFilePath());
     m_config->addDumper(this);
@@ -76,6 +79,7 @@ Mema::Mema() :
 
 Mema::~Mema()
 {
+    DBG(__FUNCTION__);
     if (m_MemaProcessor)
         m_MemaProcessor->editorBeingDeleted(m_MemaProcessor->getActiveEditor());
 }
@@ -91,18 +95,20 @@ void Mema::timerCallback()
     }
 }
 
-juce::Component* Mema::getUIComponent()
+juce::Component* Mema::getMemaProcessorEditor()
 {
     if (m_MemaProcessor)
     {
         if (nullptr == m_MemaProcessor->getActiveEditor())
             m_MemaProcessor->createEditorIfNeeded();
 
-        if (auto editor = dynamic_cast<MemaEditor*>(m_MemaProcessor->getActiveEditor()))
+        if (auto editor = dynamic_cast<MemaProcessorEditor*>(m_MemaProcessor->getActiveEditor()))
         {
-            jassert(onSizeChangeRequested); // should be set before handling the ui component!
-            editor->onSizeChangeRequested = onSizeChangeRequested;
+            jassert(onEditorSizeChangeRequested); // should be set before handling the ui component!
+            editor->onEditorSizeChangeRequested = onEditorSizeChangeRequested;
         }
+
+        m_MemaProcessor->updateCommanders();
 
         return m_MemaProcessor->getActiveEditor();
     }
@@ -123,15 +129,12 @@ void Mema::performConfigurationDump()
     if (m_config)
     {
         auto stateXml = m_config->getConfigState();
-
-        if (stateXml && m_MemaProcessor)
+        if (stateXml)
         {
-            m_config->setConfigState(m_MemaProcessor->createStateXml(), AppConfiguration::getTagName(AppConfiguration::TagID::PROCESSORCONFIG));
-
-            if (auto editor = dynamic_cast<MemaEditor*>(m_MemaProcessor->getActiveEditor()))
-            {
-                m_config->setConfigState(editor->createStateXml(), AppConfiguration::getTagName(AppConfiguration::TagID::EDITORCONFIG));
-            }
+            if (m_MemaProcessor)
+                m_config->setConfigState(m_MemaProcessor->createStateXml(), AppConfiguration::getTagName(AppConfiguration::TagID::PROCESSORCONFIG));
+            if (m_MemaUIConfigCache)
+                m_config->setConfigState(std::make_unique<juce::XmlElement>(*m_MemaUIConfigCache), AppConfiguration::getTagName(AppConfiguration::TagID::UICONFIG));
         }
     }
 }
@@ -144,27 +147,34 @@ void Mema::onConfigUpdated()
         m_MemaProcessor->setStateXml(processorConfigState.get());
     }
         
-    auto editorConfigState = m_config->getConfigState(AppConfiguration::getTagName(AppConfiguration::TagID::EDITORCONFIG));
-    if (editorConfigState && m_MemaProcessor && m_MemaProcessor->getActiveEditor())
+    auto uiConfigState = m_config->getConfigState(AppConfiguration::getTagName(AppConfiguration::TagID::UICONFIG));
+    if (uiConfigState && m_MemaProcessor)
     {
-        if (auto editor = dynamic_cast<MemaEditor*>(m_MemaProcessor->getActiveEditor()))
-        {
-            editor->setStateXml(editorConfigState.get());
-        }
+        m_MemaUIConfigCache = std::make_unique<juce::XmlElement>(*uiConfigState);
     }
 }
 
-void Mema::lookAndFeelChanged()
+void Mema::propagateLookAndFeelChanged()
 {
     if (m_MemaProcessor)
     {
         m_MemaProcessor->environmentChanged();
         
-        if (auto editor = dynamic_cast<MemaEditor*>(m_MemaProcessor->getActiveEditor()))
+        if (auto editor = dynamic_cast<MemaProcessorEditor*>(m_MemaProcessor->getActiveEditor()))
         {
             editor->lookAndFeelChanged();
         }
     }
+}
+
+void Mema::setUIConfigState(const std::unique_ptr<juce::XmlElement>& uiConfigState)
+{
+    m_MemaUIConfigCache = std::make_unique<juce::XmlElement>(*uiConfigState);
+}
+
+const std::unique_ptr<juce::XmlElement>& Mema::getUIConfigState()
+{
+    return m_MemaUIConfigCache;
 }
 
 

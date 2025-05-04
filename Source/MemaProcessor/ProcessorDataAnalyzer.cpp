@@ -79,7 +79,7 @@ void ProcessorDataAnalyzer::removeListener(Listener* listener)
 	m_callbackListeners.remove(m_callbackListeners.indexOf(listener));
 }
 
-void ProcessorDataAnalyzer::analyzeData(const AudioBuffer<float>& buffer)
+void ProcessorDataAnalyzer::analyzeData(const juce::AudioBuffer<float>& buffer)
 {
 	if (!IsInitialized())
 		return;
@@ -204,6 +204,7 @@ void ProcessorDataAnalyzer::analyzeData(const AudioBuffer<float>& buffer)
 		{
 			m_centiSecondBuffer.copyFrom(i, writePos, buffer.getReadPointer(i) + readPos, availableSamples);
 		}
+		m_missingSamplesForCentiSecond -= availableSamples;
 	}
 }
 

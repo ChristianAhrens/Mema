@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="ja98xe" name="Mema.Mo" projectType="guiapp" useAppConfig="0"
-              jucerFormatVersion="1" version="0.4.3" companyWebsite="github.com/ChristianAhrens/Mema"
+              jucerFormatVersion="1" version="0.5.0" companyWebsite="github.com/ChristianAhrens/Mema"
               bundleIdentifier="com.ChristianAhrens.MemaMo" headerPath="../../../submodules/JUCE-AppBasics/Source&#10;../../../Source"
               defines="JUCE_USE_LAME_AUDIO_FORMAT=1,&#10;JUCE_USE_MP3AUDIOFORMAT=1,&#10;JUCE_DISPLAY_SPLASH_SCREEN=0"
               companyName="ChristianAhrens" companyCopyright="Copyright (c) 2024 Christian Ahrens.">
@@ -39,14 +39,18 @@
       </GROUP>
     </GROUP>
     <GROUP id="{B4C42B10-6A29-1C3A-435D-5CB7A9DE671E}" name="Source">
-      <FILE id="HGrWel" name="TwoDFieldOutputComponent.cpp" compile="1" resource="0"
-            file="../Source/MemaEditor/TwoDFieldOutputComponent.cpp"/>
-      <FILE id="R4FcNe" name="TwoDFieldOutputComponent.h" compile="0" resource="0"
-            file="../Source/MemaEditor/TwoDFieldOutputComponent.h"/>
-      <FILE id="cpO0IL" name="MeterbridgeComponent.cpp" compile="1" resource="0"
-            file="../Source/MemaEditor/MeterbridgeComponent.cpp"/>
-      <FILE id="k5NfZT" name="MeterbridgeComponent.h" compile="0" resource="0"
-            file="../Source/MemaEditor/MeterbridgeComponent.h"/>
+      <FILE id="j4AVKB" name="AbstractAudioVisualizer.cpp" compile="1" resource="0"
+            file="../Source/MemaProcessorEditor/AbstractAudioVisualizer.cpp"/>
+      <FILE id="JmJngu" name="AbstractAudioVisualizer.h" compile="0" resource="0"
+            file="../Source/MemaProcessorEditor/AbstractAudioVisualizer.h"/>
+      <FILE id="iwKL0M" name="MeterbridgeComponent.cpp" compile="1" resource="0"
+            file="../Source/MemaProcessorEditor/MeterbridgeComponent.cpp"/>
+      <FILE id="fIADmU" name="MeterbridgeComponent.h" compile="0" resource="0"
+            file="../Source/MemaProcessorEditor/MeterbridgeComponent.h"/>
+      <FILE id="WhHDmY" name="TwoDFieldOutputComponent.cpp" compile="1" resource="0"
+            file="../Source/MemaProcessorEditor/TwoDFieldOutputComponent.cpp"/>
+      <FILE id="CHiFIG" name="TwoDFieldOutputComponent.h" compile="0" resource="0"
+            file="../Source/MemaProcessorEditor/TwoDFieldOutputComponent.h"/>
       <FILE id="avbo06" name="MemaMessages.h" compile="0" resource="0" file="../Source/MemaProcessor/MemaMessages.h"/>
       <FILE id="Sl1faN" name="MemaServiceData.cpp" compile="1" resource="0"
             file="../Source/MemaProcessor/MemaServiceData.cpp"/>
@@ -72,10 +76,6 @@
             file="../Source/MemaProcessor/AbstractProcessorData.cpp"/>
       <FILE id="b9h1KE" name="AbstractProcessorData.h" compile="0" resource="0"
             file="../Source/MemaProcessor/AbstractProcessorData.h"/>
-      <FILE id="XOThz1" name="AbstractAudioVisualizer.cpp" compile="1" resource="0"
-            file="../Source/MemaEditor/AbstractAudioVisualizer.cpp"/>
-      <FILE id="bRlDfN" name="AbstractAudioVisualizer.h" compile="0" resource="0"
-            file="../Source/MemaEditor/AbstractAudioVisualizer.h"/>
       <FILE id="I1Qk3D" name="MemaMoComponent.cpp" compile="1" resource="0"
             file="MemaMoComponent.cpp"/>
       <FILE id="IiCQQ0" name="MemaMoComponent.h" compile="0" resource="0"

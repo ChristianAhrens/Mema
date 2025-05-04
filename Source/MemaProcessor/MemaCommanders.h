@@ -122,7 +122,7 @@ protected:
     void crosspointFactorPoll(int input, int output);
 
 private:
-    void setChannelCount(int channelCount) override { ignoreUnused(channelCount); };
+    void setChannelCount(int channelCount) override { ignoreUnused(channelCount); jassertfalse; };
 
     std::function<void(MemaCrosspointCommander* sender, int, int, bool)> m_crosspointEnabledChangeCallback{ nullptr };
     std::function<void(MemaCrosspointCommander* sender, int, int)>       m_crosspointEnabledPollCallback{ nullptr };

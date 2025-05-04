@@ -41,7 +41,7 @@ bool AppConfiguration::isValid(const std::unique_ptr<juce::XmlElement>& xmlConfi
 	if (!JUCEAppBasics::AppConfigurationBase::isValid(xmlConfig))
 		return false;
 
-	auto editorCfgSectionElement = xmlConfig->getChildByName(AppConfiguration::getTagName(AppConfiguration::TagID::EDITORCONFIG));
+	auto editorCfgSectionElement = xmlConfig->getChildByName(AppConfiguration::getTagName(AppConfiguration::TagID::UICONFIG));
 	if (editorCfgSectionElement)
 	{
 		// validate
@@ -54,6 +54,43 @@ bool AppConfiguration::isValid(const std::unique_ptr<juce::XmlElement>& xmlConfi
 	{
 		auto devSectionElement = processorSectionElement->getChildByName(AppConfiguration::getTagName(AppConfiguration::TagID::DEVCONFIG));
 		if (devSectionElement)
+		{
+			// validate
+		}
+		else
+			return false;
+
+		auto plginSectionElement = processorSectionElement->getChildByName(AppConfiguration::getTagName(AppConfiguration::TagID::PLUGINCONFIG));
+		if (plginSectionElement)
+		{
+			if (!plginSectionElement->hasAttribute(AppConfiguration::getAttributeName(AppConfiguration::AttributeID::ENABLED)))
+				return false;
+			if (!plginSectionElement->hasAttribute(AppConfiguration::getAttributeName(AppConfiguration::AttributeID::POST)))
+				return false;
+
+			// validate
+		}
+		else
+			return false;
+
+		auto inputMutesSectionElement = processorSectionElement->getChildByName(AppConfiguration::getTagName(AppConfiguration::TagID::INPUTMUTES));
+		if (inputMutesSectionElement)
+		{
+			// validate
+		}
+		else
+			return false;
+
+		auto crosspointGainsSectionElement = processorSectionElement->getChildByName(AppConfiguration::getTagName(AppConfiguration::TagID::CROSSPOINTGAINS));
+		if (crosspointGainsSectionElement)
+		{
+			// validate
+		}
+		else
+			return false;
+
+		auto outputMutesSectionElement = processorSectionElement->getChildByName(AppConfiguration::getTagName(AppConfiguration::TagID::OUTPUTMUTES));
+		if (outputMutesSectionElement)
 		{
 			// validate
 		}

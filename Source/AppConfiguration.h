@@ -35,8 +35,11 @@ public:
     {
         PROCESSORCONFIG,
         DEVCONFIG,
-        EDITORCONFIG,
-        PLUGINCONFIG
+        UICONFIG,
+        PLUGINCONFIG,
+        INPUTMUTES,
+        OUTPUTMUTES,
+        CROSSPOINTGAINS
     };
     static juce::String getTagName(TagID ID)
     {
@@ -46,10 +49,16 @@ public:
             return "PROCESSORCONFIG";
         case DEVCONFIG:
             return "DEVICECONFIG";
-        case EDITORCONFIG:
-            return "EDITORCONFIG";
+        case UICONFIG:
+            return "UICONFIG";
         case PLUGINCONFIG:
             return "PLUGINCONFIG";
+        case INPUTMUTES:
+            return "INPUTMUTES";
+        case OUTPUTMUTES:
+            return "OUTPUTMUTES";
+        case CROSSPOINTGAINS:
+            return "CROSSPOINTGAINS";
         default:
             return "INVALID";
         }
@@ -57,7 +66,10 @@ public:
 
     enum AttributeID
     {
-        ENABLED
+        ENABLED,
+        POST,
+        PALETTESTYLE,
+        METERINGCOLOR
     };
     static juce::String getAttributeName(AttributeID ID)
     {
@@ -65,6 +77,12 @@ public:
         {
         case ENABLED:
             return "ENABLED";
+        case POST:
+            return "POST";
+        case PALETTESTYLE:
+            return "PALETTESTYLE";
+        case METERINGCOLOR:
+            return "METERINGCOLOR";
         default:
             return "-";
         }

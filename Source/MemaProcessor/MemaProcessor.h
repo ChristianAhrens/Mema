@@ -21,7 +21,7 @@
 #include <JuceHeader.h>
 
 #include "ProcessorDataAnalyzer.h"
-#include "../MemaEditor/MemaEditor.h"
+#include "../MemaProcessorEditor/MemaProcessorEditor.h"
 #include "../AppConfiguration.h"
 
 
@@ -98,6 +98,8 @@ public:
     void initializeCrosspointCommander(MemaCrosspointCommander* commander);
     void removeCrosspointCommander(MemaCrosspointCommander* comander);
 
+    void updateCommanders();
+
     //==============================================================================
     bool getInputMuteState(int channelNumber);
     void setInputMuteState(int channelNumber, bool muted, MemaChannelCommander* sender = nullptr);
@@ -118,6 +120,8 @@ public:
     juce::PluginDescription getPluginDescription();
     void setPluginEnabledState(bool enabled);
     bool isPluginEnabled();
+    void setPluginPrePostState(bool post);
+    bool isPluginPost();
     void clearPlugin();
     void openPluginEditor();
     void closePluginEditor(bool deleteEditorWindow = true);
@@ -175,6 +179,9 @@ public:
     //==============================================================================
     void environmentChanged();
 
+    void triggerIOUpdate();
+    void triggerConfigurationDump();
+
     //==============================================================================
     static constexpr int s_maxChannelCount = 64;
     static constexpr int s_maxNumSamples = 1024;
@@ -185,6 +192,7 @@ public:
 protected:
     //==============================================================================
     void initializeCtrlValues(int inputCount, int outputCount);
+    void initializeCtrlValuesToUnity(int inputCount, int outputCount);
 
 private:
     //==============================================================================
@@ -219,12 +227,13 @@ private:
     std::map<int, std::map<int, std::pair<bool, float>>>  m_matrixCrosspointValues;
 
     //==============================================================================
-    std::unique_ptr<MemaEditor>  m_processorEditor;
+    std::unique_ptr<MemaProcessorEditor>  m_processorEditor;
 
     //==============================================================================
     juce::CriticalSection                                           m_pluginProcessingLock;
     std::unique_ptr<juce::AudioPluginInstance>                      m_pluginInstance;
     bool                                                            m_pluginEnabled = false;
+    bool                                                            m_pluginPost = false;
     std::unique_ptr<ResizeableWindowWithTitleBarAndCloseCallback>   m_pluginEditorWindow;
 
     //==============================================================================
