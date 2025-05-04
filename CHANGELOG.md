@@ -11,6 +11,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+## [0.5.0] 2025-05-04
+### Added
+- Added plug-in processing switchability pre/post matrix
+- Added plug-in state saving to and restoring from xml configuration
+- Added storing MemaProcessor processing config state to and restore from xml (crosspoints + mutes)
+- Added button to reset matrix to unity and unmute all IOs to UI
+
+### Changed
+- Changed Mema to be a CalloutBox from menubar, incl. major code refactoring to enable this
+- Changed macOS DiskImage deployment to generate custom image for mounting
+- Changed Mema / Mema.Mo icons to comply with general app icon scheme
+
+### Fixed
+- Fixed automatic Mema.Mo app hibernation (esp. of interest on iOS)
+- Fixed processing for small buffer sizes (buffers smaller than a centisecond worth auf samples)
+
 ## [0.4.2] 2025-02-09
 ### Added
 - Added metering colour selection to Mema and Mema.Mo
