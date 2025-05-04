@@ -18,6 +18,7 @@ chmod +x makeDmgIcon.sh
 ./makeDmgIcon.sh "$IconSetSourcePng" "$IconSetSourceDiskPng" dmgIcon.png
 chmod +x makeIconset.sh
 ./makeIconset.sh dmgIcon.png
+rm dmgIcon.png
 cd ../../MemaMo
 
 # collect dmg contents
@@ -34,5 +35,3 @@ test -f "$DmgTargetPath" && rm "$DmgTargetPath"
 # cleanup
 test -d "$DmgContentsCollectionPath" && rm -r "$DmgContentsCollectionPath"
 test -f "$VolIconPath" && rm "$VolIconPath"
-
-rm dmgIcon.png
