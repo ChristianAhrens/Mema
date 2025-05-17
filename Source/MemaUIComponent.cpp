@@ -231,7 +231,10 @@ MemaUIComponent::MemaUIComponent()
 
 MemaUIComponent::~MemaUIComponent()
 {
-    if (onDeleted) onDeleted();
+    juce::Desktop::getInstance().removeDarkModeSettingListener(this);
+
+    if (onDeleted)
+        onDeleted();
 }
 
 
