@@ -23,15 +23,17 @@
 
 class MemaMoComponent;
 class MemaDiscoverComponent;
+class MemaConnectingComponent;
 class AboutComponent;
 
-class MainComponent :   public juce::Component
+class MainComponent :   public juce::Component, juce::Timer
 {
 public:
     enum Status
     {
         Discovering,
-        Monitoring
+        Connecting,
+        Monitoring,
     };
 
     enum MemaMoSettingsOption
@@ -67,16 +69,18 @@ public:
 
     void applySettingsOption(const MemaMoSettingsOption& option);
 
-    //========================================================================*
+    //==============================================================================
     void resized() override;
     void paint(juce::Graphics& g) override;
     void lookAndFeelChanged() override;
 
-    //========================================================================*
+    void timerCallback() override;
+
+    //==============================================================================
     std::function<void(int, bool)> onPaletteStyleChange;
 
 private:
-    //========================================================================*
+    //==============================================================================
     class InterprocessConnectionImpl : public juce::InterprocessConnection
     {
     public:
@@ -89,15 +93,27 @@ private:
 
         void messageReceived(const MemoryBlock& message) override { if (onMessageReceived) onMessageReceived(message); };
 
+        bool ConnectToSocket(const juce::String& hostName, int portNumber) {
+            m_hostName = hostName;
+            m_portNumber = portNumber;
+            return juce::InterprocessConnection::connectToSocket(hostName, portNumber, 3000);
+        };
+        
+        bool RetryConnectToSocket() { 
+            disconnect();
+            return connectToSocket(m_hostName, m_portNumber, 3000);
+        };
+
         std::function<void()>                   onConnectionMade;
         std::function<void()>                   onConnectionLost;
         std::function<void(const MemoryBlock&)> onMessageReceived;
 
     private:
-
+        juce::String m_hostName;
+        int m_portNumber;
     };
 
-    //========================================================================*
+    //==============================================================================
     void handleSettingsMenuResult(int selectedId);
     void handleSettingsLookAndFeelMenuResult(int selectedId);
     void handleSettingsOutputVisuTypeMenuResult(int selectedId);
@@ -106,12 +122,18 @@ private:
     void setMeteringColour(const juce::Colour& meteringColour);
     void applyMeteringColour();
 
-    //========================================================================*
+    void setStatus(const Status& s);
+    const Status getStatus();
+
+    void connectToMema(const String& hostName, int portNumber);
+
+    //==============================================================================
     std::unique_ptr<juce::NetworkServiceDiscovery::AvailableServiceList>    m_availableServices;
     std::unique_ptr<InterprocessConnectionImpl>                             m_networkConnection;
 
     std::unique_ptr<MemaMoComponent>                                        m_monitorComponent;
     std::unique_ptr<MemaDiscoverComponent>                                  m_discoverComponent;
+    std::unique_ptr<MemaConnectingComponent>                                m_connectingComponent;
 
     std::unique_ptr<juce::DrawableButton>                                   m_settingsButton;
     std::map<int, std::pair<std::string, int>>                              m_settingsItems;

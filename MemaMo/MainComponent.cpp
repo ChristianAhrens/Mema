@@ -21,6 +21,7 @@
 #include "CustomPopupMenuComponent.h"
 #include "MemaMoComponent.h"
 #include "MemaDiscoverComponent.h"
+#include "MemaConnectingComponent.h"
 
 #include <AboutComponent.h>
 #include <CustomLookAndFeel.h>
@@ -38,17 +39,15 @@ MainComponent::MainComponent()
     m_networkConnection = std::make_unique<InterprocessConnectionImpl>();
     m_networkConnection->onConnectionMade = [=]() {
         DBG(__FUNCTION__);
+
+        setStatus(Status::Monitoring);
     };
     m_networkConnection->onConnectionLost = [=]() {
         DBG(__FUNCTION__);
-        if (m_monitorComponent)
-            m_monitorComponent->setRunning(false);
-
         if (m_discoverComponent)
             m_discoverComponent->setDiscoveredServices(m_availableServices->getServices());
 
-        m_currentStatus = Status::Discovering;
-        resized();
+        setStatus(Status::Discovering);
     };
     m_networkConnection->onMessageReceived = [=](const juce::MemoryBlock& message) {
         auto knownMessage = Mema::SerializableMessage::initFromMemoryBlock(message);
@@ -63,8 +62,10 @@ MainComponent::MainComponent()
                 onPaletteStyleChange(m_settingsHostLookAndFeelId, false/*do not follow local style any more if a message was received via net once*/);
             }
         }
-        else if (m_monitorComponent && nullptr != knownMessage)
+        else if (m_monitorComponent && nullptr != knownMessage && Status::Monitoring == m_currentStatus)
+        {
             m_monitorComponent->handleMessage(*knownMessage);
+        }
         Mema::SerializableMessage::freeMessageData(knownMessage);
     };
 
@@ -73,27 +74,18 @@ MainComponent::MainComponent()
         if (m_discoverComponent)
             m_discoverComponent->setDiscoveredServices(m_availableServices->getServices());
 
-        if (m_monitorComponent)
-            m_monitorComponent->setRunning(false);
-
-        m_currentStatus = Status::Discovering;
-        resized();
+        setStatus(Status::Discovering);
     };
-    m_monitorComponent->setRunning(false);
     addAndMakeVisible(m_monitorComponent.get());
 
     m_discoverComponent = std::make_unique<MemaDiscoverComponent>();
     m_discoverComponent->onServiceSelected = [=](const juce::NetworkServiceDiscovery::Service& selectedService) {
-        m_currentStatus = Status::Monitoring;
-        resized();
-
-        if (m_monitorComponent)
-            m_monitorComponent->setRunning(true);
-
-        if (m_networkConnection)
-            m_networkConnection->connectToSocket(selectedService.address.toString(), selectedService.port, 100);
+        connectToMema(selectedService.address.toString(), selectedService.port);
     };
     addAndMakeVisible(m_discoverComponent.get());
+
+    m_connectingComponent = std::make_unique<MemaConnectingComponent>();
+    addAndMakeVisible(m_connectingComponent.get());
 
     m_aboutComponent = std::make_unique<AboutComponent>(BinaryData::MemaMoRect_png, BinaryData::MemaMoCanvas_pngSize);
     m_aboutButton = std::make_unique<juce::DrawableButton>("About", juce::DrawableButton::ButtonStyle::ImageFitted);
@@ -160,14 +152,10 @@ MainComponent::MainComponent()
         if (m_networkConnection)
             m_networkConnection->disconnect();
 
-        if (m_monitorComponent)
-            m_monitorComponent->setRunning(false);
-
         if (m_discoverComponent)
             m_discoverComponent->setDiscoveredServices(m_availableServices->getServices());
 
-        m_currentStatus = Status::Discovering;
-        resized();
+        setStatus(Status::Discovering);
     };
     m_disconnectButton->setAlwaysOnTop(true);
     m_disconnectButton->setColour(juce::DrawableButton::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
@@ -306,12 +294,20 @@ void MainComponent::resized()
     switch (m_currentStatus)
     {
         case Status::Monitoring:
+            m_connectingComponent->setVisible(false);
             m_discoverComponent->setVisible(false);
             m_monitorComponent->setVisible(true);
             m_monitorComponent->setBounds(safeBounds);
             break;
+        case Status::Connecting:
+            m_monitorComponent->setVisible(false);
+            m_discoverComponent->setVisible(false);
+            m_connectingComponent->setVisible(true);
+            m_connectingComponent->setBounds(safeBounds);
+            break;
         case Status::Discovering:
         default:
+            m_connectingComponent->setVisible(false);
             m_monitorComponent->setVisible(false);
             m_discoverComponent->setVisible(true);
             m_discoverComponent->setBounds(safeBounds);
@@ -531,5 +527,38 @@ void MainComponent::applyMeteringColour()
             break;
         }
     }
+}
+
+void MainComponent::setStatus(const Status& s)
+{
+    m_currentStatus = s;
+    resized();
+}
+
+const MainComponent::Status MainComponent::getStatus()
+{
+    return m_currentStatus;
+}
+
+void MainComponent::connectToMema(const String& hostName, int portNumber)
+{
+    setStatus(Status::Connecting);
+
+    if (m_networkConnection)
+        m_networkConnection->ConnectToSocket(hostName, portNumber);
+
+    // restart connection attempt after 5s, in case something got stuck...
+    startTimer(5000);
+}
+
+void MainComponent::timerCallback()
+{
+    if (Status::Connecting == getStatus())
+    {
+        if (m_networkConnection && !m_networkConnection->isConnected())
+            m_networkConnection->RetryConnectToSocket();
+    }
+    else
+        stopTimer();
 }
 

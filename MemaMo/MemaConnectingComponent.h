@@ -1,4 +1,4 @@
-/* Copyright (c) 2024-2025, Christian Ahrens
+/* Copyright (c) 2025, Christian Ahrens
  *
  * This file is part of Mema <https://github.com/ChristianAhrens/Mema>
  *
@@ -21,27 +21,20 @@
 #include <JuceHeader.h>
 
 
-class MemaDiscoverComponent :   public juce::Component
+class MemaConnectingComponent :   public juce::Component
 {
 public:
-    MemaDiscoverComponent();
-    ~MemaDiscoverComponent() override;
+    MemaConnectingComponent();
+    ~MemaConnectingComponent() override;
 
     //==============================================================================
-    void paint(Graphics&) override;
     void resized() override;
-
-    //==============================================================================
-    void setDiscoveredServices(const std::vector<juce::NetworkServiceDiscovery::Service>& services);
-
-    //==============================================================================
-    std::function<void(const juce::NetworkServiceDiscovery::Service&)> onServiceSelected;
+    void paint(juce::Graphics& g) override;
 
 private:
-    std::unique_ptr<juce::Label>                        m_discoveredServicesLabel;
-    std::unique_ptr<juce::ComboBox>                     m_discoveredServicesSelection;
-    std::vector<juce::NetworkServiceDiscovery::Service> m_discoveredServices;
+    double                                  m_progress = -1.0;
+    std::unique_ptr<juce::ProgressBar>      m_startupProgressIndicator;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MemaDiscoverComponent)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MemaConnectingComponent)
 };
 
