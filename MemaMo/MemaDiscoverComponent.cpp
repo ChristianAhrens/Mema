@@ -1,4 +1,4 @@
-/* Copyright (c) 2024, Christian Ahrens
+/* Copyright (c) 2024-2025, Christian Ahrens
  *
  * This file is part of Mema <https://github.com/ChristianAhrens/Mema>
  *
