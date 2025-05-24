@@ -1,4 +1,4 @@
-/* Copyright (c) 2024, Christian Ahrens
+/* Copyright (c) 2024-2025, Christian Ahrens
  *
  * This file is part of Mema <https://github.com/ChristianAhrens/Mema>
  *
@@ -27,14 +27,14 @@ public:
     MemaDiscoverComponent();
     ~MemaDiscoverComponent() override;
 
-    //========================================================================*
+    //==============================================================================
     void paint(Graphics&) override;
     void resized() override;
 
-    //========================================================================*
+    //==============================================================================
     void setDiscoveredServices(const std::vector<juce::NetworkServiceDiscovery::Service>& services);
 
-    //========================================================================*
+    //==============================================================================
     std::function<void(const juce::NetworkServiceDiscovery::Service&)> onServiceSelected;
 
 private:

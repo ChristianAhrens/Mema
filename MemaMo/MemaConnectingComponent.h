@@ -1,4 +1,4 @@
-/* Copyright (c) 2024-2025, Christian Ahrens
+/* Copyright (c) 2025, Christian Ahrens
  *
  * This file is part of Mema <https://github.com/ChristianAhrens/Mema>
  *
@@ -16,41 +16,25 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "ProcessorAudioSignalData.h"
+#pragma once
 
-namespace Mema
+#include <JuceHeader.h>
+
+
+class MemaConnectingComponent :   public juce::Component
 {
+public:
+    MemaConnectingComponent();
+    ~MemaConnectingComponent() override;
 
-ProcessorAudioSignalData::ProcessorAudioSignalData()
-{
-    m_type = AudioSignal;
+    //==============================================================================
+    void resized() override;
+    void paint(juce::Graphics& g) override;
 
-    m_sampleRate = 0;
-}
+private:
+    double                                  m_progress = -1.0;
+    std::unique_ptr<juce::ProgressBar>      m_startupProgressIndicator;
 
-ProcessorAudioSignalData::~ProcessorAudioSignalData()
-{
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MemaConnectingComponent)
+};
 
-}
-
-void ProcessorAudioSignalData::SetChannelCount(unsigned long count)
-{
-    setSize(static_cast<int>(count), getNumSamples(), true, false, true);
-}
-
-unsigned long ProcessorAudioSignalData::GetChannelCount()
-{
-    return getNumChannels();
-}
-
-void ProcessorAudioSignalData::SetSampleRate(unsigned long rate)
-{
-    m_sampleRate = rate;
-}
-
-unsigned long ProcessorAudioSignalData::GetSampleRate()
-{
-    return m_sampleRate;
-}
-
-}

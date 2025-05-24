@@ -1,4 +1,4 @@
-/* Copyright (c) 2024, Christian Ahrens
+/* Copyright (c) 2024-2025, Christian Ahrens
  *
  * This file is part of Mema <https://github.com/ChristianAhrens/Mema>
  *
@@ -98,6 +98,8 @@ public:
             // use the settings menu item call infrastructure to activate dark mode per default
             if (auto mc = dynamic_cast<MainComponent*>(getContentComponent()))
                 mc->applySettingsOption(MainComponent::MemaMoSettingsOption::LookAndFeel_Dark);
+
+            JUCEAppBasics::AppConfigurationBase::getInstance()->triggerWatcherUpdate();
         }
 
         void closeButtonPressed() override

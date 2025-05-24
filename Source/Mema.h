@@ -20,7 +20,7 @@
 
 #include <JuceHeader.h>
 
-#include "AppConfiguration.h"
+#include "MemaAppConfiguration.h"
 
 
 namespace Mema
@@ -39,8 +39,8 @@ class MemaRemoteWrapper;
  *
  */
 class Mema   :  public juce::Timer,
-                public AppConfiguration::Dumper,
-                public AppConfiguration::Watcher
+                public MemaAppConfiguration::Dumper,
+                public MemaAppConfiguration::Watcher
 {
 public:
     Mema();
@@ -77,7 +77,7 @@ private:
     std::unique_ptr<MemaProcessorEditor>    m_audioVisuComponent;
     std::unique_ptr<AudioSelectComponent>   m_audioDeviceSelectComponent;
 
-    std::unique_ptr<AppConfiguration>       m_config;
+    std::unique_ptr<MemaAppConfiguration>   m_config;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Mema)
 };

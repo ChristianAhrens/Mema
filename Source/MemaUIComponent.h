@@ -20,7 +20,7 @@
 
 #include <JuceHeader.h>
 
-#include "AppConfiguration.h"
+#include "MemaAppConfiguration.h"
 
 #include <CustomLookAndFeel.h>
 
