@@ -154,7 +154,11 @@ MainComponent::MainComponent()
         settingsMenu.addSubMenu("LookAndFeel", lookAndFeelSubMenu);
         settingsMenu.addSubMenu("Output monitoring", outputVisuTypeSubMenu);
         settingsMenu.addSubMenu("Metering colour", meteringColourSubMenu);
-        settingsMenu.showMenuAsync(juce::PopupMenu::Options(), [=](int selectedId) { handleSettingsMenuResult(selectedId); });
+        settingsMenu.showMenuAsync(juce::PopupMenu::Options(), [=](int selectedId) {
+            handleSettingsMenuResult(selectedId);
+            if (m_config)
+                m_config->triggerConfigurationDump();
+        });
     };
     m_settingsButton->setAlwaysOnTop(true);
     m_settingsButton->setColour(juce::DrawableButton::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
@@ -299,7 +303,7 @@ MainComponent::MainComponent()
 
 
     // add this main component to watchers
-    m_config->addWatcher(this, true);
+    m_config->addWatcher(this); // without initial update - that we have to do externally after lambdas were assigned
 
 }
 
@@ -601,25 +605,42 @@ void MainComponent::performConfigurationDump()
 {
     if (m_config)
     {
+        // connection config
         auto connectionConfigXmlElement = std::make_unique<juce::XmlElement>(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::CONNECTIONCONFIG));
+
         auto serviceDescriptionXmlElmement = std::make_unique<juce::XmlElement>(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::SERVICEDESCRIPTION));
         serviceDescriptionXmlElmement->addTextElement(m_selectedService.description);
         connectionConfigXmlElement->addChildElement(serviceDescriptionXmlElmement.release());
+
         m_config->setConfigState(std::move(connectionConfigXmlElement), MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::CONNECTIONCONFIG));
 
+        // visu config
         auto visuConfigXmlElement = std::make_unique<juce::XmlElement>(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::VISUCONFIG));
-        auto outputVisuTypeXmlElmement = std::make_unique<juce::XmlElement>(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::OUTPUTVISUTYPE));
-        //if (m_networkConnection)
-        //    outputVisuTypeXmlElmement->addTextElement(m_networkConnection->GetHostName());
-        visuConfigXmlElement->addChildElement(outputVisuTypeXmlElmement.release());
-        auto meteringColourXmlElmement = std::make_unique<juce::XmlElement>(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::METERINGCOLOUR));
-        //if (m_networkConnection)
-        //    portXmlElmement->addTextElement(juce::String(m_networkConnection->GetPortNumber()));
-        visuConfigXmlElement->addChildElement(meteringColourXmlElmement.release());
+        
         auto lookAndFeelXmlElmement = std::make_unique<juce::XmlElement>(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::LOOKANDFEEL));
-        //if (m_networkConnection)
-        //    portXmlElmement->addTextElement(juce::String(m_networkConnection->GetPortNumber()));
+        for (int i = MemaMoSettingsOption::LookAndFeel_First; i <= MemaMoSettingsOption::LookAndFeel_Last; i++)
+        {
+            if (m_settingsItems[i].second == 1)
+                lookAndFeelXmlElmement->addTextElement(juce::String(i));
+        }
         visuConfigXmlElement->addChildElement(lookAndFeelXmlElmement.release());
+
+        auto outputVisuTypeXmlElmement = std::make_unique<juce::XmlElement>(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::OUTPUTVISUTYPE));
+        for (int i = MemaMoSettingsOption::OutputVisuType_First; i <= MemaMoSettingsOption::OutputVisuType_Last; i++)
+        {
+            if (m_settingsItems[i].second == 1)
+                outputVisuTypeXmlElmement->addTextElement(juce::String(i));
+        }
+        visuConfigXmlElement->addChildElement(outputVisuTypeXmlElmement.release());
+        
+        auto meteringColourXmlElmement = std::make_unique<juce::XmlElement>(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::METERINGCOLOUR));
+        for (int i = MemaMoSettingsOption::MeteringColour_First; i <= MemaMoSettingsOption::MeteringColour_Last; i++)
+        {
+            if (m_settingsItems[i].second == 1)
+                meteringColourXmlElmement->addTextElement(juce::String(i));
+        }
+        visuConfigXmlElement->addChildElement(meteringColourXmlElmement.release());
+
         m_config->setConfigState(std::move(visuConfigXmlElement), MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::VISUCONFIG));
     }
 }
@@ -649,6 +670,26 @@ void MainComponent::onConfigUpdated()
     auto visuConfigState = m_config->getConfigState(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::VISUCONFIG));
     if (visuConfigState)
     {
+        auto lookAndFeelXmlElement = visuConfigState->getChildByName(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::LOOKANDFEEL));
+        if (lookAndFeelXmlElement)
+        {
+            auto lookAndFeelSettingsOptionId = lookAndFeelXmlElement->getAllSubText().getIntValue();
+            handleSettingsLookAndFeelMenuResult(lookAndFeelSettingsOptionId);
+        }
+
+        auto outputVisuTypeXmlElement = visuConfigState->getChildByName(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::OUTPUTVISUTYPE));
+        if (outputVisuTypeXmlElement)
+        {
+            auto outputVisuTypeSettingsOptionId = outputVisuTypeXmlElement->getAllSubText().getIntValue();
+            handleSettingsOutputVisuTypeMenuResult(outputVisuTypeSettingsOptionId);
+        }
+
+        auto meteringColourXmlElement = visuConfigState->getChildByName(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::METERINGCOLOUR));
+        if (meteringColourXmlElement)
+        {
+            auto meteringColourSettingsOptionId = meteringColourXmlElement->getAllSubText().getIntValue();
+            handleSettingsMeteringColourMenuResult(meteringColourSettingsOptionId);
+        }
     }
 }
 
