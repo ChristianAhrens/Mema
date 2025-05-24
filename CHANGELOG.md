@@ -4,6 +4,13 @@ All notable changes to Mema will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Added
+
+### Changed
+
+### Fixed
+
 ## [0.5.1] 2025-05-24
 ### Added
 - Added Mema.Mo persistent configuration to restore UI and connection state after restart or connection loss
