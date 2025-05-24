@@ -1,4 +1,4 @@
-/* Copyright (c) 2024, Christian Ahrens
+/* Copyright (c) 2025, Christian Ahrens
  *
  * This file is part of Mema <https://github.com/ChristianAhrens/Mema>
  *
@@ -24,41 +24,36 @@
 
 #define Mema_CONFIG_VERSION "1.0.0"
 
-namespace Mema
-{
 
-class AppConfiguration : public JUCEAppBasics::AppConfigurationBase
+class MemaMoAppConfiguration : public JUCEAppBasics::AppConfigurationBase
 {
 
 public:
     enum TagID
     {
-        PROCESSORCONFIG,
-        DEVCONFIG,
-        UICONFIG,
-        PLUGINCONFIG,
-        INPUTMUTES,
-        OUTPUTMUTES,
-        CROSSPOINTGAINS
+        CONNECTIONCONFIG,
+        SERVICEDESCRIPTION,
+        VISUCONFIG,
+        OUTPUTVISUTYPE,
+        METERINGCOLOUR,
+        LOOKANDFEEL,
     };
     static juce::String getTagName(TagID ID)
     {
         switch(ID)
         {
-        case PROCESSORCONFIG:
-            return "PROCESSORCONFIG";
-        case DEVCONFIG:
-            return "DEVICECONFIG";
-        case UICONFIG:
-            return "UICONFIG";
-        case PLUGINCONFIG:
-            return "PLUGINCONFIG";
-        case INPUTMUTES:
-            return "INPUTMUTES";
-        case OUTPUTMUTES:
-            return "OUTPUTMUTES";
-        case CROSSPOINTGAINS:
-            return "CROSSPOINTGAINS";
+        case CONNECTIONCONFIG:
+            return "CONNECTIONCONFIG";
+        case SERVICEDESCRIPTION:
+            return "SERVICEDESCRIPTION";
+        case VISUCONFIG:
+            return "VISUCONFIG";
+        case OUTPUTVISUTYPE:
+            return "OUTPUTVISUTYPE";
+        case METERINGCOLOUR:
+            return "METERINGCOLOUR";
+        case LOOKANDFEEL:
+            return "LOOKANDFEEL";
         default:
             return "INVALID";
         }
@@ -67,9 +62,6 @@ public:
     enum AttributeID
     {
         ENABLED,
-        POST,
-        PALETTESTYLE,
-        METERINGCOLOR
     };
     static juce::String getAttributeName(AttributeID ID)
     {
@@ -77,20 +69,14 @@ public:
         {
         case ENABLED:
             return "ENABLED";
-        case POST:
-            return "POST";
-        case PALETTESTYLE:
-            return "PALETTESTYLE";
-        case METERINGCOLOR:
-            return "METERINGCOLOR";
         default:
             return "-";
         }
     };
 
 public:
-    explicit AppConfiguration(const File &file);
-    ~AppConfiguration() override;
+    explicit MemaMoAppConfiguration(const File &file);
+    ~MemaMoAppConfiguration() override;
 
     bool isValid() override;
     static bool isValid(const std::unique_ptr<juce::XmlElement>& xmlConfig);
@@ -102,7 +88,6 @@ protected:
 
 private:
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AppConfiguration)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MemaMoAppConfiguration)
 };
 
-} // namespace SpaConBridge

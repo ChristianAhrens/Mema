@@ -100,20 +100,11 @@ void MemaMoComponent::setOutputFieldVisuActive(const juce::AudioChannelSet& chan
 void MemaMoComponent::paint(Graphics &g)
 {
     g.fillAll(getLookAndFeel().findColour(juce::LookAndFeel_V4::ColourScheme::widgetBackground));
-    if (RunningStatus::Active != m_runningStatus)
-    {
-        g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOnId));
-        m_startRunningIndicator.paint(g);
-    }
 }
 
 void MemaMoComponent::resized()
 {
-    if (RunningStatus::Active != m_runningStatus)
-    {
-        m_startRunningIndicator.setBounds(getLocalBounds());
-    }
-    else if (m_inputMeteringComponent && m_outputFieldComponent)
+    if (m_inputMeteringComponent && m_outputFieldComponent)
     {
         auto margin = 8;
         auto bounds = getLocalBounds().reduced(margin, margin);
@@ -180,14 +171,6 @@ void MemaMoComponent::resized()
     }
 }
 
-void MemaMoComponent::mouseUp(const juce::MouseEvent& e)
-{
-    if (getLocalBounds().contains(e.getPosition()) && e.mouseWasClicked() && m_startRunningIndicator.progress == -1 && onExitClick)
-        onExitClick();
-
-    juce::Component::mouseUp(e);
-}
-
 void MemaMoComponent::handleMessage(const Message& message)
 {
     if (RunningStatus::Active != m_runningStatus)
@@ -235,40 +218,3 @@ void MemaMoComponent::handleMessage(const Message& message)
     }
 }
 
-void MemaMoComponent::timerCallback()
-{
-    if (RunningStatus::Standby == m_runningStatus)
-    {
-        m_startRunningAttemptTime -= sc_startRunningRefreshInterval;
-        if (m_startRunningAttemptTime > 0)
-        {
-            updateStartupAnimation();
-            startTimer(sc_startRunningRefreshInterval);
-        }
-        else
-            showStartupTimeout();
-    }
-}
-
-void MemaMoComponent::setRunning(bool running)
-{
-    m_runningStatus = running ? RunningStatus::Standby : RunningStatus::Inactive;
-
-    if (running)
-    {
-        m_startRunningAttemptTime = sc_startRunningTimeout;
-        startTimer(sc_startRunningRefreshInterval);
-    }
-}
-
-void MemaMoComponent::updateStartupAnimation()
-{
-    m_startRunningIndicator.progress = int((float(m_startRunningAttemptTime) / float(sc_startRunningTimeout)) * 100.0f);
-    repaint();
-}
-
-void MemaMoComponent::showStartupTimeout()
-{
-    m_startRunningIndicator.progress = -1;
-    repaint();
-}

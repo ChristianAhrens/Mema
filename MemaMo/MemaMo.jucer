@@ -8,6 +8,10 @@
   <MAINGROUP id="YIs3Nm" name="Mema.Mo">
     <GROUP id="{60526C8C-38C9-8A62-4BE8-08FDFBF21423}" name="submodules">
       <GROUP id="{A748DC48-D24B-A4B1-772D-A48B7873F767}" name="JUCEAppBascics">
+        <FILE id="T6JLwW" name="AppConfigurationBase.cpp" compile="1" resource="0"
+              file="../submodules/JUCE-AppBasics/Source/AppConfigurationBase.cpp"/>
+        <FILE id="Bj56WV" name="AppConfigurationBase.h" compile="0" resource="0"
+              file="../submodules/JUCE-AppBasics/Source/AppConfigurationBase.h"/>
         <FILE id="TQ34xv" name="CustomLookAndFeel.cpp" compile="1" resource="0"
               file="../submodules/JUCE-AppBasics/Source/CustomLookAndFeel.cpp"/>
         <FILE id="JS6zlP" name="CustomLookAndFeel.h" compile="0" resource="0"
@@ -37,25 +41,53 @@
               file="../submodules/JUCE-AppBasics/Resources/Images/settings_24dp.svg"/>
         <FILE id="uY5jnL" name="tune_24dp.svg" compile="0" resource="1" file="../submodules/JUCE-AppBasics/Resources/Images/tune_24dp.svg"/>
       </GROUP>
+      <FILE id="jMyrFg" name="MemaMoDefault.config" compile="0" resource="1"
+            file="../Resources/MemaMoDefault.config"/>
     </GROUP>
     <GROUP id="{B4C42B10-6A29-1C3A-435D-5CB7A9DE671E}" name="Source">
+      <FILE id="wfVH30" name="AboutComponent.cpp" compile="1" resource="0"
+            file="../Source/AboutComponent.cpp"/>
+      <FILE id="vkneaH" name="AboutComponent.h" compile="0" resource="0"
+            file="../Source/AboutComponent.h"/>
       <FILE id="j4AVKB" name="AbstractAudioVisualizer.cpp" compile="1" resource="0"
             file="../Source/MemaProcessorEditor/AbstractAudioVisualizer.cpp"/>
       <FILE id="JmJngu" name="AbstractAudioVisualizer.h" compile="0" resource="0"
             file="../Source/MemaProcessorEditor/AbstractAudioVisualizer.h"/>
-      <FILE id="iwKL0M" name="MeterbridgeComponent.cpp" compile="1" resource="0"
-            file="../Source/MemaProcessorEditor/MeterbridgeComponent.cpp"/>
-      <FILE id="fIADmU" name="MeterbridgeComponent.h" compile="0" resource="0"
-            file="../Source/MemaProcessorEditor/MeterbridgeComponent.h"/>
-      <FILE id="WhHDmY" name="TwoDFieldOutputComponent.cpp" compile="1" resource="0"
-            file="../Source/MemaProcessorEditor/TwoDFieldOutputComponent.cpp"/>
-      <FILE id="CHiFIG" name="TwoDFieldOutputComponent.h" compile="0" resource="0"
-            file="../Source/MemaProcessorEditor/TwoDFieldOutputComponent.h"/>
+      <FILE id="Mm5KcE" name="AbstractProcessorData.cpp" compile="1" resource="0"
+            file="../Source/MemaProcessor/AbstractProcessorData.cpp"/>
+      <FILE id="b9h1KE" name="AbstractProcessorData.h" compile="0" resource="0"
+            file="../Source/MemaProcessor/AbstractProcessorData.h"/>
+      <FILE id="v69CCa" name="CustomPopupMenuComponent.h" compile="0" resource="0"
+            file="../Source/CustomPopupMenuComponent.h"/>
+      <FILE id="Y0aPvI" name="Main.cpp" compile="1" resource="0" file="Main.cpp"/>
+      <FILE id="ijXJpV" name="MainComponent.cpp" compile="1" resource="0"
+            file="MainComponent.cpp"/>
+      <FILE id="UysMVV" name="MainComponent.h" compile="0" resource="0" file="MainComponent.h"/>
+      <FILE id="gZxdkr" name="MemaConnectingComponent.cpp" compile="1" resource="0"
+            file="MemaConnectingComponent.cpp"/>
+      <FILE id="wFde2T" name="MemaConnectingComponent.h" compile="0" resource="0"
+            file="MemaConnectingComponent.h"/>
+      <FILE id="ttw4M3" name="MemaDiscoverComponent.cpp" compile="1" resource="0"
+            file="MemaDiscoverComponent.cpp"/>
+      <FILE id="rRagrh" name="MemaDiscoverComponent.h" compile="0" resource="0"
+            file="MemaDiscoverComponent.h"/>
       <FILE id="avbo06" name="MemaMessages.h" compile="0" resource="0" file="../Source/MemaProcessor/MemaMessages.h"/>
+      <FILE id="YOyntA" name="MemaMoAppConfiguration.cpp" compile="1" resource="0"
+            file="MemaMoAppConfiguration.cpp"/>
+      <FILE id="vlDIa5" name="MemaMoAppConfiguration.h" compile="0" resource="0"
+            file="MemaMoAppConfiguration.h"/>
+      <FILE id="I1Qk3D" name="MemaMoComponent.cpp" compile="1" resource="0"
+            file="MemaMoComponent.cpp"/>
+      <FILE id="IiCQQ0" name="MemaMoComponent.h" compile="0" resource="0"
+            file="MemaMoComponent.h"/>
       <FILE id="Sl1faN" name="MemaServiceData.cpp" compile="1" resource="0"
             file="../Source/MemaProcessor/MemaServiceData.cpp"/>
       <FILE id="I0uyCC" name="MemaServiceData.h" compile="0" resource="0"
             file="../Source/MemaProcessor/MemaServiceData.h"/>
+      <FILE id="iwKL0M" name="MeterbridgeComponent.cpp" compile="1" resource="0"
+            file="../Source/MemaProcessorEditor/MeterbridgeComponent.cpp"/>
+      <FILE id="fIADmU" name="MeterbridgeComponent.h" compile="0" resource="0"
+            file="../Source/MemaProcessorEditor/MeterbridgeComponent.h"/>
       <FILE id="FQmsio" name="ProcessorAudioSignalData.cpp" compile="1" resource="0"
             file="../Source/MemaProcessor/ProcessorAudioSignalData.cpp"/>
       <FILE id="XHJ5ms" name="ProcessorAudioSignalData.h" compile="0" resource="0"
@@ -72,28 +104,10 @@
             file="../Source/MemaProcessor/ProcessorSpectrumData.cpp"/>
       <FILE id="qCeR2y" name="ProcessorSpectrumData.h" compile="0" resource="0"
             file="../Source/MemaProcessor/ProcessorSpectrumData.h"/>
-      <FILE id="Mm5KcE" name="AbstractProcessorData.cpp" compile="1" resource="0"
-            file="../Source/MemaProcessor/AbstractProcessorData.cpp"/>
-      <FILE id="b9h1KE" name="AbstractProcessorData.h" compile="0" resource="0"
-            file="../Source/MemaProcessor/AbstractProcessorData.h"/>
-      <FILE id="I1Qk3D" name="MemaMoComponent.cpp" compile="1" resource="0"
-            file="MemaMoComponent.cpp"/>
-      <FILE id="IiCQQ0" name="MemaMoComponent.h" compile="0" resource="0"
-            file="MemaMoComponent.h"/>
-      <FILE id="ttw4M3" name="MemaDiscoverComponent.cpp" compile="1" resource="0"
-            file="MemaDiscoverComponent.cpp"/>
-      <FILE id="rRagrh" name="MemaDiscoverComponent.h" compile="0" resource="0"
-            file="MemaDiscoverComponent.h"/>
-      <FILE id="wfVH30" name="AboutComponent.cpp" compile="1" resource="0"
-            file="../Source/AboutComponent.cpp"/>
-      <FILE id="vkneaH" name="AboutComponent.h" compile="0" resource="0"
-            file="../Source/AboutComponent.h"/>
-      <FILE id="v69CCa" name="CustomPopupMenuComponent.h" compile="0" resource="0"
-            file="../Source/CustomPopupMenuComponent.h"/>
-      <FILE id="Y0aPvI" name="Main.cpp" compile="1" resource="0" file="Main.cpp"/>
-      <FILE id="ijXJpV" name="MainComponent.cpp" compile="1" resource="0"
-            file="MainComponent.cpp"/>
-      <FILE id="UysMVV" name="MainComponent.h" compile="0" resource="0" file="MainComponent.h"/>
+      <FILE id="WhHDmY" name="TwoDFieldOutputComponent.cpp" compile="1" resource="0"
+            file="../Source/MemaProcessorEditor/TwoDFieldOutputComponent.cpp"/>
+      <FILE id="CHiFIG" name="TwoDFieldOutputComponent.h" compile="0" resource="0"
+            file="../Source/MemaProcessorEditor/TwoDFieldOutputComponent.h"/>
     </GROUP>
   </MAINGROUP>
   <MODULES>

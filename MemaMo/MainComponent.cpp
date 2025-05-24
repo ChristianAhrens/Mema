@@ -21,6 +21,7 @@
 #include "CustomPopupMenuComponent.h"
 #include "MemaMoComponent.h"
 #include "MemaDiscoverComponent.h"
+#include "MemaConnectingComponent.h"
 
 #include <AboutComponent.h>
 #include <CustomLookAndFeel.h>
@@ -35,20 +36,28 @@
 MainComponent::MainComponent()
     : juce::Component()
 {
+    // create the configuration object (is being initialized from disk automatically)
+    m_config = std::make_unique<MemaMoAppConfiguration>(JUCEAppBasics::AppConfigurationBase::getDefaultConfigFilePath());
+    m_config->addDumper(this);
+
+    // check if config creation was able to read a valid config from disk...
+    if (!m_config->isValid())
+    {
+        m_config->ResetToDefault();
+    }
+
     m_networkConnection = std::make_unique<InterprocessConnectionImpl>();
     m_networkConnection->onConnectionMade = [=]() {
         DBG(__FUNCTION__);
+
+        setStatus(Status::Monitoring);
     };
     m_networkConnection->onConnectionLost = [=]() {
         DBG(__FUNCTION__);
-        if (m_monitorComponent)
-            m_monitorComponent->setRunning(false);
-
         if (m_discoverComponent)
             m_discoverComponent->setDiscoveredServices(m_availableServices->getServices());
 
-        m_currentStatus = Status::Discovering;
-        resized();
+        setStatus(Status::Discovering);
     };
     m_networkConnection->onMessageReceived = [=](const juce::MemoryBlock& message) {
         auto knownMessage = Mema::SerializableMessage::initFromMemoryBlock(message);
@@ -63,8 +72,10 @@ MainComponent::MainComponent()
                 onPaletteStyleChange(m_settingsHostLookAndFeelId, false/*do not follow local style any more if a message was received via net once*/);
             }
         }
-        else if (m_monitorComponent && nullptr != knownMessage)
+        else if (m_monitorComponent && nullptr != knownMessage && Status::Monitoring == m_currentStatus)
+        {
             m_monitorComponent->handleMessage(*knownMessage);
+        }
         Mema::SerializableMessage::freeMessageData(knownMessage);
     };
 
@@ -73,27 +84,23 @@ MainComponent::MainComponent()
         if (m_discoverComponent)
             m_discoverComponent->setDiscoveredServices(m_availableServices->getServices());
 
-        if (m_monitorComponent)
-            m_monitorComponent->setRunning(false);
-
-        m_currentStatus = Status::Discovering;
-        resized();
+        setStatus(Status::Discovering);
     };
-    m_monitorComponent->setRunning(false);
     addAndMakeVisible(m_monitorComponent.get());
 
     m_discoverComponent = std::make_unique<MemaDiscoverComponent>();
     m_discoverComponent->onServiceSelected = [=](const juce::NetworkServiceDiscovery::Service& selectedService) {
-        m_currentStatus = Status::Monitoring;
-        resized();
+        m_selectedService = selectedService;
 
-        if (m_monitorComponent)
-            m_monitorComponent->setRunning(true);
+        connectToMema();
 
-        if (m_networkConnection)
-            m_networkConnection->connectToSocket(selectedService.address.toString(), selectedService.port, 100);
+        if (m_config)
+            m_config->triggerConfigurationDump(false);
     };
     addAndMakeVisible(m_discoverComponent.get());
+
+    m_connectingComponent = std::make_unique<MemaConnectingComponent>();
+    addAndMakeVisible(m_connectingComponent.get());
 
     m_aboutComponent = std::make_unique<AboutComponent>(BinaryData::MemaMoRect_png, BinaryData::MemaMoCanvas_pngSize);
     m_aboutButton = std::make_unique<juce::DrawableButton>("About", juce::DrawableButton::ButtonStyle::ImageFitted);
@@ -147,7 +154,11 @@ MainComponent::MainComponent()
         settingsMenu.addSubMenu("LookAndFeel", lookAndFeelSubMenu);
         settingsMenu.addSubMenu("Output monitoring", outputVisuTypeSubMenu);
         settingsMenu.addSubMenu("Metering colour", meteringColourSubMenu);
-        settingsMenu.showMenuAsync(juce::PopupMenu::Options(), [=](int selectedId) { handleSettingsMenuResult(selectedId); });
+        settingsMenu.showMenuAsync(juce::PopupMenu::Options(), [=](int selectedId) {
+            handleSettingsMenuResult(selectedId);
+            if (m_config)
+                m_config->triggerConfigurationDump();
+        });
     };
     m_settingsButton->setAlwaysOnTop(true);
     m_settingsButton->setColour(juce::DrawableButton::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
@@ -160,14 +171,15 @@ MainComponent::MainComponent()
         if (m_networkConnection)
             m_networkConnection->disconnect();
 
-        if (m_monitorComponent)
-            m_monitorComponent->setRunning(false);
+        m_selectedService = {};
+
+        if (m_config)
+            m_config->triggerConfigurationDump();
 
         if (m_discoverComponent)
             m_discoverComponent->setDiscoveredServices(m_availableServices->getServices());
 
-        m_currentStatus = Status::Discovering;
-        resized();
+        setStatus(Status::Discovering);
     };
     m_disconnectButton->setAlwaysOnTop(true);
     m_disconnectButton->setColour(juce::DrawableButton::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
@@ -288,6 +300,11 @@ MainComponent::MainComponent()
     updater->SetDownloadUpdateWebAddress("https://github.com/christianahrens/mema/releases/latest");
     updater->CheckForNewVersion(true, "https://raw.githubusercontent.com/ChristianAhrens/Mema/refs/heads/main/");
 #endif
+
+
+    // add this main component to watchers
+    m_config->addWatcher(this); // without initial update - that we have to do externally after lambdas were assigned
+
 }
 
 MainComponent::~MainComponent()
@@ -306,12 +323,20 @@ void MainComponent::resized()
     switch (m_currentStatus)
     {
         case Status::Monitoring:
+            m_connectingComponent->setVisible(false);
             m_discoverComponent->setVisible(false);
             m_monitorComponent->setVisible(true);
             m_monitorComponent->setBounds(safeBounds);
             break;
+        case Status::Connecting:
+            m_monitorComponent->setVisible(false);
+            m_discoverComponent->setVisible(false);
+            m_connectingComponent->setVisible(true);
+            m_connectingComponent->setBounds(safeBounds);
+            break;
         case Status::Discovering:
         default:
+            m_connectingComponent->setVisible(false);
             m_monitorComponent->setVisible(false);
             m_discoverComponent->setVisible(true);
             m_discoverComponent->setBounds(safeBounds);
@@ -529,6 +554,141 @@ void MainComponent::applyMeteringColour()
             getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId, m_meteringColour.darker());
             getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId, m_meteringColour);
             break;
+        }
+    }
+}
+
+void MainComponent::setStatus(const Status& s)
+{
+    m_currentStatus = s;
+    resized();
+}
+
+const MainComponent::Status MainComponent::getStatus()
+{
+    return m_currentStatus;
+}
+
+void MainComponent::connectToMema()
+{
+    setStatus(Status::Connecting);
+
+    timerCallback(); // avoid codeclones by manually trigger the timed connection attempt once
+
+    // restart connection attempt after 5s, in case something got stuck...
+    startTimer(5000);
+}
+
+void MainComponent::timerCallback()
+{
+    if (Status::Connecting == getStatus())
+    {
+        auto sl = m_availableServices->getServices();
+        auto const& iter = std::find_if(sl.begin(), sl.end(), [=](const auto& service) { return service.description == m_selectedService.description; });
+        if (iter != sl.end())
+        {
+            if ((m_selectedService.address != iter->address && m_selectedService.port != iter->port && m_selectedService.description != iter->description) || !m_networkConnection->isConnected())
+            {
+                m_selectedService = *iter;
+                if (m_networkConnection)
+                    m_networkConnection->ConnectToSocket(m_selectedService.address.toString(), m_selectedService.port);
+            }
+            else if (m_networkConnection && !m_networkConnection->isConnected())
+                m_networkConnection->RetryConnectToSocket();
+        }
+    }
+    else
+        stopTimer();
+}
+
+void MainComponent::performConfigurationDump()
+{
+    if (m_config)
+    {
+        // connection config
+        auto connectionConfigXmlElement = std::make_unique<juce::XmlElement>(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::CONNECTIONCONFIG));
+
+        auto serviceDescriptionXmlElmement = std::make_unique<juce::XmlElement>(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::SERVICEDESCRIPTION));
+        serviceDescriptionXmlElmement->addTextElement(m_selectedService.description);
+        connectionConfigXmlElement->addChildElement(serviceDescriptionXmlElmement.release());
+
+        m_config->setConfigState(std::move(connectionConfigXmlElement), MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::CONNECTIONCONFIG));
+
+        // visu config
+        auto visuConfigXmlElement = std::make_unique<juce::XmlElement>(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::VISUCONFIG));
+        
+        auto lookAndFeelXmlElmement = std::make_unique<juce::XmlElement>(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::LOOKANDFEEL));
+        for (int i = MemaMoSettingsOption::LookAndFeel_First; i <= MemaMoSettingsOption::LookAndFeel_Last; i++)
+        {
+            if (m_settingsItems[i].second == 1)
+                lookAndFeelXmlElmement->addTextElement(juce::String(i));
+        }
+        visuConfigXmlElement->addChildElement(lookAndFeelXmlElmement.release());
+
+        auto outputVisuTypeXmlElmement = std::make_unique<juce::XmlElement>(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::OUTPUTVISUTYPE));
+        for (int i = MemaMoSettingsOption::OutputVisuType_First; i <= MemaMoSettingsOption::OutputVisuType_Last; i++)
+        {
+            if (m_settingsItems[i].second == 1)
+                outputVisuTypeXmlElmement->addTextElement(juce::String(i));
+        }
+        visuConfigXmlElement->addChildElement(outputVisuTypeXmlElmement.release());
+        
+        auto meteringColourXmlElmement = std::make_unique<juce::XmlElement>(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::METERINGCOLOUR));
+        for (int i = MemaMoSettingsOption::MeteringColour_First; i <= MemaMoSettingsOption::MeteringColour_Last; i++)
+        {
+            if (m_settingsItems[i].second == 1)
+                meteringColourXmlElmement->addTextElement(juce::String(i));
+        }
+        visuConfigXmlElement->addChildElement(meteringColourXmlElmement.release());
+
+        m_config->setConfigState(std::move(visuConfigXmlElement), MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::VISUCONFIG));
+    }
+}
+
+void MainComponent::onConfigUpdated()
+{
+    auto connectionConfigState = m_config->getConfigState(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::CONNECTIONCONFIG));
+    if (connectionConfigState)
+    {
+        auto serviceDescriptionXmlElement = connectionConfigState->getChildByName(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::SERVICEDESCRIPTION));
+        if (serviceDescriptionXmlElement)
+        {
+            auto serviceDescription = serviceDescriptionXmlElement->getAllSubText();
+            if (serviceDescription.isNotEmpty() && m_selectedService.description != serviceDescription)
+            {
+                if (m_networkConnection)
+                    m_networkConnection->disconnect();
+
+                m_selectedService = {};
+                m_selectedService.description = serviceDescription;
+
+                connectToMema();
+            }
+        }
+    }
+
+    auto visuConfigState = m_config->getConfigState(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::VISUCONFIG));
+    if (visuConfigState)
+    {
+        auto lookAndFeelXmlElement = visuConfigState->getChildByName(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::LOOKANDFEEL));
+        if (lookAndFeelXmlElement)
+        {
+            auto lookAndFeelSettingsOptionId = lookAndFeelXmlElement->getAllSubText().getIntValue();
+            handleSettingsLookAndFeelMenuResult(lookAndFeelSettingsOptionId);
+        }
+
+        auto outputVisuTypeXmlElement = visuConfigState->getChildByName(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::OUTPUTVISUTYPE));
+        if (outputVisuTypeXmlElement)
+        {
+            auto outputVisuTypeSettingsOptionId = outputVisuTypeXmlElement->getAllSubText().getIntValue();
+            handleSettingsOutputVisuTypeMenuResult(outputVisuTypeSettingsOptionId);
+        }
+
+        auto meteringColourXmlElement = visuConfigState->getChildByName(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::METERINGCOLOUR));
+        if (meteringColourXmlElement)
+        {
+            auto meteringColourSettingsOptionId = meteringColourXmlElement->getAllSubText().getIntValue();
+            handleSettingsMeteringColourMenuResult(meteringColourSettingsOptionId);
         }
     }
 }

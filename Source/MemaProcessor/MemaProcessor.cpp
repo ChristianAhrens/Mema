@@ -22,7 +22,7 @@
 #include "MemaCommanders.h"
 #include "MemaServiceData.h"
 #include "MemaMessages.h"
-#include "../AppConfiguration.h"
+#include "../MemaAppConfiguration.h"
 
 #include <CustomLookAndFeel.h>
 
@@ -187,16 +187,16 @@ MemaProcessor::~MemaProcessor()
 
 std::unique_ptr<juce::XmlElement> MemaProcessor::createStateXml()
 {
-	auto stateXml = std::make_unique<juce::XmlElement>(AppConfiguration::getTagName(AppConfiguration::TagID::PROCESSORCONFIG));
+	auto stateXml = std::make_unique<juce::XmlElement>(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::PROCESSORCONFIG));
 
-	auto devConfElm = std::make_unique<juce::XmlElement>(AppConfiguration::getTagName(AppConfiguration::TagID::DEVCONFIG));
+	auto devConfElm = std::make_unique<juce::XmlElement>(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::DEVCONFIG));
 	if (m_deviceManager)
 		devConfElm->addChildElement(m_deviceManager->createStateXml().release());
 	stateXml->addChildElement(devConfElm.release());
 
-	auto plgConfElm = std::make_unique<juce::XmlElement>(AppConfiguration::getTagName(AppConfiguration::TagID::PLUGINCONFIG));
-	plgConfElm->setAttribute(AppConfiguration::getAttributeName(AppConfiguration::AttributeID::ENABLED), m_pluginEnabled ? 1 : 0);
-	plgConfElm->setAttribute(AppConfiguration::getAttributeName(AppConfiguration::AttributeID::POST), m_pluginPost ? 1 : 0);
+	auto plgConfElm = std::make_unique<juce::XmlElement>(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::PLUGINCONFIG));
+	plgConfElm->setAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::ENABLED), m_pluginEnabled ? 1 : 0);
+	plgConfElm->setAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::POST), m_pluginPost ? 1 : 0);
 	if (m_pluginInstance)
 	{
 		plgConfElm->addChildElement(m_pluginInstance->getPluginDescription().createXml().release());
@@ -218,21 +218,21 @@ std::unique_ptr<juce::XmlElement> MemaProcessor::createStateXml()
 		matrixCrosspointValues = m_matrixCrosspointValues;
 	}
 
-	auto inputMutesElm = std::make_unique<juce::XmlElement>(AppConfiguration::getTagName(AppConfiguration::TagID::INPUTMUTES));
+	auto inputMutesElm = std::make_unique<juce::XmlElement>(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::INPUTMUTES));
 	juce::StringArray imutestatestr;
 	for (auto const& mutestate : inputMuteStates)
 		imutestatestr.add(juce::String(mutestate.first) + "," + juce::String(mutestate.second ? 1 : 0));
 	inputMutesElm->addTextElement(imutestatestr.joinIntoString(";"));
 	stateXml->addChildElement(inputMutesElm.release());
 
-	auto outputMutesElm = std::make_unique<juce::XmlElement>(AppConfiguration::getTagName(AppConfiguration::TagID::OUTPUTMUTES));
+	auto outputMutesElm = std::make_unique<juce::XmlElement>(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::OUTPUTMUTES));
 	juce::StringArray omutestatestr;
 	for (auto const& mutestate : outputMuteStates)
 		omutestatestr.add(juce::String(mutestate.first) + "," + juce::String(mutestate.second ? 1 : 0));
 	outputMutesElm->addTextElement(omutestatestr.joinIntoString(";"));
 	stateXml->addChildElement(outputMutesElm.release());
 
-	auto crosspointGainsElm = std::make_unique<juce::XmlElement>(AppConfiguration::getTagName(AppConfiguration::TagID::CROSSPOINTGAINS));
+	auto crosspointGainsElm = std::make_unique<juce::XmlElement>(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::CROSSPOINTGAINS));
 	juce::StringArray cgainstatestr;
 	for (auto const& insKV : matrixCrosspointValues)
 		for (auto const& outsKV : insKV.second)
@@ -245,14 +245,14 @@ std::unique_ptr<juce::XmlElement> MemaProcessor::createStateXml()
 
 bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
 {
-	if (nullptr == stateXml || stateXml->getTagName() != AppConfiguration::getTagName(AppConfiguration::TagID::PROCESSORCONFIG))
+	if (nullptr == stateXml || stateXml->getTagName() != MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::PROCESSORCONFIG))
 	{
 		jassertfalse;
 		return false;
 	}
 
     juce::XmlElement* deviceSetupXml = nullptr;
-    auto devConfElm = stateXml->getChildByName(AppConfiguration::getTagName(AppConfiguration::TagID::DEVCONFIG));
+    auto devConfElm = stateXml->getChildByName(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::DEVCONFIG));
     if (nullptr != devConfElm)
         deviceSetupXml = devConfElm->getChildByName("DEVICESETUP");
     
@@ -286,11 +286,11 @@ bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
 		return false;
 
 
-	auto plgConfElm = stateXml->getChildByName(AppConfiguration::getTagName(AppConfiguration::TagID::PLUGINCONFIG));
+	auto plgConfElm = stateXml->getChildByName(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::PLUGINCONFIG));
 	if (nullptr != plgConfElm)
 	{
-		setPluginEnabledState(plgConfElm->getBoolAttribute(AppConfiguration::getAttributeName(AppConfiguration::AttributeID::ENABLED)));
-		setPluginPrePostState(plgConfElm->getBoolAttribute(AppConfiguration::getAttributeName(AppConfiguration::AttributeID::POST)));
+		setPluginEnabledState(plgConfElm->getBoolAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::ENABLED)));
+		setPluginPrePostState(plgConfElm->getBoolAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::POST)));
 		auto pluginDescriptionXml = plgConfElm->getChildByName("PLUGIN");
 		if (nullptr != pluginDescriptionXml)
 		{
@@ -309,7 +309,7 @@ bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
 	std::map<int, bool> inputMuteStates;
 	std::map<int, bool> outputMuteStates;
 	std::map<int, std::map<int, std::pair<bool, float>>> matrixCrosspointValues;
-	auto inputMutesElm = stateXml->getChildByName(AppConfiguration::getTagName(AppConfiguration::TagID::INPUTMUTES));
+	auto inputMutesElm = stateXml->getChildByName(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::INPUTMUTES));
 	if (nullptr != inputMutesElm)
 	{
 		juce::StringArray imutestatestrs;
@@ -323,7 +323,7 @@ bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
 				inputMuteStates[imutestatestra[0].getIntValue()] = (1 == imutestatestra[1].getIntValue());
 		}
 	}
-	auto outputMutesElm = stateXml->getChildByName(AppConfiguration::getTagName(AppConfiguration::TagID::OUTPUTMUTES));
+	auto outputMutesElm = stateXml->getChildByName(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::OUTPUTMUTES));
 	if (nullptr != outputMutesElm)
 	{
 		juce::StringArray omutestatestrs;
@@ -337,7 +337,7 @@ bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
 				outputMuteStates[omutestatestra[0].getIntValue()] = (1 == omutestatestra[1].getIntValue());
 		}
 	}
-	auto crosspointGainsElm = stateXml->getChildByName(AppConfiguration::getTagName(AppConfiguration::TagID::CROSSPOINTGAINS));
+	auto crosspointGainsElm = stateXml->getChildByName(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::CROSSPOINTGAINS));
 	if (nullptr != crosspointGainsElm)
 	{
 		juce::StringArray cgainstatestrs;
