@@ -34,7 +34,7 @@ Mema::Mema() :  juce::Timer()
 {
     DBG(__FUNCTION__);
     // create the configuration object (is being initialized from disk automatically)
-    m_config = std::make_unique<AppConfiguration>(JUCEAppBasics::AppConfigurationBase::getDefaultConfigFilePath());
+    m_config = std::make_unique<MemaAppConfiguration>(JUCEAppBasics::AppConfigurationBase::getDefaultConfigFilePath());
     m_config->addDumper(this);
 
     // check if config creation was able to read a valid config from disk...
@@ -46,7 +46,7 @@ Mema::Mema() :  juce::Timer()
     // add this main component to watchers
     m_config->addWatcher(this, true); // this initial update cannot yet reach all parts of the app, esp. settings page that relies on fully initialized pagecomponentmanager, therefor a manual watcher update is triggered below
 
-    m_MemaProcessor = std::make_unique<MemaProcessor>(m_config->getConfigState(AppConfiguration::getTagName(AppConfiguration::TagID::PROCESSORCONFIG)).get());
+    m_MemaProcessor = std::make_unique<MemaProcessor>(m_config->getConfigState(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::PROCESSORCONFIG)).get());
 
     m_audioDeviceSelectComponent = std::make_unique<AudioSelectComponent>(m_MemaProcessor->getDeviceManager(),
                                                                           MemaProcessor::s_minInputsCount,
@@ -132,22 +132,22 @@ void Mema::performConfigurationDump()
         if (stateXml)
         {
             if (m_MemaProcessor)
-                m_config->setConfigState(m_MemaProcessor->createStateXml(), AppConfiguration::getTagName(AppConfiguration::TagID::PROCESSORCONFIG));
+                m_config->setConfigState(m_MemaProcessor->createStateXml(), MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::PROCESSORCONFIG));
             if (m_MemaUIConfigCache)
-                m_config->setConfigState(std::make_unique<juce::XmlElement>(*m_MemaUIConfigCache), AppConfiguration::getTagName(AppConfiguration::TagID::UICONFIG));
+                m_config->setConfigState(std::make_unique<juce::XmlElement>(*m_MemaUIConfigCache), MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::UICONFIG));
         }
     }
 }
 
 void Mema::onConfigUpdated()
 {
-    auto processorConfigState = m_config->getConfigState(AppConfiguration::getTagName(AppConfiguration::TagID::PROCESSORCONFIG));
+    auto processorConfigState = m_config->getConfigState(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::PROCESSORCONFIG));
     if (processorConfigState && m_MemaProcessor)
     {
         m_MemaProcessor->setStateXml(processorConfigState.get());
     }
         
-    auto uiConfigState = m_config->getConfigState(AppConfiguration::getTagName(AppConfiguration::TagID::UICONFIG));
+    auto uiConfigState = m_config->getConfigState(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::UICONFIG));
     if (uiConfigState && m_MemaProcessor)
     {
         m_MemaUIConfigCache = std::make_unique<juce::XmlElement>(*uiConfigState);

@@ -20,13 +20,18 @@
 
 #include <JuceHeader.h>
 
+#include "MemaMoAppConfiguration.h"
+
 
 class MemaMoComponent;
 class MemaDiscoverComponent;
 class MemaConnectingComponent;
 class AboutComponent;
 
-class MainComponent :   public juce::Component, juce::Timer
+class MainComponent :   public juce::Component,
+                        public juce::Timer,
+                        public MemaMoAppConfiguration::Dumper,
+                        public MemaMoAppConfiguration::Watcher
 {
 public:
     enum Status
@@ -77,6 +82,10 @@ public:
     void timerCallback() override;
 
     //==============================================================================
+    void performConfigurationDump() override;
+    void onConfigUpdated() override;
+
+    //==============================================================================
     std::function<void(int, bool)> onPaletteStyleChange;
 
 private:
@@ -110,7 +119,7 @@ private:
 
     private:
         juce::String m_hostName;
-        int m_portNumber;
+        int m_portNumber = 0;
     };
 
     //==============================================================================
@@ -125,10 +134,11 @@ private:
     void setStatus(const Status& s);
     const Status getStatus();
 
-    void connectToMema(const String& hostName, int portNumber);
+    void connectToMema();
 
     //==============================================================================
     std::unique_ptr<juce::NetworkServiceDiscovery::AvailableServiceList>    m_availableServices;
+    juce::NetworkServiceDiscovery::Service                                  m_selectedService;
     std::unique_ptr<InterprocessConnectionImpl>                             m_networkConnection;
 
     std::unique_ptr<MemaMoComponent>                                        m_monitorComponent;
@@ -144,9 +154,11 @@ private:
     std::unique_ptr<juce::DrawableButton>                                   m_aboutButton;
     std::unique_ptr<AboutComponent>                                         m_aboutComponent;
 
-    Status m_currentStatus = Status::Discovering;
+    Status                                                                  m_currentStatus = Status::Discovering;
 
-    juce::Colour m_meteringColour = juce::Colours::forestgreen;
+    juce::Colour                                                            m_meteringColour = juce::Colours::forestgreen;
+
+    std::unique_ptr<MemaMoAppConfiguration>                                 m_config;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

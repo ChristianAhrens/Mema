@@ -49,7 +49,8 @@
               file="submodules/JUCE-AppBasics/Resources/Images/stat_minus_1_24dp.svg"/>
         <FILE id="rqbjLo" name="tune_24dp.svg" compile="0" resource="1" file="submodules/JUCE-AppBasics/Resources/Images/tune_24dp.svg"/>
       </GROUP>
-      <FILE id="pqcvEg" name="Default.config" compile="0" resource="1" file="Resources/Default.config"/>
+      <FILE id="aKpbVe" name="MemaDefault.config" compile="0" resource="1"
+            file="Resources/MemaDefault.config"/>
     </GROUP>
     <GROUP id="{B4C42B10-6A29-1C3A-435D-5CB7A9DE671E}" name="Source">
       <GROUP id="{DCDB6122-F952-CB92-8481-8567B7B7F7C0}" name="MemaProcessor">
@@ -128,23 +129,23 @@
         <FILE id="SpQ1vS" name="TwoDFieldOutputComponent.h" compile="0" resource="0"
               file="Source/MemaProcessorEditor/TwoDFieldOutputComponent.h"/>
       </GROUP>
-      <FILE id="NVRWpP" name="AppConfiguration.cpp" compile="1" resource="0"
-            file="Source/AppConfiguration.cpp"/>
-      <FILE id="LKp1G8" name="AppConfiguration.h" compile="0" resource="0"
-            file="Source/AppConfiguration.h"/>
-      <FILE id="jTXcC7" name="Mema.cpp" compile="1" resource="0" file="Source/Mema.cpp"/>
-      <FILE id="eleQrX" name="Mema.h" compile="0" resource="0" file="Source/Mema.h"/>
-      <FILE id="xmecvf" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
-      <FILE id="svDZvt" name="MemaUIComponent.h" compile="0" resource="0"
-            file="Source/MemaUIComponent.h"/>
-      <FILE id="F1bdYR" name="MemaUIComponent.cpp" compile="1" resource="0"
-            file="Source/MemaUIComponent.cpp"/>
       <FILE id="M0Uva0" name="AboutComponent.cpp" compile="1" resource="0"
             file="Source/AboutComponent.cpp"/>
       <FILE id="IZplXz" name="AboutComponent.h" compile="0" resource="0"
             file="Source/AboutComponent.h"/>
       <FILE id="Q8jLPX" name="CustomPopupMenuComponent.h" compile="0" resource="0"
             file="Source/CustomPopupMenuComponent.h"/>
+      <FILE id="xmecvf" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
+      <FILE id="jTXcC7" name="Mema.cpp" compile="1" resource="0" file="Source/Mema.cpp"/>
+      <FILE id="eleQrX" name="Mema.h" compile="0" resource="0" file="Source/Mema.h"/>
+      <FILE id="NVRWpP" name="MemaAppConfiguration.cpp" compile="1" resource="0"
+            file="Source/MemaAppConfiguration.cpp"/>
+      <FILE id="LKp1G8" name="MemaAppConfiguration.h" compile="0" resource="0"
+            file="Source/MemaAppConfiguration.h"/>
+      <FILE id="F1bdYR" name="MemaUIComponent.cpp" compile="1" resource="0"
+            file="Source/MemaUIComponent.cpp"/>
+      <FILE id="svDZvt" name="MemaUIComponent.h" compile="0" resource="0"
+            file="Source/MemaUIComponent.h"/>
     </GROUP>
   </MAINGROUP>
   <MODULES>

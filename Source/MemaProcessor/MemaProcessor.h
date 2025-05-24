@@ -22,7 +22,7 @@
 
 #include "ProcessorDataAnalyzer.h"
 #include "../MemaProcessorEditor/MemaProcessorEditor.h"
-#include "../AppConfiguration.h"
+#include "../MemaAppConfiguration.h"
 
 
 namespace Mema
@@ -73,7 +73,7 @@ class MemaProcessor :   public juce::AudioProcessor,
 					    public juce::AudioIODeviceCallback,
                         public juce::MessageListener,
                         public juce::ChangeListener,
-                        public AppConfiguration::XmlConfigurableElement
+                        public MemaAppConfiguration::XmlConfigurableElement
 {
 public:
     MemaProcessor(XmlElement* stateXml);

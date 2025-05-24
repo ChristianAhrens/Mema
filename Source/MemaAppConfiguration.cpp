@@ -16,32 +16,32 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include "AppConfiguration.h"
+#include "MemaAppConfiguration.h"
 
 namespace Mema
 {
 
-AppConfiguration::AppConfiguration(const juce::File& file)
+MemaAppConfiguration::MemaAppConfiguration(const juce::File& file)
 	: JUCEAppBasics::AppConfigurationBase()
 {
 	InitializeBase(file, JUCEAppBasics::AppConfigurationBase::Version::FromString(Mema_CONFIG_VERSION));
 }
 
-AppConfiguration::~AppConfiguration()
+MemaAppConfiguration::~MemaAppConfiguration()
 {
 }
 
-bool AppConfiguration::isValid()
+bool MemaAppConfiguration::isValid()
 {
 	return isValid(m_xml);
 }
 
-bool AppConfiguration::isValid(const std::unique_ptr<juce::XmlElement>& xmlConfig)
+bool MemaAppConfiguration::isValid(const std::unique_ptr<juce::XmlElement>& xmlConfig)
 {
 	if (!JUCEAppBasics::AppConfigurationBase::isValid(xmlConfig))
 		return false;
 
-	auto editorCfgSectionElement = xmlConfig->getChildByName(AppConfiguration::getTagName(AppConfiguration::TagID::UICONFIG));
+	auto editorCfgSectionElement = xmlConfig->getChildByName(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::UICONFIG));
 	if (editorCfgSectionElement)
 	{
 		// validate
@@ -49,10 +49,10 @@ bool AppConfiguration::isValid(const std::unique_ptr<juce::XmlElement>& xmlConfi
 	else
 		return false;
 
-	auto processorSectionElement = xmlConfig->getChildByName(AppConfiguration::getTagName(AppConfiguration::TagID::PROCESSORCONFIG));
+	auto processorSectionElement = xmlConfig->getChildByName(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::PROCESSORCONFIG));
 	if (processorSectionElement)
 	{
-		auto devSectionElement = processorSectionElement->getChildByName(AppConfiguration::getTagName(AppConfiguration::TagID::DEVCONFIG));
+		auto devSectionElement = processorSectionElement->getChildByName(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::DEVCONFIG));
 		if (devSectionElement)
 		{
 			// validate
@@ -60,12 +60,12 @@ bool AppConfiguration::isValid(const std::unique_ptr<juce::XmlElement>& xmlConfi
 		else
 			return false;
 
-		auto plginSectionElement = processorSectionElement->getChildByName(AppConfiguration::getTagName(AppConfiguration::TagID::PLUGINCONFIG));
+		auto plginSectionElement = processorSectionElement->getChildByName(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::PLUGINCONFIG));
 		if (plginSectionElement)
 		{
-			if (!plginSectionElement->hasAttribute(AppConfiguration::getAttributeName(AppConfiguration::AttributeID::ENABLED)))
+			if (!plginSectionElement->hasAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::ENABLED)))
 				return false;
-			if (!plginSectionElement->hasAttribute(AppConfiguration::getAttributeName(AppConfiguration::AttributeID::POST)))
+			if (!plginSectionElement->hasAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::POST)))
 				return false;
 
 			// validate
@@ -73,7 +73,7 @@ bool AppConfiguration::isValid(const std::unique_ptr<juce::XmlElement>& xmlConfi
 		else
 			return false;
 
-		auto inputMutesSectionElement = processorSectionElement->getChildByName(AppConfiguration::getTagName(AppConfiguration::TagID::INPUTMUTES));
+		auto inputMutesSectionElement = processorSectionElement->getChildByName(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::INPUTMUTES));
 		if (inputMutesSectionElement)
 		{
 			// validate
@@ -81,7 +81,7 @@ bool AppConfiguration::isValid(const std::unique_ptr<juce::XmlElement>& xmlConfi
 		else
 			return false;
 
-		auto crosspointGainsSectionElement = processorSectionElement->getChildByName(AppConfiguration::getTagName(AppConfiguration::TagID::CROSSPOINTGAINS));
+		auto crosspointGainsSectionElement = processorSectionElement->getChildByName(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::CROSSPOINTGAINS));
 		if (crosspointGainsSectionElement)
 		{
 			// validate
@@ -89,7 +89,7 @@ bool AppConfiguration::isValid(const std::unique_ptr<juce::XmlElement>& xmlConfi
 		else
 			return false;
 
-		auto outputMutesSectionElement = processorSectionElement->getChildByName(AppConfiguration::getTagName(AppConfiguration::TagID::OUTPUTMUTES));
+		auto outputMutesSectionElement = processorSectionElement->getChildByName(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::OUTPUTMUTES));
 		if (outputMutesSectionElement)
 		{
 			// validate
@@ -103,13 +103,13 @@ bool AppConfiguration::isValid(const std::unique_ptr<juce::XmlElement>& xmlConfi
 	return true;
 }
 
-bool AppConfiguration::ResetToDefault()
+bool MemaAppConfiguration::ResetToDefault()
 {
-	auto xmlConfig = juce::parseXML(juce::String(BinaryData::Default_config, BinaryData::Default_configSize));
+	auto xmlConfig = juce::parseXML(juce::String(BinaryData::MemaDefault_config, BinaryData::MemaDefault_configSize));
 	if (xmlConfig)
 	{
 
-		if (Mema::AppConfiguration::isValid(xmlConfig))
+		if (Mema::MemaAppConfiguration::isValid(xmlConfig))
 		{
 
 			SetFlushAndUpdateDisabled();
@@ -146,7 +146,7 @@ bool AppConfiguration::ResetToDefault()
 	return false;
 }
 
-bool AppConfiguration::HandleConfigVersionConflict(const JUCEAppBasics::AppConfigurationBase::Version& configVersionFound)
+bool MemaAppConfiguration::HandleConfigVersionConflict(const JUCEAppBasics::AppConfigurationBase::Version& configVersionFound)
 {
 	if (configVersionFound != JUCEAppBasics::AppConfigurationBase::Version::FromString(Mema_CONFIG_VERSION))
 	{

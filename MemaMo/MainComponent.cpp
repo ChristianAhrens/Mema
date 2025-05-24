@@ -36,6 +36,16 @@
 MainComponent::MainComponent()
     : juce::Component()
 {
+    // create the configuration object (is being initialized from disk automatically)
+    m_config = std::make_unique<MemaMoAppConfiguration>(JUCEAppBasics::AppConfigurationBase::getDefaultConfigFilePath());
+    m_config->addDumper(this);
+
+    // check if config creation was able to read a valid config from disk...
+    if (!m_config->isValid())
+    {
+        m_config->ResetToDefault();
+    }
+
     m_networkConnection = std::make_unique<InterprocessConnectionImpl>();
     m_networkConnection->onConnectionMade = [=]() {
         DBG(__FUNCTION__);
@@ -80,7 +90,12 @@ MainComponent::MainComponent()
 
     m_discoverComponent = std::make_unique<MemaDiscoverComponent>();
     m_discoverComponent->onServiceSelected = [=](const juce::NetworkServiceDiscovery::Service& selectedService) {
-        connectToMema(selectedService.address.toString(), selectedService.port);
+        m_selectedService = selectedService;
+
+        connectToMema();
+
+        if (m_config)
+            m_config->triggerConfigurationDump(false);
     };
     addAndMakeVisible(m_discoverComponent.get());
 
@@ -151,6 +166,11 @@ MainComponent::MainComponent()
     m_disconnectButton->onClick = [this] {
         if (m_networkConnection)
             m_networkConnection->disconnect();
+
+        m_selectedService = {};
+
+        if (m_config)
+            m_config->triggerConfigurationDump();
 
         if (m_discoverComponent)
             m_discoverComponent->setDiscoveredServices(m_availableServices->getServices());
@@ -276,6 +296,11 @@ MainComponent::MainComponent()
     updater->SetDownloadUpdateWebAddress("https://github.com/christianahrens/mema/releases/latest");
     updater->CheckForNewVersion(true, "https://raw.githubusercontent.com/ChristianAhrens/Mema/refs/heads/main/");
 #endif
+
+
+    // add this main component to watchers
+    m_config->addWatcher(this, true);
+
 }
 
 MainComponent::~MainComponent()
@@ -540,12 +565,11 @@ const MainComponent::Status MainComponent::getStatus()
     return m_currentStatus;
 }
 
-void MainComponent::connectToMema(const String& hostName, int portNumber)
+void MainComponent::connectToMema()
 {
     setStatus(Status::Connecting);
 
-    if (m_networkConnection)
-        m_networkConnection->ConnectToSocket(hostName, portNumber);
+    timerCallback(); // avoid codeclones by manually trigger the timed connection attempt once
 
     // restart connection attempt after 5s, in case something got stuck...
     startTimer(5000);
@@ -555,10 +579,76 @@ void MainComponent::timerCallback()
 {
     if (Status::Connecting == getStatus())
     {
-        if (m_networkConnection && !m_networkConnection->isConnected())
-            m_networkConnection->RetryConnectToSocket();
+        auto sl = m_availableServices->getServices();
+        auto const& iter = std::find_if(sl.begin(), sl.end(), [=](const auto& service) { return service.description == m_selectedService.description; });
+        if (iter != sl.end())
+        {
+            if ((m_selectedService.address != iter->address && m_selectedService.port != iter->port && m_selectedService.description != iter->description) || !m_networkConnection->isConnected())
+            {
+                m_selectedService = *iter;
+                if (m_networkConnection)
+                    m_networkConnection->ConnectToSocket(m_selectedService.address.toString(), m_selectedService.port);
+            }
+            else if (m_networkConnection && !m_networkConnection->isConnected())
+                m_networkConnection->RetryConnectToSocket();
+        }
     }
     else
         stopTimer();
+}
+
+void MainComponent::performConfigurationDump()
+{
+    if (m_config)
+    {
+        auto connectionConfigXmlElement = std::make_unique<juce::XmlElement>(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::CONNECTIONCONFIG));
+        auto serviceDescriptionXmlElmement = std::make_unique<juce::XmlElement>(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::SERVICEDESCRIPTION));
+        serviceDescriptionXmlElmement->addTextElement(m_selectedService.description);
+        connectionConfigXmlElement->addChildElement(serviceDescriptionXmlElmement.release());
+        m_config->setConfigState(std::move(connectionConfigXmlElement), MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::CONNECTIONCONFIG));
+
+        auto visuConfigXmlElement = std::make_unique<juce::XmlElement>(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::VISUCONFIG));
+        auto outputVisuTypeXmlElmement = std::make_unique<juce::XmlElement>(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::OUTPUTVISUTYPE));
+        //if (m_networkConnection)
+        //    outputVisuTypeXmlElmement->addTextElement(m_networkConnection->GetHostName());
+        visuConfigXmlElement->addChildElement(outputVisuTypeXmlElmement.release());
+        auto meteringColourXmlElmement = std::make_unique<juce::XmlElement>(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::METERINGCOLOUR));
+        //if (m_networkConnection)
+        //    portXmlElmement->addTextElement(juce::String(m_networkConnection->GetPortNumber()));
+        visuConfigXmlElement->addChildElement(meteringColourXmlElmement.release());
+        auto lookAndFeelXmlElmement = std::make_unique<juce::XmlElement>(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::LOOKANDFEEL));
+        //if (m_networkConnection)
+        //    portXmlElmement->addTextElement(juce::String(m_networkConnection->GetPortNumber()));
+        visuConfigXmlElement->addChildElement(lookAndFeelXmlElmement.release());
+        m_config->setConfigState(std::move(visuConfigXmlElement), MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::VISUCONFIG));
+    }
+}
+
+void MainComponent::onConfigUpdated()
+{
+    auto connectionConfigState = m_config->getConfigState(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::CONNECTIONCONFIG));
+    if (connectionConfigState)
+    {
+        auto serviceDescriptionXmlElement = connectionConfigState->getChildByName(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::SERVICEDESCRIPTION));
+        if (serviceDescriptionXmlElement)
+        {
+            auto serviceDescription = serviceDescriptionXmlElement->getAllSubText();
+            if (serviceDescription.isNotEmpty() && m_selectedService.description != serviceDescription)
+            {
+                if (m_networkConnection)
+                    m_networkConnection->disconnect();
+
+                m_selectedService = {};
+                m_selectedService.description = serviceDescription;
+
+                connectToMema();
+            }
+        }
+    }
+
+    auto visuConfigState = m_config->getConfigState(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::VISUCONFIG));
+    if (visuConfigState)
+    {
+    }
 }
 
