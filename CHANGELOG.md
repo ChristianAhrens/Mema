@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+## [0.5.1] 2025-05-24
+### Added
+- Added Mema.Mo persistent configuration to restore UI and connection state after restart or connection loss
+
+### Changed
+
+### Fixed
+- Fixed Mema crash on darkmode change
+
 ## [0.5.0] 2025-05-04
 ### Added
 - Added plug-in processing switchability pre/post matrix
