@@ -54,10 +54,10 @@ MainComponent::MainComponent()
     };
     m_networkConnection->onConnectionLost = [=]() {
         DBG(__FUNCTION__);
-        if (m_discoverComponent)
-            m_discoverComponent->setDiscoveredServices(m_availableServices->getServices());
+        
+        connectToMema();
 
-        setStatus(Status::Discovering);
+        setStatus(Status::Connecting);
     };
     m_networkConnection->onMessageReceived = [=](const juce::MemoryBlock& message) {
         auto knownMessage = Mema::SerializableMessage::initFromMemoryBlock(message);
