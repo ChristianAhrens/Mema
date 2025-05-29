@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="ja98xe" name="Mema.Re" projectType="guiapp" useAppConfig="0"
+              jucerFormatVersion="1" version="0.6.0" companyWebsite="github.com/ChristianAhrens/Mema"
+              bundleIdentifier="com.ChristianAhrens.MemaRe" headerPath="../../../submodules/JUCE-AppBasics/Source&#10;../../../Source"
+              defines="JUCE_USE_LAME_AUDIO_FORMAT=1,&#10;JUCE_USE_MP3AUDIOFORMAT=1,&#10;JUCE_DISPLAY_SPLASH_SCREEN=0"
+              companyName="ChristianAhrens" companyCopyright="Copyright (c) 2025 Christian Ahrens.">
+  <MAINGROUP id="YIs3Nm" name="Mema.Re">
+    <GROUP id="{60526C8C-38C9-8A62-4BE8-08FDFBF21423}" name="submodules">
+      <GROUP id="{A748DC48-D24B-A4B1-772D-A48B7873F767}" name="JUCEAppBascics">
+        <FILE id="T6JLwW" name="AppConfigurationBase.cpp" compile="1" resource="0"
+              file="../submodules/JUCE-AppBasics/Source/AppConfigurationBase.cpp"/>
+        <FILE id="Bj56WV" name="AppConfigurationBase.h" compile="0" resource="0"
+              file="../submodules/JUCE-AppBasics/Source/AppConfigurationBase.h"/>
+        <FILE id="TQ34xv" name="CustomLookAndFeel.cpp" compile="1" resource="0"
+              file="../submodules/JUCE-AppBasics/Source/CustomLookAndFeel.cpp"/>
+        <FILE id="JS6zlP" name="CustomLookAndFeel.h" compile="0" resource="0"
+              file="../submodules/JUCE-AppBasics/Source/CustomLookAndFeel.h"/>
+        <FILE id="iFIFTc" name="iOS_utils.cpp" compile="1" resource="0" file="../submodules/JUCE-AppBasics/Source/iOS_utils.cpp"/>
+        <FILE id="u9384n" name="iOS_utils.h" compile="0" resource="0" file="../submodules/JUCE-AppBasics/Source/iOS_utils.h"/>
+        <FILE id="l9NfyW" name="WebUpdateDetector.cpp" compile="1" resource="0"
+              file="../submodules/JUCE-AppBasics/Source/WebUpdateDetector.cpp"/>
+        <FILE id="yh3GjW" name="WebUpdateDetector.h" compile="0" resource="0"
+              file="../submodules/JUCE-AppBasics/Source/WebUpdateDetector.h"/>
+      </GROUP>
+    </GROUP>
+    <GROUP id="{72AB56DC-8637-938F-3846-2BD91435687D}" name="Resources">
+      <GROUP id="{5418C8BA-AFDC-83EF-A716-D3FB9CE9A772}" name="Images">
+        <FILE id="hHtooO" name="grid_4x4_24dp.svg" compile="0" resource="1"
+              file="../submodules/JUCE-AppBasics/Resources/Images/grid_4x4_24dp.svg"/>
+        <FILE id="LsoMoI" name="link_off_24dp.svg" compile="0" resource="1"
+              file="../submodules/JUCE-AppBasics/Resources/Images/link_off_24dp.svg"/>
+        <FILE id="SM2kRq" name="Mema.png" compile="0" resource="1" file="../Resources/Images/Mema.png"/>
+        <FILE id="h4L3Zp" name="MemaRe.png" compile="0" resource="1" file="../Resources/Images/MemaRe.png"/>
+        <FILE id="fJPOo5" name="MemaReCanvas.png" compile="0" resource="1"
+              file="../Resources/Images/MemaReCanvas.png"/>
+        <FILE id="FTnVHP" name="MemaReRect.png" compile="0" resource="1" file="../Resources/Images/MemaReRect.png"/>
+        <FILE id="D3JJ8C" name="question_mark_24dp.svg" compile="0" resource="1"
+              file="../submodules/JUCE-AppBasics/Resources/Images/question_mark_24dp.svg"/>
+        <FILE id="PU3KWa" name="settings_24dp.svg" compile="0" resource="1"
+              file="../submodules/JUCE-AppBasics/Resources/Images/settings_24dp.svg"/>
+        <FILE id="uY5jnL" name="tune_24dp.svg" compile="0" resource="1" file="../submodules/JUCE-AppBasics/Resources/Images/tune_24dp.svg"/>
+      </GROUP>
+      <FILE id="mw73f5" name="MemaReDefault.config" compile="0" resource="1"
+            file="../Resources/MemaReDefault.config"/>
+    </GROUP>
+    <GROUP id="{B4C42B10-6A29-1C3A-435D-5CB7A9DE671E}" name="Source">
+      <FILE id="wfVH30" name="AboutComponent.cpp" compile="1" resource="0"
+            file="../Source/AboutComponent.cpp"/>
+      <FILE id="vkneaH" name="AboutComponent.h" compile="0" resource="0"
+            file="../Source/AboutComponent.h"/>
+      <FILE id="j4AVKB" name="AbstractAudioVisualizer.cpp" compile="1" resource="0"
+            file="../Source/MemaProcessorEditor/AbstractAudioVisualizer.cpp"/>
+      <FILE id="JmJngu" name="AbstractAudioVisualizer.h" compile="0" resource="0"
+            file="../Source/MemaProcessorEditor/AbstractAudioVisualizer.h"/>
+      <FILE id="Mm5KcE" name="AbstractProcessorData.cpp" compile="1" resource="0"
+            file="../Source/MemaProcessor/AbstractProcessorData.cpp"/>
+      <FILE id="b9h1KE" name="AbstractProcessorData.h" compile="0" resource="0"
+            file="../Source/MemaProcessor/AbstractProcessorData.h"/>
+      <FILE id="v69CCa" name="CustomPopupMenuComponent.h" compile="0" resource="0"
+            file="../Source/CustomPopupMenuComponent.h"/>
+      <FILE id="Y0aPvI" name="Main.cpp" compile="1" resource="0" file="Main.cpp"/>
+      <FILE id="ijXJpV" name="MainComponent.cpp" compile="1" resource="0"
+            file="MainComponent.cpp"/>
+      <FILE id="UysMVV" name="MainComponent.h" compile="0" resource="0" file="MainComponent.h"/>
+      <FILE id="IQbygZ" name="MemaClientConnectingComponent.cpp" compile="1"
+            resource="0" file="../Source/MemaClientCommon/MemaClientConnectingComponent.cpp"/>
+      <FILE id="tOFlwB" name="MemaClientConnectingComponent.h" compile="0"
+            resource="0" file="../Source/MemaClientCommon/MemaClientConnectingComponent.h"/>
+      <FILE id="Lxh6b5" name="MemaClientDiscoverComponent.cpp" compile="1"
+            resource="0" file="../Source/MemaClientCommon/MemaClientDiscoverComponent.cpp"/>
+      <FILE id="D4YQYR" name="MemaClientDiscoverComponent.h" compile="0"
+            resource="0" file="../Source/MemaClientCommon/MemaClientDiscoverComponent.h"/>
+      <FILE id="avbo06" name="MemaMessages.h" compile="0" resource="0" file="../Source/MemaProcessor/MemaMessages.h"/>
+      <FILE id="yRPcEF" name="MemaReAppConfiguration.cpp" compile="1" resource="0"
+            file="MemaReAppConfiguration.cpp"/>
+      <FILE id="dzkG5y" name="MemaReAppConfiguration.h" compile="0" resource="0"
+            file="MemaReAppConfiguration.h"/>
+      <FILE id="rwe4AY" name="MemaReComponent.cpp" compile="1" resource="0"
+            file="MemaReComponent.cpp"/>
+      <FILE id="dP7zeA" name="MemaReComponent.h" compile="0" resource="0"
+            file="MemaReComponent.h"/>
+      <FILE id="Sl1faN" name="MemaServiceData.cpp" compile="1" resource="0"
+            file="../Source/MemaProcessor/MemaServiceData.cpp"/>
+      <FILE id="I0uyCC" name="MemaServiceData.h" compile="0" resource="0"
+            file="../Source/MemaProcessor/MemaServiceData.h"/>
+      <FILE id="iwKL0M" name="MeterbridgeComponent.cpp" compile="1" resource="0"
+            file="../Source/MemaProcessorEditor/MeterbridgeComponent.cpp"/>
+      <FILE id="fIADmU" name="MeterbridgeComponent.h" compile="0" resource="0"
+            file="../Source/MemaProcessorEditor/MeterbridgeComponent.h"/>
+      <FILE id="FQmsio" name="ProcessorAudioSignalData.cpp" compile="1" resource="0"
+            file="../Source/MemaProcessor/ProcessorAudioSignalData.cpp"/>
+      <FILE id="XHJ5ms" name="ProcessorAudioSignalData.h" compile="0" resource="0"
+            file="../Source/MemaProcessor/ProcessorAudioSignalData.h"/>
+      <FILE id="YHSDva" name="ProcessorDataAnalyzer.cpp" compile="1" resource="0"
+            file="../Source/MemaProcessor/ProcessorDataAnalyzer.cpp"/>
+      <FILE id="EVlvPD" name="ProcessorDataAnalyzer.h" compile="0" resource="0"
+            file="../Source/MemaProcessor/ProcessorDataAnalyzer.h"/>
+      <FILE id="tawkqF" name="ProcessorLevelData.cpp" compile="1" resource="0"
+            file="../Source/MemaProcessor/ProcessorLevelData.cpp"/>
+      <FILE id="Gek8yS" name="ProcessorLevelData.h" compile="0" resource="0"
+            file="../Source/MemaProcessor/ProcessorLevelData.h"/>
+      <FILE id="A5fpAt" name="ProcessorSpectrumData.cpp" compile="1" resource="0"
+            file="../Source/MemaProcessor/ProcessorSpectrumData.cpp"/>
+      <FILE id="qCeR2y" name="ProcessorSpectrumData.h" compile="0" resource="0"
+            file="../Source/MemaProcessor/ProcessorSpectrumData.h"/>
+      <FILE id="WhHDmY" name="TwoDFieldOutputComponent.cpp" compile="1" resource="0"
+            file="../Source/MemaProcessorEditor/TwoDFieldOutputComponent.cpp"/>
+      <FILE id="CHiFIG" name="TwoDFieldOutputComponent.h" compile="0" resource="0"
+            file="../Source/MemaProcessorEditor/TwoDFieldOutputComponent.h"/>
+    </GROUP>
+  </MAINGROUP>
+  <MODULES>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_dsp" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+  </MODULES>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
+  <EXPORTFORMATS>
+    <XCODE_MAC targetFolder="Builds/MacOSX" smallIcon="FTnVHP" bigIcon="FTnVHP"
+               iosDevelopmentTeamID="SB7Q3PP4FQ" hardenedRuntime="1" customPList="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#10;&#10;&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;&#10;&lt;plist&gt;&#10;  &lt;dict&gt;&#10;    &lt;key&gt;NSLocalNetworkUsageDescription&lt;/key&gt;&#10;    &lt;string&gt;Mema.Mo uses multicast to discover IP Addresses of Mema instances on the network.&lt;/string&gt;&#10;  &lt;/dict&gt;&#10;&lt;/plist&gt;"
+               applicationCategory="public.app-category.utilities" appSandbox="1"
+               appSandboxOptions="com.apple.security.network.client,com.apple.security.network.server"
+               networkingMulticast="1">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="MemaMo"/>
+        <CONFIGURATION isDebug="0" name="Release" customXcodeFlags="OTHER_CODE_SIGN_FLAGS = $(inherited) --timestamp -s 'Developer ID Application: Christian Ahrens', CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO"
+                       codeSigningIdentity="Developer ID Application: Christian Ahrens"
+                       targetName="MemaMo"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../submodules/JUCE/modules"/>
+      </MODULEPATHS>
+    </XCODE_MAC>
+    <VS2022 targetFolder="Builds/VisualStudio2022" smallIcon="h4L3Zp" bigIcon="h4L3Zp">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="MemaMo"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="MemaMo"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="..\submodules\JUCE\modules"/>
+        <MODULEPATH id="juce_audio_devices" path="..\submodules\JUCE\modules"/>
+        <MODULEPATH id="juce_audio_formats" path="..\submodules\JUCE\modules"/>
+        <MODULEPATH id="juce_audio_processors" path="..\submodules\JUCE\modules"/>
+        <MODULEPATH id="juce_audio_utils" path="..\submodules\JUCE\modules"/>
+        <MODULEPATH id="juce_core" path="..\submodules\JUCE\modules"/>
+        <MODULEPATH id="juce_data_structures" path="..\submodules\JUCE\modules"/>
+        <MODULEPATH id="juce_events" path="..\submodules\JUCE\modules"/>
+        <MODULEPATH id="juce_graphics" path="..\submodules\JUCE\modules"/>
+        <MODULEPATH id="juce_gui_basics" path="..\submodules\JUCE\modules"/>
+        <MODULEPATH id="juce_gui_extra" path="..\submodules\JUCE\modules"/>
+        <MODULEPATH id="juce_dsp" path="..\submodules\JUCE\modules"/>
+      </MODULEPATHS>
+    </VS2022>
+    <LINUX_MAKE targetFolder="Builds/LinuxMakefile" smallIcon="h4L3Zp" bigIcon="h4L3Zp">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug"/>
+        <CONFIGURATION isDebug="0" name="Release"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../submodules/JUCE/modules"/>
+      </MODULEPATHS>
+    </LINUX_MAKE>
+    <XCODE_IPHONE targetFolder="Builds/iOS" smallIcon="fJPOo5" bigIcon="fJPOo5"
+                  customLaunchStoryboard="../Resources/Deployment/iOS/Launchscreen.storyboard"
+                  iosScreenOrientation="UIInterfaceOrientationLandscapeRight,UIInterfaceOrientationPortrait"
+                  iPadScreenOrientation="UIInterfaceOrientationLandscapeLeft,UIInterfaceOrientationLandscapeRight,UIInterfaceOrientationPortrait,UIInterfaceOrientationPortraitUpsideDown"
+                  UIStatusBarHidden="1" networkingMulticast="1" iosDevelopmentTeamID="SB7Q3PP4FQ"
+                  UIRequiresFullScreen="0" customPList="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#10;&#10;&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;&#10;&lt;plist&gt;&#10;  &lt;dict&gt;&#10;    &lt;key&gt;NSLocalNetworkUsageDescription&lt;/key&gt;&#10;    &lt;string&gt;Mema.Mo uses multicast to discover IP Addresses of Mema instances on the network.&lt;/string&gt;&#10;    &#9;&lt;key&gt;UIBackgroundModes&lt;/key&gt;&#10;    &#9;&lt;array&gt;&#10;&#9;      &#9;&lt;string&gt;processing&lt;/string&gt;&#10;    &#9;&lt;/array&gt;&#10;    &lt;key&gt;BGTaskSchedulerPermittedIdentifiers&lt;/key&gt;&#10;    &lt;array&gt;&#10;      &lt;string&gt;com.ChristianAhrens.MemaMo&lt;/string&gt;&#10;    &lt;/array&gt;&#10;&lt;/dict&gt;&#10;&lt;/plist&gt;">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" iosDeploymentTarget="15" iosCompatibility="15"
+                       targetName="MemaMo"/>
+        <CONFIGURATION isDebug="0" name="Release" iosDeploymentTarget="15" iosCompatibility="15"
+                       targetName="MemaMo"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../submodules/JUCE/modules"/>
+      </MODULEPATHS>
+    </XCODE_IPHONE>
+  </EXPORTFORMATS>
+</JUCERPROJECT>

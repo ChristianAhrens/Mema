@@ -63,14 +63,14 @@
       <FILE id="ijXJpV" name="MainComponent.cpp" compile="1" resource="0"
             file="MainComponent.cpp"/>
       <FILE id="UysMVV" name="MainComponent.h" compile="0" resource="0" file="MainComponent.h"/>
-      <FILE id="gZxdkr" name="MemaConnectingComponent.cpp" compile="1" resource="0"
-            file="MemaConnectingComponent.cpp"/>
-      <FILE id="wFde2T" name="MemaConnectingComponent.h" compile="0" resource="0"
-            file="MemaConnectingComponent.h"/>
-      <FILE id="ttw4M3" name="MemaDiscoverComponent.cpp" compile="1" resource="0"
-            file="MemaDiscoverComponent.cpp"/>
-      <FILE id="rRagrh" name="MemaDiscoverComponent.h" compile="0" resource="0"
-            file="MemaDiscoverComponent.h"/>
+      <FILE id="IQbygZ" name="MemaClientConnectingComponent.cpp" compile="1"
+            resource="0" file="../Source/MemaClientCommon/MemaClientConnectingComponent.cpp"/>
+      <FILE id="tOFlwB" name="MemaClientConnectingComponent.h" compile="0"
+            resource="0" file="../Source/MemaClientCommon/MemaClientConnectingComponent.h"/>
+      <FILE id="Lxh6b5" name="MemaClientDiscoverComponent.cpp" compile="1"
+            resource="0" file="../Source/MemaClientCommon/MemaClientDiscoverComponent.cpp"/>
+      <FILE id="D4YQYR" name="MemaClientDiscoverComponent.h" compile="0"
+            resource="0" file="../Source/MemaClientCommon/MemaClientDiscoverComponent.h"/>
       <FILE id="avbo06" name="MemaMessages.h" compile="0" resource="0" file="../Source/MemaProcessor/MemaMessages.h"/>
       <FILE id="YOyntA" name="MemaMoAppConfiguration.cpp" compile="1" resource="0"
             file="MemaMoAppConfiguration.cpp"/>

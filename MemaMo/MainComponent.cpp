@@ -20,8 +20,8 @@
 
 #include "CustomPopupMenuComponent.h"
 #include "MemaMoComponent.h"
-#include "MemaDiscoverComponent.h"
-#include "MemaConnectingComponent.h"
+#include "MemaClientCommon/MemaClientDiscoverComponent.h"
+#include "MemaClientCommon/MemaClientConnectingComponent.h"
 
 #include <AboutComponent.h>
 #include <CustomLookAndFeel.h>
@@ -88,7 +88,7 @@ MainComponent::MainComponent()
     };
     addAndMakeVisible(m_monitorComponent.get());
 
-    m_discoverComponent = std::make_unique<MemaDiscoverComponent>();
+    m_discoverComponent = std::make_unique<MemaClientDiscoverComponent>();
     m_discoverComponent->onServiceSelected = [=](const juce::NetworkServiceDiscovery::Service& selectedService) {
         m_selectedService = selectedService;
 
@@ -99,10 +99,10 @@ MainComponent::MainComponent()
     };
     addAndMakeVisible(m_discoverComponent.get());
 
-    m_connectingComponent = std::make_unique<MemaConnectingComponent>();
+    m_connectingComponent = std::make_unique<MemaClientConnectingComponent>();
     addAndMakeVisible(m_connectingComponent.get());
 
-    m_aboutComponent = std::make_unique<AboutComponent>(BinaryData::MemaMoRect_png, BinaryData::MemaMoCanvas_pngSize);
+    m_aboutComponent = std::make_unique<AboutComponent>(BinaryData::MemaMoRect_png, BinaryData::MemaMoRect_pngSize);
     m_aboutButton = std::make_unique<juce::DrawableButton>("About", juce::DrawableButton::ButtonStyle::ImageFitted);
     m_aboutButton->setTooltip(juce::String("About") + juce::JUCEApplication::getInstance()->getApplicationName());
     m_aboutButton->onClick = [this] {
