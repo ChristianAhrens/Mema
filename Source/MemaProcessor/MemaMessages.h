@@ -284,8 +284,10 @@ protected:
         blob.append(&m_direction, sizeof(FlowDirection));
         blob.append(&numChannels, sizeof(std::uint16_t));
         blob.append(&numSamples, sizeof(std::uint16_t));
-        blob.append(m_buffer.getReadPointer(0), sizeof(float) * numChannels * numSamples);
+        for (int channelNumber = 0; channelNumber < numChannels; channelNumber++)
+            blob.append(m_buffer.getReadPointer(channelNumber), sizeof(float) * numSamples);
         contentSize = blob.getSize();
+
         return blob;
     };
 
