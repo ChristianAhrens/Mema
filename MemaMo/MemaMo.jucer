@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="ja98xe" name="Mema.Mo" projectType="guiapp" useAppConfig="0"
-              jucerFormatVersion="1" version="0.5.2" companyWebsite="github.com/ChristianAhrens/Mema"
+              jucerFormatVersion="1" version="0.6.0" companyWebsite="github.com/ChristianAhrens/Mema"
               bundleIdentifier="com.ChristianAhrens.MemaMo" headerPath="../../../submodules/JUCE-AppBasics/Source&#10;../../../Source"
               defines="JUCE_USE_LAME_AUDIO_FORMAT=1,&#10;JUCE_USE_MP3AUDIOFORMAT=1,&#10;JUCE_DISPLAY_SPLASH_SCREEN=0"
               companyName="ChristianAhrens" companyCopyright="Copyright (c) 2024 Christian Ahrens.">
