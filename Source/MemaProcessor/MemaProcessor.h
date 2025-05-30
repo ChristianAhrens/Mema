@@ -20,6 +20,7 @@
 
 #include <JuceHeader.h>
 
+#include "MemaMessages.h"
 #include "ProcessorDataAnalyzer.h"
 #include "../MemaProcessorEditor/MemaProcessorEditor.h"
 #include "../MemaAppConfiguration.h"
@@ -183,6 +184,9 @@ public:
     void triggerConfigurationDump();
 
     //==============================================================================
+    void setTrafficTypesForConnectionId(const std::vector<SerializableMessage::SerializableMessageType>& trafficTypes, int connectionId);
+
+    //==============================================================================
     static constexpr int s_maxChannelCount = 64;
     static constexpr int s_maxNumSamples = 1024;
 
@@ -195,6 +199,9 @@ protected:
     void initializeCtrlValuesToUnity(int inputCount, int outputCount);
 
 private:
+    //==============================================================================
+    void sendMessageToClients(const MemoryBlock& messageMemoryBlock, const std::vector<int>& sendIds);
+
     //==============================================================================
     juce::String    m_Name;
 
@@ -243,6 +250,7 @@ private:
     std::unique_ptr<juce::NetworkServiceDiscovery::Advertiser>  m_serviceAdvertiser;
 #endif
     std::unique_ptr<InterprocessConnectionServerImpl> m_networkServer;
+    std::map<int, std::vector<SerializableMessage::SerializableMessageType>> m_trafficTypesPerConnection;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MemaProcessor)
 };

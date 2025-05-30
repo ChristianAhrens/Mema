@@ -21,7 +21,6 @@
 #include "InterprocessConnection.h"
 #include "MemaCommanders.h"
 #include "MemaServiceData.h"
-#include "MemaMessages.h"
 #include "../MemaAppConfiguration.h"
 
 #include <CustomLookAndFeel.h>
@@ -111,6 +110,10 @@ private:
 MemaProcessor::MemaProcessor(XmlElement* stateXml) :
 	juce::AudioProcessor()
 {
+#ifdef RUN_MESSAGE_TESTS
+	runTests();
+#endif
+
 	// prepare max sized processing data buffer
 	m_processorChannels = new float* [s_maxChannelCount];
 	for (auto i = 0; i < s_maxChannelCount; i++)
@@ -156,8 +159,11 @@ MemaProcessor::MemaProcessor(XmlElement* stateXml) :
         auto connection = dynamic_cast<InterprocessConnectionImpl*>(m_networkServer->getActiveConnection(connectionId).get());
         if (connection)
         {
-			connection->onConnectionLost = [=](int /*connectionId*/) { DBG(__FUNCTION__); };
-			connection->onConnectionMade = [=](int /*connectionId*/ ) { DBG(__FUNCTION__);
+			connection->onConnectionLost = [=](int connectionId) { DBG(juce::String(__FUNCTION__) << " connection " << connectionId << " lost");
+				m_trafficTypesPerConnection.erase(connectionId);
+			};
+			connection->onConnectionMade = [=](int connectionId ) { DBG(juce::String(__FUNCTION__) << " connection " << connectionId << " made");
+				m_trafficTypesPerConnection[connectionId].clear();
 				if (m_networkServer && m_networkServer->hasActiveConnections())
 				{
 					auto success = true;
@@ -168,7 +174,15 @@ MemaProcessor::MemaProcessor(XmlElement* stateXml) :
 						m_networkServer->cleanupDeadConnections();
 				}
 			};
-			connection->onMessageReceived = [=](const juce::MemoryBlock& /*data*/) { DBG(__FUNCTION__); };
+			connection->onMessageReceived = [=](int connectionId, const juce::MemoryBlock& message) {
+				if (auto knownMessage = Mema::SerializableMessage::initFromMemoryBlock(message))
+				{
+					knownMessage->setId(connectionId);
+					postMessage(knownMessage);
+				}
+				else
+					DBG(juce::String(__FUNCTION__) + " ignoring unknown message");
+			};
         }
     };
 }
@@ -917,14 +931,17 @@ void MemaProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMes
 
 void MemaProcessor::handleMessage(const Message& message)
 {
+	auto tId = SerializableMessage::SerializableMessageType::None;
 	juce::MemoryBlock serializedMessageMemoryBlock;
 	if (auto const epm = dynamic_cast<const EnvironmentParametersMessage*>(&message))
 	{
 		serializedMessageMemoryBlock = epm->getSerializedMessage();
+		tId = epm->getType();
 	}
 	else if (auto const apm = dynamic_cast<const AnalyzerParametersMessage*>(&message))
 	{
 		serializedMessageMemoryBlock = apm->getSerializedMessage();
+		tId = apm->getType();
 	}
 	else if (auto const iom = dynamic_cast<const ReinitIOCountMessage*> (&message))
 	{
@@ -945,6 +962,8 @@ void MemaProcessor::handleMessage(const Message& message)
 		initializeCtrlValues(iom->getInputCount(), iom->getOutputCount());
 
 		serializedMessageMemoryBlock = iom->getSerializedMessage();
+
+		tId = iom->getType();
 	}
 	else if (auto m = dynamic_cast<const AudioBufferMessage*> (&message))
 	{
@@ -958,11 +977,59 @@ void MemaProcessor::handleMessage(const Message& message)
 		}
 
 		serializedMessageMemoryBlock = m->getSerializedMessage();
+
+		tId = m->getType();
+	}
+	else if (auto const cpm = dynamic_cast<const Mema::ControlParametersMessage*>(&message))
+	{
+		for (auto const& inputMuteState : cpm->getInputMuteStates())
+			setInputMuteState(inputMuteState.first, inputMuteState.second);
+		for (auto const& outputMuteState : cpm->getOutputMuteStates())
+			setOutputMuteState(outputMuteState.first, outputMuteState.second);
+		for (auto const& crosspointStateKV : cpm->getCrosspointStates())
+		{
+			auto& inputNumber = crosspointStateKV.first;
+			for (auto const& crosspointOStateKV : crosspointStateKV.second)
+			{
+				auto& outputNumber = crosspointOStateKV.first;
+				setMatrixCrosspointEnabledValue(inputNumber, outputNumber, crosspointOStateKV.second.first);
+				setMatrixCrosspointFactorValue(inputNumber, outputNumber, crosspointOStateKV.second.first);
+			}
+		}
+
+		tId = cpm->getType();
+	}
+	else if (auto const dtsm = dynamic_cast<const Mema::DataTrafficTypeSelectionMessage*>(&message))
+	{
+		if (!dtsm->hasUserId())
+			DBG("Incoming DataTrafficTypeSelecitonMessage cannot be associated with a connection");
+		else
+			setTrafficTypesForConnectionId(dtsm->getTrafficTypes(), dtsm->getId());
+
+		tId = dtsm->getType();
 	}
 
+	std::vector<int> sendIds;
+	for (auto const& cId : m_trafficTypesPerConnection)
+		if (cId.second.end() != std::find(cId.second.begin(), cId.second.end(), tId))
+			sendIds.push_back(cId.first);
+	sendMessageToClients(serializedMessageMemoryBlock, sendIds);
+}
+
+void MemaProcessor::sendMessageToClients(const MemoryBlock& messageMemoryBlock, const std::vector<int>& sendIds)
+{
 	if (m_networkServer && m_networkServer->hasActiveConnections())
-		if (!m_networkServer->enqueueMessage(serializedMessageMemoryBlock))
-			m_networkServer->cleanupDeadConnections();
+	{
+		if (!messageMemoryBlock.isEmpty() && !m_networkServer->enqueueMessage(messageMemoryBlock, sendIds))
+		{
+			auto deadConnectionIds = m_networkServer->cleanupDeadConnections();
+			if (!deadConnectionIds.empty())
+			{
+				for (auto const& dcId : deadConnectionIds)
+					m_trafficTypesPerConnection.erase(dcId);
+			}
+		}
+	}
 }
 
 double MemaProcessor::getTailLengthSeconds() const
@@ -1173,6 +1240,16 @@ void MemaProcessor::initializeCtrlValuesToUnity(int inputCount, int outputCount)
 			setMatrixCrosspointEnabledValue(in, out, in == out);
 			setMatrixCrosspointFactorValue(in, out, 1.0f);
 		}
+	}
+}
+
+void MemaProcessor::setTrafficTypesForConnectionId(const std::vector<SerializableMessage::SerializableMessageType>& trafficTypes, int connectionId)
+{
+	DBG(juce::String(__FUNCTION__) << " " << connectionId << " chose " << trafficTypes.size() << " types");
+	for (auto const& tt : trafficTypes)
+	{
+		if (m_trafficTypesPerConnection[connectionId].end() == std::find(m_trafficTypesPerConnection[connectionId].begin(), m_trafficTypesPerConnection[connectionId].end(), tt))
+			m_trafficTypesPerConnection[connectionId].push_back(tt);
 	}
 }
 

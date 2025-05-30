@@ -35,6 +35,8 @@ class AnalyzerParametersMessage;
 class ReinitIOCountMessage;
 class AudioInputBufferMessage;
 class AudioOutputBufferMessage;
+class DataTrafficTypeSelectionMessage;
+class ControlParametersMessage;
 
 class SerializableMessage : public juce::Message
 {
@@ -46,12 +48,18 @@ public:
         AnalyzerParameters,
         ReinitIOCount,
         AudioInputBuffer,
-        AudioOutputBuffer
+        AudioOutputBuffer,
+        DataTrafficTypeSelection,
+        ControlParameters
     };
 
 public:
     SerializableMessage() = default;
     virtual ~SerializableMessage() = default;
+
+    void setId(int id) { m_userId = id; };
+    int getId() const { return m_userId; };
+    bool hasUserId() const { return -1 != m_userId; };
 
     const SerializableMessageType getType() const { return m_type; };
 
@@ -84,6 +92,10 @@ public:
             return reinterpret_cast<SerializableMessage*>(std::make_unique<AudioInputBufferMessage>(blob).release());
         case AudioOutputBuffer:
             return reinterpret_cast<SerializableMessage*>(std::make_unique<AudioOutputBufferMessage>(blob).release());
+        case DataTrafficTypeSelection:
+            return reinterpret_cast<SerializableMessage*>(std::make_unique<DataTrafficTypeSelectionMessage>(blob).release());
+        case ControlParameters:
+            return reinterpret_cast<SerializableMessage*>(std::make_unique<ControlParametersMessage>(blob).release());
         case None:
         default:
             return nullptr;
@@ -115,6 +127,16 @@ public:
                     auto aobm = std::unique_ptr<AudioOutputBufferMessage>(reinterpret_cast<AudioOutputBufferMessage*>(message));
                 }
                 break;
+            case DataTrafficTypeSelection:
+                {
+                    auto dtsm = std::unique_ptr<DataTrafficTypeSelectionMessage>(reinterpret_cast<DataTrafficTypeSelectionMessage*>(message));
+                }
+                break;
+            case ControlParameters:
+                {
+                    auto cpm = std::unique_ptr<ControlParametersMessage>(reinterpret_cast<ControlParametersMessage*>(message));
+                }
+                break;
             case None:
             default:
                 break;
@@ -142,6 +164,7 @@ protected:
 
     //==============================================================================
     SerializableMessageType m_type = SerializableMessageType::None;
+    int m_userId = -1;
 };
 
 //==============================================================================
@@ -230,8 +253,8 @@ public:
         jassert(SerializableMessageType::ReinitIOCount == static_cast<SerializableMessageType>(blob[0]));
 
         m_type = SerializableMessageType::ReinitIOCount;
-        blob.copyTo(&m_inputCount, sizeof(SerializableMessageType), 2);
-        blob.copyTo(&m_outputCount, sizeof(SerializableMessageType) + sizeof(std::uint16_t), 2);
+        blob.copyTo(&m_inputCount, sizeof(SerializableMessageType), sizeof(std::uint16_t));
+        blob.copyTo(&m_outputCount, sizeof(SerializableMessageType) + sizeof(std::uint16_t), sizeof(std::uint16_t));
 
     };
     ~ReinitIOCountMessage() = default;
@@ -312,6 +335,7 @@ public:
         m_type = SerializableMessageType::AudioInputBuffer;
 
         auto readPos = int(sizeof(SerializableMessageType));
+
         blob.copyTo(&m_direction, readPos, sizeof(FlowDirection));
         jassert(FlowDirection::Input == m_direction);
 
@@ -349,6 +373,7 @@ public:
         m_type = SerializableMessageType::AudioOutputBuffer;
 
         auto readPos = int(sizeof(SerializableMessageType));
+
         blob.copyTo(&m_direction, readPos, sizeof(FlowDirection));
         jassert(FlowDirection::Output == m_direction);
 
@@ -371,6 +396,305 @@ public:
     };
     ~AudioOutputBufferMessage() = default;
 };
+
+//==============================================================================
+/*
+ *
+ */
+class DataTrafficTypeSelectionMessage : public SerializableMessage
+{
+public:
+    DataTrafficTypeSelectionMessage() = default;
+    DataTrafficTypeSelectionMessage(const std::vector<SerializableMessageType>& trafficTypes) { m_type = SerializableMessageType::DataTrafficTypeSelection; m_trafficTypes = trafficTypes; };
+    DataTrafficTypeSelectionMessage(const juce::MemoryBlock& blob)
+    {
+        jassert(SerializableMessageType::DataTrafficTypeSelection == static_cast<SerializableMessageType>(blob[0]));
+
+        m_type = SerializableMessageType::DataTrafficTypeSelection;
+
+        auto readPos = int(sizeof(SerializableMessageType));
+
+        std::uint16_t typesCount;
+        blob.copyTo(&typesCount, readPos, sizeof(std::uint16_t));
+        readPos += sizeof(std::uint16_t);
+        m_trafficTypes.resize(typesCount);
+        for (int i = 0; i < typesCount; i++)
+        {
+            blob.copyTo(&m_trafficTypes[i], readPos, sizeof(SerializableMessageType));
+            readPos += sizeof(SerializableMessageType);
+        }
+
+    };
+    ~DataTrafficTypeSelectionMessage() = default;
+
+    const std::vector<SerializableMessageType>& getTrafficTypes() const { return m_trafficTypes; };
+
+protected:
+    juce::MemoryBlock createSerializedContent(size_t& contentSize) const override
+    {
+        juce::MemoryBlock blob;
+        auto typesCount = std::uint16_t(m_trafficTypes.size());
+        blob.append(&typesCount, sizeof(std::uint16_t));
+        for (auto& trafficType : m_trafficTypes)
+            blob.append(&trafficType, sizeof(SerializableMessageType));
+        contentSize = blob.getSize();
+        return blob;
+    };
+
+private:
+    std::vector<SerializableMessageType>    m_trafficTypes;
+};
+
+//==============================================================================
+/*
+ *
+ */
+class ControlParametersMessage : public SerializableMessage
+{
+public:
+    ControlParametersMessage() = default;
+    ControlParametersMessage(const std::map<std::uint16_t, bool>& inputMuteStates, const std::map<std::uint16_t, bool>& outputMuteStates, 
+        const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>& crosspointStates)
+    {
+        m_type = SerializableMessageType::ControlParameters;
+        m_inputMuteStates = inputMuteStates;
+        m_outputMuteStates = outputMuteStates;
+        m_crosspointStates = crosspointStates;
+    };
+    ControlParametersMessage(const juce::MemoryBlock& blob)
+    {
+        jassert(SerializableMessageType::ControlParameters == static_cast<SerializableMessageType>(blob[0]));
+
+        m_type = SerializableMessageType::ControlParameters;
+
+        auto readPos = int(sizeof(SerializableMessageType));
+
+        std::uint16_t inputMuteStatesCount;
+        blob.copyTo(&inputMuteStatesCount, readPos, sizeof(std::uint16_t));
+        readPos += sizeof(inputMuteStatesCount);
+        for (int i = 0; i < inputMuteStatesCount; i++)
+        {
+            std::pair<std::uint16_t, bool> inputMuteState;
+            blob.copyTo(&inputMuteState, readPos, sizeof(inputMuteState));
+            readPos += sizeof(inputMuteState);
+
+            m_inputMuteStates[inputMuteState.first] = inputMuteState.second;
+        }
+
+        std::uint16_t outputMuteStatesCount;
+        blob.copyTo(&outputMuteStatesCount, readPos, sizeof(std::uint16_t));
+        readPos += sizeof(outputMuteStatesCount);
+        for (int i = 0; i < outputMuteStatesCount; i++)
+        {
+            std::pair<std::uint16_t, bool> outputMuteState;
+            blob.copyTo(&outputMuteState, readPos, sizeof(outputMuteState));
+            readPos += sizeof(outputMuteState);
+
+            m_outputMuteStates[outputMuteState.first] = outputMuteState.second;
+        }
+
+        std::uint16_t crosspointStatesCount;
+        blob.copyTo(&crosspointStatesCount, readPos, sizeof(std::uint16_t));
+        readPos += sizeof(crosspointStatesCount);
+        for (int i = 0; i < crosspointStatesCount; i++)
+        {
+            std::uint16_t in, out;
+            std::pair<bool, float> state;
+            blob.copyTo(&in, readPos, sizeof(in));
+            readPos += sizeof(in);
+            blob.copyTo(&out, readPos, sizeof(in));
+            readPos += sizeof(in);
+            blob.copyTo(&state, readPos, sizeof(state));
+            readPos += sizeof(state);
+
+            m_crosspointStates[in][out] = state;
+        }
+    };
+    ~ControlParametersMessage() = default;
+
+    const std::map<std::uint16_t, bool>& getInputMuteStates() const { return m_inputMuteStates; };
+    const std::map<std::uint16_t, bool>& getOutputMuteStates() const { return m_outputMuteStates; };
+    const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>& getCrosspointStates() const { return m_crosspointStates; };
+
+protected:
+    juce::MemoryBlock createSerializedContent(size_t& contentSize) const override
+    {
+        juce::MemoryBlock blob;
+
+        auto inputMuteStatesCount = std::uint16_t(m_inputMuteStates.size());
+        blob.append(&inputMuteStatesCount, sizeof(inputMuteStatesCount));
+        for (auto& inputMuteStateKV : m_inputMuteStates)
+            blob.append(&inputMuteStateKV, sizeof(inputMuteStateKV));
+
+        auto outputMuteStatesCount = std::uint16_t(m_outputMuteStates.size());
+        blob.append(&outputMuteStatesCount, sizeof(outputMuteStatesCount));
+        for (auto& outputMuteStateKV : m_outputMuteStates)
+            blob.append(&outputMuteStateKV, sizeof(outputMuteStateKV));
+
+        jassert(0 < m_crosspointStates.size());
+        if (0 < m_crosspointStates.size())
+        {
+            auto crosspointStatesCount = std::uint16_t(m_crosspointStates.size() * m_crosspointStates.begin()->second.size());
+            blob.append(&crosspointStatesCount, sizeof(crosspointStatesCount));
+            auto crosspointStatesCountRef = std::uint16_t(0);
+            for (auto& crosspointStatesFirstDKV : m_crosspointStates)
+            {
+                for (auto& crosspointStatesSecDKV : crosspointStatesFirstDKV.second)
+                {
+                    auto& in = crosspointStatesFirstDKV.first;
+                    blob.append(&in, sizeof(in));
+                    auto& out = crosspointStatesSecDKV.first;
+                    blob.append(&out, sizeof(out));
+                    auto& state = crosspointStatesSecDKV.second;
+                    blob.append(&state, sizeof(state));
+                    crosspointStatesCountRef++;
+                }
+            }
+            jassert(crosspointStatesCount == crosspointStatesCountRef);
+        }
+
+        contentSize = blob.getSize();
+        return blob;
+    };
+
+private:
+    std::map<std::uint16_t, bool>                                               m_inputMuteStates;
+    std::map<std::uint16_t, bool>                                               m_outputMuteStates;
+    std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>    m_crosspointStates;
+};
+
+#ifdef DEBUG
+#define RUN_MESSAGE_TESTS
+#endif
+#ifdef RUN_MESSAGE_TESTS
+static void runTests()
+{
+    auto inputs = 11;
+    auto outputs = 12;
+    auto buffer = juce::AudioBuffer<float>();
+    auto refSample = 11.11f;
+    auto sr = 48000;
+    auto mespb = 256;
+
+    // test AnalyzerParametersMessage
+    auto apm = std::make_unique<AnalyzerParametersMessage>(sr, mespb);
+    auto apmb = apm->getSerializedMessage();
+    auto apmcpy = AnalyzerParametersMessage(apmb);
+    auto test5 = apmcpy.getSampleRate();
+    auto test6 = apmcpy.getMaximumExpectedSamplesPerBlock();
+    jassert(test5 == sr);
+    jassert(test6 == mespb);
+
+    // test ReinitIOCountMessage
+    auto rcm = std::make_unique<ReinitIOCountMessage>(inputs, outputs);
+    auto rcmb = rcm->getSerializedMessage();
+    auto rcmcpy = ReinitIOCountMessage(rcmb);
+    auto test7 = rcmcpy.getInputCount();
+    auto test8 = rcmcpy.getOutputCount();
+    jassert(test7 == inputs);
+    jassert(test8 == outputs);
+
+    // test AudioInputBufferMessage
+    auto channelCount = 2;
+    auto sampleCount = 6;
+    buffer.setSize(channelCount, sampleCount, false, true, false);
+    for (int i = 0; i < channelCount; i++)
+    {
+        for (int j = 0; j < sampleCount; j++)
+        {
+            buffer.setSample(i, j, ++refSample);
+        }
+    }
+    auto rrefSample1 = refSample;
+    auto aibm1 = std::make_unique<AudioInputBufferMessage>(buffer);
+    for (int i = channelCount - 1; i >= 0; i--)
+    {
+        for (int j = sampleCount - 1; j >= 0; j--)
+        {
+            auto test1 = aibm1->getAudioBuffer().getSample(i, j);
+            jassert(int(test1) == int(refSample));
+            refSample--;
+        }
+    }
+    auto aibmb1 = aibm1->getSerializedMessage();
+    auto aibmcpy1 = AudioInputBufferMessage(aibmb1);
+    for (int i = channelCount - 1; i >= 0; i--)
+    {
+        for (int j = sampleCount - 1; j >= 0; j--)
+        {
+            auto test1 = aibmcpy1.getAudioBuffer().getSample(i, j);
+            jassert(int(test1) == int(rrefSample1));
+            rrefSample1--;
+        }
+    }
+
+    // test AudioOutputBufferMessage
+    buffer.setSize(channelCount, sampleCount, false, true, false);
+    for (int i = 0; i < channelCount; i++)
+    {
+        for (int j = 0; j < sampleCount; j++)
+        {
+            buffer.setSample(i, j, ++refSample);
+        }
+    }
+    auto rrefSample2 = refSample;
+    auto aibm2 = std::make_unique<AudioOutputBufferMessage>(buffer);
+    for (int i = channelCount - 1; i >= 0; i--)
+    {
+        for (int j = sampleCount - 1; j >= 0; j--)
+        {
+            auto test2 = aibm2->getAudioBuffer().getSample(i, j);
+            jassert(int(test2) == int(rrefSample2));
+            rrefSample2--;
+        }
+    }
+    auto aibmb2 = aibm2->getSerializedMessage();
+    auto aibmcpy2 = AudioOutputBufferMessage(aibmb2);
+    for (int i = channelCount - 1; i >= 0; i--)
+    {
+        for (int j = sampleCount - 1; j >= 0; j--)
+        {
+            auto test2 = aibmcpy2.getAudioBuffer().getSample(i, j);
+            jassert(int(test2) == int(refSample));
+            refSample--;
+        }
+    }
+
+    // test EnvironmentParametersMessage
+    auto paletteStyle = JUCEAppBasics::CustomLookAndFeel::PaletteStyle::PS_Light;
+    auto epm = std::make_unique<EnvironmentParametersMessage>(paletteStyle);
+    auto epmb = epm->getSerializedMessage();
+    auto epmcpy = EnvironmentParametersMessage(epmb);
+    auto test9 = epmcpy.getPaletteStyle();
+    jassert(test9 == paletteStyle);
+
+    // test DataTrafficTypeSelectionMessage
+    auto trafficTypes = std::vector<SerializableMessage::SerializableMessageType>({ SerializableMessage::ControlParameters, SerializableMessage::AnalyzerParameters });
+    auto dttm = std::make_unique<DataTrafficTypeSelectionMessage>(trafficTypes);
+    auto dttmb = dttm->getSerializedMessage();
+    auto dttmcpy = DataTrafficTypeSelectionMessage(dttmb);
+    auto test10 = dttmcpy.getTrafficTypes();
+    jassert(test10 == trafficTypes);
+
+    // test ControlParametersMessage
+    auto inputMuteStates = std::map<std::uint16_t, bool>{ { std::uint16_t(1), true}, { std::uint16_t(2), false}, { std::uint16_t(3), true} };
+    auto outputMuteStates = std::map<std::uint16_t, bool>{ { std::uint16_t(4), false}, { std::uint16_t(5), true}, { std::uint16_t(6), false} };
+    auto crosspointStates = std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>();
+    crosspointStates[1][1] = { false, 0.0f };
+    crosspointStates[1][2] = { true, 1.0f };
+    crosspointStates[2][1] = { true, 0.5f };
+    crosspointStates[2][2] = { true, 0.7f };
+    auto cpm = std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates);
+    auto cpmb = cpm->getSerializedMessage();
+    auto cpmcpy = ControlParametersMessage(cpmb);
+    auto test11 = cpmcpy.getInputMuteStates();
+    auto test12 = cpmcpy.getOutputMuteStates();
+    auto test13 = cpmcpy.getCrosspointStates();
+    jassert(test11 == inputMuteStates);
+    jassert(test12 == outputMuteStates);
+    jassert(test13 == crosspointStates);
+}
+#endif
 
 
 };
