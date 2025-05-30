@@ -22,9 +22,8 @@
 
 namespace Mema
 {
-    //class ProcessorDataAnalyzer;
-    //class MeterbridgeComponent;
-    //class TwoDFieldOutputComponent;
+    class FaderbankControlComponent;
+    class PanningControlComponent;
 }
 
 class MemaReComponent :   public juce::Component, juce::MessageListener
@@ -56,12 +55,8 @@ public:
 
 private:
     //==============================================================================
-    //std::unique_ptr<Mema::ProcessorDataAnalyzer>  m_inputDataAnalyzer;
-    //std::unique_ptr<Mema::ProcessorDataAnalyzer>  m_outputDataAnalyzer;
-    
-    //std::unique_ptr<Mema::MeterbridgeComponent> m_inputMeteringComponent;
-    //std::unique_ptr<Mema::MeterbridgeComponent> m_outputMeteringComponent;
-    //std::unique_ptr<Mema::TwoDFieldOutputComponent> m_outputFieldComponent;
+    std::unique_ptr<Mema::FaderbankControlComponent>    m_faderbankCtrlComponent;
+    std::unique_ptr<Mema::PanningControlComponent>      m_panningCtrlComponent;
 
     //==============================================================================
     RunningStatus m_runningStatus = RunningStatus::Inactive;

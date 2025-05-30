@@ -63,6 +63,10 @@
             resource="0" file="../Source/MemaClientCommon/MemaClientDiscoverComponent.cpp"/>
       <FILE id="D4YQYR" name="MemaClientDiscoverComponent.h" compile="0"
             resource="0" file="../Source/MemaClientCommon/MemaClientDiscoverComponent.h"/>
+      <FILE id="UYJMAM" name="MemaClientControlComponents.cpp" compile="1"
+            resource="0" file="../Source/MemaClientCommon/MemaClientControlComponents.cpp"/>
+      <FILE id="nOGjRy" name="MemaClientControlComponents.h" compile="0"
+            resource="0" file="../Source/MemaClientCommon/MemaClientControlComponents.h"/>
       <FILE id="avbo06" name="MemaMessages.h" compile="0" resource="0" file="../Source/MemaProcessor/MemaMessages.h"/>
       <FILE id="yRPcEF" name="MemaReAppConfiguration.cpp" compile="1" resource="0"
             file="MemaReAppConfiguration.cpp"/>

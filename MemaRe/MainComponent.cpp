@@ -158,8 +158,8 @@ MainComponent::MainComponent()
 
         juce::PopupMenu settingsMenu;
         settingsMenu.addSubMenu("LookAndFeel", lookAndFeelSubMenu);
-        settingsMenu.addSubMenu("Remote format", outputPanningTypeSubMenu);
-        settingsMenu.addSubMenu("Panner colour", panningColourSubMenu);
+        settingsMenu.addSubMenu("Control format", outputPanningTypeSubMenu);
+        settingsMenu.addSubMenu("Control colour", panningColourSubMenu);
         settingsMenu.showMenuAsync(juce::PopupMenu::Options(), [=](int selectedId) {
             handleSettingsMenuResult(selectedId);
             if (m_config)

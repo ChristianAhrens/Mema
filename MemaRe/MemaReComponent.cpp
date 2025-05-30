@@ -18,22 +18,18 @@
 
 #include "MemaReComponent.h"
 
-//#include "MemaProcessorEditor/MeterbridgeComponent.h"
-//#include "MemaProcessorEditor/TwoDFieldOutputComponent.h"
 #include "MemaProcessor/MemaMessages.h"
 #include "MemaProcessor/MemaProcessor.h"
-//#include "MemaProcessor/ProcessorDataAnalyzer.h"
+#include "MemaClientCommon/MemaClientControlComponents.h"
 
 MemaReComponent::MemaReComponent()
     : juce::Component()
 {
-    //m_inputMeteringComponent = std::make_unique<Mema::MeterbridgeComponent>(Mema::MeterbridgeComponent::Direction::Horizontal);
-    //addAndMakeVisible(m_inputMeteringComponent.get());
-    //
-    //m_inputDataAnalyzer = std::make_unique<Mema::ProcessorDataAnalyzer>();
-    //m_inputDataAnalyzer->addListener(m_inputMeteringComponent.get());
-    //
-    //m_outputDataAnalyzer = std::make_unique<Mema::ProcessorDataAnalyzer>();
+    m_faderbankCtrlComponent = std::make_unique<Mema::FaderbankControlComponent>();
+    addChildComponent(m_faderbankCtrlComponent.get());
+
+    m_panningCtrlComponent = std::make_unique<Mema::PanningControlComponent>();
+    addChildComponent(m_panningCtrlComponent.get());
 
     setOutputFaderbankCtrlActive();
 }
@@ -45,25 +41,17 @@ MemaReComponent::~MemaReComponent()
 void MemaReComponent::setOutputFaderbankCtrlActive()
 {
     auto resizeRequired = false;
-    //if (!m_outputMeteringComponent)
-    //{
-    //    m_outputMeteringComponent = std::make_unique<Mema::MeterbridgeComponent>(Mema::MeterbridgeComponent::Direction::Horizontal);
-    //    m_outputMeteringComponent->setChannelCount(m_currentIOCount.second);
-    //    addAndMakeVisible(m_outputMeteringComponent.get());
-    //    if (m_outputDataAnalyzer)
-    //        m_outputDataAnalyzer->addListener(m_outputMeteringComponent.get());
-    //    resizeRequired = true;
-    //}
-    //
-    //if (m_outputFieldComponent)
-    //{
-    //    if (m_outputDataAnalyzer)
-    //        m_outputDataAnalyzer->removeListener(m_outputFieldComponent.get());
-    //
-    //    removeChildComponent(m_outputFieldComponent.get());
-    //    m_outputFieldComponent.reset();
-    //    resizeRequired = true;
-    //}
+    
+    if (m_faderbankCtrlComponent && !m_faderbankCtrlComponent->isVisible())
+    {
+        m_faderbankCtrlComponent->setVisible(true);
+        resizeRequired = true;
+    }
+    if (m_panningCtrlComponent && m_panningCtrlComponent->isVisible())
+    {
+        m_panningCtrlComponent->setVisible(false);
+        resizeRequired = true;
+    }
 
     if (resizeRequired && !getLocalBounds().isEmpty())
         resized();
@@ -72,26 +60,18 @@ void MemaReComponent::setOutputFaderbankCtrlActive()
 void MemaReComponent::setOutputPanningCtrlActive(const juce::AudioChannelSet& channelConfiguration)
 {
     auto resizeRequired = false;
-    //if (!m_outputFieldComponent)
-    //{
-    //    m_outputFieldComponent = std::make_unique<Mema::TwoDFieldOutputComponent>();
-    //    addAndMakeVisible(m_outputFieldComponent.get());
-    //    if (m_outputDataAnalyzer)
-    //        m_outputDataAnalyzer->addListener(m_outputFieldComponent.get());
-    //    resizeRequired = true;
-    //}
-    //if (m_outputFieldComponent->setChannelConfiguration(channelConfiguration))
-    //    resizeRequired = true;
-    //
-    //if (m_outputMeteringComponent)
-    //{
-    //    if (m_outputDataAnalyzer)
-    //        m_outputDataAnalyzer->removeListener(m_outputMeteringComponent.get());
-    //
-    //    removeChildComponent(m_outputMeteringComponent.get());
-    //    m_outputMeteringComponent.reset();
-    //    resizeRequired = true;
-    //}
+
+    if (m_panningCtrlComponent && !m_panningCtrlComponent->isVisible())
+    {
+        m_panningCtrlComponent->setChannelConfig(channelConfiguration);
+        m_panningCtrlComponent->setVisible(true);
+        resizeRequired = true;
+    }
+    if (m_faderbankCtrlComponent && m_faderbankCtrlComponent->isVisible())
+    {
+        m_faderbankCtrlComponent->setVisible(false);
+        resizeRequired = true;
+    }
 
     if (resizeRequired && !getLocalBounds().isEmpty())
         resized();
@@ -104,71 +84,10 @@ void MemaReComponent::paint(Graphics &g)
 
 void MemaReComponent::resized()
 {
-    //if (m_inputMeteringComponent && m_outputFieldComponent)
-    //{
-    //    auto margin = 8;
-    //    auto bounds = getLocalBounds().reduced(margin, margin);
-    //    auto boundsAspect = bounds.toFloat().getAspectRatio();
-    //    auto fieldAspect = m_outputFieldComponent->getRequiredAspectRatio();
-    //    if (boundsAspect >= 1 / fieldAspect)
-    //    {
-    //        // landscape
-    //        auto outputsBounds = bounds.removeFromRight(int(bounds.getHeight() / fieldAspect));
-    //        outputsBounds.removeFromLeft(margin / 2);
-    //        auto inputsBounds = bounds;
-    //        inputsBounds.removeFromRight(margin / 2);
-    //
-    //        m_inputMeteringComponent->setBounds(inputsBounds);
-    //        m_outputFieldComponent->setBounds(outputsBounds);
-    //    }
-    //    else
-    //    {
-    //        // portrait
-    //        auto outputBounds = bounds.removeFromBottom(int(bounds.getWidth() * fieldAspect));
-    //        outputBounds.removeFromTop(margin / 2);
-    //        auto inputBounds = bounds;
-    //        inputBounds.removeFromBottom(margin / 2);
-    //
-    //        m_inputMeteringComponent->setBounds(inputBounds);
-    //        m_outputFieldComponent->setBounds(outputBounds);
-    //    }
-    //}
-    //else if (m_inputMeteringComponent && m_outputMeteringComponent)
-    //{
-    //    auto margin = 8;
-    //    auto bounds = getLocalBounds().reduced(margin, margin);
-    //    if (bounds.getAspectRatio() >= 1)
-    //    {
-    //        // landscape
-    //        if (m_inputMeteringComponent && m_outputMeteringComponent)
-    //        {
-    //            auto ic = float(m_inputMeteringComponent->getChannelCount());
-    //            auto oc = float(m_outputMeteringComponent->getChannelCount());
-    //
-    //            if (0.0f != ic && 0.0f != oc)
-    //                m_ioRatio = ic / (ic + oc);
-    //        }
-    //
-    //        auto inputsBounds = bounds.removeFromLeft(int(bounds.getWidth() * m_ioRatio));
-    //        inputsBounds.removeFromRight(margin / 2);
-    //        auto outputsBounds = bounds;
-    //        outputsBounds.removeFromLeft(margin / 2);
-    //
-    //        m_inputMeteringComponent->setBounds(inputsBounds);
-    //        m_outputMeteringComponent->setBounds(outputsBounds);
-    //    }
-    //    else
-    //    {
-    //        // portrait
-    //        auto inputBounds = bounds.removeFromTop(bounds.getHeight() / 2);
-    //        inputBounds.removeFromBottom(margin / 2);
-    //        auto outputBounds = bounds;
-    //        outputBounds.removeFromTop(margin / 2);
-    //
-    //        m_inputMeteringComponent->setBounds(inputBounds);
-    //        m_outputMeteringComponent->setBounds(outputBounds);
-    //    }
-    //}
+    if (m_faderbankCtrlComponent && m_faderbankCtrlComponent->isVisible())
+        m_faderbankCtrlComponent->setBounds(getLocalBounds());
+    if (m_panningCtrlComponent && m_panningCtrlComponent->isVisible())
+        m_panningCtrlComponent->setBounds(getLocalBounds());
 }
 
 void MemaReComponent::handleMessage(const Message& message)
@@ -181,11 +100,13 @@ void MemaReComponent::handleMessage(const Message& message)
     
     if (auto const apm = dynamic_cast<const Mema::AnalyzerParametersMessage*>(&message))
     {
-        jassertfalse; // we don't want analyzer parameter infos!
+        // we don't want analyzer parameter infos!
+        DBG(juce::String(__FUNCTION__) + " ignoring unexpected AnalyzerParametersMessage...");
     }
     else if (auto m = dynamic_cast<const Mema::AudioBufferMessage*>(&message))
     {
-        jassertfalse; // we don't want audio buffer infos!
+        // we don't want audio buffer infos!
+        DBG(juce::String(__FUNCTION__) + " ignoring unexpected AudiBufferMessage...");
     }
     else if (auto const iom = dynamic_cast<const Mema::ReinitIOCountMessage*>(&message))
     {
@@ -196,20 +117,35 @@ void MemaReComponent::handleMessage(const Message& message)
 
         m_currentIOCount = std::make_pair(inputCount, outputCount);
 
-        //
+        if (m_faderbankCtrlComponent)
+            m_faderbankCtrlComponent->setIOCount(m_currentIOCount);
+        if (m_panningCtrlComponent)
+            m_panningCtrlComponent->setIOCount(m_currentIOCount);
 
         resized();
     }
     else if (auto const cpm = dynamic_cast<const Mema::ControlParametersMessage*>(&message))
     {
         m_inputMuteStates = cpm->getInputMuteStates();
-        jassert(m_inputMuteStates.empty());
-        m_outputMuteStates = cpm->getOutputMuteStates();
-        jassert(m_outputMuteStates.empty());
-        m_crosspointStates = cpm->getCrosspointStates();
-        jassert(m_crosspointStates.empty());
+        jassert(!m_inputMuteStates.empty());
+        if (m_faderbankCtrlComponent)
+            m_faderbankCtrlComponent->setInputMuteStates(m_inputMuteStates);
+        if (m_panningCtrlComponent)
+            m_panningCtrlComponent->setInputMuteStates(m_inputMuteStates);
 
-        //
+        m_outputMuteStates = cpm->getOutputMuteStates();
+        jassert(!m_outputMuteStates.empty());
+        if (m_faderbankCtrlComponent)
+            m_faderbankCtrlComponent->setOutputMuteStates(m_outputMuteStates);
+        if (m_panningCtrlComponent)
+            m_panningCtrlComponent->setOutputMuteStates(m_outputMuteStates);
+
+        m_crosspointStates = cpm->getCrosspointStates();
+        jassert(!m_crosspointStates.empty());
+        if (m_faderbankCtrlComponent)
+            m_faderbankCtrlComponent->setCrosspointStates(m_crosspointStates);
+        if (m_panningCtrlComponent)
+            m_panningCtrlComponent->setCrosspointStates(m_crosspointStates);
 
         resized();
     }
