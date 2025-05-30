@@ -29,6 +29,12 @@ MemaClientConnectingComponent::~MemaClientConnectingComponent()
 {
 }
 
+void MemaClientConnectingComponent::setServiceDescription(const juce::String& serviceDescription)
+{
+    m_serviceDescription = serviceDescription;
+    repaint();
+}
+
 void MemaClientConnectingComponent::resized()
 {
     auto bounds = getLocalBounds();
@@ -46,5 +52,8 @@ void MemaClientConnectingComponent::resized()
 void MemaClientConnectingComponent::paint(Graphics& g)
 {
     g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::ColourIds::backgroundColourId));
+
+    g.setColour(getLookAndFeel().findColour(juce::TextEditor::ColourIds::textColourId));
+    g.drawFittedText("Waiting for\n" + (m_serviceDescription.isNotEmpty() ? m_serviceDescription : "UNKNOWN"), getLocalBounds().reduced(35), juce::Justification::centred, 2);
 }
 

@@ -27,6 +27,8 @@ public:
     MemaClientConnectingComponent();
     ~MemaClientConnectingComponent() override;
 
+    void setServiceDescription(const juce::String& serviceDescription);
+
     //==============================================================================
     void resized() override;
     void paint(juce::Graphics& g) override;
@@ -34,6 +36,7 @@ public:
 private:
     double                                  m_progress = -1.0;
     std::unique_ptr<juce::ProgressBar>      m_startupProgressIndicator;
+    juce::String                            m_serviceDescription;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MemaClientConnectingComponent)
 };
