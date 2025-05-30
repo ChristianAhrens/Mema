@@ -102,19 +102,19 @@ public:
     void updateCommanders();
 
     //==============================================================================
-    bool getInputMuteState(int channelNumber);
-    void setInputMuteState(int channelNumber, bool muted, MemaChannelCommander* sender = nullptr);
+    bool getInputMuteState(std::uint16_t channelNumber);
+    void setInputMuteState(std::uint16_t channelNumber, bool muted, MemaChannelCommander* sender = nullptr);
     
-    bool getMatrixCrosspointEnabledValue(int inputNumber, int outputNumber);
-    void setMatrixCrosspointEnabledValue(int inputNumber, int outputNumber, bool enabled, MemaChannelCommander* sender = nullptr);
+    bool getMatrixCrosspointEnabledValue(std::uint16_t inputNumber, std::uint16_t outputNumber);
+    void setMatrixCrosspointEnabledValue(std::uint16_t inputNumber, std::uint16_t outputNumber, bool enabled, MemaChannelCommander* sender = nullptr);
 
-    float getMatrixCrosspointFactorValue(int inputNumber, int outputNumber);
-    void setMatrixCrosspointFactorValue(int inputNumber, int outputNumber, float factor, MemaChannelCommander* sender = nullptr);
+    float getMatrixCrosspointFactorValue(std::uint16_t inputNumber, std::uint16_t outputNumber);
+    void setMatrixCrosspointFactorValue(std::uint16_t inputNumber, std::uint16_t outputNumber, float factor, MemaChannelCommander* sender = nullptr);
 
-    bool getOutputMuteState(int channelNumber);
-    void setOutputMuteState(int channelNumber, bool muted, MemaChannelCommander* sender = nullptr);
+    bool getOutputMuteState(std::uint16_t channelNumber);
+    void setOutputMuteState(std::uint16_t channelNumber, bool muted, MemaChannelCommander* sender = nullptr);
 
-    void setChannelCounts(int inputChannelCount, int outputChannelCount);
+    void setChannelCounts(std::uint16_t inputChannelCount, std::uint16_t outputChannelCount);
 
     //==============================================================================
     bool setPlugin(const juce::PluginDescription& pluginDescription);
@@ -223,15 +223,15 @@ private:
     std::vector<MemaCrosspointCommander*>   m_crosspointCommanders;
 
     //==============================================================================
-    std::map<int, bool> m_inputMuteStates;
-    std::map<int, bool> m_outputMuteStates;
+    std::map<std::uint16_t, bool> m_inputMuteStates;
+    std::map<std::uint16_t, bool> m_outputMuteStates;
 
     //==============================================================================
     int m_inputChannelCount{ 1 };
     int m_outputChannelCount{ 1 };
 
     //==============================================================================
-    std::map<int, std::map<int, std::pair<bool, float>>>  m_matrixCrosspointValues;
+    std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>  m_matrixCrosspointValues;
 
     //==============================================================================
     std::unique_ptr<MemaProcessorEditor>  m_processorEditor;
