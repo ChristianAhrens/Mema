@@ -1,4 +1,4 @@
-/* Copyright (c) 2024-2025, Christian Ahrens
+/* Copyright (c) 2025, Christian Ahrens
  *
  * This file is part of Mema <https://github.com/ChristianAhrens/Mema>
  *
@@ -48,24 +48,24 @@ public:
         LookAndFeel_Dark,
         LookAndFeel_Light,
         LookAndFeel_Last = LookAndFeel_Light,
-        OutputVisuType_First,
-        OutputVisuType_Meterbridge = OutputVisuType_First,
-        OutputVisuType_LRS,
-        OutputVisuType_LCRS,
-        OutputVisuType_5point0,
-        OutputVisuType_5point1,
-        OutputVisuType_5point1point2,
-        OutputVisuType_7point0,
-        OutputVisuType_7point1,
-        OutputVisuType_7point1point4,
-        OutputVisuType_9point1point6,
-        OutputVisuType_Last = OutputVisuType_9point1point6,
-        MeteringColour_First,
-        MeteringColour_Green = MeteringColour_First,
-        MeteringColour_Red,
-        MeteringColour_Blue,
-        MeteringColour_Pink,
-        MeteringColour_Last = MeteringColour_Pink
+        OutputPanningType_First,
+        OutputPanningType_RawChannels = OutputPanningType_First,
+        OutputPanningType_LRS,
+        OutputPanningType_LCRS,
+        OutputPanningType_5point0,
+        OutputPanningType_5point1,
+        OutputPanningType_5point1point2,
+        OutputPanningType_7point0,
+        OutputPanningType_7point1,
+        OutputPanningType_7point1point4,
+        OutputPanningType_9point1point6,
+        OutputPanningType_Last = OutputPanningType_9point1point6,
+        PanningColour_First,
+        PanningColour_Green = PanningColour_First,
+        PanningColour_Red,
+        PanningColour_Blue,
+        PanningColour_Pink,
+        PanningColour_Last = PanningColour_Pink
     };
 
 public:
@@ -125,11 +125,11 @@ private:
     //==============================================================================
     void handleSettingsMenuResult(int selectedId);
     void handleSettingsLookAndFeelMenuResult(int selectedId);
-    void handleSettingsOutputVisuTypeMenuResult(int selectedId);
-    void handleSettingsMeteringColourMenuResult(int selectedId);
+    void handleSettingsOutputPanningTypeMenuResult(int selectedId);
+    void handleSettingsPanningColourMenuResult(int selectedId);
 
-    void setMeteringColour(const juce::Colour& meteringColour);
-    void applyMeteringColour();
+    void setPanningColour(const juce::Colour& meteringColour);
+    void applyPanningColour();
 
     void setStatus(const Status& s);
     const Status getStatus();
@@ -141,9 +141,9 @@ private:
     juce::NetworkServiceDiscovery::Service                                  m_selectedService;
     std::unique_ptr<InterprocessConnectionImpl>                             m_networkConnection;
 
-    std::unique_ptr<MemaReComponent>                                        m_monitorComponent;
-    std::unique_ptr<MemaClientDiscoverComponent>                                  m_discoverComponent;
-    std::unique_ptr<MemaClientConnectingComponent>                                m_connectingComponent;
+    std::unique_ptr<MemaReComponent>                                        m_remoteComponent;
+    std::unique_ptr<MemaClientDiscoverComponent>                            m_discoverComponent;
+    std::unique_ptr<MemaClientConnectingComponent>                          m_connectingComponent;
 
     std::unique_ptr<juce::DrawableButton>                                   m_settingsButton;
     std::map<int, std::pair<std::string, int>>                              m_settingsItems;
@@ -156,7 +156,7 @@ private:
 
     Status                                                                  m_currentStatus = Status::Discovering;
 
-    juce::Colour                                                            m_meteringColour = juce::Colours::forestgreen;
+    juce::Colour                                                            m_panningColour = juce::Colours::forestgreen;
 
     std::unique_ptr<MemaReAppConfiguration>                                 m_config;
 

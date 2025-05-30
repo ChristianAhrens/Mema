@@ -49,14 +49,6 @@
             file="../Source/AboutComponent.cpp"/>
       <FILE id="vkneaH" name="AboutComponent.h" compile="0" resource="0"
             file="../Source/AboutComponent.h"/>
-      <FILE id="j4AVKB" name="AbstractAudioVisualizer.cpp" compile="1" resource="0"
-            file="../Source/MemaProcessorEditor/AbstractAudioVisualizer.cpp"/>
-      <FILE id="JmJngu" name="AbstractAudioVisualizer.h" compile="0" resource="0"
-            file="../Source/MemaProcessorEditor/AbstractAudioVisualizer.h"/>
-      <FILE id="Mm5KcE" name="AbstractProcessorData.cpp" compile="1" resource="0"
-            file="../Source/MemaProcessor/AbstractProcessorData.cpp"/>
-      <FILE id="b9h1KE" name="AbstractProcessorData.h" compile="0" resource="0"
-            file="../Source/MemaProcessor/AbstractProcessorData.h"/>
       <FILE id="v69CCa" name="CustomPopupMenuComponent.h" compile="0" resource="0"
             file="../Source/CustomPopupMenuComponent.h"/>
       <FILE id="Y0aPvI" name="Main.cpp" compile="1" resource="0" file="Main.cpp"/>
@@ -84,30 +76,6 @@
             file="../Source/MemaProcessor/MemaServiceData.cpp"/>
       <FILE id="I0uyCC" name="MemaServiceData.h" compile="0" resource="0"
             file="../Source/MemaProcessor/MemaServiceData.h"/>
-      <FILE id="iwKL0M" name="MeterbridgeComponent.cpp" compile="1" resource="0"
-            file="../Source/MemaProcessorEditor/MeterbridgeComponent.cpp"/>
-      <FILE id="fIADmU" name="MeterbridgeComponent.h" compile="0" resource="0"
-            file="../Source/MemaProcessorEditor/MeterbridgeComponent.h"/>
-      <FILE id="FQmsio" name="ProcessorAudioSignalData.cpp" compile="1" resource="0"
-            file="../Source/MemaProcessor/ProcessorAudioSignalData.cpp"/>
-      <FILE id="XHJ5ms" name="ProcessorAudioSignalData.h" compile="0" resource="0"
-            file="../Source/MemaProcessor/ProcessorAudioSignalData.h"/>
-      <FILE id="YHSDva" name="ProcessorDataAnalyzer.cpp" compile="1" resource="0"
-            file="../Source/MemaProcessor/ProcessorDataAnalyzer.cpp"/>
-      <FILE id="EVlvPD" name="ProcessorDataAnalyzer.h" compile="0" resource="0"
-            file="../Source/MemaProcessor/ProcessorDataAnalyzer.h"/>
-      <FILE id="tawkqF" name="ProcessorLevelData.cpp" compile="1" resource="0"
-            file="../Source/MemaProcessor/ProcessorLevelData.cpp"/>
-      <FILE id="Gek8yS" name="ProcessorLevelData.h" compile="0" resource="0"
-            file="../Source/MemaProcessor/ProcessorLevelData.h"/>
-      <FILE id="A5fpAt" name="ProcessorSpectrumData.cpp" compile="1" resource="0"
-            file="../Source/MemaProcessor/ProcessorSpectrumData.cpp"/>
-      <FILE id="qCeR2y" name="ProcessorSpectrumData.h" compile="0" resource="0"
-            file="../Source/MemaProcessor/ProcessorSpectrumData.h"/>
-      <FILE id="WhHDmY" name="TwoDFieldOutputComponent.cpp" compile="1" resource="0"
-            file="../Source/MemaProcessorEditor/TwoDFieldOutputComponent.cpp"/>
-      <FILE id="CHiFIG" name="TwoDFieldOutputComponent.h" compile="0" resource="0"
-            file="../Source/MemaProcessorEditor/TwoDFieldOutputComponent.h"/>
     </GROUP>
   </MAINGROUP>
   <MODULES>

@@ -56,16 +56,16 @@ bool MemaReAppConfiguration::isValid(const std::unique_ptr<juce::XmlElement>& xm
 	auto visuConfigSectionElement = xmlConfig->getChildByName(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::VISUCONFIG));
 	if (visuConfigSectionElement)
 	{
-		auto outputVisuXmlElement = visuConfigSectionElement->getChildByName(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::OUTPUTVISUTYPE));
-		if (outputVisuXmlElement)
+		auto outputPanningXmlElement = visuConfigSectionElement->getChildByName(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::OUTPUTPANNINGTYPE));
+		if (outputPanningXmlElement)
 		{
 			//validate
 		}
 		else
 			return false;
 
-		auto meteringColourXmlElement = visuConfigSectionElement->getChildByName(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::METERINGCOLOUR));
-		if (meteringColourXmlElement)
+		auto panningColourXmlElement = visuConfigSectionElement->getChildByName(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::PANNINGCOLOUR));
+		if (panningColourXmlElement)
 		{
 			// validate
 		}

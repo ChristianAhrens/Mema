@@ -1,4 +1,4 @@
-/* Copyright (c) 2024-2025, Christian Ahrens
+/* Copyright (c) 2025, Christian Ahrens
  *
  * This file is part of Mema <https://github.com/ChristianAhrens/Mema>
  *
@@ -22,9 +22,9 @@
 
 namespace Mema
 {
-    class ProcessorDataAnalyzer;
-    class MeterbridgeComponent;
-    class TwoDFieldOutputComponent;
+    //class ProcessorDataAnalyzer;
+    //class MeterbridgeComponent;
+    //class TwoDFieldOutputComponent;
 }
 
 class MemaReComponent :   public juce::Component, juce::MessageListener
@@ -41,8 +41,8 @@ public:
     MemaReComponent();
     ~MemaReComponent() override;
 
-    void setOutputMeteringVisuActive();
-    void setOutputFieldVisuActive(const juce::AudioChannelSet& channelConfiguration);
+    void setOutputFaderbankCtrlActive();
+    void setOutputPanningCtrlActive(const juce::AudioChannelSet& channelConfiguration);
 
     //==============================================================================
     void resized() override;
@@ -56,18 +56,21 @@ public:
 
 private:
     //==============================================================================
-    std::unique_ptr<Mema::ProcessorDataAnalyzer>  m_inputDataAnalyzer;
-    std::unique_ptr<Mema::ProcessorDataAnalyzer>  m_outputDataAnalyzer;
-
-    std::unique_ptr<Mema::MeterbridgeComponent> m_inputMeteringComponent;
-    std::unique_ptr<Mema::MeterbridgeComponent> m_outputMeteringComponent;
-    std::unique_ptr<Mema::TwoDFieldOutputComponent> m_outputFieldComponent;
+    //std::unique_ptr<Mema::ProcessorDataAnalyzer>  m_inputDataAnalyzer;
+    //std::unique_ptr<Mema::ProcessorDataAnalyzer>  m_outputDataAnalyzer;
+    
+    //std::unique_ptr<Mema::MeterbridgeComponent> m_inputMeteringComponent;
+    //std::unique_ptr<Mema::MeterbridgeComponent> m_outputMeteringComponent;
+    //std::unique_ptr<Mema::TwoDFieldOutputComponent> m_outputFieldComponent;
 
     //==============================================================================
     RunningStatus m_runningStatus = RunningStatus::Inactive;
     static constexpr int sc_connectionTimeout = 5000; // 5s running before attempt is considered failed
 
-    std::pair<int, int> m_currentIOCount = { 0, 0 };
+    std::pair<int, int>                                                         m_currentIOCount = { 0, 0 };
+    std::map<std::uint16_t, bool>                                               m_inputMuteStates = {};
+    std::map<std::uint16_t, bool>                                               m_outputMuteStates = {};
+    std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>    m_crosspointStates = {};
 
     float m_ioRatio = 0.5f;
 

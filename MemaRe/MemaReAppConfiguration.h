@@ -34,8 +34,8 @@ public:
         CONNECTIONCONFIG,
         SERVICEDESCRIPTION,
         VISUCONFIG,
-        OUTPUTVISUTYPE,
-        METERINGCOLOUR,
+        OUTPUTPANNINGTYPE,
+        PANNINGCOLOUR,
         LOOKANDFEEL,
     };
     static juce::String getTagName(TagID ID)
@@ -48,10 +48,10 @@ public:
             return "SERVICEDESCRIPTION";
         case VISUCONFIG:
             return "VISUCONFIG";
-        case OUTPUTVISUTYPE:
-            return "OUTPUTVISUTYPE";
-        case METERINGCOLOUR:
-            return "METERINGCOLOUR";
+        case OUTPUTPANNINGTYPE:
+            return "OUTPUTPANNINGTYPE";
+        case PANNINGCOLOUR:
+            return "PANNINGCOLOUR";
         case LOOKANDFEEL:
             return "LOOKANDFEEL";
         default:
