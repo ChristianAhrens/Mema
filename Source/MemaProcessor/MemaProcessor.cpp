@@ -1018,9 +1018,16 @@ void MemaProcessor::handleMessage(const Message& message)
 
 	std::vector<int> sendIds;
 	for (auto const& cId : m_trafficTypesPerConnection)
-		if (cId.second.end() != std::find(cId.second.begin(), cId.second.end(), tId))
+	{
+		// if the connection did not define relevant traffic types, add its connectionId to list of recipients
+		if (cId.second.empty())
 			sendIds.push_back(cId.first);
-	sendMessageToClients(serializedMessageMemoryBlock, sendIds);
+		// if the traffic type is active for a connection, add the connectionId to list of recipients
+		else if (cId.second.end() != std::find(cId.second.begin(), cId.second.end(), tId))
+			sendIds.push_back(cId.first);
+	}
+	if (!sendIds.empty())
+		sendMessageToClients(serializedMessageMemoryBlock, sendIds);
 }
 
 void MemaProcessor::sendMessageToClients(const MemoryBlock& messageMemoryBlock, const std::vector<int>& sendIds)
