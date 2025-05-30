@@ -35,16 +35,16 @@ public:
     virtual void resized() = 0;
 
     //==============================================================================
-    void setIOCount(const std::pair<int, int>& ioCount);
+    virtual void setIOCount(const std::pair<int, int>& ioCount);
     const std::pair<int, int>& getIOCount();
 
-    void setInputMuteStates(const std::map<std::uint16_t, bool>& inputMuteStates);
+    virtual void setInputMuteStates(const std::map<std::uint16_t, bool>& inputMuteStates);
     const std::map<std::uint16_t, bool>& getInputMuteStates();
 
-    void setOutputMuteStates(const std::map<std::uint16_t, bool>& outputMuteStates);
+    virtual void setOutputMuteStates(const std::map<std::uint16_t, bool>& outputMuteStates);
     const std::map<std::uint16_t, bool>& getOutputMuteStates();
 
-    void setCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>& crosspointStates);
+    virtual void setCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>& crosspointStates);
     const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>& getCrosspointStates();
 
     //==============================================================================
@@ -78,11 +78,25 @@ public:
     void resized() override;
 
     //==============================================================================
+    void setIOCount(const std::pair<int, int>& ioCount) override;
+    void setInputMuteStates(const std::map<std::uint16_t, bool>& inputMuteStates) override;
+    void setOutputMuteStates(const std::map<std::uint16_t, bool>& outputMuteStates) override;
+    void setCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>& crosspointStates) override;
 
     //==============================================================================
 
 private:
     //==============================================================================
+    std::unique_ptr<juce::Grid>                     m_inputControlsGrid;
+    std::vector<std::unique_ptr<juce::TextButton>>  m_inputSelectButtons;
+    std::vector<std::unique_ptr<juce::TextButton>>  m_inputMuteButtons;
+
+    std::unique_ptr<juce::Grid>                     m_outputControlsGrid;
+    std::vector<std::unique_ptr<juce::TextButton>>  m_outputSelectButtons;
+    std::vector<std::unique_ptr<juce::TextButton>>  m_outputMuteButtons;
+
+    std::unique_ptr<juce::Grid>                 m_crosspointsControlsGrid;
+    std::vector<std::unique_ptr<juce::Slider>>  m_crosspointGainSliders;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FaderbankControlComponent)
 };

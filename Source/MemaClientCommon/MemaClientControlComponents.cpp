@@ -107,6 +107,15 @@ const juce::String MemaClientControlComponentBase::getClientControlParametersAsS
 FaderbankControlComponent::FaderbankControlComponent()
     : MemaClientControlComponentBase()
 {
+    m_inputControlsGrid = std::make_unique<juce::Grid>();
+    m_inputControlsGrid->rowGap.pixels = 2;
+    m_inputControlsGrid->columnGap.pixels = 2;
+    m_outputControlsGrid = std::make_unique<juce::Grid>();
+    m_outputControlsGrid->rowGap.pixels = 2;
+    m_outputControlsGrid->columnGap.pixels = 2;
+    m_crosspointsControlsGrid = std::make_unique<juce::Grid>();
+    m_crosspointsControlsGrid->rowGap.pixels = 2;
+    m_crosspointsControlsGrid->columnGap.pixels = 2;
 }
 
 FaderbankControlComponent::~FaderbankControlComponent()
@@ -123,6 +132,94 @@ void FaderbankControlComponent::paint(Graphics& g)
 
 void FaderbankControlComponent::resized()
 {
+    auto ctrlsSize = 80;
+    auto bounds = getLocalBounds();
+    auto inputControlBounds = bounds.removeFromTop(ctrlsSize);
+    inputControlBounds.removeFromLeft(ctrlsSize);
+    auto outputControlBounds = bounds.removeFromLeft(ctrlsSize);
+
+    if (m_inputControlsGrid)
+        m_inputControlsGrid->performLayout(inputControlBounds);
+    if (m_outputControlsGrid)
+        m_outputControlsGrid->performLayout(outputControlBounds);
+}
+
+void FaderbankControlComponent::setIOCount(const std::pair<int, int>& ioCount)
+{
+    MemaClientControlComponentBase::setIOCount(ioCount);
+
+    m_inputControlsGrid->templateColumns.clear();
+    m_inputControlsGrid->items.resize(ioCount.first);
+    m_inputMuteButtons.resize(ioCount.first);
+    m_inputSelectButtons.resize(ioCount.first);
+    for (auto i = 0; i < ioCount.first; i++)
+    {
+        m_inputControlsGrid->templateColumns.add(juce::Grid::TrackInfo(juce::Grid::Fr(1)));
+        if (nullptr == m_inputControlsGrid->items[i].associatedComponent)
+        {
+            m_inputMuteButtons.at(i) = std::make_unique<juce::TextButton>("M");
+            addAndMakeVisible(m_inputMuteButtons.at(i).get());
+            m_inputControlsGrid->items[i] = juce::GridItem(m_inputMuteButtons.at(i).get());
+        }
+        if (nullptr == m_inputControlsGrid->items[i + ioCount.first].associatedComponent)
+        {
+            m_inputSelectButtons.at(i) = std::make_unique<juce::TextButton>(juce::String(i+1));
+            addAndMakeVisible(m_inputSelectButtons.at(i).get());
+            m_inputControlsGrid->items[i + ioCount.first] = juce::GridItem(m_inputSelectButtons.at(i).get());
+        }
+    }
+    m_inputControlsGrid->templateRows = { juce::Grid::TrackInfo(juce::Grid::Fr(1)), juce::Grid::TrackInfo(juce::Grid::Fr(1)) };
+    //m_inputControlsGrid->autoColumns = juce::Grid::TrackInfo(juce::Grid::Fr(10));
+    //m_inputControlsGrid->autoRows = juce::Grid::TrackInfo(juce::Grid::Fr(10));
+    //m_inputControlsGrid->autoFlow = juce::Grid::AutoFlow::row;
+
+    m_outputControlsGrid->templateRows.clear();
+    m_outputControlsGrid->items.resize(ioCount.second);
+    m_outputMuteButtons.resize(ioCount.second);
+    m_outputSelectButtons.resize(ioCount.second);
+    for (auto i = 0; i < ioCount.second; i++)
+    {
+        m_outputControlsGrid->templateRows.add(juce::Grid::TrackInfo(juce::Grid::Fr(1)));
+        if (nullptr == m_outputControlsGrid->items[i].associatedComponent)
+        {
+            m_outputMuteButtons.at(i) = std::make_unique<juce::TextButton>("M");
+            addAndMakeVisible(m_outputMuteButtons.at(i).get());
+            m_outputControlsGrid->items[i] = juce::GridItem(m_outputMuteButtons.at(i).get());
+        }
+        if (nullptr == m_outputControlsGrid->items[i + ioCount.second].associatedComponent)
+        {
+            m_outputSelectButtons.at(i) = std::make_unique<juce::TextButton>(juce::String(i + 1));
+            addAndMakeVisible(m_outputSelectButtons.at(i).get());
+            m_outputControlsGrid->items[i + ioCount.second] = juce::GridItem(m_outputSelectButtons.at(i).get());
+        }
+    }
+    m_outputControlsGrid->templateColumns = { juce::Grid::TrackInfo(juce::Grid::Fr(1)), juce::Grid::TrackInfo(juce::Grid::Fr(1)) };
+    //m_outputControlsGrid->autoColumns = juce::Grid::TrackInfo(juce::Grid::Fr(10));
+    //m_outputControlsGrid->autoRows = juce::Grid::TrackInfo(juce::Grid::Fr(10));
+    //m_outputControlsGrid->autoFlow = juce::Grid::AutoFlow::column;
+
+    resized();
+}
+
+void FaderbankControlComponent::setInputMuteStates(const std::map<std::uint16_t, bool>& inputMuteStates)
+{
+    MemaClientControlComponentBase::setInputMuteStates(inputMuteStates);
+
+    //
+}
+
+void FaderbankControlComponent::setOutputMuteStates(const std::map<std::uint16_t, bool>& outputMuteStates)
+{
+    MemaClientControlComponentBase::setOutputMuteStates(outputMuteStates);
+
+    //
+}
+
+void FaderbankControlComponent::setCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>& crosspointStates)
+{
+    MemaClientControlComponentBase::setCrosspointStates(crosspointStates);
+
+    //
 }
 
 

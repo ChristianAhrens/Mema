@@ -563,7 +563,7 @@ private:
     std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>    m_crosspointStates;
 };
 
-#ifdef DEBUG
+#ifdef NIX //DEBUG
 #define RUN_MESSAGE_TESTS
 #endif
 #ifdef RUN_MESSAGE_TESTS
