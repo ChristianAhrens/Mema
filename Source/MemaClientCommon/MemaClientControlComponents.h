@@ -70,12 +70,21 @@ private:
 class FaderbankControlComponent : public MemaClientControlComponentBase
 {
 public:
+    enum ControlDirection
+    {
+        None = 0,
+        Input,
+        Output
+    };
+
+public:
     FaderbankControlComponent();
     virtual ~FaderbankControlComponent();
 
     //==============================================================================
     void paint(Graphics&) override;
     void resized() override;
+    void lookAndFeelChanged() override;
 
     //==============================================================================
     void setIOCount(const std::pair<int, int>& ioCount) override;
@@ -84,6 +93,7 @@ public:
     void setCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>& crosspointStates) override;
 
     //==============================================================================
+    void selectIOChannel(const ControlDirection& direction, int channel);
 
 private:
     //==============================================================================
@@ -97,6 +107,8 @@ private:
 
     std::unique_ptr<juce::Grid>                 m_crosspointsControlsGrid;
     std::vector<std::unique_ptr<juce::Slider>>  m_crosspointGainSliders;
+
+    std::pair<ControlDirection, int>    m_currentIOChannel = { ControlDirection::None, 0 };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FaderbankControlComponent)
 };

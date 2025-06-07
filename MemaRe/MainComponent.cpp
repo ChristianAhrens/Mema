@@ -264,9 +264,11 @@ void MainComponent::resized()
             break;
     }
 
-    m_aboutButton->setBounds(safeBounds.removeFromTop(35).removeFromLeft(30).removeFromBottom(30));
-    m_settingsButton->setBounds(safeBounds.removeFromTop(35).removeFromLeft(30).removeFromBottom(30));
-    m_disconnectButton->setBounds(safeBounds.removeFromTop(35).removeFromLeft(30).removeFromBottom(30));
+    auto leftButtons = safeBounds.removeFromLeft(36);
+    auto rightButtons = safeBounds.removeFromLeft(36);
+    m_aboutButton->setBounds(leftButtons.removeFromTop(35).removeFromBottom(30));
+    m_settingsButton->setBounds(leftButtons.removeFromTop(35).removeFromBottom(30));
+    m_disconnectButton->setBounds(rightButtons.removeFromTop(35).removeFromBottom(30));
 }
 
 void MainComponent::paint(juce::Graphics& g)

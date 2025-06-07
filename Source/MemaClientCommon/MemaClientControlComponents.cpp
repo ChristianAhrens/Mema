@@ -18,6 +18,8 @@
 
 #include "MemaClientControlComponents.h"
 
+#include <CustomLookAndFeel.h>
+
 
 namespace Mema
 {
@@ -108,102 +110,14 @@ FaderbankControlComponent::FaderbankControlComponent()
     : MemaClientControlComponentBase()
 {
     m_inputControlsGrid = std::make_unique<juce::Grid>();
-    m_inputControlsGrid->rowGap.pixels = 2;
-    m_inputControlsGrid->columnGap.pixels = 2;
+    m_inputControlsGrid->rowGap.pixels = 3;
+    m_inputControlsGrid->columnGap.pixels = 3;
     m_outputControlsGrid = std::make_unique<juce::Grid>();
-    m_outputControlsGrid->rowGap.pixels = 2;
-    m_outputControlsGrid->columnGap.pixels = 2;
+    m_outputControlsGrid->rowGap.pixels = 3;
+    m_outputControlsGrid->columnGap.pixels = 3;
     m_crosspointsControlsGrid = std::make_unique<juce::Grid>();
-    m_crosspointsControlsGrid->rowGap.pixels = 2;
-    m_crosspointsControlsGrid->columnGap.pixels = 2;
-
-    /*//test
-    m_inputControlsGrid->templateRows = { 
-        juce::Grid::TrackInfo(juce::Grid::Fr(1)), 
-        juce::Grid::TrackInfo(juce::Grid::Fr(1)) };
-    m_inputControlsGrid->templateColumns = {
-        juce::Grid::TrackInfo(juce::Grid::Fr(1)), 
-        juce::Grid::TrackInfo(juce::Grid::Fr(1)),
-        juce::Grid::TrackInfo(juce::Grid::Fr(1)),
-        juce::Grid::TrackInfo(juce::Grid::Fr(1)) };
-
-    m_inputMuteButtons.resize(4);
-    m_inputMuteButtons.at(0) = std::make_unique<juce::TextButton>("MI1");
-    addAndMakeVisible(m_inputMuteButtons.at(0).get());
-    m_inputMuteButtons.at(1) = std::make_unique<juce::TextButton>("MI2");
-    addAndMakeVisible(m_inputMuteButtons.at(1).get());
-    m_inputMuteButtons.at(2) = std::make_unique<juce::TextButton>("MI3");
-    addAndMakeVisible(m_inputMuteButtons.at(2).get());
-    m_inputMuteButtons.at(3) = std::make_unique<juce::TextButton>("MI4");
-    addAndMakeVisible(m_inputMuteButtons.at(3).get());
-
-    m_inputSelectButtons.resize(4);
-    m_inputSelectButtons.at(0) = std::make_unique<juce::TextButton>("I" + juce::String(1));
-    addAndMakeVisible(m_inputSelectButtons.at(0).get());
-    m_inputSelectButtons.at(1) = std::make_unique<juce::TextButton>("I" + juce::String(2));
-    addAndMakeVisible(m_inputSelectButtons.at(1).get());
-    m_inputSelectButtons.at(2) = std::make_unique<juce::TextButton>("I" + juce::String(3));
-    addAndMakeVisible(m_inputSelectButtons.at(2).get());
-    m_inputSelectButtons.at(3) = std::make_unique<juce::TextButton>("I" + juce::String(4));
-    addAndMakeVisible(m_inputSelectButtons.at(3).get());
-
-    m_inputControlsGrid->items = { 
-        juce::GridItem(m_inputMuteButtons.at(0).get()),
-        juce::GridItem(m_inputMuteButtons.at(1).get()),
-        juce::GridItem(m_inputMuteButtons.at(2).get()),
-        juce::GridItem(m_inputMuteButtons.at(3).get()),
-        juce::GridItem(m_inputSelectButtons.at(0).get()),
-        juce::GridItem(m_inputSelectButtons.at(1).get()),
-        juce::GridItem(m_inputSelectButtons.at(2).get()),
-        juce::GridItem(m_inputSelectButtons.at(3).get()) };
-
-    //m_inputControlsGrid->autoColumns = juce::Grid::TrackInfo(juce::Grid::Fr(10));
-    //m_inputControlsGrid->autoRows = juce::Grid::TrackInfo(juce::Grid::Fr(10));
-    //m_inputControlsGrid->autoFlow = juce::Grid::AutoFlow::row;
-
-    m_outputControlsGrid->templateRows = {
-        juce::Grid::TrackInfo(juce::Grid::Fr(1)),
-        juce::Grid::TrackInfo(juce::Grid::Fr(1)),
-        juce::Grid::TrackInfo(juce::Grid::Fr(1)),
-        juce::Grid::TrackInfo(juce::Grid::Fr(1)) };
-    m_outputControlsGrid->templateColumns = { 
-        juce::Grid::TrackInfo(juce::Grid::Fr(1)), 
-        juce::Grid::TrackInfo(juce::Grid::Fr(1)) };
-
-    m_outputMuteButtons.resize(4);
-    m_outputMuteButtons.at(0) = std::make_unique<juce::TextButton>("MO1");
-    addAndMakeVisible(m_outputMuteButtons.at(0).get());
-    m_outputMuteButtons.at(1) = std::make_unique<juce::TextButton>("MO2");
-    addAndMakeVisible(m_outputMuteButtons.at(1).get());
-    m_outputMuteButtons.at(2) = std::make_unique<juce::TextButton>("MO3");
-    addAndMakeVisible(m_outputMuteButtons.at(2).get());
-    m_outputMuteButtons.at(3) = std::make_unique<juce::TextButton>("MO4");
-    addAndMakeVisible(m_outputMuteButtons.at(3).get());
-
-    m_outputSelectButtons.resize(4);
-    m_outputSelectButtons.at(0) = std::make_unique<juce::TextButton>("O" + juce::String(1));
-    addAndMakeVisible(m_outputSelectButtons.at(0).get());
-    m_outputSelectButtons.at(1) = std::make_unique<juce::TextButton>("O" + juce::String(2));
-    addAndMakeVisible(m_outputSelectButtons.at(1).get());
-    m_outputSelectButtons.at(2) = std::make_unique<juce::TextButton>("O" + juce::String(3));
-    addAndMakeVisible(m_outputSelectButtons.at(2).get());
-    m_outputSelectButtons.at(3) = std::make_unique<juce::TextButton>("O" + juce::String(4));
-    addAndMakeVisible(m_outputSelectButtons.at(3).get());
-            
-    m_outputControlsGrid->items = {
-        juce::GridItem(m_outputMuteButtons.at(0).get()),
-        juce::GridItem(m_outputMuteButtons.at(1).get()),
-        juce::GridItem(m_outputMuteButtons.at(2).get()),
-        juce::GridItem(m_outputMuteButtons.at(3).get()),
-        juce::GridItem(m_outputSelectButtons.at(0).get()),
-        juce::GridItem(m_outputSelectButtons.at(1).get()),
-        juce::GridItem(m_outputSelectButtons.at(2).get()),
-        juce::GridItem(m_outputSelectButtons.at(3).get()) };
-
-    //m_outputControlsGrid->autoColumns = juce::Grid::TrackInfo(juce::Grid::Fr(10));
-    //m_outputControlsGrid->autoRows = juce::Grid::TrackInfo(juce::Grid::Fr(10));
-    //m_outputControlsGrid->autoFlow = juce::Grid::AutoFlow::column;
-    */
+    m_crosspointsControlsGrid->rowGap.pixels = 5;
+    m_crosspointsControlsGrid->columnGap.pixels = 5;
 }
 
 FaderbankControlComponent::~FaderbankControlComponent()
@@ -214,22 +128,42 @@ void FaderbankControlComponent::paint(Graphics& g)
 {
     g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::ColourIds::backgroundColourId));
 
-    g.setColour(getLookAndFeel().findColour(juce::TextEditor::ColourIds::textColourId));
-    g.drawFittedText("Faderbank config:\n\n" + getClientControlParametersAsString(), getLocalBounds().reduced(35), juce::Justification::topLeft, 22);
+    //g.setColour(getLookAndFeel().findColour(juce::TextEditor::ColourIds::textColourId));
+    //g.drawFittedText("Faderbank config:\n\n" + getClientControlParametersAsString(), getLocalBounds().reduced(35), juce::Justification::topLeft, 22);
 }
 
 void FaderbankControlComponent::resized()
 {
-    auto ctrlsSize = 80;
+    auto ctrlsSize = 75;
     auto bounds = getLocalBounds();
     auto inputControlBounds = bounds.removeFromTop(ctrlsSize);
     inputControlBounds.removeFromLeft(ctrlsSize);
     auto outputControlBounds = bounds.removeFromLeft(ctrlsSize);
+    auto crosspointControlBounds = bounds;
 
     if (m_inputControlsGrid)
         m_inputControlsGrid->performLayout(inputControlBounds);
     if (m_outputControlsGrid)
         m_outputControlsGrid->performLayout(outputControlBounds);
+    if (m_crosspointsControlsGrid)
+        m_crosspointsControlsGrid->performLayout(crosspointControlBounds);
+}
+
+void FaderbankControlComponent::lookAndFeelChanged()
+{
+    auto ioCount = getIOCount();
+    for (auto in = 0; in < ioCount.first; in++)
+    {
+        if (nullptr != m_inputSelectButtons.at(in))
+            m_inputSelectButtons.at(in)->setColour(juce::TextButton::ColourIds::buttonOnColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
+        if (nullptr != m_crosspointGainSliders.at(in))
+            m_crosspointGainSliders.at(in)->setColour(juce::Slider::ColourIds::thumbColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
+    }
+    for (auto out = 0; out < ioCount.second; out++)
+    {
+        if (nullptr != m_outputSelectButtons.at(out))
+            m_outputSelectButtons.at(out)->setColour(juce::TextButton::ColourIds::buttonOnColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
+    }
 }
 
 void FaderbankControlComponent::setIOCount(const std::pair<int, int>& ioCount)
@@ -241,7 +175,7 @@ void FaderbankControlComponent::setIOCount(const std::pair<int, int>& ioCount)
     for (auto i = 0; i < ioCount.first; i++)
         templateColums.add(juce::Grid::TrackInfo(juce::Grid::Fr(1)));
     
-    m_inputControlsGrid->items.clear();// .resize(ioCount.first);
+    m_inputControlsGrid->items.clear();
     m_inputMuteButtons.resize(ioCount.first);
     m_inputSelectButtons.resize(ioCount.first);
     m_inputControlsGrid->templateRows = { juce::Grid::TrackInfo(juce::Grid::Fr(1)), juce::Grid::TrackInfo(juce::Grid::Fr(1)) };
@@ -252,6 +186,9 @@ void FaderbankControlComponent::setIOCount(const std::pair<int, int>& ioCount)
         if (nullptr == m_inputControlsGrid->items[in + ioCount.first].associatedComponent || nullptr == m_inputSelectButtons.at(in))
         {
             m_inputSelectButtons.at(in) = std::make_unique<juce::TextButton>(juce::String(in + 1));
+            m_inputSelectButtons.at(in)->setClickingTogglesState(true);
+            m_inputSelectButtons.at(in)->setColour(juce::TextButton::ColourIds::buttonOnColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
+            m_inputSelectButtons.at(in)->onClick = [this, in] { selectIOChannel(ControlDirection::Input, in); };
             addAndMakeVisible(m_inputSelectButtons.at(in).get());
             m_inputControlsGrid->items.add(juce::GridItem(m_inputSelectButtons.at(in).get()));
         }
@@ -273,7 +210,7 @@ void FaderbankControlComponent::setIOCount(const std::pair<int, int>& ioCount)
     for (auto i = 0; i < ioCount.second; i++)
         templateRows.add(juce::Grid::TrackInfo(juce::Grid::Fr(1)));
 
-    m_outputControlsGrid->items.clear();// .resize(ioCount.second);
+    m_outputControlsGrid->items.clear();
     m_outputMuteButtons.resize(ioCount.second);
     m_outputSelectButtons.resize(ioCount.second);
     m_outputControlsGrid->templateRows = templateRows;
@@ -284,6 +221,9 @@ void FaderbankControlComponent::setIOCount(const std::pair<int, int>& ioCount)
         if (nullptr == m_outputControlsGrid->items[out + ioCount.second].associatedComponent || nullptr == m_outputSelectButtons.at(out))
         {
             m_outputSelectButtons.at(out) = std::make_unique<juce::TextButton>(juce::String(out + 1));
+            m_outputSelectButtons.at(out)->setClickingTogglesState(true);
+            m_outputSelectButtons.at(out)->setColour(juce::TextButton::ColourIds::buttonOnColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
+            m_outputSelectButtons.at(out)->onClick = [this, out] { selectIOChannel(ControlDirection::Output, out); };
             addAndMakeVisible(m_outputSelectButtons.at(out).get());
             m_outputControlsGrid->items.add(juce::GridItem(m_outputSelectButtons.at(out).get()));
         }
@@ -294,6 +234,27 @@ void FaderbankControlComponent::setIOCount(const std::pair<int, int>& ioCount)
             m_outputMuteButtons.at(out)->setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::red);
             addAndMakeVisible(m_outputMuteButtons.at(out).get());
             m_outputControlsGrid->items.add(juce::GridItem(m_outputMuteButtons.at(out).get()));
+        }
+    }
+
+    // crosspoint controls
+    templateColums.clear();
+    for (auto i = 0; i < ioCount.first; i++)
+        templateColums.add(juce::Grid::TrackInfo(juce::Grid::Fr(1)));
+
+    m_crosspointsControlsGrid->items.clear();
+    m_crosspointGainSliders.resize(ioCount.first);
+    m_crosspointsControlsGrid->templateRows = { juce::Grid::TrackInfo(juce::Grid::Fr(1)), juce::Grid::TrackInfo(juce::Grid::Fr(1)) };
+    m_crosspointsControlsGrid->templateColumns = templateColums;
+
+    for (auto in = 0; in < ioCount.first; in++)
+    {
+        if (nullptr == m_crosspointsControlsGrid->items[in + ioCount.first].associatedComponent || nullptr == m_crosspointGainSliders.at(in))
+        {
+            m_crosspointGainSliders.at(in) = std::make_unique<juce::Slider>(juce::Slider::LinearVertical, juce::Slider::TextBoxAbove);
+            m_crosspointGainSliders.at(in)->setColour(juce::Slider::ColourIds::thumbColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
+            addAndMakeVisible(m_crosspointGainSliders.at(in).get());
+            m_crosspointsControlsGrid->items.add(juce::GridItem(m_crosspointGainSliders.at(in).get()));
         }
     }
 
@@ -319,6 +280,29 @@ void FaderbankControlComponent::setCrosspointStates(const std::map<std::uint16_t
     MemaClientControlComponentBase::setCrosspointStates(crosspointStates);
 
     //
+}
+
+void FaderbankControlComponent::selectIOChannel(const ControlDirection& direction, int channel)
+{
+    m_currentIOChannel = std::make_pair(direction, channel);
+
+    auto ioCount = getIOCount();
+    for (auto in = 0; in < ioCount.first; in++)
+    {
+        if (nullptr != m_inputSelectButtons.at(in))
+        {
+            auto state = (ControlDirection::Input == direction && channel == in);
+            m_inputSelectButtons.at(in)->setToggleState(state, juce::dontSendNotification);
+        }
+    }
+    for (auto out = 0; out < ioCount.second; out++)
+    {
+        if (nullptr != m_outputSelectButtons.at(out))
+        {
+            auto state = (ControlDirection::Output == direction && channel == out);
+            m_outputSelectButtons.at(out)->setToggleState(state, juce::dontSendNotification);
+        }
+    }
 }
 
 
