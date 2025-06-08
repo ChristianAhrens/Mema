@@ -92,8 +92,11 @@ public:
     void setOutputMuteStates(const std::map<std::uint16_t, bool>& outputMuteStates) override;
     void setCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>& crosspointStates) override;
 
+protected:
     //==============================================================================
     void selectIOChannel(const ControlDirection& direction, int channel);
+    void rebuildControls();
+    void updateCrosspointFaderValues();
 
 private:
     //==============================================================================
