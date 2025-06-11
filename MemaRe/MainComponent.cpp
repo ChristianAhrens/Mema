@@ -92,6 +92,10 @@ MainComponent::MainComponent()
 
         setStatus(Status::Discovering);
     };
+    m_remoteComponent->onMessageReadyToSend = [=](const juce::MemoryBlock& message) {
+        if (m_networkConnection)
+            m_networkConnection->sendMessage(message);
+    };
     addAndMakeVisible(m_remoteComponent.get());
 
     m_discoverComponent = std::make_unique<MemaClientDiscoverComponent>();

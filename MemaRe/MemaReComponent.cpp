@@ -18,14 +18,33 @@
 
 #include "MemaReComponent.h"
 
-#include "MemaProcessor/MemaMessages.h"
-#include "MemaProcessor/MemaProcessor.h"
 #include "MemaClientCommon/MemaClientControlComponents.h"
+
+#include <MemaProcessor/MemaMessages.h>
+#include <MemaProcessor/MemaProcessor.h>
 
 MemaReComponent::MemaReComponent()
     : juce::Component()
 {
     m_faderbankCtrlComponent = std::make_unique<Mema::FaderbankControlComponent>();
+    m_faderbankCtrlComponent->onInputMutesChanged = [=](const std::map<std::uint16_t, bool>& inputMuteStates) {
+        std::map<std::uint16_t, bool> outputMuteStates;
+        std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>> crosspointStates;
+        if (onMessageReadyToSend)
+            onMessageReadyToSend(std::make_unique<Mema::ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates)->getSerializedMessage());
+    };
+    m_faderbankCtrlComponent->onOutputMutesChanged = [=](const std::map<std::uint16_t, bool>& outputMuteStates) {
+        std::map<std::uint16_t, bool> inputMuteStates;
+        std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>> crosspointStates;
+        if (onMessageReadyToSend)
+            onMessageReadyToSend(std::make_unique<Mema::ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates)->getSerializedMessage());
+    };
+    m_faderbankCtrlComponent->onCrosspointStatesChanged = [=](const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>& crosspointStates) {
+        std::map<std::uint16_t, bool> inputMuteStates;
+        std::map<std::uint16_t, bool> outputMuteStates;
+        if (onMessageReadyToSend)
+            onMessageReadyToSend(std::make_unique<Mema::ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates)->getSerializedMessage());
+    };
     addChildComponent(m_faderbankCtrlComponent.get());
 
     m_panningCtrlComponent = std::make_unique<Mema::PanningControlComponent>();

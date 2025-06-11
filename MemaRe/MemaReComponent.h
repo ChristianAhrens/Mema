@@ -51,7 +51,8 @@ public:
     void handleMessage(const Message& message) override;
 
     //==============================================================================
-    std::function<void()>   onExitClick;
+    std::function<void()>                           onExitClick;
+    std::function<void(const juce::MemoryBlock&)>   onMessageReadyToSend;
 
 private:
     //==============================================================================

@@ -76,20 +76,41 @@ const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>& 
 
 const juce::String MemaClientControlComponentBase::getClientControlParametersAsString()
 {
+    auto controlParametersStr = getIOCountParametersAsString();
+    controlParametersStr += getInputMuteParametersAsString();
+    controlParametersStr += getOutputMuteParametersAsString();
+    controlParametersStr += getCrosspointParametersAsString();
+    return controlParametersStr;
+}
+
+const juce::String MemaClientControlComponentBase::getIOCountParametersAsString()
+{
     auto controlParametersStr = juce::String("IO ");
     controlParametersStr << "\n" << getIOCount().first << "x" << getIOCount().second << "\n\n";
+    return controlParametersStr;
+}
 
-    controlParametersStr << "InputMutes: " << "\n";
+const juce::String MemaClientControlComponentBase::getInputMuteParametersAsString()
+{
+    auto controlParametersStr = juce::String("InputMutes: ") << "\n";
     for (auto const& mutestate : getInputMuteStates())
         controlParametersStr << int(mutestate.first) << ":" << (mutestate.second ? "on" : "off") << ";";
     controlParametersStr << "\n\n";
+    return controlParametersStr;
+}
 
-    controlParametersStr << "OutputMutes: " << "\n";
+const juce::String MemaClientControlComponentBase::getOutputMuteParametersAsString()
+{
+    auto controlParametersStr = juce::String("OutputMutes: ") << "\n";
     for (auto const& mutestate : getOutputMuteStates())
         controlParametersStr << int(mutestate.first) << ":" << (mutestate.second ? "on" : "off") << ";";
     controlParametersStr << "\n\n";
+    return controlParametersStr;
+}
 
-    controlParametersStr << "Crosspoints: " << "\n";
+const juce::String MemaClientControlComponentBase::getCrosspointParametersAsString()
+{
+    auto controlParametersStr = juce::String("Crosspoints: ") << "\n";
     for (auto const& crosspointstateFKV : getCrosspointStates())
     {
         auto in = int(crosspointstateFKV.first);
@@ -101,7 +122,6 @@ const juce::String MemaClientControlComponentBase::getClientControlParametersAsS
         controlParametersStr << "\n";
     }
     controlParametersStr << "\n";
-
     return controlParametersStr;
 }
 
@@ -124,9 +144,6 @@ FaderbankControlComponent::~FaderbankControlComponent()
 void FaderbankControlComponent::paint(Graphics& g)
 {
     g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::ColourIds::backgroundColourId));
-
-    //g.setColour(getLookAndFeel().findColour(juce::TextEditor::ColourIds::textColourId));
-    //g.drawFittedText("Faderbank config:\n\n" + getClientControlParametersAsString(), getLocalBounds().reduced(35), juce::Justification::topLeft, 22);
 }
 
 void FaderbankControlComponent::resized()
@@ -170,6 +187,8 @@ void FaderbankControlComponent::setIOCount(const std::pair<int, int>& ioCount)
     MemaClientControlComponentBase::setIOCount(ioCount);
 
     rebuildControls();
+
+    DBG(juce::String(__FUNCTION__) << " " << getIOCountParametersAsString());
 }
 
 void FaderbankControlComponent::rebuildControls()
@@ -203,7 +222,7 @@ void FaderbankControlComponent::rebuildControls()
         m_inputMuteButtons.at(in)->setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::red);
         m_inputMuteButtons.at(in)->onClick = [this, in] {
             auto inputMuteStates = getInputMuteStates();
-            inputMuteStates[in] = m_inputMuteButtons.at(in)->getToggleState();
+            inputMuteStates[in + 1] = m_inputMuteButtons.at(in)->getToggleState();
             MemaClientControlComponentBase::setInputMuteStates(inputMuteStates);
             if (onInputMutesChanged)
                 onInputMutesChanged(inputMuteStates);
@@ -236,8 +255,8 @@ void FaderbankControlComponent::rebuildControls()
         m_outputMuteButtons.at(out)->setClickingTogglesState(true);
         m_outputMuteButtons.at(out)->setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::red);
         m_outputMuteButtons.at(out)->onClick = [this, out] {
-            auto outputMuteStates = getInputMuteStates();
-            outputMuteStates[out] = m_outputMuteButtons.at(out)->getToggleState();
+            auto outputMuteStates = getOutputMuteStates();
+            outputMuteStates[out + 1] = m_outputMuteButtons.at(out)->getToggleState();
             MemaClientControlComponentBase::setOutputMuteStates(outputMuteStates);
             if (onOutputMutesChanged)
                 onOutputMutesChanged(outputMuteStates);
@@ -266,7 +285,7 @@ void FaderbankControlComponent::rebuildControls()
                 auto crosspointStates = getCrosspointStates();
                 auto faderValue = m_crosspointGainSliders.at(in)->getValue();
                 auto faderState = (faderValue != 0.0);
-                crosspointStates[in][m_currentIOChannel.second] = std::make_pair(faderState, float(faderValue));
+                crosspointStates[in + 1][m_currentIOChannel.second] = std::make_pair(faderState, float(faderValue));
                 MemaClientControlComponentBase::setCrosspointStates(crosspointStates);
                 if (onCrosspointStatesChanged)
                     onCrosspointStatesChanged(crosspointStates);
@@ -294,7 +313,7 @@ void FaderbankControlComponent::rebuildControls()
                 auto crosspointStates = getCrosspointStates();
                 auto faderValue = m_crosspointGainSliders.at(out)->getValue();
                 auto faderState = (faderValue != 0.0);
-                crosspointStates[m_currentIOChannel.second][out] = std::make_pair(faderState, float(faderValue));
+                crosspointStates[m_currentIOChannel.second][out + 1] = std::make_pair(faderState, float(faderValue));
                 MemaClientControlComponentBase::setCrosspointStates(crosspointStates);
                 if (onCrosspointStatesChanged)
                     onCrosspointStatesChanged(crosspointStates);
@@ -318,6 +337,8 @@ void FaderbankControlComponent::setInputMuteStates(const std::map<std::uint16_t,
         if (m_inputMuteButtons.size() > in && nullptr != m_inputMuteButtons.at(in))
             m_inputMuteButtons.at(in)->setToggleState(state, juce::dontSendNotification);
     }
+
+    DBG(juce::String(__FUNCTION__) << " " << getInputMuteParametersAsString());
 }
 
 void FaderbankControlComponent::setOutputMuteStates(const std::map<std::uint16_t, bool>& outputMuteStates)
@@ -331,6 +352,8 @@ void FaderbankControlComponent::setOutputMuteStates(const std::map<std::uint16_t
         if (m_outputMuteButtons.size() > out && nullptr != m_outputMuteButtons.at(out))
             m_outputMuteButtons.at(out)->setToggleState(state, juce::dontSendNotification);
     }
+
+    DBG(juce::String(__FUNCTION__) << " " << getOutputMuteParametersAsString());
 }
 
 void FaderbankControlComponent::setCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>& crosspointStates)
@@ -338,6 +361,8 @@ void FaderbankControlComponent::setCrosspointStates(const std::map<std::uint16_t
     MemaClientControlComponentBase::setCrosspointStates(crosspointStates);
 
     updateCrosspointFaderValues();
+
+    DBG(juce::String(__FUNCTION__) << " " << getCrosspointParametersAsString());
 }
 
 void FaderbankControlComponent::selectIOChannel(const ControlDirection& direction, int channel)
@@ -377,10 +402,10 @@ void FaderbankControlComponent::updateCrosspointFaderValues()
             auto& out = crosspointStateIOKV.first;
             auto& state = crosspointStateIOKV.second;
 
-            if (ControlDirection::Input == m_currentIOChannel.first && in == m_currentIOChannel.second && m_crosspointGainSliders.size() < out)
-                m_crosspointGainSliders.at(out)->setValue((state.first ? state.second : 0.0), juce::dontSendNotification);
-            if (ControlDirection::Output == m_currentIOChannel.first && out == m_currentIOChannel.second && m_crosspointGainSliders.size() < in)
-                m_crosspointGainSliders.at(in)->setValue((state.first ? state.second : 0.0), juce::dontSendNotification);
+            if (ControlDirection::Input == m_currentIOChannel.first && in == m_currentIOChannel.second && m_crosspointGainSliders.size() <= out)
+                m_crosspointGainSliders.at(out - 1)->setValue((state.first ? state.second : 0.0), juce::dontSendNotification);
+            if (ControlDirection::Output == m_currentIOChannel.first && out == m_currentIOChannel.second && m_crosspointGainSliders.size() <= in)
+                m_crosspointGainSliders.at(in - 1)->setValue((state.first ? state.second : 0.0), juce::dontSendNotification);
         }
     }
 }

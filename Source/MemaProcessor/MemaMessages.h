@@ -531,27 +531,25 @@ protected:
         for (auto& outputMuteStateKV : m_outputMuteStates)
             blob.append(&outputMuteStateKV, sizeof(outputMuteStateKV));
 
-        jassert(0 < m_crosspointStates.size());
+        auto crosspointStatesCount = std::uint16_t(0);
         if (0 < m_crosspointStates.size())
+            crosspointStatesCount = std::uint16_t(m_crosspointStates.size() * m_crosspointStates.begin()->second.size());
+        blob.append(&crosspointStatesCount, sizeof(crosspointStatesCount));
+        auto crosspointStatesCountRef = std::uint16_t(0);
+        for (auto& crosspointStatesFirstDKV : m_crosspointStates)
         {
-            auto crosspointStatesCount = std::uint16_t(m_crosspointStates.size() * m_crosspointStates.begin()->second.size());
-            blob.append(&crosspointStatesCount, sizeof(crosspointStatesCount));
-            auto crosspointStatesCountRef = std::uint16_t(0);
-            for (auto& crosspointStatesFirstDKV : m_crosspointStates)
+            for (auto& crosspointStatesSecDKV : crosspointStatesFirstDKV.second)
             {
-                for (auto& crosspointStatesSecDKV : crosspointStatesFirstDKV.second)
-                {
-                    auto& in = crosspointStatesFirstDKV.first;
-                    blob.append(&in, sizeof(in));
-                    auto& out = crosspointStatesSecDKV.first;
-                    blob.append(&out, sizeof(out));
-                    auto& state = crosspointStatesSecDKV.second;
-                    blob.append(&state, sizeof(state));
-                    crosspointStatesCountRef++;
-                }
+                auto& in = crosspointStatesFirstDKV.first;
+                blob.append(&in, sizeof(in));
+                auto& out = crosspointStatesSecDKV.first;
+                blob.append(&out, sizeof(out));
+                auto& state = crosspointStatesSecDKV.second;
+                blob.append(&state, sizeof(state));
+                crosspointStatesCountRef++;
             }
-            jassert(crosspointStatesCount == crosspointStatesCountRef);
         }
+        jassert(crosspointStatesCount == crosspointStatesCountRef);
 
         contentSize = blob.getSize();
         return blob;

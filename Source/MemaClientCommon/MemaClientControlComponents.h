@@ -55,6 +55,10 @@ public:
 protected:
     //==============================================================================
     const juce::String getClientControlParametersAsString();
+    const juce::String getIOCountParametersAsString();
+    const juce::String getInputMuteParametersAsString();
+    const juce::String getOutputMuteParametersAsString();
+    const juce::String getCrosspointParametersAsString();
 
 private:
     //==============================================================================

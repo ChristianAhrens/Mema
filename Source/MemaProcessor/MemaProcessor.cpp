@@ -659,6 +659,8 @@ void MemaProcessor::setOutputMuteState(std::uint16_t outputChannelNumber, bool m
 		m_outputMuteStates[outputChannelNumber] = muted;
 	}
 
+	// sending to connected clients T.B.D.
+
 	triggerConfigurationDump();
 }
 
@@ -989,6 +991,7 @@ void MemaProcessor::handleMessage(const Message& message)
 	}
 	else if (auto const cpm = dynamic_cast<const Mema::ControlParametersMessage*>(&message))
 	{
+		DBG(juce::String(__FUNCTION__) << " i:" << cpm->getInputMuteStates().size() << " o:" << cpm->getOutputMuteStates().size() << " c:" << cpm->getCrosspointStates().size());
 		for (auto const& inputMuteState : cpm->getInputMuteStates())
 			setInputMuteState(inputMuteState.first, inputMuteState.second);
 		for (auto const& outputMuteState : cpm->getOutputMuteStates())
