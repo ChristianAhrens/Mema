@@ -114,6 +114,7 @@ private:
 
     std::unique_ptr<juce::Grid>                 m_crosspointsControlsGrid;
     std::vector<std::unique_ptr<juce::Slider>>  m_crosspointGainSliders;
+    std::unique_ptr<juce::Label>                m_crosspointsNoSelectionLabel;
 
     std::pair<ControlDirection, int>    m_currentIOChannel = { ControlDirection::None, 0 };
 

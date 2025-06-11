@@ -131,10 +131,15 @@ FaderbankControlComponent::FaderbankControlComponent()
 {
     m_inputControlsGrid = std::make_unique<juce::Grid>();
     m_inputControlsGrid->setGap(3_px);
+
     m_outputControlsGrid = std::make_unique<juce::Grid>();
     m_outputControlsGrid->setGap(3_px);
+
     m_crosspointsControlsGrid = std::make_unique<juce::Grid>();
     m_crosspointsControlsGrid->setGap(5_px);
+    m_crosspointsNoSelectionLabel = std::make_unique<juce::Label>("NoSelectLabel", "Select a channel to control crosspoints.");
+    m_crosspointsNoSelectionLabel->setJustificationType(juce::Justification::centred);
+    addAndMakeVisible(m_crosspointsNoSelectionLabel.get());
 }
 
 FaderbankControlComponent::~FaderbankControlComponent()
@@ -159,8 +164,20 @@ void FaderbankControlComponent::resized()
         m_inputControlsGrid->performLayout(inputControlBounds);
     if (m_outputControlsGrid)
         m_outputControlsGrid->performLayout(outputControlBounds);
+
     if (m_crosspointsControlsGrid && m_currentIOChannel.first != ControlDirection::None)
+    {
         m_crosspointsControlsGrid->performLayout(crosspointControlBounds);
+        m_crosspointsNoSelectionLabel->setVisible(false);
+    }
+    else if (m_currentIOChannel.first == ControlDirection::None)
+    {
+        for (auto const& item : m_crosspointsControlsGrid->items)
+            if (nullptr != item.associatedComponent)
+                item.associatedComponent->setVisible(false);
+        m_crosspointsNoSelectionLabel->setVisible(true);
+        m_crosspointsNoSelectionLabel->setBounds(crosspointControlBounds);
+    }
 }
 
 void FaderbankControlComponent::lookAndFeelChanged()
@@ -211,7 +228,17 @@ void FaderbankControlComponent::rebuildControls()
         m_inputSelectButtons.at(in) = std::make_unique<juce::TextButton>("In " + juce::String(in + 1));
         m_inputSelectButtons.at(in)->setClickingTogglesState(true);
         m_inputSelectButtons.at(in)->setColour(juce::TextButton::ColourIds::buttonOnColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
-        m_inputSelectButtons.at(in)->onClick = [this, in] { selectIOChannel(ControlDirection::Input, in); };
+        m_inputSelectButtons.at(in)->onClick = [this, in] {
+            if (m_inputSelectButtons.size() > in)
+            {
+                if (m_inputSelectButtons.at(in)->getToggleState())
+                    selectIOChannel(ControlDirection::Input, in);
+                else
+                    selectIOChannel(ControlDirection::None, 0);
+            }
+            else
+                jassertfalse;
+        };
         addAndMakeVisible(m_inputSelectButtons.at(in).get());
         m_inputControlsGrid->items.add(juce::GridItem(m_inputSelectButtons.at(in).get()));
     }
@@ -247,7 +274,17 @@ void FaderbankControlComponent::rebuildControls()
         m_outputSelectButtons.at(out) = std::make_unique<juce::TextButton>("Out " + juce::String(out + 1));
         m_outputSelectButtons.at(out)->setClickingTogglesState(true);
         m_outputSelectButtons.at(out)->setColour(juce::TextButton::ColourIds::buttonOnColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
-        m_outputSelectButtons.at(out)->onClick = [this, out] { selectIOChannel(ControlDirection::Output, out); };
+        m_outputSelectButtons.at(out)->onClick = [this, out] {
+            if (m_outputSelectButtons.size() > out)
+            {
+                if (m_outputSelectButtons.at(out)->getToggleState())
+                    selectIOChannel(ControlDirection::Output, out);
+                else
+                    selectIOChannel(ControlDirection::None, 0);
+            }
+            else
+                jassertfalse;
+        };
         addAndMakeVisible(m_outputSelectButtons.at(out).get());
         m_outputControlsGrid->items.add(juce::GridItem(m_outputSelectButtons.at(out).get()));
 
