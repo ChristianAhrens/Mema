@@ -259,8 +259,8 @@ public:
     };
     ~ReinitIOCountMessage() = default;
 
-    int getInputCount() const { return m_inputCount; };
-    int getOutputCount() const { return m_outputCount; };
+    std::uint16_t getInputCount() const { return m_inputCount; };
+    std::uint16_t getOutputCount() const { return m_outputCount; };
 
 protected:
     juce::MemoryBlock createSerializedContent(size_t& contentSize) const override

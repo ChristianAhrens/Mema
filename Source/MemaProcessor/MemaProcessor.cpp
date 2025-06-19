@@ -109,7 +109,7 @@ private:
 class MemaNetworkClientCommanderWrapper : public MemaInputCommander, public MemaOutputCommander, public MemaCrosspointCommander
 {
 public:
-	void setInputMute(unsigned int channel, bool muteState) override
+	void setInputMute(std::uint16_t channel, bool muteState) override
 	{
 		if (m_networkServer && m_networkServer->hasActiveConnections())
 		{
@@ -123,7 +123,7 @@ public:
 		}
 	};
 
-	void setOutputMute(unsigned int channel, bool muteState) override
+	void setOutputMute(std::uint16_t channel, bool muteState) override
 	{
 		if (m_networkServer && m_networkServer->hasActiveConnections())
 		{
@@ -137,7 +137,7 @@ public:
 		}
 	};
 
-	void setCrosspointEnabledValue(int input, int output, bool enabledState) override
+	void setCrosspointEnabledValue(std::uint16_t input, std::uint16_t output, bool enabledState) override
 	{
 		if (m_networkServer && m_networkServer->hasActiveConnections())
 		{
@@ -151,7 +151,7 @@ public:
 		}
 	};
 
-	void setCrosspointFactorValue(int input, int output, float factor) override
+	void setCrosspointFactorValue(std::uint16_t input, std::uint16_t output, float factor) override
 	{
 		if (m_networkServer && m_networkServer->hasActiveConnections())
 		{
@@ -165,7 +165,7 @@ public:
 		}
 	};
 
-	void setIOCount(int inputCount, int outputCount) override
+	void setIOCount(std::uint16_t inputCount, std::uint16_t outputCount) override
 	{
 		if (m_networkServer && m_networkServer->hasActiveConnections())
 		{
@@ -179,7 +179,7 @@ public:
 	}
 
 private:
-	void setChannelCount(int channelCount) override { ignoreUnused(channelCount); };
+	void setChannelCount(std::uint16_t channelCount) override { ignoreUnused(channelCount); };
 
 private:
 	std::shared_ptr<InterprocessConnectionServerImpl> m_networkServer;
@@ -639,17 +639,17 @@ void MemaProcessor::updateCommanders()
 {
 	for (auto const& ic : m_inputCommanders)
 	{
-		ic->setChannelCount(m_inputChannelCount);
+		ic->setChannelCount(m_inputChannelCount > 0 ? std::uint16_t(m_inputChannelCount) : 0);
 		initializeInputCommander(ic);
 	}
 	for (auto const& cc : m_crosspointCommanders)
 	{
-		cc->setIOCount(m_inputChannelCount, m_outputChannelCount);
+		cc->setIOCount(m_inputChannelCount > 0 ? std::uint16_t(m_inputChannelCount) : 0, m_outputChannelCount > 0 ? std::uint16_t(m_outputChannelCount) : 0);
 		initializeCrosspointCommander(cc);
 	}
 	for (auto const& oc : m_outputCommanders)
 	{
-		oc->setChannelCount(m_outputChannelCount);
+		oc->setChannelCount(m_outputChannelCount > 0 ? std::uint16_t(m_outputChannelCount) : 0);
 		initializeOutputCommander(oc);
 	}
 }
