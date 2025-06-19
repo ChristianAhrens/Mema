@@ -60,6 +60,9 @@ MainComponent::MainComponent()
     };
     m_networkConnection->onConnectionLost = [=]() {
         DBG(__FUNCTION__);
+
+        if (m_remoteComponent)
+            m_remoteComponent->resetCtrl();
         
         connectToMema();
 
@@ -176,10 +179,13 @@ MainComponent::MainComponent()
     addAndMakeVisible(m_settingsButton.get());
 
     m_disconnectButton = std::make_unique<juce::DrawableButton>("Disconnect", juce::DrawableButton::ButtonStyle::ImageFitted);
-    m_disconnectButton->setTooltip(juce::String("Disconnect ") + juce::JUCEApplication::getInstance()->getApplicationName());
+    m_disconnectButton->setTooltip(juce::String("Disconnect ") + juce::JUCEApplication::getInstance()->getApplicationName() + " from " + m_selectedService.description);
     m_disconnectButton->onClick = [this] {
         if (m_networkConnection)
             m_networkConnection->disconnect();
+
+        if (m_remoteComponent)
+            m_remoteComponent->resetCtrl();
 
         m_selectedService = {};
 

@@ -42,6 +42,7 @@ public:
 
     void setOutputFaderbankCtrlActive();
     void setOutputPanningCtrlActive(const juce::AudioChannelSet& channelConfiguration);
+    void resetCtrl();
 
     //==============================================================================
     void resized() override;

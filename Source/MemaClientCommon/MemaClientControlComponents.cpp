@@ -19,6 +19,7 @@
 #include "MemaClientControlComponents.h"
 
 #include <CustomLookAndFeel.h>
+#include <MemaProcessor/ProcessorDataAnalyzer.h>
 
 
 namespace Mema
@@ -76,9 +77,9 @@ const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>& 
 
 const juce::String MemaClientControlComponentBase::getClientControlParametersAsString()
 {
-    auto controlParametersStr = getIOCountParametersAsString();
-    controlParametersStr += getInputMuteParametersAsString();
-    controlParametersStr += getOutputMuteParametersAsString();
+    auto controlParametersStr = getIOCountParametersAsString() + "\n";
+    controlParametersStr += getInputMuteParametersAsString() + "\n";
+    controlParametersStr += getOutputMuteParametersAsString() + "\n";
     controlParametersStr += getCrosspointParametersAsString();
     return controlParametersStr;
 }
@@ -86,31 +87,29 @@ const juce::String MemaClientControlComponentBase::getClientControlParametersAsS
 const juce::String MemaClientControlComponentBase::getIOCountParametersAsString()
 {
     auto controlParametersStr = juce::String("IO ");
-    controlParametersStr << "\n" << getIOCount().first << "x" << getIOCount().second << "\n\n";
+    controlParametersStr << getIOCount().first << "x" << getIOCount().second;
     return controlParametersStr;
 }
 
 const juce::String MemaClientControlComponentBase::getInputMuteParametersAsString()
 {
-    auto controlParametersStr = juce::String("InputMutes: ") << "\n";
+    auto controlParametersStr = juce::String("InputMutes: ");
     for (auto const& mutestate : getInputMuteStates())
         controlParametersStr << int(mutestate.first) << ":" << (mutestate.second ? "on" : "off") << ";";
-    controlParametersStr << "\n\n";
     return controlParametersStr;
 }
 
 const juce::String MemaClientControlComponentBase::getOutputMuteParametersAsString()
 {
-    auto controlParametersStr = juce::String("OutputMutes: ") << "\n";
+    auto controlParametersStr = juce::String("OutputMutes: ");
     for (auto const& mutestate : getOutputMuteStates())
         controlParametersStr << int(mutestate.first) << ":" << (mutestate.second ? "on" : "off") << ";";
-    controlParametersStr << "\n\n";
     return controlParametersStr;
 }
 
 const juce::String MemaClientControlComponentBase::getCrosspointParametersAsString()
 {
-    auto controlParametersStr = juce::String("Crosspoints: ") << "\n";
+    auto controlParametersStr = juce::String("Crosspoints:\n");
     for (auto const& crosspointstateFKV : getCrosspointStates())
     {
         auto in = int(crosspointstateFKV.first);
@@ -121,7 +120,6 @@ const juce::String MemaClientControlComponentBase::getCrosspointParametersAsStri
         }
         controlParametersStr << "\n";
     }
-    controlParametersStr << "\n";
     return controlParametersStr;
 }
 
@@ -199,6 +197,12 @@ void FaderbankControlComponent::lookAndFeelChanged()
     }
 }
 
+void FaderbankControlComponent::resetCtrl()
+{
+    setIOCount({ 0,0 });
+    selectIOChannel(ControlDirection::None, 0);
+}
+
 void FaderbankControlComponent::setIOCount(const std::pair<int, int>& ioCount)
 {
     MemaClientControlComponentBase::setIOCount(ioCount);
@@ -213,150 +217,210 @@ void FaderbankControlComponent::rebuildControls()
     auto ioCount = getIOCount();
 
     // input controls
-    auto templateColums = juce::Array<juce::Grid::TrackInfo>();
-    for (auto in = 0; in < ioCount.first; in++)
-        templateColums.add(juce::Grid::TrackInfo(juce::Grid::Fr(1)));
-    
-    m_inputMuteButtons.resize(ioCount.first);
-    m_inputSelectButtons.resize(ioCount.first);
-    m_inputControlsGrid->items.clear();
-    m_inputControlsGrid->templateRows = { juce::Grid::TrackInfo(juce::Grid::Fr(1)), juce::Grid::TrackInfo(juce::Grid::Fr(1)) };
-    m_inputControlsGrid->templateColumns = templateColums;
+    if (ioCount.first != m_inputSelectButtons.size() || ioCount.first != m_inputMuteButtons.size())
+    {
+        DBG(juce::String(__FUNCTION__) + " rebuilding input controls");
+        auto templateColums = juce::Array<juce::Grid::TrackInfo>();
+        for (auto in = 0; in < ioCount.first; in++)
+            templateColums.add(juce::Grid::TrackInfo(juce::Grid::Fr(1)));
 
-    for (auto in = 0; in < ioCount.first; in++)
-    {
-        m_inputSelectButtons.at(in) = std::make_unique<juce::TextButton>("In " + juce::String(in + 1));
-        m_inputSelectButtons.at(in)->setClickingTogglesState(true);
-        m_inputSelectButtons.at(in)->setColour(juce::TextButton::ColourIds::buttonOnColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
-        m_inputSelectButtons.at(in)->onClick = [this, in] {
-            if (m_inputSelectButtons.size() > in)
-            {
-                if (m_inputSelectButtons.at(in)->getToggleState())
-                    selectIOChannel(ControlDirection::Input, in);
+        m_inputMuteButtons.resize(ioCount.first);
+        m_inputSelectButtons.resize(ioCount.first);
+        m_inputControlsGrid->items.clear();
+        m_inputControlsGrid->templateRows = { juce::Grid::TrackInfo(juce::Grid::Fr(1)), juce::Grid::TrackInfo(juce::Grid::Fr(1)) };
+        m_inputControlsGrid->templateColumns = templateColums;
+
+        for (auto i = 0; i < ioCount.first; i++)
+        {
+            auto in = std::uint16_t(i + 1);
+            m_inputSelectButtons.at(i) = std::make_unique<juce::TextButton>("In " + juce::String(in));
+            m_inputSelectButtons.at(i)->setClickingTogglesState(true);
+            m_inputSelectButtons.at(i)->setColour(juce::TextButton::ColourIds::buttonOnColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
+            m_inputSelectButtons.at(i)->onClick = [this, i] {
+                if (m_inputSelectButtons.size() > i)
+                {
+                    auto in = std::uint16_t(i + 1);
+                    if (m_inputSelectButtons.at(i)->getToggleState())
+                        selectIOChannel(ControlDirection::Input, in);
+                    else
+                        selectIOChannel(ControlDirection::None, 0);
+                }
                 else
-                    selectIOChannel(ControlDirection::None, 0);
-            }
-            else
-                jassertfalse;
-        };
-        addAndMakeVisible(m_inputSelectButtons.at(in).get());
-        m_inputControlsGrid->items.add(juce::GridItem(m_inputSelectButtons.at(in).get()));
-    }
-    for (auto in = 0; in < ioCount.first; in++)
-    {
-        m_inputMuteButtons.at(in) = std::make_unique<juce::TextButton>("M");
-        m_inputMuteButtons.at(in)->setClickingTogglesState(true);
-        m_inputMuteButtons.at(in)->setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::red);
-        m_inputMuteButtons.at(in)->onClick = [this, in] {
-            auto inputMuteStates = getInputMuteStates();
-            inputMuteStates[in + 1] = m_inputMuteButtons.at(in)->getToggleState();
-            MemaClientControlComponentBase::setInputMuteStates(inputMuteStates);
-            if (onInputMutesChanged)
-                onInputMutesChanged(inputMuteStates);
-        };
-        addAndMakeVisible(m_inputMuteButtons.at(in).get());
-        m_inputControlsGrid->items.add(juce::GridItem(m_inputMuteButtons.at(in).get()));
+                    jassertfalse;
+                };
+            addAndMakeVisible(m_inputSelectButtons.at(i).get());
+            m_inputControlsGrid->items.add(juce::GridItem(m_inputSelectButtons.at(i).get()));
+        }
+        for (auto i = 0; i < ioCount.first; i++)
+        {
+            auto in = std::uint16_t(i + 1);
+            m_inputMuteButtons.at(i) = std::make_unique<juce::TextButton>("M");
+            m_inputMuteButtons.at(i)->setClickingTogglesState(true);
+            m_inputMuteButtons.at(i)->setToggleState((getInputMuteStates().count(in) != 0 ? getInputMuteStates().at(in) : false), juce::dontSendNotification);
+            m_inputMuteButtons.at(i)->setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::red);
+            m_inputMuteButtons.at(i)->onClick = [this, i] {
+                auto inputMuteStates = std::map<std::uint16_t, bool>();
+                auto in = std::uint16_t(i + 1);
+                inputMuteStates[in] = m_inputMuteButtons.at(i)->getToggleState();
+                MemaClientControlComponentBase::setInputMuteStates(inputMuteStates);
+                if (onInputMutesChanged)
+                    onInputMutesChanged(inputMuteStates);
+                };
+            addAndMakeVisible(m_inputMuteButtons.at(i).get());
+            m_inputControlsGrid->items.add(juce::GridItem(m_inputMuteButtons.at(i).get()));
+        }
     }
 
     // output controls
-    auto templateRows = juce::Array<juce::Grid::TrackInfo>();
-    for (auto out = 0; out < ioCount.second; out++)
-        templateRows.add(juce::Grid::TrackInfo(juce::Grid::Fr(1)));
-
-    m_outputMuteButtons.resize(ioCount.second);
-    m_outputSelectButtons.resize(ioCount.second);
-    m_outputControlsGrid->items.clear();
-    m_outputControlsGrid->templateRows = templateRows;
-    m_outputControlsGrid->templateColumns = { juce::Grid::TrackInfo(juce::Grid::Fr(1)), juce::Grid::TrackInfo(juce::Grid::Fr(1)) };
-
-    for (auto out = 0; out < ioCount.second; out++)
+    if (ioCount.second != m_outputSelectButtons.size() || ioCount.second != m_outputMuteButtons.size())
     {
-        m_outputSelectButtons.at(out) = std::make_unique<juce::TextButton>("Out " + juce::String(out + 1));
-        m_outputSelectButtons.at(out)->setClickingTogglesState(true);
-        m_outputSelectButtons.at(out)->setColour(juce::TextButton::ColourIds::buttonOnColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
-        m_outputSelectButtons.at(out)->onClick = [this, out] {
-            if (m_outputSelectButtons.size() > out)
-            {
-                if (m_outputSelectButtons.at(out)->getToggleState())
-                    selectIOChannel(ControlDirection::Output, out);
-                else
-                    selectIOChannel(ControlDirection::None, 0);
-            }
-            else
-                jassertfalse;
-        };
-        addAndMakeVisible(m_outputSelectButtons.at(out).get());
-        m_outputControlsGrid->items.add(juce::GridItem(m_outputSelectButtons.at(out).get()));
+        DBG(juce::String(__FUNCTION__) + " rebuilding output controls");
+        auto templateRows = juce::Array<juce::Grid::TrackInfo>();
+        for (auto out = 0; out < ioCount.second; out++)
+            templateRows.add(juce::Grid::TrackInfo(juce::Grid::Fr(1)));
 
-        m_outputMuteButtons.at(out) = std::make_unique<juce::TextButton>("M");
-        m_outputMuteButtons.at(out)->setClickingTogglesState(true);
-        m_outputMuteButtons.at(out)->setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::red);
-        m_outputMuteButtons.at(out)->onClick = [this, out] {
-            auto outputMuteStates = getOutputMuteStates();
-            outputMuteStates[out + 1] = m_outputMuteButtons.at(out)->getToggleState();
-            MemaClientControlComponentBase::setOutputMuteStates(outputMuteStates);
-            if (onOutputMutesChanged)
-                onOutputMutesChanged(outputMuteStates);
-        };
-        addAndMakeVisible(m_outputMuteButtons.at(out).get());
-        m_outputControlsGrid->items.add(juce::GridItem(m_outputMuteButtons.at(out).get()));
+        m_outputMuteButtons.resize(ioCount.second);
+        m_outputSelectButtons.resize(ioCount.second);
+        m_outputControlsGrid->items.clear();
+        m_outputControlsGrid->templateRows = templateRows;
+        m_outputControlsGrid->templateColumns = { juce::Grid::TrackInfo(juce::Grid::Fr(1)), juce::Grid::TrackInfo(juce::Grid::Fr(1)) };
+
+        for (auto o = 0; o < ioCount.second; o++)
+        {
+            auto out = std::uint16_t(o + 1);
+            m_outputSelectButtons.at(o) = std::make_unique<juce::TextButton>("Out " + juce::String(out));
+            m_outputSelectButtons.at(o)->setClickingTogglesState(true);
+            m_outputSelectButtons.at(o)->setColour(juce::TextButton::ColourIds::buttonOnColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
+            m_outputSelectButtons.at(o)->onClick = [this, o] {
+                if (m_outputSelectButtons.size() > o)
+                {
+                    auto out = std::uint16_t(o + 1);
+                    if (m_outputSelectButtons.at(o)->getToggleState())
+                        selectIOChannel(ControlDirection::Output, out);
+                    else
+                        selectIOChannel(ControlDirection::None, 0);
+                }
+                else
+                    jassertfalse;
+                };
+            addAndMakeVisible(m_outputSelectButtons.at(o).get());
+            m_outputControlsGrid->items.add(juce::GridItem(m_outputSelectButtons.at(o).get()));
+
+            m_outputMuteButtons.at(o) = std::make_unique<juce::TextButton>("M");
+            m_outputMuteButtons.at(o)->setClickingTogglesState(true);
+            m_outputMuteButtons.at(o)->setToggleState((getOutputMuteStates().count(out) != 0 ? getOutputMuteStates().at(out) : false), juce::dontSendNotification);
+            m_outputMuteButtons.at(o)->setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::red);
+            m_outputMuteButtons.at(o)->onClick = [this, o] {
+                auto outputMuteStates = std::map<std::uint16_t, bool>();
+                auto out = std::uint16_t(o + 1);
+                outputMuteStates[out] = m_outputMuteButtons.at(o)->getToggleState();
+                MemaClientControlComponentBase::setOutputMuteStates(outputMuteStates);
+                if (onOutputMutesChanged)
+                    onOutputMutesChanged(outputMuteStates);
+                };
+            addAndMakeVisible(m_outputMuteButtons.at(o).get());
+            m_outputControlsGrid->items.add(juce::GridItem(m_outputMuteButtons.at(o).get()));
+        }
     }
 
     // crosspoint controls
     if (ControlDirection::Output == m_currentIOChannel.first)
     {
-        templateColums.clear();
-        for (auto in = 0; in < ioCount.first; in++)
-            templateColums.add(juce::Grid::TrackInfo(juce::Grid::Fr(1)));
-
-        m_crosspointGainSliders.resize(ioCount.first);
-        m_crosspointsControlsGrid->items.clear();
-        m_crosspointsControlsGrid->templateRows = { juce::Grid::TrackInfo(juce::Grid::Fr(1)) };
-        m_crosspointsControlsGrid->templateColumns = templateColums;
-
-        for (auto in = 0; in < ioCount.first; in++)
+        if (ioCount.first != m_crosspointGainSliders.size())
         {
-            m_crosspointGainSliders.at(in) = std::make_unique<juce::Slider>(juce::Slider::LinearVertical, juce::Slider::NoTextBox);
-            m_crosspointGainSliders.at(in)->setColour(juce::Slider::ColourIds::thumbColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
-            m_crosspointGainSliders.at(in)->onValueChange = [this, in] {
-                auto crosspointStates = getCrosspointStates();
-                auto faderValue = m_crosspointGainSliders.at(in)->getValue();
-                auto faderState = (faderValue != 0.0);
-                crosspointStates[in + 1][m_currentIOChannel.second] = std::make_pair(faderState, float(faderValue));
-                MemaClientControlComponentBase::setCrosspointStates(crosspointStates);
-                if (onCrosspointStatesChanged)
-                    onCrosspointStatesChanged(crosspointStates);
-            };
-            addAndMakeVisible(m_crosspointGainSliders.at(in).get());
-            m_crosspointsControlsGrid->items.add(juce::GridItem(m_crosspointGainSliders.at(in).get()));
+            DBG(juce::String(__FUNCTION__) + " rebuilding crosspoint controls for output");
+            auto templateColums = juce::Array<juce::Grid::TrackInfo>();
+            for (auto in = 0; in < ioCount.first; in++)
+                templateColums.add(juce::Grid::TrackInfo(juce::Grid::Fr(1)));
+
+            m_crosspointGainSliders.resize(ioCount.first);
+            m_crosspointsControlsGrid->items.clear();
+            m_crosspointsControlsGrid->templateRows = { juce::Grid::TrackInfo(juce::Grid::Fr(1)) };
+            m_crosspointsControlsGrid->templateColumns = templateColums;
+
+            for (auto i = 0; i < ioCount.first; i++)
+            {
+                m_crosspointGainSliders.at(i) = std::make_unique<juce::Slider>(juce::Slider::LinearVertical, juce::Slider::NoTextBox);
+                m_crosspointGainSliders.at(i)->setColour(juce::Slider::ColourIds::thumbColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
+                m_crosspointGainSliders.at(i)->setRange(
+                    juce::Decibels::gainToDecibels(0.0, static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())),
+                    juce::Decibels::gainToDecibels(1.0, static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())),
+                    0.1);
+                m_crosspointGainSliders.at(i)->onValueChange = [this, i] {
+                    auto crosspointStates = std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>();
+                    auto faderValue = juce::Decibels::decibelsToGain(m_crosspointGainSliders.at(i)->getValue(), static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB()));
+                    auto faderState = (faderValue != 0.0);
+                    auto in = std::uint16_t(i + 1);
+                    auto out = std::uint16_t(m_currentIOChannel.second);
+                    crosspointStates[in][out] = std::make_pair(faderState, float(faderValue));
+                    if (onCrosspointStatesChanged)
+                        onCrosspointStatesChanged(crosspointStates);
+                    addCrosspointStates(crosspointStates);
+                    };
+                addAndMakeVisible(m_crosspointGainSliders.at(i).get());
+                m_crosspointsControlsGrid->items.add(juce::GridItem(m_crosspointGainSliders.at(i).get()));
+            }
+        }
+        for (auto i = 0; i < ioCount.first; i++)
+        {
+            if (m_crosspointGainSliders.size() > i)
+            {
+                auto in = std::uint16_t(i + 1);
+                auto out = std::uint16_t(m_currentIOChannel.second);
+                auto crosspointState = (getCrosspointStates().count(in) != 0 && getCrosspointStates().at(in).count(out) != 0) ? getCrosspointStates().at(in).at(out) : std::make_pair(false, 0.0f);
+                m_crosspointGainSliders.at(i)->setValue(juce::Decibels::gainToDecibels(double(crosspointState.second), static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())), juce::dontSendNotification);
+                m_crosspointGainSliders.at(i)->setVisible(true);
+            }
         }
     }
     else if (ControlDirection::Input == m_currentIOChannel.first)
     {
-        templateRows.clear();
-        for (auto out = 0; out < ioCount.second; out++)
-            templateRows.add(juce::Grid::TrackInfo(juce::Grid::Fr(1)));
-
-        m_crosspointGainSliders.resize(ioCount.second);
-        m_crosspointsControlsGrid->items.clear();
-        m_crosspointsControlsGrid->templateColumns = { juce::Grid::TrackInfo(juce::Grid::Fr(1)) };
-        m_crosspointsControlsGrid->templateRows = templateRows;
-
-        for (auto out = 0; out < ioCount.second; out++)
+        if (ioCount.second != m_crosspointGainSliders.size())
         {
-            m_crosspointGainSliders.at(out) = std::make_unique<juce::Slider>(juce::Slider::LinearHorizontal, juce::Slider::NoTextBox);
-            m_crosspointGainSliders.at(out)->setColour(juce::Slider::ColourIds::thumbColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
-            m_crosspointGainSliders.at(out)->onValueChange = [this, out] {
-                auto crosspointStates = getCrosspointStates();
-                auto faderValue = m_crosspointGainSliders.at(out)->getValue();
-                auto faderState = (faderValue != 0.0);
-                crosspointStates[m_currentIOChannel.second][out + 1] = std::make_pair(faderState, float(faderValue));
-                MemaClientControlComponentBase::setCrosspointStates(crosspointStates);
-                if (onCrosspointStatesChanged)
-                    onCrosspointStatesChanged(crosspointStates);
-            }; 
-            addAndMakeVisible(m_crosspointGainSliders.at(out).get());
-            m_crosspointsControlsGrid->items.add(juce::GridItem(m_crosspointGainSliders.at(out).get()));
+            DBG(juce::String(__FUNCTION__) + " rebuilding crosspoint controls for input");
+            auto templateRows = juce::Array<juce::Grid::TrackInfo>();
+            for (auto out = 0; out < ioCount.second; out++)
+                templateRows.add(juce::Grid::TrackInfo(juce::Grid::Fr(1)));
+
+            m_crosspointGainSliders.resize(ioCount.second);
+            m_crosspointsControlsGrid->items.clear();
+            m_crosspointsControlsGrid->templateColumns = { juce::Grid::TrackInfo(juce::Grid::Fr(1)) };
+            m_crosspointsControlsGrid->templateRows = templateRows;
+
+            for (auto o = 0; o < ioCount.second; o++)
+            {
+                m_crosspointGainSliders.at(o) = std::make_unique<juce::Slider>(juce::Slider::LinearHorizontal, juce::Slider::NoTextBox);
+                m_crosspointGainSliders.at(o)->setColour(juce::Slider::ColourIds::thumbColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
+                m_crosspointGainSliders.at(o)->setRange(
+                    juce::Decibels::gainToDecibels(0.0, static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())),
+                    juce::Decibels::gainToDecibels(1.0, static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())),
+                    0.1);
+                m_crosspointGainSliders.at(o)->onValueChange = [this, o] {
+                    auto crosspointStates = std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>();
+                    auto faderValue = juce::Decibels::decibelsToGain(m_crosspointGainSliders.at(o)->getValue(), static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB()));
+                    auto faderState = (faderValue != 0.0);
+                    auto in = std::uint16_t(m_currentIOChannel.second);
+                    auto out = std::uint16_t(o + 1);
+                    crosspointStates[in][out] = std::make_pair(faderState, float(faderValue));
+                    if (onCrosspointStatesChanged)
+                        onCrosspointStatesChanged(crosspointStates);
+                    addCrosspointStates(crosspointStates);
+                    };
+                addAndMakeVisible(m_crosspointGainSliders.at(o).get());
+                m_crosspointsControlsGrid->items.add(juce::GridItem(m_crosspointGainSliders.at(o).get()));
+
+            }
+        }
+        for (auto o = 0; o < ioCount.second; o++)
+        {
+            if (m_crosspointGainSliders.size() > o)
+            {
+                auto in = std::uint16_t(m_currentIOChannel.second);
+                auto out = std::uint16_t(o + 1);
+                auto crosspointState = ((getCrosspointStates().count(in) != 0) != 0 && getCrosspointStates().at(in).count(out) != 0) ? getCrosspointStates().at(in).at(out) : std::make_pair(false, 0.0f);
+                m_crosspointGainSliders.at(o)->setValue(juce::Decibels::gainToDecibels(double(crosspointState.second), static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())), juce::dontSendNotification);
+                m_crosspointGainSliders.at(o)->setVisible(true);
+            }
         }
     }
 
@@ -370,9 +434,10 @@ void FaderbankControlComponent::setInputMuteStates(const std::map<std::uint16_t,
     for (auto const& inputMuteStateKV : inputMuteStates)
     {
         auto& in = inputMuteStateKV.first;
+        auto i = in - 1;
         auto& state = inputMuteStateKV.second;
-        if (m_inputMuteButtons.size() > in && nullptr != m_inputMuteButtons.at(in))
-            m_inputMuteButtons.at(in)->setToggleState(state, juce::dontSendNotification);
+        if (m_inputMuteButtons.size() > i && nullptr != m_inputMuteButtons.at(i))
+            m_inputMuteButtons.at(i)->setToggleState(state, juce::dontSendNotification);
     }
 
     DBG(juce::String(__FUNCTION__) << " " << getInputMuteParametersAsString());
@@ -385,9 +450,10 @@ void FaderbankControlComponent::setOutputMuteStates(const std::map<std::uint16_t
     for (auto const& outputMuteStateKV : outputMuteStates)
     {
         auto& out = outputMuteStateKV.first;
+        auto o = out - 1;
         auto& state = outputMuteStateKV.second;
-        if (m_outputMuteButtons.size() > out && nullptr != m_outputMuteButtons.at(out))
-            m_outputMuteButtons.at(out)->setToggleState(state, juce::dontSendNotification);
+        if (m_outputMuteButtons.size() > o && nullptr != m_outputMuteButtons.at(o))
+            m_outputMuteButtons.at(o)->setToggleState(state, juce::dontSendNotification);
     }
 
     DBG(juce::String(__FUNCTION__) << " " << getOutputMuteParametersAsString());
@@ -402,28 +468,45 @@ void FaderbankControlComponent::setCrosspointStates(const std::map<std::uint16_t
     DBG(juce::String(__FUNCTION__) << " " << getCrosspointParametersAsString());
 }
 
+void FaderbankControlComponent::addCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>& crosspointStates)
+{
+    auto crosspointStatesCpy = getCrosspointStates();
+
+    for (auto const& crosspointStateKV : crosspointStates)
+        crosspointStatesCpy[crosspointStateKV.first] = crosspointStateKV.second;
+    MemaClientControlComponentBase::setCrosspointStates(crosspointStates);
+
+    DBG(juce::String(__FUNCTION__) << " " << getCrosspointParametersAsString());
+}
+
 void FaderbankControlComponent::selectIOChannel(const ControlDirection& direction, int channel)
 {
+    jassert((direction == ControlDirection::None && channel == 0) || (direction != ControlDirection::None && channel != 0));
     auto oldDirection = m_currentIOChannel.first;
+    auto oldChannel = m_currentIOChannel.second;
     m_currentIOChannel = std::make_pair(direction, channel);
     if (oldDirection != direction)
         rebuildControls();
+    else if (oldChannel != channel)
+        rebuildControls();
 
     auto ioCount = getIOCount();
-    for (auto in = 0; in < ioCount.first; in++)
+    for (auto i = 0; i < ioCount.first; i++)
     {
-        if (nullptr != m_inputSelectButtons.at(in))
+        if (nullptr != m_inputSelectButtons.at(i))
         {
+            auto in = std::uint16_t(i + 1);
             auto state = (ControlDirection::Input == direction && channel == in);
-            m_inputSelectButtons.at(in)->setToggleState(state, juce::dontSendNotification);
+            m_inputSelectButtons.at(i)->setToggleState(state, juce::dontSendNotification);
         }
     }
-    for (auto out = 0; out < ioCount.second; out++)
+    for (auto o = 0; o < ioCount.second; o++)
     {
-        if (nullptr != m_outputSelectButtons.at(out))
+        if (nullptr != m_outputSelectButtons.at(o))
         {
+            auto out = std::uint16_t(o + 1);
             auto state = (ControlDirection::Output == direction && channel == out);
-            m_outputSelectButtons.at(out)->setToggleState(state, juce::dontSendNotification);
+            m_outputSelectButtons.at(o)->setToggleState(state, juce::dontSendNotification);
         }
     }
 }
@@ -439,10 +522,13 @@ void FaderbankControlComponent::updateCrosspointFaderValues()
             auto& out = crosspointStateIOKV.first;
             auto& state = crosspointStateIOKV.second;
 
-            if (ControlDirection::Input == m_currentIOChannel.first && in == m_currentIOChannel.second && m_crosspointGainSliders.size() <= out)
-                m_crosspointGainSliders.at(out - 1)->setValue((state.first ? state.second : 0.0), juce::dontSendNotification);
-            if (ControlDirection::Output == m_currentIOChannel.first && out == m_currentIOChannel.second && m_crosspointGainSliders.size() <= in)
-                m_crosspointGainSliders.at(in - 1)->setValue((state.first ? state.second : 0.0), juce::dontSendNotification);
+            auto i = in - 1;
+            auto o = out - 1;
+
+            if (ControlDirection::Input == m_currentIOChannel.first && in == m_currentIOChannel.second && m_crosspointGainSliders.size() > o)
+                m_crosspointGainSliders.at(o)->setValue((state.first ? state.second : 0.0), juce::dontSendNotification);
+            if (ControlDirection::Output == m_currentIOChannel.first && out == m_currentIOChannel.second && m_crosspointGainSliders.size() > i)
+                m_crosspointGainSliders.at(i)->setValue((state.first ? state.second : 0.0), juce::dontSendNotification);
         }
     }
 }
@@ -466,6 +552,10 @@ void PanningControlComponent::paint(Graphics& g)
 }
 
 void PanningControlComponent::resized()
+{
+}
+
+void PanningControlComponent::resetCtrl()
 {
 }
 

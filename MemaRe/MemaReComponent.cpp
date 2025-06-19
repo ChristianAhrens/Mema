@@ -96,6 +96,14 @@ void MemaReComponent::setOutputPanningCtrlActive(const juce::AudioChannelSet& ch
         resized();
 }
 
+void MemaReComponent::resetCtrl()
+{
+    if (m_faderbankCtrlComponent)
+        m_faderbankCtrlComponent->resetCtrl();
+    if (m_panningCtrlComponent)
+        m_panningCtrlComponent->resetCtrl();
+}
+
 void MemaReComponent::paint(Graphics &g)
 {
     g.fillAll(getLookAndFeel().findColour(juce::LookAndFeel_V4::ColourScheme::widgetBackground));

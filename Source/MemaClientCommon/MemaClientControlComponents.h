@@ -35,6 +35,9 @@ public:
     virtual void resized() = 0;
 
     //==============================================================================
+    virtual void resetCtrl() = 0;
+
+    //==============================================================================
     virtual void setIOCount(const std::pair<int, int>& ioCount);
     const std::pair<int, int>& getIOCount();
 
@@ -91,10 +94,16 @@ public:
     void lookAndFeelChanged() override;
 
     //==============================================================================
+    void resetCtrl() override;
+
+    //==============================================================================
     void setIOCount(const std::pair<int, int>& ioCount) override;
     void setInputMuteStates(const std::map<std::uint16_t, bool>& inputMuteStates) override;
     void setOutputMuteStates(const std::map<std::uint16_t, bool>& outputMuteStates) override;
     void setCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>& crosspointStates) override;
+
+    //==============================================================================
+    void addCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>& crosspointStates);
 
 protected:
     //==============================================================================
@@ -131,6 +140,9 @@ public:
     //==============================================================================
     void paint(Graphics&) override;
     void resized() override;
+
+    //==============================================================================
+    void resetCtrl() override;
 
     //==============================================================================
     void setChannelConfig(const juce::AudioChannelSet& channelConfiguration);
