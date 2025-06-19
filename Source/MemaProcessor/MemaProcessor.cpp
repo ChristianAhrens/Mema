@@ -105,6 +105,86 @@ private:
 };
 #endif
 
+//==============================================================================
+class MemaNetworkClientCommanderWrapper : public MemaInputCommander, public MemaOutputCommander, public MemaCrosspointCommander
+{
+public:
+	void setInputMute(unsigned int channel, bool muteState) override
+	{
+		if (m_networkServer && m_networkServer->hasActiveConnections())
+		{
+			std::map<std::uint16_t, bool> inputMuteStates;
+			std::map<std::uint16_t, bool> outputMuteStates;
+			std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>> crosspointStates;
+
+			inputMuteStates[channel] = muteState;
+
+			m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates)->getSerializedMessage());
+		}
+	};
+
+	void setOutputMute(unsigned int channel, bool muteState) override
+	{
+		if (m_networkServer && m_networkServer->hasActiveConnections())
+		{
+			std::map<std::uint16_t, bool> inputMuteStates;
+			std::map<std::uint16_t, bool> outputMuteStates;
+			std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>> crosspointStates;
+
+			outputMuteStates[channel] = muteState;
+
+			m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates)->getSerializedMessage());
+		}
+	};
+
+	void setCrosspointEnabledValue(int input, int output, bool enabledState) override
+	{
+		if (m_networkServer && m_networkServer->hasActiveConnections())
+		{
+			std::map<std::uint16_t, bool> inputMuteStates;
+			std::map<std::uint16_t, bool> outputMuteStates;
+			std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>> crosspointStates;
+
+			crosspointStates[input][output] = std::make_pair(enabledState, enabledState ? 1.0f : 0.0f);
+
+			m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates)->getSerializedMessage());
+		}
+	};
+
+	void setCrosspointFactorValue(int input, int output, float factor) override
+	{
+		if (m_networkServer && m_networkServer->hasActiveConnections())
+		{
+			std::map<std::uint16_t, bool> inputMuteStates;
+			std::map<std::uint16_t, bool> outputMuteStates;
+			std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>> crosspointStates;
+
+			crosspointStates[input][output] = std::make_pair(1.0f == factor, factor);
+
+			m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates)->getSerializedMessage());
+		}
+	};
+
+	void setIOCount(int inputCount, int outputCount) override
+	{
+		if (m_networkServer && m_networkServer->hasActiveConnections())
+		{
+			m_networkServer->enqueueMessage(std::make_unique<ReinitIOCountMessage>(inputCount, outputCount)->getSerializedMessage());
+		}
+	};
+
+	void setNetworkConnection(const std::shared_ptr<InterprocessConnectionServerImpl>& networkServer)
+	{
+		m_networkServer = networkServer;
+	}
+
+private:
+	void setChannelCount(int channelCount) override { ignoreUnused(channelCount); };
+
+private:
+	std::shared_ptr<InterprocessConnectionServerImpl> m_networkServer;
+
+};
 
 //==============================================================================
 MemaProcessor::MemaProcessor(XmlElement* stateXml) :
@@ -153,7 +233,7 @@ MemaProcessor::MemaProcessor(XmlElement* stateXml) :
 		Mema::ServiceData::getConnectionPort());
 #endif
 
-	m_networkServer = std::make_unique<InterprocessConnectionServerImpl>();
+	m_networkServer = std::make_shared<InterprocessConnectionServerImpl>();
 	m_networkServer->beginWaitingForSocket(Mema::ServiceData::getConnectionPort());
     m_networkServer->onConnectionCreated = [=](int connectionId) {
         auto connection = dynamic_cast<InterprocessConnectionImpl*>(m_networkServer->getActiveConnection(connectionId).get());
@@ -186,6 +266,11 @@ MemaProcessor::MemaProcessor(XmlElement* stateXml) :
 			};
         }
     };
+	m_networkCommanderWrapper = std::make_unique<MemaNetworkClientCommanderWrapper>();
+	m_networkCommanderWrapper->setNetworkConnection(m_networkServer);
+	addInputCommander(static_cast<MemaInputCommander*>(m_networkCommanderWrapper.get()));
+	addOutputCommander(static_cast<MemaOutputCommander*>(m_networkCommanderWrapper.get()));
+	addCrosspointCommander(static_cast<MemaCrosspointCommander*>(m_networkCommanderWrapper.get()));
 
 	m_timedConfigurationDumper = std::make_unique<juce::TimedCallback>([=]() {
 		if (isTimedConfigurationDumpPending())
