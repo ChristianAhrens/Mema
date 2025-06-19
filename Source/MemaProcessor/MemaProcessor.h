@@ -70,11 +70,11 @@ public:
 };
 
 //==============================================================================
-class MemaProcessor :   public juce::AudioProcessor,
-					    public juce::AudioIODeviceCallback,
-                        public juce::MessageListener,
-                        public juce::ChangeListener,
-                        public MemaAppConfiguration::XmlConfigurableElement
+class MemaProcessor : public juce::AudioProcessor,
+    public juce::AudioIODeviceCallback,
+    public juce::MessageListener,
+    public juce::ChangeListener,
+    public MemaAppConfiguration::XmlConfigurableElement
 {
 public:
     MemaProcessor(XmlElement* stateXml);
@@ -104,7 +104,7 @@ public:
     //==============================================================================
     bool getInputMuteState(std::uint16_t channelNumber);
     void setInputMuteState(std::uint16_t channelNumber, bool muted, MemaChannelCommander* sender = nullptr);
-    
+
     bool getMatrixCrosspointEnabledValue(std::uint16_t inputNumber, std::uint16_t outputNumber);
     void setMatrixCrosspointEnabledValue(std::uint16_t inputNumber, std::uint16_t outputNumber, bool enabled, MemaChannelCommander* sender = nullptr);
 
@@ -157,13 +157,13 @@ public:
     void setStateInformation(const void* data, int sizeInBytes) override;
 
     //==============================================================================
-    void audioDeviceIOCallbackWithContext (const float* const* inputChannelData,
-                                           int numInputChannels,
-                                           float* const* outputChannelData,
-                                           int numOutputChannels,
-                                           int numSamples,
-                                           const AudioIODeviceCallbackContext& context) override;
-    
+    void audioDeviceIOCallbackWithContext(const float* const* inputChannelData,
+        int numInputChannels,
+        float* const* outputChannelData,
+        int numOutputChannels,
+        int numSamples,
+        const AudioIODeviceCallbackContext& context) override;
+
     void audioDeviceAboutToStart(AudioIODevice* device) override;
     void audioDeviceStopped() override;
 
@@ -181,7 +181,6 @@ public:
     void environmentChanged();
 
     void triggerIOUpdate();
-    void triggerConfigurationDump();
 
     //==============================================================================
     void setTrafficTypesForConnectionId(const std::vector<SerializableMessage::SerializableMessageType>& trafficTypes, int connectionId);
@@ -192,6 +191,11 @@ public:
 
     static constexpr int s_minInputsCount = 1;
     static constexpr int s_minOutputsCount = 1;
+
+    //==============================================================================
+    bool isTimedConfigurationDumpPending() { return m_timedConfigurationDumpPending; };
+    void setTimedConfigurationDumpPending() { m_timedConfigurationDumpPending = true; };
+    void resetTimedConfigurationDumpPending() { m_timedConfigurationDumpPending = false; };
 
 protected:
     //==============================================================================
@@ -251,6 +255,9 @@ private:
 #endif
     std::unique_ptr<InterprocessConnectionServerImpl> m_networkServer;
     std::map<int, std::vector<SerializableMessage::SerializableMessageType>> m_trafficTypesPerConnection;
+
+    std::unique_ptr<juce::TimedCallback>   m_timedConfigurationDumper;
+    bool    m_timedConfigurationDumpPending = false;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MemaProcessor)
 };

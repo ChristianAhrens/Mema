@@ -186,10 +186,30 @@ MemaProcessor::MemaProcessor(XmlElement* stateXml) :
 			};
         }
     };
+
+	m_timedConfigurationDumper = std::make_unique<juce::TimedCallback>([=]() {
+		if (isTimedConfigurationDumpPending())
+		{
+			auto config = JUCEAppBasics::AppConfigurationBase::getInstance();
+			if (config != nullptr)
+				config->triggerConfigurationDump(false);
+			resetTimedConfigurationDumpPending();
+		}
+	});
+	m_timedConfigurationDumper->startTimer(100);
 }
 
 MemaProcessor::~MemaProcessor()
 {
+	m_timedConfigurationDumper->stopTimer();
+	if (isTimedConfigurationDumpPending())
+	{
+		auto config = JUCEAppBasics::AppConfigurationBase::getInstance();
+		if (config != nullptr)
+			config->triggerConfigurationDump(false);
+		resetTimedConfigurationDumpPending();
+	}
+
 	m_networkServer->stop();
 
 	m_deviceManager->removeAudioCallback(this);
@@ -392,13 +412,6 @@ void MemaProcessor::triggerIOUpdate()
 	postMessage(std::make_unique<ReinitIOCountMessage>(m_inputChannelCount, m_outputChannelCount).release());
 }
 
-void MemaProcessor::triggerConfigurationDump()
-{
-	auto config = JUCEAppBasics::AppConfigurationBase::getInstance();
-	if (config != nullptr)
-		config->triggerConfigurationDump(false);
-}
-
 void MemaProcessor::addInputListener(ProcessorDataAnalyzer::Listener* listener)
 {
 	if (m_inputDataAnalyzer)
@@ -580,14 +593,20 @@ void MemaProcessor::setInputMuteState(std::uint16_t inputChannelNumber, bool mut
 
 	// sending to connected clients T.B.D.
 
-	triggerConfigurationDump();
+	setTimedConfigurationDumpPending();
 }
 
 bool MemaProcessor::getMatrixCrosspointEnabledValue(std::uint16_t inputNumber, std::uint16_t outputNumber)
 {
     jassert(inputNumber > 0 && outputNumber > 0);
-    const ScopedLock sl(m_audioDeviceIOCallbackLock);
-    return m_matrixCrosspointValues[inputNumber][outputNumber].first;
+	{
+		const ScopedLock sl(m_audioDeviceIOCallbackLock);
+		if (m_matrixCrosspointValues.count(inputNumber) != 0)
+			if (m_matrixCrosspointValues.at(inputNumber).count(outputNumber) != 0)
+				return m_matrixCrosspointValues.at(inputNumber).at(outputNumber).first;
+	}
+	jassertfalse;
+	return false;
 }
 
 void MemaProcessor::setMatrixCrosspointEnabledValue(std::uint16_t inputNumber, std::uint16_t outputNumber, bool enabled, MemaChannelCommander* sender)
@@ -607,14 +626,20 @@ void MemaProcessor::setMatrixCrosspointEnabledValue(std::uint16_t inputNumber, s
 
 	// sending to connected clients T.B.D.
 
-	triggerConfigurationDump();
+	setTimedConfigurationDumpPending();
 }
 
 float MemaProcessor::getMatrixCrosspointFactorValue(std::uint16_t inputNumber, std::uint16_t outputNumber)
 {
 	jassert(inputNumber > 0 && outputNumber > 0);
-	const ScopedLock sl(m_audioDeviceIOCallbackLock);
-	return m_matrixCrosspointValues[inputNumber][outputNumber].second;
+	{
+		const ScopedLock sl(m_audioDeviceIOCallbackLock);
+		if (m_matrixCrosspointValues.count(inputNumber) != 0)
+			if (m_matrixCrosspointValues.at(inputNumber).count(outputNumber) != 0)
+				return m_matrixCrosspointValues.at(inputNumber).at(outputNumber).second;
+	}
+	jassertfalse;
+	return 0.0f;
 }
 
 void MemaProcessor::setMatrixCrosspointFactorValue(std::uint16_t inputNumber, std::uint16_t outputNumber, float factor, MemaChannelCommander* sender)
@@ -634,7 +659,7 @@ void MemaProcessor::setMatrixCrosspointFactorValue(std::uint16_t inputNumber, st
 
 	// sending to connected clients T.B.D.
 
-	triggerConfigurationDump();
+	setTimedConfigurationDumpPending();
 }
 
 bool MemaProcessor::getOutputMuteState(std::uint16_t outputChannelNumber)
@@ -661,7 +686,7 @@ void MemaProcessor::setOutputMuteState(std::uint16_t outputChannelNumber, bool m
 
 	// sending to connected clients T.B.D.
 
-	triggerConfigurationDump();
+	setTimedConfigurationDumpPending();
 }
 
 void MemaProcessor::setChannelCounts(std::uint16_t inputChannelCount, std::uint16_t outputChannelCount)
@@ -881,7 +906,7 @@ void MemaProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMes
 
 	for (std::uint16_t input = 1; input <= m_inputChannelCount; input++)
 	{
-		if (m_inputMuteStates[input])
+		if (m_inputMuteStates.count(input) != 0 && m_inputMuteStates.at(input))
 		{
 			auto channelIdx = input - 1;
 			buffer.clear(channelIdx, 0, buffer.getNumSamples());
@@ -904,11 +929,17 @@ void MemaProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMes
 	{
 		for (std::uint16_t outputIdx = 0; outputIdx < m_outputChannelCount; outputIdx++)
 		{
-			auto& crosspointValues = m_matrixCrosspointValues[inputIdx + 1][outputIdx + 1];
-			auto& enabled = crosspointValues.first;
-			auto& factor = crosspointValues.second;
-            auto gain = !enabled ? 0.0f : factor;
-			processedBuffer.addFrom(outputIdx, 0, buffer.getReadPointer(inputIdx), buffer.getNumSamples(), gain);
+			if (m_matrixCrosspointValues.count(inputIdx + 1) != 0)
+			{
+				if (m_matrixCrosspointValues[inputIdx + 1].count(outputIdx + 1) != 0)
+				{
+					auto& crosspointValues = m_matrixCrosspointValues.at(inputIdx + 1).at(outputIdx + 1);
+					auto& enabled = crosspointValues.first;
+					auto& factor = crosspointValues.second;
+					auto gain = !enabled ? 0.0f : factor;
+					processedBuffer.addFrom(outputIdx, 0, buffer.getReadPointer(inputIdx), buffer.getNumSamples(), gain);
+				}
+			}
 		}
 	}
 	buffer.makeCopyOf(processedBuffer, true);
@@ -925,7 +956,7 @@ void MemaProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMes
 
 	for (std::uint16_t output = 1; output <= m_outputChannelCount; output++)
 	{
-		if (m_outputMuteStates[output])
+		if (m_outputMuteStates.count(output) != 0 && m_outputMuteStates.at(output))
 		{
 			auto channelIdx = output - 1;
 			buffer.clear(channelIdx, 0, buffer.getNumSamples());
@@ -1003,7 +1034,7 @@ void MemaProcessor::handleMessage(const Message& message)
 			{
 				auto& outputNumber = crosspointOStateKV.first;
 				setMatrixCrosspointEnabledValue(inputNumber, outputNumber, crosspointOStateKV.second.first);
-				setMatrixCrosspointFactorValue(inputNumber, outputNumber, crosspointOStateKV.second.first);
+				setMatrixCrosspointFactorValue(inputNumber, outputNumber, crosspointOStateKV.second.second);
 			}
 		}
 
@@ -1188,7 +1219,7 @@ void MemaProcessor::audioDeviceStopped()
 void MemaProcessor::changeListenerCallback(ChangeBroadcaster* source)
 {
 	if (source == m_deviceManager.get())
-		triggerConfigurationDump();
+		setTimedConfigurationDumpPending();
 }
 
 void MemaProcessor::initializeCtrlValues(int inputCount, int outputCount)
