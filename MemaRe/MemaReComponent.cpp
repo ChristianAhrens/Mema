@@ -154,25 +154,31 @@ void MemaReComponent::handleMessage(const Message& message)
     else if (auto const cpm = dynamic_cast<const Mema::ControlParametersMessage*>(&message))
     {
         m_inputMuteStates = cpm->getInputMuteStates();
-        jassert(!m_inputMuteStates.empty());
-        if (m_faderbankCtrlComponent)
-            m_faderbankCtrlComponent->setInputMuteStates(m_inputMuteStates);
-        if (m_panningCtrlComponent)
-            m_panningCtrlComponent->setInputMuteStates(m_inputMuteStates);
+        if (!m_inputMuteStates.empty())
+        {
+            if (m_faderbankCtrlComponent)
+                m_faderbankCtrlComponent->setInputMuteStates(m_inputMuteStates);
+            if (m_panningCtrlComponent)
+                m_panningCtrlComponent->setInputMuteStates(m_inputMuteStates);
+        }
 
         m_outputMuteStates = cpm->getOutputMuteStates();
-        jassert(!m_outputMuteStates.empty());
-        if (m_faderbankCtrlComponent)
-            m_faderbankCtrlComponent->setOutputMuteStates(m_outputMuteStates);
-        if (m_panningCtrlComponent)
-            m_panningCtrlComponent->setOutputMuteStates(m_outputMuteStates);
+        if (!m_outputMuteStates.empty())
+        {
+            if (m_faderbankCtrlComponent)
+                m_faderbankCtrlComponent->setOutputMuteStates(m_outputMuteStates);
+            if (m_panningCtrlComponent)
+                m_panningCtrlComponent->setOutputMuteStates(m_outputMuteStates);
+        }
 
         m_crosspointStates = cpm->getCrosspointStates();
-        jassert(!m_crosspointStates.empty());
-        if (m_faderbankCtrlComponent)
-            m_faderbankCtrlComponent->setCrosspointStates(m_crosspointStates);
-        if (m_panningCtrlComponent)
-            m_panningCtrlComponent->setCrosspointStates(m_crosspointStates);
+        if (!m_crosspointStates.empty())
+        {
+            if (m_faderbankCtrlComponent)
+                m_faderbankCtrlComponent->setCrosspointStates(m_crosspointStates);
+            if (m_panningCtrlComponent)
+                m_panningCtrlComponent->setCrosspointStates(m_crosspointStates);
+        }
 
         resized();
     }
