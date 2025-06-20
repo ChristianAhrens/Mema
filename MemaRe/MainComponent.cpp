@@ -504,7 +504,8 @@ const MainComponent::Status MainComponent::getStatus()
 
 void MainComponent::connectToMema()
 {
-    if (m_connectingComponent) m_connectingComponent->setServiceDescription(m_selectedService.description);
+    if (m_connectingComponent)
+        m_connectingComponent->setServiceDescription(m_selectedService.description);
 
     setStatus(Status::Connecting);
 
