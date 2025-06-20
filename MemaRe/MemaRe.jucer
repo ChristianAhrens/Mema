@@ -106,10 +106,10 @@
                appSandboxOptions="com.apple.security.network.client,com.apple.security.network.server"
                networkingMulticast="1">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="MemaMo"/>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="MemaRe"/>
         <CONFIGURATION isDebug="0" name="Release" customXcodeFlags="OTHER_CODE_SIGN_FLAGS = $(inherited) --timestamp -s 'Developer ID Application: Christian Ahrens', CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO"
                        codeSigningIdentity="Developer ID Application: Christian Ahrens"
-                       targetName="MemaMo"/>
+                       targetName="MemaRe"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_audio_basics" path="../submodules/JUCE/modules"/>
@@ -128,8 +128,8 @@
     </XCODE_MAC>
     <VS2022 targetFolder="Builds/VisualStudio2022" smallIcon="h4L3Zp" bigIcon="h4L3Zp">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="MemaMo"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="MemaMo"/>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="MemaRe"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="MemaRe"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_audio_basics" path="..\submodules\JUCE\modules"/>
@@ -174,9 +174,9 @@
                   UIRequiresFullScreen="0" customPList="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#10;&#10;&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;&#10;&lt;plist&gt;&#10;  &lt;dict&gt;&#10;    &lt;key&gt;NSLocalNetworkUsageDescription&lt;/key&gt;&#10;    &lt;string&gt;Mema.Mo uses multicast to discover IP Addresses of Mema instances on the network.&lt;/string&gt;&#10;    &#9;&lt;key&gt;UIBackgroundModes&lt;/key&gt;&#10;    &#9;&lt;array&gt;&#10;&#9;      &#9;&lt;string&gt;processing&lt;/string&gt;&#10;    &#9;&lt;/array&gt;&#10;    &lt;key&gt;BGTaskSchedulerPermittedIdentifiers&lt;/key&gt;&#10;    &lt;array&gt;&#10;      &lt;string&gt;com.ChristianAhrens.MemaMo&lt;/string&gt;&#10;    &lt;/array&gt;&#10;&lt;/dict&gt;&#10;&lt;/plist&gt;">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" iosDeploymentTarget="15" iosCompatibility="15"
-                       targetName="MemaMo"/>
+                       targetName="MemaRe"/>
         <CONFIGURATION isDebug="0" name="Release" iosDeploymentTarget="15" iosCompatibility="15"
-                       targetName="MemaMo"/>
+                       targetName="MemaRe"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_audio_basics" path="../submodules/JUCE/modules"/>
