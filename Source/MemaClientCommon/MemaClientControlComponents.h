@@ -109,6 +109,9 @@ protected:
     //==============================================================================
     void selectIOChannel(const ControlDirection& direction, int channel);
     void rebuildControls();
+    void rebuildInputControls();
+    void rebuildOutputControls();
+    void rebuildCrosspointControls();
     void updateCrosspointFaderValues();
 
 private:
