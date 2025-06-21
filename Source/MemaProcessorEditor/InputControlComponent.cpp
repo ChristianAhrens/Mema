@@ -69,7 +69,7 @@ void InputControlComponent::paint(Graphics& g)
     AbstractAudioVisualizer::paint(g);
 }
 
-void InputControlComponent::setInputMute(unsigned int channel, bool muteState)
+void InputControlComponent::setInputMute(std::uint16_t channel, bool muteState)
 {
     if (m_inputMutes.count(channel) != 1)
         return;
@@ -105,16 +105,16 @@ void InputControlComponent::processChanges()
     AbstractAudioVisualizer::processChanges();
 }
 
-void InputControlComponent::setChannelCount(int channelCount)
+void InputControlComponent::setChannelCount(std::uint16_t channelCount)
 {
     if (m_channelCount != channelCount)
     {
         m_channelCount = channelCount;
-        DBG(__FUNCTION__ << " " << channelCount);
+        DBG(__FUNCTION__ << " " << int(channelCount));
 
         m_inputLevels->setChannelCount(channelCount);
 
-        auto channelsToRemove = std::vector<int>();
+        auto channelsToRemove = std::vector<std::uint16_t>();
         for (auto const& inputMuteKV : m_inputMutes)
         {
             if (inputMuteKV.first > channelCount)
@@ -128,7 +128,7 @@ void InputControlComponent::setChannelCount(int channelCount)
                 m_inputMutes.erase(iter);
         }
 
-        for (int channel = 1; channel <= channelCount; channel++)
+        for (std::uint16_t channel = 1; channel <= channelCount; channel++)
         {
             if (m_inputMutes.count(channel) == 0)
             {

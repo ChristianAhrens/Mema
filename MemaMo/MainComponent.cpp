@@ -494,6 +494,9 @@ const MainComponent::Status MainComponent::getStatus()
 
 void MainComponent::connectToMema()
 {
+    if (m_connectingComponent)
+        m_connectingComponent->setServiceDescription(m_selectedService.description);
+
     setStatus(Status::Connecting);
 
     timerCallback(); // avoid codeclones by manually trigger the timed connection attempt once

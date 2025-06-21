@@ -35,6 +35,7 @@ class MemaChannelCommander;
 class MemaInputCommander;
 class MemaOutputCommander;
 class MemaCrosspointCommander;
+class MemaNetworkClientCommanderWrapper;
 #if JUCE_WINDOWS
 struct ServiceAdvertiser;
 #endif
@@ -235,7 +236,8 @@ private:
     int m_outputChannelCount{ 1 };
 
     //==============================================================================
-    std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>  m_matrixCrosspointValues;
+    std::map<std::uint16_t, std::map<std::uint16_t, bool>>  m_matrixCrosspointStates;
+    std::map<std::uint16_t, std::map<std::uint16_t, float>>  m_matrixCrosspointValues;
 
     //==============================================================================
     std::unique_ptr<MemaProcessorEditor>  m_processorEditor;
@@ -253,7 +255,8 @@ private:
 #else
     std::unique_ptr<juce::NetworkServiceDiscovery::Advertiser>  m_serviceAdvertiser;
 #endif
-    std::unique_ptr<InterprocessConnectionServerImpl> m_networkServer;
+    std::shared_ptr<InterprocessConnectionServerImpl> m_networkServer;
+    std::unique_ptr<MemaNetworkClientCommanderWrapper> m_networkCommanderWrapper;
     std::map<int, std::vector<SerializableMessage::SerializableMessageType>> m_trafficTypesPerConnection;
 
     std::unique_ptr<juce::TimedCallback>   m_timedConfigurationDumper;

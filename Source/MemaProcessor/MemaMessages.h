@@ -259,8 +259,8 @@ public:
     };
     ~ReinitIOCountMessage() = default;
 
-    int getInputCount() const { return m_inputCount; };
-    int getOutputCount() const { return m_outputCount; };
+    std::uint16_t getInputCount() const { return m_inputCount; };
+    std::uint16_t getOutputCount() const { return m_outputCount; };
 
 protected:
     juce::MemoryBlock createSerializedContent(size_t& contentSize) const override
@@ -454,12 +454,13 @@ class ControlParametersMessage : public SerializableMessage
 public:
     ControlParametersMessage() = default;
     ControlParametersMessage(const std::map<std::uint16_t, bool>& inputMuteStates, const std::map<std::uint16_t, bool>& outputMuteStates, 
-        const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>& crosspointStates)
+        const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& crosspointStates, const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues)
     {
         m_type = SerializableMessageType::ControlParameters;
         m_inputMuteStates = inputMuteStates;
         m_outputMuteStates = outputMuteStates;
         m_crosspointStates = crosspointStates;
+        m_crosspointValues = crosspointValues;
     };
     ControlParametersMessage(const juce::MemoryBlock& blob)
     {
@@ -499,22 +500,40 @@ public:
         for (int i = 0; i < crosspointStatesCount; i++)
         {
             std::uint16_t in, out;
-            std::pair<bool, float> state;
+            bool state;
             blob.copyTo(&in, readPos, sizeof(in));
             readPos += sizeof(in);
-            blob.copyTo(&out, readPos, sizeof(in));
-            readPos += sizeof(in);
+            blob.copyTo(&out, readPos, sizeof(out));
+            readPos += sizeof(out);
             blob.copyTo(&state, readPos, sizeof(state));
             readPos += sizeof(state);
 
             m_crosspointStates[in][out] = state;
+        }
+
+        std::uint16_t crosspointValuesCount;
+        blob.copyTo(&crosspointValuesCount, readPos, sizeof(std::uint16_t));
+        readPos += sizeof(crosspointValuesCount);
+        for (int i = 0; i < crosspointValuesCount; i++)
+        {
+            std::uint16_t in, out;
+            float value;
+            blob.copyTo(&in, readPos, sizeof(in));
+            readPos += sizeof(in);
+            blob.copyTo(&out, readPos, sizeof(out));
+            readPos += sizeof(out);
+            blob.copyTo(&value, readPos, sizeof(value));
+            readPos += sizeof(value);
+
+            m_crosspointValues[in][out] = value;
         }
     };
     ~ControlParametersMessage() = default;
 
     const std::map<std::uint16_t, bool>& getInputMuteStates() const { return m_inputMuteStates; };
     const std::map<std::uint16_t, bool>& getOutputMuteStates() const { return m_outputMuteStates; };
-    const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>& getCrosspointStates() const { return m_crosspointStates; };
+    const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& getCrosspointStates() const { return m_crosspointStates; };
+    const std::map<std::uint16_t, std::map<std::uint16_t, float>>& getCrosspointValues() const { return m_crosspointValues; };
 
 protected:
     juce::MemoryBlock createSerializedContent(size_t& contentSize) const override
@@ -551,17 +570,38 @@ protected:
         }
         jassert(crosspointStatesCount == crosspointStatesCountRef);
 
+        auto crosspointValuesCount = std::uint16_t(0);
+        if (0 < m_crosspointValues.size())
+            crosspointValuesCount = std::uint16_t(m_crosspointValues.size() * m_crosspointValues.begin()->second.size());
+        blob.append(&crosspointValuesCount, sizeof(crosspointValuesCount));
+        auto crosspointValuesCountRef = std::uint16_t(0);
+        for (auto& crosspointValuesFirstDKV : m_crosspointValues)
+        {
+            for (auto& crosspointValuesSecDKV : crosspointValuesFirstDKV.second)
+            {
+                auto& in = crosspointValuesFirstDKV.first;
+                blob.append(&in, sizeof(in));
+                auto& out = crosspointValuesSecDKV.first;
+                blob.append(&out, sizeof(out));
+                auto& value = crosspointValuesSecDKV.second;
+                blob.append(&value, sizeof(value));
+                crosspointValuesCountRef++;
+            }
+        }
+        jassert(crosspointValuesCount == crosspointValuesCountRef);
+
         contentSize = blob.getSize();
         return blob;
     };
 
 private:
-    std::map<std::uint16_t, bool>                                               m_inputMuteStates;
-    std::map<std::uint16_t, bool>                                               m_outputMuteStates;
-    std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>    m_crosspointStates;
+    std::map<std::uint16_t, bool>                           m_inputMuteStates;
+    std::map<std::uint16_t, bool>                           m_outputMuteStates;
+    std::map<std::uint16_t, std::map<std::uint16_t, bool>>  m_crosspointStates;
+    std::map<std::uint16_t, std::map<std::uint16_t, float>> m_crosspointValues;
 };
 
-#ifdef NIX //DEBUG
+#ifdef NIX // DEBUG
 #define RUN_MESSAGE_TESTS
 #endif
 #ifdef RUN_MESSAGE_TESTS
@@ -677,20 +717,27 @@ static void runTests()
     // test ControlParametersMessage
     auto inputMuteStates = std::map<std::uint16_t, bool>{ { std::uint16_t(1), true}, { std::uint16_t(2), false}, { std::uint16_t(3), true} };
     auto outputMuteStates = std::map<std::uint16_t, bool>{ { std::uint16_t(4), false}, { std::uint16_t(5), true}, { std::uint16_t(6), false} };
-    auto crosspointStates = std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>();
-    crosspointStates[1][1] = { false, 0.0f };
-    crosspointStates[1][2] = { true, 1.0f };
-    crosspointStates[2][1] = { true, 0.5f };
-    crosspointStates[2][2] = { true, 0.7f };
-    auto cpm = std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates);
+    auto crosspointStates = std::map<std::uint16_t, std::map<std::uint16_t, bool>>();
+    auto crosspointValues = std::map<std::uint16_t, std::map<std::uint16_t, float>>();
+    crosspointStates[1][1] = false;
+    crosspointStates[1][2] = true;
+    crosspointStates[2][1] = true;
+    crosspointStates[2][2] = true;
+    crosspointValues[1][1] = 0.0f;
+    crosspointValues[1][2] = 1.0f;
+    crosspointValues[2][1] = 0.5f;
+    crosspointValues[2][2] = 0.7f;
+    auto cpm = std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues);
     auto cpmb = cpm->getSerializedMessage();
     auto cpmcpy = ControlParametersMessage(cpmb);
     auto test11 = cpmcpy.getInputMuteStates();
     auto test12 = cpmcpy.getOutputMuteStates();
     auto test13 = cpmcpy.getCrosspointStates();
+    auto test14 = cpmcpy.getCrosspointValues();
     jassert(test11 == inputMuteStates);
     jassert(test12 == outputMuteStates);
     jassert(test13 == crosspointStates);
+    jassert(test14 == crosspointValues);
 }
 #endif
 

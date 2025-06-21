@@ -45,7 +45,7 @@ void CrosspointsControlComponent::paint(Graphics& g)
 	g.fillAll(getLookAndFeel().findColour(ResizableWindow::backgroundColourId));
 }
 
-void CrosspointsControlComponent::setCrosspointEnabledValue(int input, int output, bool enabledState)
+void CrosspointsControlComponent::setCrosspointEnabledValue(std::uint16_t input, std::uint16_t output, bool enabledState)
 {
     m_crosspointEnabledValues[input][output] = enabledState;
     if (1 == m_crosspointComponent.count(input) && 1 == m_crosspointComponent.at(input).count(output) && m_crosspointComponent.at(input).at(output))
@@ -54,7 +54,7 @@ void CrosspointsControlComponent::setCrosspointEnabledValue(int input, int outpu
     repaint();
 }
 
-void CrosspointsControlComponent::setCrosspointFactorValue(int input, int output, float factor)
+void CrosspointsControlComponent::setCrosspointFactorValue(std::uint16_t input, std::uint16_t output, float factor)
 {
     m_crosspointFactorValues[input][output] = factor;
     if (1 == m_crosspointComponent.count(input) && 1 == m_crosspointComponent.at(input).count(output) && m_crosspointComponent.at(input).at(output))
@@ -63,25 +63,25 @@ void CrosspointsControlComponent::setCrosspointFactorValue(int input, int output
     repaint();
 }
 
-void CrosspointsControlComponent::setIOCount(int inputCount, int outputCount)
+void CrosspointsControlComponent::setIOCount(std::uint16_t inputCount, std::uint16_t outputCount)
 {
     if (m_ioCount != std::make_pair(inputCount, outputCount))
     {
         m_ioCount = std::make_pair(inputCount, outputCount);
-        DBG(__FUNCTION__ << " " << inputCount << " " << outputCount);
+        DBG(__FUNCTION__ << " " << int(inputCount) << " " << int(outputCount));
 
-        std::function<void(int, int)> initCrosspoint = [=](int input, int output) {
-            DBG(__FUNCTION__ << " " << input << " " << output);
+        std::function<void(std::uint16_t, std::uint16_t)> initCrosspoint = [=](std::uint16_t input, std::uint16_t output) {
+            DBG(__FUNCTION__ << " " << int(input) << " " << int(output));
             m_crosspointEnabledValues[input][output] = false;
             m_crosspointFactorValues[input][output] = 1.0f;
             m_crosspointComponent[input][output] = std::make_unique<CrosspointComponent>(std::make_pair(input, output));
             m_crosspointComponent[input][output]->onCheckedChanged = [=](bool checkedState, CrosspointComponent* sender) {
-                if (nullptr != sender)
-                    crosspointEnabledChange(sender->getIdent().first, sender->getIdent().second, checkedState);
+                if (nullptr != sender && CrosspointComponent::CrosspointIdent(-1, -1) != sender->getIdent())
+                    crosspointEnabledChange(std::uint16_t(sender->getIdent().first), std::uint16_t(sender->getIdent().second), checkedState);
             };
             m_crosspointComponent[input][output]->onFactorChanged = [=](float factor, CrosspointComponent* sender) {
-                if (nullptr != sender)
-                    crosspointFactorChange(sender->getIdent().first, sender->getIdent().second, factor);
+                if (nullptr != sender && CrosspointComponent::CrosspointIdent(-1, -1) != sender->getIdent())
+                    crosspointFactorChange(std::uint16_t(sender->getIdent().first), std::uint16_t(sender->getIdent().second), factor);
             };
             addAndMakeVisible(m_crosspointComponent[input][output].get());
 
@@ -97,18 +97,18 @@ void CrosspointsControlComponent::setIOCount(int inputCount, int outputCount)
         m_matrixGrid.templateRows.clear();
         m_crosspointComponent.clear();
 
-        for (int i = 1; i <= inputCount; i++)
+        for (std::uint16_t i = 1; i <= inputCount; i++)
         {
             if (1 != m_crosspointComponent.count(i))
             {
-                for (int o = 1; o <= outputCount; o++)
+                for (std::uint16_t o = 1; o <= outputCount; o++)
                     initCrosspoint(i, o);
             }
             else
             {
                 if (1 != m_crosspointComponent.at(i).count(outputCount))
                 {
-                    for (int o = 1; o <= outputCount; o++)
+                    for (std::uint16_t o = 1; o <= outputCount; o++)
                     {
                         if (1 != m_crosspointComponent.at(i).count(o))
                             initCrosspoint(i, o);
@@ -117,9 +117,9 @@ void CrosspointsControlComponent::setIOCount(int inputCount, int outputCount)
             }
         }
 
-        for (int o = 1; o <= outputCount; o++)
+        for (std::uint16_t o = 1; o <= outputCount; o++)
         {
-            for (int i = 1; i <= inputCount; i++)
+            for (std::uint16_t i = 1; i <= inputCount; i++)
             {
                 if (m_crosspointComponent.at(i).at(o))
                     m_matrixGrid.items.add(juce::GridItem(m_crosspointComponent.at(i).at(o).get()));
