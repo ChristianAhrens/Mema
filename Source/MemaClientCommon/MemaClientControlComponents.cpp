@@ -65,14 +65,24 @@ const std::map<std::uint16_t, bool>& MemaClientControlComponentBase::getOutputMu
     return m_outputMuteStates;
 }
 
-void MemaClientControlComponentBase::setCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>& crosspointStates)
+void MemaClientControlComponentBase::setCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& crosspointStates)
 {
     m_crosspointStates = crosspointStates;
 }
 
-const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>& MemaClientControlComponentBase::getCrosspointStates()
+const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& MemaClientControlComponentBase::getCrosspointStates()
 {
     return m_crosspointStates;
+}
+
+void MemaClientControlComponentBase::setCrosspointValues(const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues)
+{
+    m_crosspointValues = crosspointValues;
+}
+
+const std::map<std::uint16_t, std::map<std::uint16_t, float>>& MemaClientControlComponentBase::getCrosspointValues()
+{
+    return m_crosspointValues;
 }
 
 const juce::String MemaClientControlComponentBase::getClientControlParametersAsString()
@@ -110,13 +120,14 @@ const juce::String MemaClientControlComponentBase::getOutputMuteParametersAsStri
 const juce::String MemaClientControlComponentBase::getCrosspointParametersAsString()
 {
     auto controlParametersStr = juce::String("Crosspoints:\n");
+    auto crosspointValues = getCrosspointValues();
     for (auto const& crosspointstateFKV : getCrosspointStates())
     {
         auto in = int(crosspointstateFKV.first);
         for (auto const& crosspointstateSKV : crosspointstateFKV.second)
         {
             auto out = int(crosspointstateSKV.first);
-            controlParametersStr << in << "." << out << ":" << (crosspointstateSKV.second.first ? "on" : "off") << "(" << crosspointstateSKV.second.second << ");";
+            controlParametersStr << in << "." << out << ":" << (crosspointstateSKV.second ? "on" : "off") << "(" << crosspointValues[in][out] << ");";
         }
         controlParametersStr << "\n";
     }
@@ -362,17 +373,22 @@ void FaderbankControlComponent::rebuildCrosspointControls()
                     //juce::Decibels::gainToDecibels(1.0, static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())),
                     //0.1);
                 m_crosspointGainSliders.at(i)->onValueChange = [this, i] {
-                    auto crosspointStates = std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>();
+                    auto crosspointStates = std::map<std::uint16_t, std::map<std::uint16_t, bool>>();
+                    auto crosspointValues = std::map<std::uint16_t, std::map<std::uint16_t, float>>();
                     //auto faderValue = juce::Decibels::decibelsToGain(m_crosspointGainSliders.at(i)->getValue(), static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB()));
                     auto faderValue = m_crosspointGainSliders.at(i)->getValue();
                     auto faderState = (faderValue != 0.0);
                     auto in = std::uint16_t(i + 1);
                     auto out = std::uint16_t(m_currentIOChannel.second);
-                    crosspointStates[in][out] = std::make_pair(faderState, float(faderValue));
+                    crosspointStates[in][out] = faderState;
+                    crosspointValues[in][out] = float(faderValue);
                     if (onCrosspointStatesChanged)
                         onCrosspointStatesChanged(crosspointStates);
+                    if (onCrosspointValuesChanged)
+                        onCrosspointValuesChanged(crosspointValues);
                     addCrosspointStates(crosspointStates);
-                    };
+                    addCrosspointValues(crosspointValues);
+                };
                 addAndMakeVisible(m_crosspointGainSliders.at(i).get());
                 m_crosspointsControlsGrid->items.add(juce::GridItem(m_crosspointGainSliders.at(i).get()));
             }
@@ -383,9 +399,11 @@ void FaderbankControlComponent::rebuildCrosspointControls()
             {
                 auto in = std::uint16_t(i + 1);
                 auto out = std::uint16_t(m_currentIOChannel.second);
-                auto crosspointState = (getCrosspointStates().count(in) != 0 && getCrosspointStates().at(in).count(out) != 0) ? getCrosspointStates().at(in).at(out) : std::make_pair(false, 0.0f);
+                auto crosspointState = (getCrosspointStates().count(in) != 0 && getCrosspointStates().at(in).count(out) != 0) ? getCrosspointStates().at(in).at(out) : false;
+                auto crosspointValue = (getCrosspointValues().count(in) != 0 && getCrosspointValues().at(in).count(out) != 0) ? getCrosspointValues().at(in).at(out) : 0.0f;
+                m_crosspointGainSliders.at(i)->setEnabled(crosspointState);
                 //m_crosspointGainSliders.at(i)->setValue(juce::Decibels::gainToDecibels(double(crosspointState.second), static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())), juce::dontSendNotification);
-                m_crosspointGainSliders.at(i)->setValue(double(crosspointState.second), juce::dontSendNotification);
+                m_crosspointGainSliders.at(i)->setValue(double(crosspointValue), juce::dontSendNotification);
                 m_crosspointGainSliders.at(i)->setVisible(true);
             }
         }
@@ -413,17 +431,22 @@ void FaderbankControlComponent::rebuildCrosspointControls()
                     //juce::Decibels::gainToDecibels(1.0, static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())),
                     //0.1);
                 m_crosspointGainSliders.at(o)->onValueChange = [this, o] {
-                    auto crosspointStates = std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>();
+                    auto crosspointStates = std::map<std::uint16_t, std::map<std::uint16_t, bool>>();
+                    auto crosspointValues = std::map<std::uint16_t, std::map<std::uint16_t, float>>();
                     //auto faderValue = juce::Decibels::decibelsToGain(m_crosspointGainSliders.at(o)->getValue(), static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB()));
                     auto faderValue = m_crosspointGainSliders.at(o)->getValue();
                     auto faderState = (faderValue != 0.0);
                     auto in = std::uint16_t(m_currentIOChannel.second);
                     auto out = std::uint16_t(o + 1);
-                    crosspointStates[in][out] = std::make_pair(faderState, float(faderValue));
+                    crosspointStates[in][out] = faderState;
+                    crosspointValues[in][out] = float(faderValue);
                     if (onCrosspointStatesChanged)
                         onCrosspointStatesChanged(crosspointStates);
+                    if (onCrosspointValuesChanged)
+                        onCrosspointValuesChanged(crosspointValues);
                     addCrosspointStates(crosspointStates);
-                    };
+                    addCrosspointValues(crosspointValues);
+                };
                 addAndMakeVisible(m_crosspointGainSliders.at(o).get());
                 m_crosspointsControlsGrid->items.add(juce::GridItem(m_crosspointGainSliders.at(o).get()));
 
@@ -435,9 +458,11 @@ void FaderbankControlComponent::rebuildCrosspointControls()
             {
                 auto in = std::uint16_t(m_currentIOChannel.second);
                 auto out = std::uint16_t(o + 1);
-                auto crosspointState = ((getCrosspointStates().count(in) != 0) != 0 && getCrosspointStates().at(in).count(out) != 0) ? getCrosspointStates().at(in).at(out) : std::make_pair(false, 0.0f);
+                auto crosspointState = ((getCrosspointStates().count(in) != 0) != 0 && getCrosspointStates().at(in).count(out) != 0) ? getCrosspointStates().at(in).at(out) : false;
+                auto crosspointValue = ((getCrosspointValues().count(in) != 0) != 0 && getCrosspointValues().at(in).count(out) != 0) ? getCrosspointValues().at(in).at(out) : 0.0f;
+                m_crosspointGainSliders.at(o)->setEnabled(crosspointState);
                 //m_crosspointGainSliders.at(o)->setValue(juce::Decibels::gainToDecibels(double(crosspointState.second), static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())), juce::dontSendNotification);
-                m_crosspointGainSliders.at(o)->setValue(double(crosspointState.second), juce::dontSendNotification);
+                m_crosspointGainSliders.at(o)->setValue(double(crosspointValue), juce::dontSendNotification);
                 m_crosspointGainSliders.at(o)->setVisible(true);
             }
         }
@@ -476,7 +501,7 @@ void FaderbankControlComponent::setOutputMuteStates(const std::map<std::uint16_t
     DBG(juce::String(__FUNCTION__) << " " << getOutputMuteParametersAsString());
 }
 
-void FaderbankControlComponent::setCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>& crosspointStates)
+void FaderbankControlComponent::setCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& crosspointStates)
 {
     MemaClientControlComponentBase::setCrosspointStates(crosspointStates);
 
@@ -485,13 +510,33 @@ void FaderbankControlComponent::setCrosspointStates(const std::map<std::uint16_t
     DBG(juce::String(__FUNCTION__) << " " << getCrosspointParametersAsString());
 }
 
-void FaderbankControlComponent::addCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>& crosspointStates)
+void FaderbankControlComponent::setCrosspointValues(const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues)
+{
+    MemaClientControlComponentBase::setCrosspointValues(crosspointValues);
+
+    updateCrosspointFaderValues();
+
+    DBG(juce::String(__FUNCTION__) << " " << getCrosspointParametersAsString());
+}
+
+void FaderbankControlComponent::addCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& crosspointStates)
 {
     auto crosspointStatesCpy = getCrosspointStates();
 
     for (auto const& crosspointStateKV : crosspointStates)
         crosspointStatesCpy[crosspointStateKV.first] = crosspointStateKV.second;
-    MemaClientControlComponentBase::setCrosspointStates(crosspointStates);
+    MemaClientControlComponentBase::setCrosspointStates(crosspointStatesCpy);
+
+    DBG(juce::String(__FUNCTION__) << " " << getCrosspointParametersAsString());
+}
+
+void FaderbankControlComponent::addCrosspointValues(const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues)
+{
+    auto crosspointValuesCpy = getCrosspointValues();
+
+    for (auto const& crosspointValueKV : crosspointValues)
+        crosspointValuesCpy[crosspointValueKV.first] = crosspointValueKV.second;
+    MemaClientControlComponentBase::setCrosspointValues(crosspointValuesCpy);
 
     DBG(juce::String(__FUNCTION__) << " " << getCrosspointParametersAsString());
 }
@@ -531,6 +576,7 @@ void FaderbankControlComponent::selectIOChannel(const ControlDirection& directio
 void FaderbankControlComponent::updateCrosspointFaderValues()
 {
     auto& crosspointStates = getCrosspointStates();
+    auto crosspointValues = getCrosspointValues();
     for (auto const& crosspointStateIKV : crosspointStates)
     {
         auto& in = crosspointStateIKV.first;
@@ -538,14 +584,21 @@ void FaderbankControlComponent::updateCrosspointFaderValues()
         {
             auto& out = crosspointStateIOKV.first;
             auto& state = crosspointStateIOKV.second;
+            auto& value = crosspointValues[in][out];
 
             auto i = in - 1;
             auto o = out - 1;
 
             if (ControlDirection::Input == m_currentIOChannel.first && in == m_currentIOChannel.second && m_crosspointGainSliders.size() > o)
-                m_crosspointGainSliders.at(o)->setValue((state.first ? state.second : 0.0), juce::dontSendNotification);
+            {
+                m_crosspointGainSliders.at(o)->setEnabled(state);
+                m_crosspointGainSliders.at(o)->setValue(value, juce::dontSendNotification);
+            }
             if (ControlDirection::Output == m_currentIOChannel.first && out == m_currentIOChannel.second && m_crosspointGainSliders.size() > i)
-                m_crosspointGainSliders.at(i)->setValue((state.first ? state.second : 0.0), juce::dontSendNotification);
+            {
+                m_crosspointGainSliders.at(i)->setEnabled(state);
+                m_crosspointGainSliders.at(i)->setValue(value, juce::dontSendNotification);
+            }
         }
     }
 }

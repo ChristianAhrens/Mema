@@ -64,10 +64,11 @@ private:
     RunningStatus m_runningStatus = RunningStatus::Inactive;
     static constexpr int sc_connectionTimeout = 5000; // 5s running before attempt is considered failed
 
-    std::pair<int, int>                                                         m_currentIOCount = { 0, 0 };
-    std::map<std::uint16_t, bool>                                               m_inputMuteStates = {};
-    std::map<std::uint16_t, bool>                                               m_outputMuteStates = {};
-    std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>    m_crosspointStates = {};
+    std::pair<int, int>                                     m_currentIOCount = { 0, 0 };
+    std::map<std::uint16_t, bool>                           m_inputMuteStates = {};
+    std::map<std::uint16_t, bool>                           m_outputMuteStates = {};
+    std::map<std::uint16_t, std::map<std::uint16_t, bool>>  m_crosspointStates = {};
+    std::map<std::uint16_t, std::map<std::uint16_t, float>> m_crosspointValues = {};
 
     float m_ioRatio = 0.5f;
 

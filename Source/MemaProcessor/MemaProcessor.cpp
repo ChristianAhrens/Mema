@@ -115,11 +115,12 @@ public:
 		{
 			std::map<std::uint16_t, bool> inputMuteStates;
 			std::map<std::uint16_t, bool> outputMuteStates;
-			std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>> crosspointStates;
+			std::map<std::uint16_t, std::map<std::uint16_t, bool>> crosspointStates;
+			std::map<std::uint16_t, std::map<std::uint16_t, float>> crosspointValues;
 
 			inputMuteStates[channel] = muteState;
 
-			m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates)->getSerializedMessage());
+			m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage());
 		}
 	};
 
@@ -129,11 +130,12 @@ public:
 		{
 			std::map<std::uint16_t, bool> inputMuteStates;
 			std::map<std::uint16_t, bool> outputMuteStates;
-			std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>> crosspointStates;
+			std::map<std::uint16_t, std::map<std::uint16_t, bool>> crosspointStates;
+			std::map<std::uint16_t, std::map<std::uint16_t, float>> crosspointValues;
 
 			outputMuteStates[channel] = muteState;
 
-			m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates)->getSerializedMessage());
+			m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage());
 		}
 	};
 
@@ -143,11 +145,12 @@ public:
 		{
 			std::map<std::uint16_t, bool> inputMuteStates;
 			std::map<std::uint16_t, bool> outputMuteStates;
-			std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>> crosspointStates;
+			std::map<std::uint16_t, std::map<std::uint16_t, bool>> crosspointStates;
+			std::map<std::uint16_t, std::map<std::uint16_t, float>> crosspointValues;
 
-			crosspointStates[input][output] = std::make_pair(enabledState, enabledState ? 1.0f : 0.0f);
+			crosspointStates[input][output] = enabledState;
 
-			m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates)->getSerializedMessage());
+			m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage());
 		}
 	};
 
@@ -157,11 +160,12 @@ public:
 		{
 			std::map<std::uint16_t, bool> inputMuteStates;
 			std::map<std::uint16_t, bool> outputMuteStates;
-			std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>> crosspointStates;
+			std::map<std::uint16_t, std::map<std::uint16_t, bool>> crosspointStates;
+			std::map<std::uint16_t, std::map<std::uint16_t, float>> crosspointValues;
 
-			crosspointStates[input][output] = std::make_pair(1.0f == factor, factor);
+			crosspointValues[input][output] = factor;
 
-			m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates)->getSerializedMessage());
+			m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage());
 		}
 	};
 
@@ -250,7 +254,7 @@ MemaProcessor::MemaProcessor(XmlElement* stateXml) :
 					success = success && m_networkServer->enqueueMessage(std::make_unique<AnalyzerParametersMessage>(int(getSampleRate()), getBlockSize())->getSerializedMessage());
 					success = success && m_networkServer->enqueueMessage(std::make_unique<ReinitIOCountMessage>(m_inputChannelCount, m_outputChannelCount)->getSerializedMessage());
 					success = success && m_networkServer->enqueueMessage(std::make_unique<EnvironmentParametersMessage>(juce::Desktop::getInstance().isDarkModeActive() ? JUCEAppBasics::CustomLookAndFeel::PS_Dark : JUCEAppBasics::CustomLookAndFeel::PS_Light)->getSerializedMessage());
-					success = success && m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(m_inputMuteStates, m_outputMuteStates, m_matrixCrosspointValues)->getSerializedMessage());
+					success = success && m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(m_inputMuteStates, m_outputMuteStates, m_matrixCrosspointStates, m_matrixCrosspointValues)->getSerializedMessage());
 					if (!success)
 						m_networkServer->cleanupDeadConnections();
 				}
@@ -329,12 +333,14 @@ std::unique_ptr<juce::XmlElement> MemaProcessor::createStateXml()
 
 	std::map<std::uint16_t, bool> inputMuteStates;
 	std::map<std::uint16_t, bool> outputMuteStates;
-	std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>> matrixCrosspointValues;
+	std::map<std::uint16_t, std::map<std::uint16_t, bool>> matrixCrosspointStates;
+	std::map<std::uint16_t, std::map<std::uint16_t, float>> matrixCrosspointValues;
 	{
 		// copy the processing relevant variables to not block audio thread during all the xml handling
 		const ScopedLock sl(m_audioDeviceIOCallbackLock);
 		inputMuteStates = m_inputMuteStates;
 		outputMuteStates = m_outputMuteStates;
+		matrixCrosspointStates = m_matrixCrosspointStates;
 		matrixCrosspointValues = m_matrixCrosspointValues;
 	}
 
@@ -354,9 +360,9 @@ std::unique_ptr<juce::XmlElement> MemaProcessor::createStateXml()
 
 	auto crosspointGainsElm = std::make_unique<juce::XmlElement>(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::CROSSPOINTGAINS));
 	juce::StringArray cgainstatestr;
-	for (auto const& insKV : matrixCrosspointValues)
+	for (auto const& insKV : matrixCrosspointStates)
 		for (auto const& outsKV : insKV.second)
-			cgainstatestr.add(juce::String(insKV.first) + "," + juce::String(outsKV.first) + "," + juce::String(outsKV.second.first ? 1 : 0) + "," + juce::String(outsKV.second.second)); // "in,out,enabled,gain;"
+			cgainstatestr.add(juce::String(insKV.first) + "," + juce::String(outsKV.first) + "," + juce::String(outsKV.second ? 1 : 0) + "," + juce::String(matrixCrosspointValues[insKV.first][outsKV.first])); // "in,out,enabled,gain;"
 	crosspointGainsElm->addTextElement(cgainstatestr.joinIntoString(";"));
 	stateXml->addChildElement(crosspointGainsElm.release());
 
@@ -428,7 +434,8 @@ bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
 
 	std::map<std::uint16_t, bool> inputMuteStates;
 	std::map<std::uint16_t, bool> outputMuteStates;
-	std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>> matrixCrosspointValues;
+	std::map<std::uint16_t, std::map<std::uint16_t, bool>> matrixCrosspointStates;
+	std::map<std::uint16_t, std::map<std::uint16_t, float>> matrixCrosspointValues;
 	auto inputMutesElm = stateXml->getChildByName(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::INPUTMUTES));
 	if (nullptr != inputMutesElm)
 	{
@@ -468,7 +475,10 @@ bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
 			cgainstatestra.addTokens(cgainstatestr, ",", "");
 			jassert(4 == cgainstatestra.size());
 			if (4 == cgainstatestra.size())
-				matrixCrosspointValues[std::uint16_t(cgainstatestra[0].getIntValue())][std::uint16_t(cgainstatestra[1].getIntValue())] = std::make_pair(1 == std::uint16_t(cgainstatestra[2].getIntValue()), cgainstatestra[3].getFloatValue());
+			{
+				matrixCrosspointStates[std::uint16_t(cgainstatestra[0].getIntValue())][std::uint16_t(cgainstatestra[1].getIntValue())] = 1 == std::uint16_t(cgainstatestra[2].getIntValue());
+				matrixCrosspointValues[std::uint16_t(cgainstatestra[0].getIntValue())][std::uint16_t(cgainstatestra[1].getIntValue())] = cgainstatestra[3].getFloatValue();
+			}
 		}
 	}
 	{
@@ -476,6 +486,7 @@ bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
 		const ScopedLock sl(m_audioDeviceIOCallbackLock);
 		m_inputMuteStates = inputMuteStates;
 		m_outputMuteStates = outputMuteStates;
+		m_matrixCrosspointStates = matrixCrosspointStates;
 		m_matrixCrosspointValues = matrixCrosspointValues;
 	}
 
@@ -608,18 +619,31 @@ void MemaProcessor::initializeCrosspointCommander(MemaCrosspointCommander* comma
 {
 	if (nullptr != commander)
 	{
-		const ScopedLock sl(m_audioDeviceIOCallbackLock);
-		for (auto const& matrixCrosspointValKV : m_matrixCrosspointValues)
+		auto matrixCrosspointStates = std::map<std::uint16_t, std::map<std::uint16_t, bool>>();
+		auto matrixCrosspointValues = std::map<std::uint16_t, std::map<std::uint16_t, float>>();
+		{
+			const ScopedLock sl(m_audioDeviceIOCallbackLock);
+			matrixCrosspointStates = m_matrixCrosspointStates;
+			matrixCrosspointValues = m_matrixCrosspointValues;
+		}
+		for (auto const& matrixCrosspointStateKV : matrixCrosspointStates)
+		{
+			for (auto const& matrixCrosspointStateNodeKV : matrixCrosspointStateKV.second)
+			{
+				auto& input = matrixCrosspointStateKV.first;
+				auto& output = matrixCrosspointStateNodeKV.first;
+				auto& enabled = matrixCrosspointStateNodeKV.second;
+				commander->setCrosspointEnabledValue(input, output, enabled);
+			}
+		}
+		for (auto const& matrixCrosspointValKV : matrixCrosspointValues)
 		{
 			for (auto const& matrixCrosspointValNodeKV : matrixCrosspointValKV.second)
 			{
 				auto& input = matrixCrosspointValKV.first;
 				auto& output = matrixCrosspointValNodeKV.first;
 				auto& val = matrixCrosspointValNodeKV.second;
-				auto& enabled = val.first;
-				auto& factor = val.second;
-				commander->setCrosspointEnabledValue(input, output, enabled);
-				commander->setCrosspointFactorValue(input, output, factor);
+				commander->setCrosspointFactorValue(input, output, val);
 			}
 		}
 	}
@@ -676,8 +700,6 @@ void MemaProcessor::setInputMuteState(std::uint16_t inputChannelNumber, bool mut
 		m_inputMuteStates[inputChannelNumber] = muted;
 	}
 
-	// sending to connected clients T.B.D.
-
 	setTimedConfigurationDumpPending();
 }
 
@@ -686,9 +708,9 @@ bool MemaProcessor::getMatrixCrosspointEnabledValue(std::uint16_t inputNumber, s
     jassert(inputNumber > 0 && outputNumber > 0);
 	{
 		const ScopedLock sl(m_audioDeviceIOCallbackLock);
-		if (m_matrixCrosspointValues.count(inputNumber) != 0)
-			if (m_matrixCrosspointValues.at(inputNumber).count(outputNumber) != 0)
-				return m_matrixCrosspointValues.at(inputNumber).at(outputNumber).first;
+		if (m_matrixCrosspointStates.count(inputNumber) != 0)
+			if (m_matrixCrosspointStates.at(inputNumber).count(outputNumber) != 0)
+				return m_matrixCrosspointStates.at(inputNumber).at(outputNumber);
 	}
 	jassertfalse;
 	return false;
@@ -706,10 +728,8 @@ void MemaProcessor::setMatrixCrosspointEnabledValue(std::uint16_t inputNumber, s
 
 	{
 		const ScopedLock sl(m_audioDeviceIOCallbackLock);
-		m_matrixCrosspointValues[inputNumber][outputNumber].first = enabled;
+		m_matrixCrosspointStates[inputNumber][outputNumber] = enabled;
 	}
-
-	// sending to connected clients T.B.D.
 
 	setTimedConfigurationDumpPending();
 }
@@ -721,7 +741,7 @@ float MemaProcessor::getMatrixCrosspointFactorValue(std::uint16_t inputNumber, s
 		const ScopedLock sl(m_audioDeviceIOCallbackLock);
 		if (m_matrixCrosspointValues.count(inputNumber) != 0)
 			if (m_matrixCrosspointValues.at(inputNumber).count(outputNumber) != 0)
-				return m_matrixCrosspointValues.at(inputNumber).at(outputNumber).second;
+				return m_matrixCrosspointValues.at(inputNumber).at(outputNumber);
 	}
 	jassertfalse;
 	return 0.0f;
@@ -739,10 +759,8 @@ void MemaProcessor::setMatrixCrosspointFactorValue(std::uint16_t inputNumber, st
 
 	{
 		const ScopedLock sl(m_audioDeviceIOCallbackLock);
-		m_matrixCrosspointValues[inputNumber][outputNumber].second = factor;
+		m_matrixCrosspointValues[inputNumber][outputNumber] = factor;
 	}
-
-	// sending to connected clients T.B.D.
 
 	setTimedConfigurationDumpPending();
 }
@@ -768,8 +786,6 @@ void MemaProcessor::setOutputMuteState(std::uint16_t outputChannelNumber, bool m
 		const ScopedLock sl(m_audioDeviceIOCallbackLock);
 		m_outputMuteStates[outputChannelNumber] = muted;
 	}
-
-	// sending to connected clients T.B.D.
 
 	setTimedConfigurationDumpPending();
 }
@@ -1014,13 +1030,12 @@ void MemaProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMes
 	{
 		for (std::uint16_t outputIdx = 0; outputIdx < m_outputChannelCount; outputIdx++)
 		{
-			if (m_matrixCrosspointValues.count(inputIdx + 1) != 0)
+			if (0 != m_matrixCrosspointStates.count(inputIdx + 1) && 0 != m_matrixCrosspointValues.count(inputIdx + 1))
 			{
-				if (m_matrixCrosspointValues[inputIdx + 1].count(outputIdx + 1) != 0)
+				if (0 != m_matrixCrosspointStates[inputIdx + 1].count(outputIdx + 1) && 0 != m_matrixCrosspointValues[inputIdx + 1].count(outputIdx + 1))
 				{
-					auto& crosspointValues = m_matrixCrosspointValues.at(inputIdx + 1).at(outputIdx + 1);
-					auto& enabled = crosspointValues.first;
-					auto& factor = crosspointValues.second;
+					auto& enabled = m_matrixCrosspointStates.at(inputIdx + 1).at(outputIdx + 1);
+					auto& factor = m_matrixCrosspointValues.at(inputIdx + 1).at(outputIdx + 1);
 					auto gain = !enabled ? 0.0f : factor;
 					processedBuffer.addFrom(outputIdx, 0, buffer.getReadPointer(inputIdx), buffer.getNumSamples(), gain);
 				}
@@ -1109,17 +1124,25 @@ void MemaProcessor::handleMessage(const Message& message)
 	{
 		DBG(juce::String(__FUNCTION__) << " i:" << cpm->getInputMuteStates().size() << " o:" << cpm->getOutputMuteStates().size() << " c:" << cpm->getCrosspointStates().size());
 		for (auto const& inputMuteState : cpm->getInputMuteStates())
-			setInputMuteState(inputMuteState.first, inputMuteState.second);
+			setInputMuteState(inputMuteState.first, inputMuteState.second, static_cast<MemaInputCommander*>(m_networkCommanderWrapper.get()));
 		for (auto const& outputMuteState : cpm->getOutputMuteStates())
-			setOutputMuteState(outputMuteState.first, outputMuteState.second);
+			setOutputMuteState(outputMuteState.first, outputMuteState.second, static_cast<MemaOutputCommander*>(m_networkCommanderWrapper.get()));
 		for (auto const& crosspointStateKV : cpm->getCrosspointStates())
 		{
 			auto& inputNumber = crosspointStateKV.first;
 			for (auto const& crosspointOStateKV : crosspointStateKV.second)
 			{
 				auto& outputNumber = crosspointOStateKV.first;
-				setMatrixCrosspointEnabledValue(inputNumber, outputNumber, crosspointOStateKV.second.first);
-				setMatrixCrosspointFactorValue(inputNumber, outputNumber, crosspointOStateKV.second.second);
+				setMatrixCrosspointEnabledValue(inputNumber, outputNumber, crosspointOStateKV.second, static_cast<MemaCrosspointCommander*>(m_networkCommanderWrapper.get()));
+			}
+		}
+		for (auto const& crosspointValueKV : cpm->getCrosspointValues())
+		{
+			auto& inputNumber = crosspointValueKV.first;
+			for (auto const& crosspointOValueKV : crosspointValueKV.second)
+			{
+				auto& outputNumber = crosspointOValueKV.first;
+				setMatrixCrosspointFactorValue(inputNumber, outputNumber, crosspointOValueKV.second, static_cast<MemaCrosspointCommander*>(m_networkCommanderWrapper.get()));
 			}
 		}
 
@@ -1311,13 +1334,15 @@ void MemaProcessor::initializeCtrlValues(int inputCount, int outputCount)
 {
 	std::map<std::uint16_t, bool> inputMuteStates;
 	std::map<std::uint16_t, bool> outputMuteStates;
-	std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>> matrixCrosspointValues;
+	std::map<std::uint16_t, std::map<std::uint16_t, bool>> matrixCrosspointStates;
+	std::map<std::uint16_t, std::map<std::uint16_t, float>> matrixCrosspointValues;
 	{
 		// copy the processing relevant variables to not block audio thread during all the xml handling
 		const ScopedLock sl(m_audioDeviceIOCallbackLock);
 		inputMuteStates = m_inputMuteStates;
 		outputMuteStates = m_outputMuteStates;
 		matrixCrosspointValues = m_matrixCrosspointValues;
+		matrixCrosspointStates = m_matrixCrosspointStates;
 	}
 
 	auto inputChannelCount = std::uint16_t((inputCount > s_minInputsCount) ? inputCount : s_minInputsCount);
@@ -1348,8 +1373,8 @@ void MemaProcessor::initializeCtrlValues(int inputCount, int outputCount)
 			{
 				if (crosspointCommander != reinterpret_cast<MemaCrosspointCommander*>(&crosspointCommander))
 				{
-					crosspointCommander->setCrosspointEnabledValue(in, out, matrixCrosspointValues[in][out].first);
-					crosspointCommander->setCrosspointFactorValue(in, out, matrixCrosspointValues[in][out].second);
+					crosspointCommander->setCrosspointEnabledValue(in, out, matrixCrosspointStates[in][out]);
+					crosspointCommander->setCrosspointFactorValue(in, out, matrixCrosspointValues[in][out]);
 				}
 			}
 		}

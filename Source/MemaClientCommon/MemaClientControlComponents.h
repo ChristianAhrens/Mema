@@ -47,15 +47,18 @@ public:
     virtual void setOutputMuteStates(const std::map<std::uint16_t, bool>& outputMuteStates);
     const std::map<std::uint16_t, bool>& getOutputMuteStates();
 
-    virtual void setCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>& crosspointStates);
-    const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>& getCrosspointStates();
+    virtual void setCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& crosspointStates);
+    const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& getCrosspointStates();
+
+    virtual void setCrosspointValues(const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues);
+    const std::map<std::uint16_t, std::map<std::uint16_t, float>>& getCrosspointValues();
 
     //==============================================================================
-    std::function<void(const std::map<std::uint16_t, bool>&)>                                               onInputMutesChanged;
-    std::function<void(const std::map<std::uint16_t, bool>&)>                                               onOutputMutesChanged;
-    std::function<void(const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>&)>    onCrosspointStatesChanged;
+    std::function<void(const std::map<std::uint16_t, bool>&)>                           onInputMutesChanged;
+    std::function<void(const std::map<std::uint16_t, bool>&)>                           onOutputMutesChanged;
+    std::function<void(const std::map<std::uint16_t, std::map<std::uint16_t, bool>>&)>  onCrosspointStatesChanged;
+    std::function<void(const std::map<std::uint16_t, std::map<std::uint16_t, float>>&)> onCrosspointValuesChanged;
 
-protected:
     //==============================================================================
     const juce::String getClientControlParametersAsString();
     const juce::String getIOCountParametersAsString();
@@ -65,10 +68,11 @@ protected:
 
 private:
     //==============================================================================
-    std::pair<int, int>                                                         m_ioCount = { 0, 0 };
-    std::map<std::uint16_t, bool>                                               m_inputMuteStates = {};
-    std::map<std::uint16_t, bool>                                               m_outputMuteStates = {};
-    std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>    m_crosspointStates = {};
+    std::pair<int, int>                                     m_ioCount = { 0, 0 };
+    std::map<std::uint16_t, bool>                           m_inputMuteStates = {};
+    std::map<std::uint16_t, bool>                           m_outputMuteStates = {};
+    std::map<std::uint16_t, std::map<std::uint16_t, bool>>  m_crosspointStates = {};
+    std::map<std::uint16_t, std::map<std::uint16_t, float>> m_crosspointValues = {};
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MemaClientControlComponentBase)
 };
@@ -100,10 +104,12 @@ public:
     void setIOCount(const std::pair<int, int>& ioCount) override;
     void setInputMuteStates(const std::map<std::uint16_t, bool>& inputMuteStates) override;
     void setOutputMuteStates(const std::map<std::uint16_t, bool>& outputMuteStates) override;
-    void setCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>& crosspointStates) override;
+    void setCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& crosspointStates) override;
+    void setCrosspointValues(const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues) override;
 
     //==============================================================================
-    void addCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>& crosspointStates);
+    void addCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& crosspointStates);
+    void addCrosspointValues(const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues);
 
 protected:
     //==============================================================================

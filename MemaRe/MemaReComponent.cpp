@@ -28,22 +28,44 @@ MemaReComponent::MemaReComponent()
 {
     m_faderbankCtrlComponent = std::make_unique<Mema::FaderbankControlComponent>();
     m_faderbankCtrlComponent->onInputMutesChanged = [=](const std::map<std::uint16_t, bool>& inputMuteStates) {
+
+        DBG(juce::String(__FUNCTION__) << " " << m_faderbankCtrlComponent->getInputMuteParametersAsString());
+
         std::map<std::uint16_t, bool> outputMuteStates;
-        std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>> crosspointStates;
+        std::map<std::uint16_t, std::map<std::uint16_t, bool>> crosspointStates;
+        std::map<std::uint16_t, std::map<std::uint16_t, float>> crosspointValues;
         if (onMessageReadyToSend)
-            onMessageReadyToSend(std::make_unique<Mema::ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates)->getSerializedMessage());
+            onMessageReadyToSend(std::make_unique<Mema::ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage());
     };
     m_faderbankCtrlComponent->onOutputMutesChanged = [=](const std::map<std::uint16_t, bool>& outputMuteStates) {
+
+        DBG(juce::String(__FUNCTION__) << " " << m_faderbankCtrlComponent->getOutputMuteParametersAsString());
+
         std::map<std::uint16_t, bool> inputMuteStates;
-        std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>> crosspointStates;
+        std::map<std::uint16_t, std::map<std::uint16_t, bool>> crosspointStates;
+        std::map<std::uint16_t, std::map<std::uint16_t, float>> crosspointValues;
         if (onMessageReadyToSend)
-            onMessageReadyToSend(std::make_unique<Mema::ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates)->getSerializedMessage());
+            onMessageReadyToSend(std::make_unique<Mema::ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage());
     };
-    m_faderbankCtrlComponent->onCrosspointStatesChanged = [=](const std::map<std::uint16_t, std::map<std::uint16_t, std::pair<bool, float>>>& crosspointStates) {
+    m_faderbankCtrlComponent->onCrosspointStatesChanged = [=](const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& crosspointStates) {
+
+        DBG(juce::String(__FUNCTION__) << " " << m_faderbankCtrlComponent->getCrosspointParametersAsString());
+
         std::map<std::uint16_t, bool> inputMuteStates;
         std::map<std::uint16_t, bool> outputMuteStates;
+        std::map<std::uint16_t, std::map<std::uint16_t, float>> crosspointValues;
         if (onMessageReadyToSend)
-            onMessageReadyToSend(std::make_unique<Mema::ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates)->getSerializedMessage());
+            onMessageReadyToSend(std::make_unique<Mema::ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage());
+    };
+    m_faderbankCtrlComponent->onCrosspointValuesChanged = [=](const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues) {
+
+        DBG(juce::String(__FUNCTION__) << " " << m_faderbankCtrlComponent->getCrosspointParametersAsString());
+
+        std::map<std::uint16_t, bool> inputMuteStates;
+        std::map<std::uint16_t, bool> outputMuteStates;
+        std::map<std::uint16_t, std::map<std::uint16_t, bool>> crosspointStates;
+        if (onMessageReadyToSend)
+            onMessageReadyToSend(std::make_unique<Mema::ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage());
     };
     addChildComponent(m_faderbankCtrlComponent.get());
 
@@ -178,6 +200,15 @@ void MemaReComponent::handleMessage(const Message& message)
                 m_faderbankCtrlComponent->setCrosspointStates(m_crosspointStates);
             if (m_panningCtrlComponent)
                 m_panningCtrlComponent->setCrosspointStates(m_crosspointStates);
+        }
+
+        m_crosspointValues = cpm->getCrosspointValues();
+        if (!m_crosspointValues.empty())
+        {
+            if (m_faderbankCtrlComponent)
+                m_faderbankCtrlComponent->setCrosspointValues(m_crosspointValues);
+            if (m_panningCtrlComponent)
+                m_panningCtrlComponent->setCrosspointValues(m_crosspointValues);
         }
 
         resized();
