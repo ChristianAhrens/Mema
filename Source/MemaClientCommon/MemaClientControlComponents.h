@@ -21,6 +21,14 @@
 #include <JuceHeader.h>
 
 
+/**
+ * Fwd. Decls.
+ */
+namespace JUCEAppBasics
+{
+    class ToggleStateSlider;
+}
+
 namespace Mema
 {
 
@@ -130,9 +138,9 @@ private:
     std::vector<std::unique_ptr<juce::TextButton>>  m_outputSelectButtons;
     std::vector<std::unique_ptr<juce::TextButton>>  m_outputMuteButtons;
 
-    std::unique_ptr<juce::Grid>                 m_crosspointsControlsGrid;
-    std::vector<std::unique_ptr<juce::Slider>>  m_crosspointGainSliders;
-    std::unique_ptr<juce::Label>                m_crosspointsNoSelectionLabel;
+    std::unique_ptr<juce::Grid>                                     m_crosspointsControlsGrid;
+    std::vector<std::unique_ptr<JUCEAppBasics::ToggleStateSlider>>  m_crosspointGainSliders;
+    std::unique_ptr<juce::Label>                                    m_crosspointsNoSelectionLabel;
 
     std::pair<ControlDirection, int>    m_currentIOChannel = { ControlDirection::None, 0 };
 

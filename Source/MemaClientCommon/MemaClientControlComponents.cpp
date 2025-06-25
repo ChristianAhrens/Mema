@@ -19,6 +19,7 @@
 #include "MemaClientControlComponents.h"
 
 #include <CustomLookAndFeel.h>
+#include <ToggleStateSlider.h>
 #include <MemaProcessor/ProcessorDataAnalyzer.h>
 
 
@@ -123,11 +124,11 @@ const juce::String MemaClientControlComponentBase::getCrosspointParametersAsStri
     auto crosspointValues = getCrosspointValues();
     for (auto const& crosspointstateFKV : getCrosspointStates())
     {
-        auto in = int(crosspointstateFKV.first);
+        auto& in = crosspointstateFKV.first;
         for (auto const& crosspointstateSKV : crosspointstateFKV.second)
         {
-            auto out = int(crosspointstateSKV.first);
-            controlParametersStr << in << "." << out << ":" << (crosspointstateSKV.second ? "on" : "off") << "(" << crosspointValues[in][out] << ");";
+            auto& out = crosspointstateSKV.first;
+            controlParametersStr << int(in) << "." << int(out) << ":" << (crosspointstateSKV.second ? "on" : "off") << "(" << crosspointValues[in][out] << ");";
         }
         controlParametersStr << "\n";
     }
@@ -197,14 +198,14 @@ void FaderbankControlComponent::lookAndFeelChanged()
         if (nullptr != m_inputSelectButtons.at(in))
             m_inputSelectButtons.at(in)->setColour(juce::TextButton::ColourIds::buttonOnColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
         if (ControlDirection::Output == m_currentIOChannel.first && m_crosspointGainSliders.size() > in && nullptr != m_crosspointGainSliders.at(in))
-            m_crosspointGainSliders.at(in)->setColour(juce::Slider::ColourIds::thumbColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
+            m_crosspointGainSliders.at(in)->setColour(juce::Slider::ColourIds::trackColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
     }
     for (auto out = 0; out < ioCount.second; out++)
     {
         if (nullptr != m_outputSelectButtons.at(out))
             m_outputSelectButtons.at(out)->setColour(juce::TextButton::ColourIds::buttonOnColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
         if (ControlDirection::Input == m_currentIOChannel.first && m_crosspointGainSliders.size() > out && nullptr != m_crosspointGainSliders.at(out))
-            m_crosspointGainSliders.at(out)->setColour(juce::Slider::ColourIds::thumbColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
+            m_crosspointGainSliders.at(out)->setColour(juce::Slider::ColourIds::trackColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
     }
 }
 
@@ -366,29 +367,34 @@ void FaderbankControlComponent::rebuildCrosspointControls()
 
             for (auto i = 0; i < ioCount.first; i++)
             {
-                m_crosspointGainSliders.at(i) = std::make_unique<juce::Slider>(juce::Slider::LinearVertical, juce::Slider::NoTextBox);
-                m_crosspointGainSliders.at(i)->setColour(juce::Slider::ColourIds::thumbColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
+                m_crosspointGainSliders.at(i) = std::make_unique<JUCEAppBasics::ToggleStateSlider>(juce::Slider::LinearVertical, juce::Slider::NoTextBox);
+                m_crosspointGainSliders.at(i)->setColour(juce::Slider::ColourIds::trackColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
                 m_crosspointGainSliders.at(i)->setRange(0.0, 1.0, 0.01);
                     //juce::Decibels::gainToDecibels(0.0, static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())),
                     //juce::Decibels::gainToDecibels(1.0, static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())),
                     //0.1);
                 m_crosspointGainSliders.at(i)->onValueChange = [this, i] {
-                    auto crosspointStates = std::map<std::uint16_t, std::map<std::uint16_t, bool>>();
                     auto crosspointValues = std::map<std::uint16_t, std::map<std::uint16_t, float>>();
                     //auto faderValue = juce::Decibels::decibelsToGain(m_crosspointGainSliders.at(i)->getValue(), static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB()));
                     auto faderValue = m_crosspointGainSliders.at(i)->getValue();
-                    auto faderState = (faderValue != 0.0);
+                    auto in = std::uint16_t(i + 1);
+                    auto out = std::uint16_t(m_currentIOChannel.second);
+                    crosspointValues[in][out] = float(faderValue);
+                    if (onCrosspointValuesChanged)
+                        onCrosspointValuesChanged(crosspointValues);
+                    addCrosspointValues(crosspointValues);
+                };
+                m_crosspointGainSliders.at(i)->onToggleStateChange = [this, i] {
+                    auto crosspointStates = std::map<std::uint16_t, std::map<std::uint16_t, bool>>();
+                    //auto faderValue = juce::Decibels::decibelsToGain(m_crosspointGainSliders.at(i)->getValue(), static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB()));
+                    auto faderState = m_crosspointGainSliders.at(i)->getToggleState();
                     auto in = std::uint16_t(i + 1);
                     auto out = std::uint16_t(m_currentIOChannel.second);
                     crosspointStates[in][out] = faderState;
-                    crosspointValues[in][out] = float(faderValue);
                     if (onCrosspointStatesChanged)
                         onCrosspointStatesChanged(crosspointStates);
-                    if (onCrosspointValuesChanged)
-                        onCrosspointValuesChanged(crosspointValues);
                     addCrosspointStates(crosspointStates);
-                    addCrosspointValues(crosspointValues);
-                };
+                    };
                 addAndMakeVisible(m_crosspointGainSliders.at(i).get());
                 m_crosspointsControlsGrid->items.add(juce::GridItem(m_crosspointGainSliders.at(i).get()));
             }
@@ -401,7 +407,7 @@ void FaderbankControlComponent::rebuildCrosspointControls()
                 auto out = std::uint16_t(m_currentIOChannel.second);
                 auto crosspointState = (getCrosspointStates().count(in) != 0 && getCrosspointStates().at(in).count(out) != 0) ? getCrosspointStates().at(in).at(out) : false;
                 auto crosspointValue = (getCrosspointValues().count(in) != 0 && getCrosspointValues().at(in).count(out) != 0) ? getCrosspointValues().at(in).at(out) : 0.0f;
-                m_crosspointGainSliders.at(i)->setEnabled(crosspointState);
+                m_crosspointGainSliders.at(i)->setToggleState(crosspointState, juce::dontSendNotification);
                 //m_crosspointGainSliders.at(i)->setValue(juce::Decibels::gainToDecibels(double(crosspointState.second), static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())), juce::dontSendNotification);
                 m_crosspointGainSliders.at(i)->setValue(double(crosspointValue), juce::dontSendNotification);
                 m_crosspointGainSliders.at(i)->setVisible(true);
@@ -424,29 +430,33 @@ void FaderbankControlComponent::rebuildCrosspointControls()
 
             for (auto o = 0; o < ioCount.second; o++)
             {
-                m_crosspointGainSliders.at(o) = std::make_unique<juce::Slider>(juce::Slider::LinearHorizontal, juce::Slider::NoTextBox);
-                m_crosspointGainSliders.at(o)->setColour(juce::Slider::ColourIds::thumbColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
+                m_crosspointGainSliders.at(o) = std::make_unique<JUCEAppBasics::ToggleStateSlider>(juce::Slider::LinearHorizontal, juce::Slider::NoTextBox);
+                m_crosspointGainSliders.at(o)->setColour(juce::Slider::ColourIds::trackColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
                 m_crosspointGainSliders.at(o)->setRange(0.0, 1.0, 0.01);
                     //juce::Decibels::gainToDecibels(0.0, static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())),
                     //juce::Decibels::gainToDecibels(1.0, static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())),
                     //0.1);
                 m_crosspointGainSliders.at(o)->onValueChange = [this, o] {
-                    auto crosspointStates = std::map<std::uint16_t, std::map<std::uint16_t, bool>>();
                     auto crosspointValues = std::map<std::uint16_t, std::map<std::uint16_t, float>>();
                     //auto faderValue = juce::Decibels::decibelsToGain(m_crosspointGainSliders.at(o)->getValue(), static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB()));
                     auto faderValue = m_crosspointGainSliders.at(o)->getValue();
-                    auto faderState = (faderValue != 0.0);
+                    auto in = std::uint16_t(m_currentIOChannel.second);
+                    auto out = std::uint16_t(o + 1);
+                    crosspointValues[in][out] = float(faderValue);
+                    if (onCrosspointValuesChanged)
+                        onCrosspointValuesChanged(crosspointValues);
+                    addCrosspointValues(crosspointValues);
+                };
+                m_crosspointGainSliders.at(o)->onToggleStateChange = [this, o] {
+                    auto crosspointStates = std::map<std::uint16_t, std::map<std::uint16_t, bool>>();
+                    auto faderState = m_crosspointGainSliders.at(o)->getToggleState();
                     auto in = std::uint16_t(m_currentIOChannel.second);
                     auto out = std::uint16_t(o + 1);
                     crosspointStates[in][out] = faderState;
-                    crosspointValues[in][out] = float(faderValue);
                     if (onCrosspointStatesChanged)
                         onCrosspointStatesChanged(crosspointStates);
-                    if (onCrosspointValuesChanged)
-                        onCrosspointValuesChanged(crosspointValues);
                     addCrosspointStates(crosspointStates);
-                    addCrosspointValues(crosspointValues);
-                };
+                    };
                 addAndMakeVisible(m_crosspointGainSliders.at(o).get());
                 m_crosspointsControlsGrid->items.add(juce::GridItem(m_crosspointGainSliders.at(o).get()));
 
@@ -460,7 +470,7 @@ void FaderbankControlComponent::rebuildCrosspointControls()
                 auto out = std::uint16_t(o + 1);
                 auto crosspointState = ((getCrosspointStates().count(in) != 0) != 0 && getCrosspointStates().at(in).count(out) != 0) ? getCrosspointStates().at(in).at(out) : false;
                 auto crosspointValue = ((getCrosspointValues().count(in) != 0) != 0 && getCrosspointValues().at(in).count(out) != 0) ? getCrosspointValues().at(in).at(out) : 0.0f;
-                m_crosspointGainSliders.at(o)->setEnabled(crosspointState);
+                m_crosspointGainSliders.at(o)->setToggleState(crosspointState, juce::dontSendNotification);
                 //m_crosspointGainSliders.at(o)->setValue(juce::Decibels::gainToDecibels(double(crosspointState.second), static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())), juce::dontSendNotification);
                 m_crosspointGainSliders.at(o)->setValue(double(crosspointValue), juce::dontSendNotification);
                 m_crosspointGainSliders.at(o)->setVisible(true);
@@ -591,12 +601,12 @@ void FaderbankControlComponent::updateCrosspointFaderValues()
 
             if (ControlDirection::Input == m_currentIOChannel.first && in == m_currentIOChannel.second && m_crosspointGainSliders.size() > o)
             {
-                m_crosspointGainSliders.at(o)->setEnabled(state);
+                m_crosspointGainSliders.at(o)->setToggleState(state, juce::dontSendNotification);
                 m_crosspointGainSliders.at(o)->setValue(value, juce::dontSendNotification);
             }
             if (ControlDirection::Output == m_currentIOChannel.first && out == m_currentIOChannel.second && m_crosspointGainSliders.size() > i)
             {
-                m_crosspointGainSliders.at(i)->setEnabled(state);
+                m_crosspointGainSliders.at(i)->setToggleState(state, juce::dontSendNotification);
                 m_crosspointGainSliders.at(i)->setValue(value, juce::dontSendNotification);
             }
         }

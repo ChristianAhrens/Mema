@@ -16,6 +16,10 @@
               file="../submodules/JUCE-AppBasics/Source/CustomLookAndFeel.cpp"/>
         <FILE id="JS6zlP" name="CustomLookAndFeel.h" compile="0" resource="0"
               file="../submodules/JUCE-AppBasics/Source/CustomLookAndFeel.h"/>
+        <FILE id="a8DrAO" name="ToggleStateSlider.cpp" compile="1" resource="0"
+              file="../submodules/JUCE-AppBasics/Source/ToggleStateSlider.cpp"/>
+        <FILE id="AxVeiO" name="ToggleStateSlider.h" compile="0" resource="0"
+              file="../submodules/JUCE-AppBasics/Source/ToggleStateSlider.h"/>
         <FILE id="iFIFTc" name="iOS_utils.cpp" compile="1" resource="0" file="../submodules/JUCE-AppBasics/Source/iOS_utils.cpp"/>
         <FILE id="u9384n" name="iOS_utils.h" compile="0" resource="0" file="../submodules/JUCE-AppBasics/Source/iOS_utils.h"/>
         <FILE id="l9NfyW" name="WebUpdateDetector.cpp" compile="1" resource="0"
