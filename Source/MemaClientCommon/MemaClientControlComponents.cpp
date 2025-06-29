@@ -140,13 +140,13 @@ FaderbankControlComponent::FaderbankControlComponent()
     : MemaClientControlComponentBase()
 {
     m_inputControlsGrid = std::make_unique<juce::Grid>();
-    m_inputControlsGrid->setGap(3_px);
+    m_inputControlsGrid->setGap(juce::Grid::Px(gap));
 
     m_outputControlsGrid = std::make_unique<juce::Grid>();
-    m_outputControlsGrid->setGap(3_px);
+    m_outputControlsGrid->setGap(juce::Grid::Px(gap));
 
     m_crosspointsControlsGrid = std::make_unique<juce::Grid>();
-    m_crosspointsControlsGrid->setGap(5_px);
+    m_crosspointsControlsGrid->setGap(juce::Grid::Px(gap));
     m_crosspointsNoSelectionLabel = std::make_unique<juce::Label>("NoSelectLabel", "Select a channel to control crosspoints.");
     m_crosspointsNoSelectionLabel->setJustificationType(juce::Justification::centred);
     addAndMakeVisible(m_crosspointsNoSelectionLabel.get());
@@ -172,8 +172,15 @@ void FaderbankControlComponent::resized()
 
     if (m_inputControlsGrid)
         m_inputControlsGrid->performLayout(inputControlBounds);
+    auto currentInputsWidth = (m_inputControlsGrid->getNumberOfColumns() * (rc_size + gap)) - gap;
+    if (crosspointControlBounds.getWidth() > currentInputsWidth)
+        crosspointControlBounds.setWidth(currentInputsWidth);
+
     if (m_outputControlsGrid)
         m_outputControlsGrid->performLayout(outputControlBounds);
+    auto currentOutputsHeight = (m_outputControlsGrid->getNumberOfRows() * (rc_size + gap)) - gap;
+    if (crosspointControlBounds.getHeight() > currentOutputsHeight)
+        crosspointControlBounds.setHeight(currentOutputsHeight);
 
     if (m_crosspointsControlsGrid && m_currentIOChannel.first != ControlDirection::None)
     {
@@ -188,6 +195,9 @@ void FaderbankControlComponent::resized()
         m_crosspointsNoSelectionLabel->setVisible(true);
         m_crosspointsNoSelectionLabel->setBounds(crosspointControlBounds);
     }
+
+    if (getWidth() < currentInputsWidth || getHeight() < currentOutputsHeight)
+        setSize(currentInputsWidth, currentOutputsHeight);
 }
 
 void FaderbankControlComponent::lookAndFeelChanged()
@@ -238,7 +248,7 @@ void FaderbankControlComponent::rebuildInputControls()
     {
         auto templateColums = juce::Array<juce::Grid::TrackInfo>();
         for (auto in = 0; in < ioCount.first; in++)
-            templateColums.add(juce::Grid::TrackInfo(juce::Grid::Fr(1)));
+            templateColums.add(juce::Grid::TrackInfo(juce::Grid::Px(rc_size)));
 
         m_inputMuteButtons.resize(ioCount.first);
         m_inputSelectButtons.resize(ioCount.first);
@@ -296,7 +306,7 @@ void FaderbankControlComponent::rebuildOutputControls()
     {
         auto templateRows = juce::Array<juce::Grid::TrackInfo>();
         for (auto out = 0; out < ioCount.second; out++)
-            templateRows.add(juce::Grid::TrackInfo(juce::Grid::Fr(1)));
+            templateRows.add(juce::Grid::TrackInfo(juce::Grid::Px(rc_size)));
 
         m_outputMuteButtons.resize(ioCount.second);
         m_outputSelectButtons.resize(ioCount.second);
@@ -353,7 +363,7 @@ void FaderbankControlComponent::rebuildCrosspointControls()
         {
             auto templateColums = juce::Array<juce::Grid::TrackInfo>();
             for (auto in = 0; in < ioCount.first; in++)
-                templateColums.add(juce::Grid::TrackInfo(juce::Grid::Fr(1)));
+                templateColums.add(juce::Grid::TrackInfo(juce::Grid::Px(rc_size)));
 
             m_crosspointGainSliders.resize(ioCount.first);
             m_crosspointsControlsGrid->items.clear();
@@ -415,7 +425,7 @@ void FaderbankControlComponent::rebuildCrosspointControls()
         {
             auto templateRows = juce::Array<juce::Grid::TrackInfo>();
             for (auto out = 0; out < ioCount.second; out++)
-                templateRows.add(juce::Grid::TrackInfo(juce::Grid::Fr(1)));
+                templateRows.add(juce::Grid::TrackInfo(juce::Grid::Px(rc_size)));
 
             m_crosspointGainSliders.resize(ioCount.second);
             m_crosspointsControlsGrid->items.clear();
@@ -610,7 +620,7 @@ void PanningControlComponent::paint(Graphics& g)
     g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::ColourIds::backgroundColourId));
 
     g.setColour(getLookAndFeel().findColour(juce::TextEditor::ColourIds::textColourId));
-    g.drawFittedText("Panning control not yet implemented.\n(Panning config is " + m_channelConfiguration.getSpeakerArrangementAsString() + ")\n\n" + getClientControlParametersAsString(), getLocalBounds().reduced(35), juce::Justification::topLeft, 24);
+    g.drawFittedText("Panning control not yet implemented.\n(Panning config is " + m_channelConfiguration.getSpeakerArrangementAsString() + ")\n\n" + getClientControlParametersAsString(), getLocalBounds().reduced(rc_size), juce::Justification::topLeft, 24);
 }
 
 void PanningControlComponent::resized()

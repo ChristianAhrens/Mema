@@ -35,6 +35,10 @@ namespace Mema
 class MemaClientControlComponentBase : public juce::Component
 {
 public:
+    static constexpr int gap = 3;
+    static constexpr int rc_size = 35;
+
+public:
     MemaClientControlComponentBase();
     virtual ~MemaClientControlComponentBase();
 
