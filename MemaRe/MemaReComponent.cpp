@@ -175,7 +175,8 @@ void MemaReComponent::handleMessage(const Message& message)
     }
     else if (auto const cpm = dynamic_cast<const Mema::ControlParametersMessage*>(&message))
     {
-        m_inputMuteStates = cpm->getInputMuteStates();
+        for (auto const& inputMuteState : cpm->getInputMuteStates())
+            m_inputMuteStates[inputMuteState.first] = inputMuteState.second;
         if (!m_inputMuteStates.empty())
         {
             if (m_faderbankCtrlComponent)
@@ -184,7 +185,8 @@ void MemaReComponent::handleMessage(const Message& message)
                 m_panningCtrlComponent->setInputMuteStates(m_inputMuteStates);
         }
 
-        m_outputMuteStates = cpm->getOutputMuteStates();
+        for (auto const& outputMuteState : cpm->getOutputMuteStates())
+            m_outputMuteStates[outputMuteState.first] = outputMuteState.second;
         if (!m_outputMuteStates.empty())
         {
             if (m_faderbankCtrlComponent)
@@ -193,7 +195,9 @@ void MemaReComponent::handleMessage(const Message& message)
                 m_panningCtrlComponent->setOutputMuteStates(m_outputMuteStates);
         }
 
-        m_crosspointStates = cpm->getCrosspointStates();
+        for (auto const& cpsIKV : cpm->getCrosspointStates())
+            for (auto const& cpsOKV : cpsIKV.second)
+                m_crosspointStates[cpsIKV.first][cpsOKV.first] = cpsOKV.second;
         if (!m_crosspointStates.empty())
         {
             if (m_faderbankCtrlComponent)
@@ -202,7 +206,9 @@ void MemaReComponent::handleMessage(const Message& message)
                 m_panningCtrlComponent->setCrosspointStates(m_crosspointStates);
         }
 
-        m_crosspointValues = cpm->getCrosspointValues();
+        for (auto const& cpvIKV : cpm->getCrosspointValues())
+            for (auto const& cpvOKV : cpvIKV.second)
+                m_crosspointValues[cpvIKV.first][cpvOKV.first] = cpvOKV.second;
         if (!m_crosspointValues.empty())
         {
             if (m_faderbankCtrlComponent)
