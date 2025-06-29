@@ -80,11 +80,7 @@ public:
     //==============================================================================
     void setChecked(bool checked)
     {
-        if (m_checked != checked)
-        {
-            m_factor = 1.0f;
-            m_checked = checked;
-        }
+        m_checked = checked;
         repaint();
     }
     void toggleChecked()
