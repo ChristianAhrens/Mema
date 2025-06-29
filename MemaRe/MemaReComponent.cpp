@@ -28,9 +28,6 @@ MemaReComponent::MemaReComponent()
 {
     m_faderbankCtrlComponent = std::make_unique<Mema::FaderbankControlComponent>();
     m_faderbankCtrlComponent->onInputMutesChanged = [=](const std::map<std::uint16_t, bool>& inputMuteStates) {
-
-        DBG(juce::String(__FUNCTION__) << " " << m_faderbankCtrlComponent->getInputMuteParametersAsString());
-
         std::map<std::uint16_t, bool> outputMuteStates;
         std::map<std::uint16_t, std::map<std::uint16_t, bool>> crosspointStates;
         std::map<std::uint16_t, std::map<std::uint16_t, float>> crosspointValues;
@@ -38,9 +35,6 @@ MemaReComponent::MemaReComponent()
             onMessageReadyToSend(std::make_unique<Mema::ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage());
     };
     m_faderbankCtrlComponent->onOutputMutesChanged = [=](const std::map<std::uint16_t, bool>& outputMuteStates) {
-
-        DBG(juce::String(__FUNCTION__) << " " << m_faderbankCtrlComponent->getOutputMuteParametersAsString());
-
         std::map<std::uint16_t, bool> inputMuteStates;
         std::map<std::uint16_t, std::map<std::uint16_t, bool>> crosspointStates;
         std::map<std::uint16_t, std::map<std::uint16_t, float>> crosspointValues;
@@ -48,9 +42,6 @@ MemaReComponent::MemaReComponent()
             onMessageReadyToSend(std::make_unique<Mema::ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage());
     };
     m_faderbankCtrlComponent->onCrosspointStatesChanged = [=](const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& crosspointStates) {
-
-        DBG(juce::String(__FUNCTION__) << " " << m_faderbankCtrlComponent->getCrosspointParametersAsString());
-
         std::map<std::uint16_t, bool> inputMuteStates;
         std::map<std::uint16_t, bool> outputMuteStates;
         std::map<std::uint16_t, std::map<std::uint16_t, float>> crosspointValues;
@@ -58,9 +49,6 @@ MemaReComponent::MemaReComponent()
             onMessageReadyToSend(std::make_unique<Mema::ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage());
     };
     m_faderbankCtrlComponent->onCrosspointValuesChanged = [=](const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues) {
-
-        DBG(juce::String(__FUNCTION__) << " " << m_faderbankCtrlComponent->getCrosspointParametersAsString());
-
         std::map<std::uint16_t, bool> inputMuteStates;
         std::map<std::uint16_t, bool> outputMuteStates;
         std::map<std::uint16_t, std::map<std::uint16_t, bool>> crosspointStates;

@@ -220,8 +220,6 @@ void FaderbankControlComponent::setIOCount(const std::pair<int, int>& ioCount)
     MemaClientControlComponentBase::setIOCount(ioCount);
 
     rebuildControls();
-
-    DBG(juce::String(__FUNCTION__) << " " << getIOCountParametersAsString());
 }
 
 void FaderbankControlComponent::rebuildControls()
@@ -238,7 +236,6 @@ void FaderbankControlComponent::rebuildInputControls()
 
     if (ioCount.first != m_inputSelectButtons.size() || ioCount.first != m_inputMuteButtons.size())
     {
-        DBG(juce::String(__FUNCTION__) + " rebuilding input controls");
         auto templateColums = juce::Array<juce::Grid::TrackInfo>();
         for (auto in = 0; in < ioCount.first; in++)
             templateColums.add(juce::Grid::TrackInfo(juce::Grid::Fr(1)));
@@ -297,7 +294,6 @@ void FaderbankControlComponent::rebuildOutputControls()
 
     if (ioCount.second != m_outputSelectButtons.size() || ioCount.second != m_outputMuteButtons.size())
     {
-        DBG(juce::String(__FUNCTION__) + " rebuilding output controls");
         auto templateRows = juce::Array<juce::Grid::TrackInfo>();
         for (auto out = 0; out < ioCount.second; out++)
             templateRows.add(juce::Grid::TrackInfo(juce::Grid::Fr(1)));
@@ -355,7 +351,6 @@ void FaderbankControlComponent::rebuildCrosspointControls()
     {
         if (ioCount.first != m_crosspointGainSliders.size())
         {
-            DBG(juce::String(__FUNCTION__) + " rebuilding crosspoint controls for output");
             auto templateColums = juce::Array<juce::Grid::TrackInfo>();
             for (auto in = 0; in < ioCount.first; in++)
                 templateColums.add(juce::Grid::TrackInfo(juce::Grid::Fr(1)));
@@ -418,7 +413,6 @@ void FaderbankControlComponent::rebuildCrosspointControls()
     {
         if (ioCount.second != m_crosspointGainSliders.size())
         {
-            DBG(juce::String(__FUNCTION__) + " rebuilding crosspoint controls for input");
             auto templateRows = juce::Array<juce::Grid::TrackInfo>();
             for (auto out = 0; out < ioCount.second; out++)
                 templateRows.add(juce::Grid::TrackInfo(juce::Grid::Fr(1)));
@@ -491,8 +485,6 @@ void FaderbankControlComponent::setInputMuteStates(const std::map<std::uint16_t,
         if (m_inputMuteButtons.size() > i && nullptr != m_inputMuteButtons.at(i))
             m_inputMuteButtons.at(i)->setToggleState(state, juce::dontSendNotification);
     }
-
-    DBG(juce::String(__FUNCTION__) << " " << getInputMuteParametersAsString());
 }
 
 void FaderbankControlComponent::setOutputMuteStates(const std::map<std::uint16_t, bool>& outputMuteStates)
@@ -507,8 +499,6 @@ void FaderbankControlComponent::setOutputMuteStates(const std::map<std::uint16_t
         if (m_outputMuteButtons.size() > o && nullptr != m_outputMuteButtons.at(o))
             m_outputMuteButtons.at(o)->setToggleState(state, juce::dontSendNotification);
     }
-
-    DBG(juce::String(__FUNCTION__) << " " << getOutputMuteParametersAsString());
 }
 
 void FaderbankControlComponent::setCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& crosspointStates)
@@ -516,8 +506,6 @@ void FaderbankControlComponent::setCrosspointStates(const std::map<std::uint16_t
     MemaClientControlComponentBase::setCrosspointStates(crosspointStates);
 
     updateCrosspointFaderValues();
-
-    DBG(juce::String(__FUNCTION__) << " " << getCrosspointParametersAsString());
 }
 
 void FaderbankControlComponent::setCrosspointValues(const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues)
@@ -525,8 +513,6 @@ void FaderbankControlComponent::setCrosspointValues(const std::map<std::uint16_t
     MemaClientControlComponentBase::setCrosspointValues(crosspointValues);
 
     updateCrosspointFaderValues();
-
-    DBG(juce::String(__FUNCTION__) << " " << getCrosspointParametersAsString());
 }
 
 void FaderbankControlComponent::addCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& crosspointStates)
@@ -536,8 +522,6 @@ void FaderbankControlComponent::addCrosspointStates(const std::map<std::uint16_t
     for (auto const& crosspointStateKV : crosspointStates)
         crosspointStatesCpy[crosspointStateKV.first] = crosspointStateKV.second;
     MemaClientControlComponentBase::setCrosspointStates(crosspointStatesCpy);
-
-    DBG(juce::String(__FUNCTION__) << " " << getCrosspointParametersAsString());
 }
 
 void FaderbankControlComponent::addCrosspointValues(const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues)
@@ -547,8 +531,6 @@ void FaderbankControlComponent::addCrosspointValues(const std::map<std::uint16_t
     for (auto const& crosspointValueKV : crosspointValues)
         crosspointValuesCpy[crosspointValueKV.first] = crosspointValueKV.second;
     MemaClientControlComponentBase::setCrosspointValues(crosspointValuesCpy);
-
-    DBG(juce::String(__FUNCTION__) << " " << getCrosspointParametersAsString());
 }
 
 void FaderbankControlComponent::selectIOChannel(const ControlDirection& direction, int channel)
