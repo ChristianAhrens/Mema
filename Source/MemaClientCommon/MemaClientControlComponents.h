@@ -134,6 +134,11 @@ protected:
 
 private:
     //==============================================================================
+    std::unique_ptr<juce::Viewport>     m_horizontalScrollViewport;
+    std::unique_ptr<juce::Component>    m_horizontalScrollContainerComponent;
+    std::unique_ptr<juce::Viewport>     m_verticalScrollViewport;
+    std::unique_ptr<juce::Component>    m_verticalScrollContainerComponent;
+
     std::unique_ptr<juce::Grid>                     m_inputControlsGrid;
     std::vector<std::unique_ptr<juce::TextButton>>  m_inputSelectButtons;
     std::vector<std::unique_ptr<juce::TextButton>>  m_inputMuteButtons;
