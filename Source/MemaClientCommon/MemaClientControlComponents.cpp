@@ -406,6 +406,7 @@ void FaderbankControlComponent::rebuildCrosspointControls()
                 m_crosspointGainSliders.at(i)->setColour(juce::Slider::ColourIds::trackColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
                 m_crosspointGainSliders.at(i)->setRange(0.0, 1.0, 0.01);
                 m_crosspointGainSliders.at(i)->setTitle(juce::String(i + 1));
+                m_crosspointGainSliders.at(i)->displayValueConverter = [](double val) { return juce::String(juce::Decibels::gainToDecibels(val, static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())), 1) + " dB"; };
                     //juce::Decibels::gainToDecibels(0.0, static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())),
                     //juce::Decibels::gainToDecibels(1.0, static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())),
                     //0.1);
@@ -469,6 +470,7 @@ void FaderbankControlComponent::rebuildCrosspointControls()
                 m_crosspointGainSliders.at(o)->setColour(juce::Slider::ColourIds::trackColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
                 m_crosspointGainSliders.at(o)->setRange(0.0, 1.0, 0.01);
                 m_crosspointGainSliders.at(o)->setTitle(juce::String(o + 1));
+                m_crosspointGainSliders.at(o)->displayValueConverter = [](double val) { return juce::String(juce::Decibels::gainToDecibels(val, static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())), 1) + " dB"; };
                     //juce::Decibels::gainToDecibels(0.0, static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())),
                     //juce::Decibels::gainToDecibels(1.0, static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())),
                     //0.1);
