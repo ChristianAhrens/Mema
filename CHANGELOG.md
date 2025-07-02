@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+## [0.6.0] 2025-07-02
+### Added
+- Added new Mema client app - Mema.Re
+
+### Changed
+- Added service-to-connect to info to UI when clients are waiting to connect to Mema
+
+### Fixed
+- Fixed AudioBufferMessage data serialization when sending to clients
+
 ## [0.5.1] 2025-05-24
 ### Added
 - Added Mema.Mo persistent configuration to restore UI and connection state after restart or connection loss
