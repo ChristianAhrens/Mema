@@ -172,7 +172,7 @@ void FaderbankControlComponent::paint(Graphics& g)
 
 void FaderbankControlComponent::resized()
 {
-    auto ctrlsSize = 75;
+    auto ctrlsSize = 2 * (rc_size + gap) + scrollbarsize;
     auto currentInputsWidth = (m_inputControlsGrid->getNumberOfColumns() * (rc_size + gap)) - gap;
     auto currentOutputsHeight = (m_outputControlsGrid->getNumberOfRows() * (rc_size + gap)) - gap;
     auto crosspointControlBounds = getLocalBounds();
