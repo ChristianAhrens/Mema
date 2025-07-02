@@ -171,7 +171,7 @@
       </MODULEPATHS>
     </LINUX_MAKE>
     <XCODE_IPHONE targetFolder="Builds/iOS" smallIcon="fJPOo5" bigIcon="fJPOo5"
-                  customLaunchStoryboard="../Resources/Deployment/iOS/Launchscreen.storyboard"
+                  customLaunchStoryboard="../Resources/Deployment/iOS/Launchscreen-MemaRe.storyboard"
                   iosScreenOrientation="UIInterfaceOrientationLandscapeRight,UIInterfaceOrientationPortrait"
                   iPadScreenOrientation="UIInterfaceOrientationLandscapeLeft,UIInterfaceOrientationLandscapeRight,UIInterfaceOrientationPortrait,UIInterfaceOrientationPortraitUpsideDown"
                   UIStatusBarHidden="1" networkingMulticast="1" iosDevelopmentTeamID="SB7Q3PP4FQ"
