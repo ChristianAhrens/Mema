@@ -24,8 +24,8 @@
 
 
 class MemaMoComponent;
-class MemaDiscoverComponent;
-class MemaConnectingComponent;
+class MemaClientDiscoverComponent;
+class MemaClientConnectingComponent;
 class AboutComponent;
 
 class MainComponent :   public juce::Component,
@@ -142,8 +142,8 @@ private:
     std::unique_ptr<InterprocessConnectionImpl>                             m_networkConnection;
 
     std::unique_ptr<MemaMoComponent>                                        m_monitorComponent;
-    std::unique_ptr<MemaDiscoverComponent>                                  m_discoverComponent;
-    std::unique_ptr<MemaConnectingComponent>                                m_connectingComponent;
+    std::unique_ptr<MemaClientDiscoverComponent>                                  m_discoverComponent;
+    std::unique_ptr<MemaClientConnectingComponent>                                m_connectingComponent;
 
     std::unique_ptr<juce::DrawableButton>                                   m_settingsButton;
     std::map<int, std::pair<std::string, int>>                              m_settingsItems;

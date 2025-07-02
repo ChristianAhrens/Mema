@@ -20,8 +20,8 @@
 
 #include "CustomPopupMenuComponent.h"
 #include "MemaMoComponent.h"
-#include "MemaDiscoverComponent.h"
-#include "MemaConnectingComponent.h"
+#include "MemaClientCommon/MemaClientDiscoverComponent.h"
+#include "MemaClientCommon/MemaClientConnectingComponent.h"
 
 #include <AboutComponent.h>
 #include <CustomLookAndFeel.h>
@@ -49,6 +49,14 @@ MainComponent::MainComponent()
     m_networkConnection = std::make_unique<InterprocessConnectionImpl>();
     m_networkConnection->onConnectionMade = [=]() {
         DBG(__FUNCTION__);
+
+        std::vector<Mema::SerializableMessage::SerializableMessageType> desiredTrafficTypes = {
+            Mema::SerializableMessage::EnvironmentParameters, 
+            Mema::SerializableMessage::ReinitIOCount, 
+            Mema::SerializableMessage::AnalyzerParameters, 
+            Mema::SerializableMessage::AudioInputBuffer, 
+            Mema::SerializableMessage::AudioOutputBuffer };
+        m_networkConnection->sendMessage(std::make_unique<Mema::DataTrafficTypeSelectionMessage>(desiredTrafficTypes)->getSerializedMessage());
 
         setStatus(Status::Monitoring);
     };
@@ -88,7 +96,7 @@ MainComponent::MainComponent()
     };
     addAndMakeVisible(m_monitorComponent.get());
 
-    m_discoverComponent = std::make_unique<MemaDiscoverComponent>();
+    m_discoverComponent = std::make_unique<MemaClientDiscoverComponent>();
     m_discoverComponent->onServiceSelected = [=](const juce::NetworkServiceDiscovery::Service& selectedService) {
         m_selectedService = selectedService;
 
@@ -99,10 +107,10 @@ MainComponent::MainComponent()
     };
     addAndMakeVisible(m_discoverComponent.get());
 
-    m_connectingComponent = std::make_unique<MemaConnectingComponent>();
+    m_connectingComponent = std::make_unique<MemaClientConnectingComponent>();
     addAndMakeVisible(m_connectingComponent.get());
 
-    m_aboutComponent = std::make_unique<AboutComponent>(BinaryData::MemaMoRect_png, BinaryData::MemaMoCanvas_pngSize);
+    m_aboutComponent = std::make_unique<AboutComponent>(BinaryData::MemaMoRect_png, BinaryData::MemaMoRect_pngSize);
     m_aboutButton = std::make_unique<juce::DrawableButton>("About", juce::DrawableButton::ButtonStyle::ImageFitted);
     m_aboutButton->setTooltip(juce::String("About") + juce::JUCEApplication::getInstance()->getApplicationName());
     m_aboutButton->onClick = [this] {
@@ -194,93 +202,8 @@ MainComponent::MainComponent()
             m_discoverComponent->setDiscoveredServices(m_availableServices->getServices());
     };
 
-#ifdef NIX//DEBUG
-    auto inputs = 11;
-    auto outputs = 12;
-    auto buffer = juce::AudioBuffer<float>();
-    auto refSample = 11.11f;
-    auto sr = 48000;
-    auto mespb = 256;
-
-    auto apm = std::make_unique<Mema::AnalyzerParametersMessage>(sr, mespb);
-    auto apmb = apm->getSerializedMessage();
-    auto apmcpy = Mema::AnalyzerParametersMessage(apmb);
-    auto test5 = apmcpy.getSampleRate();
-    auto test6 = apmcpy.getMaximumExpectedSamplesPerBlock();
-    jassert(test5 == sr);
-    jassert(test6 == mespb);
-
-    auto rcm = std::make_unique<Mema::ReinitIOCountMessage>(inputs, outputs);
-    auto rcmb = rcm->getSerializedMessage();
-    auto rcmcpy = Mema::ReinitIOCountMessage(rcmb);
-    auto test7 = rcmcpy.getInputCount();
-    auto test8 = rcmcpy.getOutputCount();
-    jassert(test7 == inputs);
-    jassert(test8 == outputs);
-
-    auto channelCount = 2;
-    auto sampleCount = 6;
-    buffer.setSize(channelCount, sampleCount, false, true, false);
-    for (int i = 0; i < channelCount; i++)
-    {
-        for (int j = 0; j < sampleCount; j++)
-        {
-            buffer.setSample(i, j, ++refSample);
-        }
-    }
-    auto rrefSample1 = refSample;
-    auto aibm1 = std::make_unique<Mema::AudioInputBufferMessage>(buffer);
-    for (int i = channelCount - 1; i >= 0; i--)
-    {
-        for (int j = sampleCount - 1; j >= 0; j--)
-        {
-            auto test1 = aibm1->getAudioBuffer().getSample(i, j);
-            jassert(int(test1) == int(refSample));
-            refSample--;
-        }
-    }
-    auto aibmb1 = aibm1->getSerializedMessage();
-    auto aibmcpy1 = Mema::AudioInputBufferMessage(aibmb1);
-    for (int i = channelCount - 1; i >= 0; i--)
-    {
-        for (int j = sampleCount - 1; j >= 0; j--)
-        {
-            auto test1 = aibmcpy1.getAudioBuffer().getSample(i, j);
-            jassert(int(test1) == int(rrefSample1));
-            rrefSample1--;
-        }
-    }
-
-    buffer.setSize(channelCount, sampleCount, false, true, false);
-    for (int i = 0; i < channelCount; i++)
-    {
-        for (int j = 0; j < sampleCount; j++)
-        {
-            buffer.setSample(i, j, ++refSample);
-        }
-    }
-    auto rrefSample2 = refSample;
-    auto aibm2 = std::make_unique<Mema::AudioOutputBufferMessage>(buffer);
-    for (int i = channelCount - 1; i >= 0; i--)
-    {
-        for (int j = sampleCount - 1; j >= 0; j--)
-        {
-            auto test2 = aibm2->getAudioBuffer().getSample(i, j);
-            jassert(int(test2) == int(rrefSample2));
-            rrefSample2--;
-        }
-    }
-    auto aibmb2 = aibm2->getSerializedMessage();
-    auto aibmcpy2 = Mema::AudioOutputBufferMessage(aibmb2);
-    for (int i = channelCount - 1; i >= 0; i--)
-    {
-        for (int j = sampleCount - 1; j >= 0; j--)
-        {
-            auto test2 = aibmcpy2.getAudioBuffer().getSample(i, j);
-            jassert(int(test2) == int(refSample));
-            refSample--;
-        }
-    }
+#ifdef RUN_MESSAGE_TESTS
+    Mema::runTests();
 #endif
 
     setSize(400, 350);
@@ -571,6 +494,9 @@ const MainComponent::Status MainComponent::getStatus()
 
 void MainComponent::connectToMema()
 {
+    if (m_connectingComponent)
+        m_connectingComponent->setServiceDescription(m_selectedService.description);
+
     setStatus(Status::Connecting);
 
     timerCallback(); // avoid codeclones by manually trigger the timed connection attempt once

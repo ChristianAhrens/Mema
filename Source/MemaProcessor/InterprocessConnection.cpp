@@ -49,7 +49,7 @@ void InterprocessConnectionImpl::connectionLost()
 void InterprocessConnectionImpl::messageReceived(const MemoryBlock& message)
 {
     if (onMessageReceived)
-        onMessageReceived(message);
+        onMessageReceived(m_id, message);
 }
 
 int InterprocessConnectionImpl::getId()
@@ -170,7 +170,7 @@ const std::unique_ptr<InterprocessConnectionImpl>& InterprocessConnectionServerI
     return m_connections[id];
 }
 
-void InterprocessConnectionServerImpl::cleanupDeadConnections()
+const std::vector<int> InterprocessConnectionServerImpl::cleanupDeadConnections()
 {
     auto idsToErase = std::vector<int>();
     for (auto const& connection : m_connections)
@@ -182,13 +182,16 @@ void InterprocessConnectionServerImpl::cleanupDeadConnections()
         m_connections.erase(id);
         endMessageThread(id);
     }
+
+    return idsToErase;
 }
 
-bool InterprocessConnectionServerImpl::enqueueMessage(const MemoryBlock& message)
+bool InterprocessConnectionServerImpl::enqueueMessage(const MemoryBlock& message, std::vector<int> sendIds)
 {
     auto rVal = true;
     for (auto const& th : m_sendMessageThreads)
     {
+        if (sendIds.empty() || std::find(sendIds.begin(), sendIds.end(), th.first) != sendIds.end())
         {
             std::lock_guard<std::mutex> l(m_sendMessageMutexs[th.first]);
             m_sendMessageLists[th.first].push(message);
@@ -213,8 +216,11 @@ bool InterprocessConnectionServerImpl::enqueueMessage(const MemoryBlock& message
 
 InterprocessConnection* InterprocessConnectionServerImpl::createConnectionObject()
 {
-    m_connections[++m_connectionIdIter] = std::make_unique<InterprocessConnectionImpl>(m_connectionIdIter);
-    
+    m_connectionIdIter++;
+    m_connections[m_connectionIdIter] = std::make_unique<InterprocessConnectionImpl>(m_connectionIdIter);
+
+    DBG(juce::String(__FUNCTION__) << m_connectionIdIter);
+
     createMessageThread(m_connectionIdIter);
 
     m_connections[m_connectionIdIter]->onConnectionLost = [=](int /*connectionId*/) {

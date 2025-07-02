@@ -32,16 +32,17 @@ namespace Mema
 //==============================================================================
 class CrosspointComponent : public juce::Component
 {
-using crosspointIdent = std::pair<int, int>;
+public:
+    using CrosspointIdent = std::pair<int, int>;
 
-static constexpr auto pi = juce::MathConstants<float>::pi;
-static constexpr auto arcStartRad = 0.0f;
+    static constexpr auto pi = juce::MathConstants<float>::pi;
+    static constexpr auto arcStartRad = 0.0f;
 
 public:
-    CrosspointComponent(const crosspointIdent& ident) : juce::Component::Component() { m_ident = ident; }
+    CrosspointComponent(const CrosspointIdent& ident) : juce::Component::Component() { m_ident = ident; }
     ~CrosspointComponent() {}
 
-    const crosspointIdent& getIdent() { return m_ident; }
+    const CrosspointIdent& getIdent() { return m_ident; }
 
     //==============================================================================
     void paint(Graphics& g) override
@@ -79,11 +80,7 @@ public:
     //==============================================================================
     void setChecked(bool checked)
     {
-        if (m_checked != checked)
-        {
-            m_factor = 1.0f;
-            m_checked = checked;
-        }
+        m_checked = checked;
         repaint();
     }
     void toggleChecked()
@@ -146,7 +143,7 @@ public:
             }
 #endif
 
-            DBG(juce::String(__FUNCTION__) << " " << m_ident.first << "/" << m_ident.second << " new factor: " << m_tempFactorWhileDragging);
+            DBG(juce::String(__FUNCTION__) << " " << int(m_ident.first) << "/" << int(m_ident.second) << " new factor: " << m_tempFactorWhileDragging);
 
             repaint();
 
@@ -162,7 +159,7 @@ private:
     bool m_checked = false;
     float m_factor = 1.0f;
     float m_tempFactorWhileDragging = 1.0f;
-    crosspointIdent m_ident = { -1, -1 };
+    CrosspointIdent m_ident = { -1, -1 };
     bool m_isDragging = false;
 };
 
@@ -179,21 +176,21 @@ public:
     void resized() override;
 
     //==============================================================================
-    void setCrosspointEnabledValue(int input, int output, bool enabledState) override;
-    void setCrosspointFactorValue(int input, int output, float factor) override;
+    void setCrosspointEnabledValue(std::uint16_t input, std::uint16_t output, bool enabledState) override;
+    void setCrosspointFactorValue(std::uint16_t input, std::uint16_t output, float factor) override;
 
     //==============================================================================
     std::function<void()> onBoundsRequirementChange;
     juce::Rectangle<int> getRequiredSize();
 
     //==============================================================================
-    void setIOCount(int inputCount, int outputCount) override;
+    void setIOCount(std::uint16_t inputCount, std::uint16_t outputCount) override;
 
 private:
     //==============================================================================
-    std::map<int, std::map<int, bool>> m_crosspointEnabledValues;
-    std::map<int, std::map<int, float>> m_crosspointFactorValues;
-    std::map<int, std::map<int, std::unique_ptr<CrosspointComponent>>> m_crosspointComponent;
+    std::map<std::uint16_t, std::map<std::uint16_t, bool>> m_crosspointEnabledValues;
+    std::map<std::uint16_t, std::map<std::uint16_t, float>> m_crosspointFactorValues;
+    std::map<std::uint16_t, std::map<std::uint16_t, std::unique_ptr<CrosspointComponent>>> m_crosspointComponent;
 
     //==============================================================================
     juce::Grid  m_matrixGrid;

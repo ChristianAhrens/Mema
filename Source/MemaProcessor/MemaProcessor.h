@@ -20,6 +20,7 @@
 
 #include <JuceHeader.h>
 
+#include "MemaMessages.h"
 #include "ProcessorDataAnalyzer.h"
 #include "../MemaProcessorEditor/MemaProcessorEditor.h"
 #include "../MemaAppConfiguration.h"
@@ -34,6 +35,7 @@ class MemaChannelCommander;
 class MemaInputCommander;
 class MemaOutputCommander;
 class MemaCrosspointCommander;
+class MemaNetworkClientCommanderWrapper;
 #if JUCE_WINDOWS
 struct ServiceAdvertiser;
 #endif
@@ -69,11 +71,11 @@ public:
 };
 
 //==============================================================================
-class MemaProcessor :   public juce::AudioProcessor,
-					    public juce::AudioIODeviceCallback,
-                        public juce::MessageListener,
-                        public juce::ChangeListener,
-                        public MemaAppConfiguration::XmlConfigurableElement
+class MemaProcessor : public juce::AudioProcessor,
+    public juce::AudioIODeviceCallback,
+    public juce::MessageListener,
+    public juce::ChangeListener,
+    public MemaAppConfiguration::XmlConfigurableElement
 {
 public:
     MemaProcessor(XmlElement* stateXml);
@@ -101,19 +103,19 @@ public:
     void updateCommanders();
 
     //==============================================================================
-    bool getInputMuteState(int channelNumber);
-    void setInputMuteState(int channelNumber, bool muted, MemaChannelCommander* sender = nullptr);
-    
-    bool getMatrixCrosspointEnabledValue(int inputNumber, int outputNumber);
-    void setMatrixCrosspointEnabledValue(int inputNumber, int outputNumber, bool enabled, MemaChannelCommander* sender = nullptr);
+    bool getInputMuteState(std::uint16_t channelNumber);
+    void setInputMuteState(std::uint16_t channelNumber, bool muted, MemaChannelCommander* sender = nullptr);
 
-    float getMatrixCrosspointFactorValue(int inputNumber, int outputNumber);
-    void setMatrixCrosspointFactorValue(int inputNumber, int outputNumber, float factor, MemaChannelCommander* sender = nullptr);
+    bool getMatrixCrosspointEnabledValue(std::uint16_t inputNumber, std::uint16_t outputNumber);
+    void setMatrixCrosspointEnabledValue(std::uint16_t inputNumber, std::uint16_t outputNumber, bool enabled, MemaChannelCommander* sender = nullptr);
 
-    bool getOutputMuteState(int channelNumber);
-    void setOutputMuteState(int channelNumber, bool muted, MemaChannelCommander* sender = nullptr);
+    float getMatrixCrosspointFactorValue(std::uint16_t inputNumber, std::uint16_t outputNumber);
+    void setMatrixCrosspointFactorValue(std::uint16_t inputNumber, std::uint16_t outputNumber, float factor, MemaChannelCommander* sender = nullptr);
 
-    void setChannelCounts(int inputChannelCount, int outputChannelCount);
+    bool getOutputMuteState(std::uint16_t channelNumber);
+    void setOutputMuteState(std::uint16_t channelNumber, bool muted, MemaChannelCommander* sender = nullptr);
+
+    void setChannelCounts(std::uint16_t inputChannelCount, std::uint16_t outputChannelCount);
 
     //==============================================================================
     bool setPlugin(const juce::PluginDescription& pluginDescription);
@@ -156,13 +158,13 @@ public:
     void setStateInformation(const void* data, int sizeInBytes) override;
 
     //==============================================================================
-    void audioDeviceIOCallbackWithContext (const float* const* inputChannelData,
-                                           int numInputChannels,
-                                           float* const* outputChannelData,
-                                           int numOutputChannels,
-                                           int numSamples,
-                                           const AudioIODeviceCallbackContext& context) override;
-    
+    void audioDeviceIOCallbackWithContext(const float* const* inputChannelData,
+        int numInputChannels,
+        float* const* outputChannelData,
+        int numOutputChannels,
+        int numSamples,
+        const AudioIODeviceCallbackContext& context) override;
+
     void audioDeviceAboutToStart(AudioIODevice* device) override;
     void audioDeviceStopped() override;
 
@@ -180,7 +182,9 @@ public:
     void environmentChanged();
 
     void triggerIOUpdate();
-    void triggerConfigurationDump();
+
+    //==============================================================================
+    void setTrafficTypesForConnectionId(const std::vector<SerializableMessage::SerializableMessageType>& trafficTypes, int connectionId);
 
     //==============================================================================
     static constexpr int s_maxChannelCount = 64;
@@ -189,12 +193,20 @@ public:
     static constexpr int s_minInputsCount = 1;
     static constexpr int s_minOutputsCount = 1;
 
+    //==============================================================================
+    bool isTimedConfigurationDumpPending() { return m_timedConfigurationDumpPending; };
+    void setTimedConfigurationDumpPending() { m_timedConfigurationDumpPending = true; };
+    void resetTimedConfigurationDumpPending() { m_timedConfigurationDumpPending = false; };
+
 protected:
     //==============================================================================
     void initializeCtrlValues(int inputCount, int outputCount);
     void initializeCtrlValuesToUnity(int inputCount, int outputCount);
 
 private:
+    //==============================================================================
+    void sendMessageToClients(const MemoryBlock& messageMemoryBlock, const std::vector<int>& sendIds);
+
     //==============================================================================
     juce::String    m_Name;
 
@@ -216,15 +228,16 @@ private:
     std::vector<MemaCrosspointCommander*>   m_crosspointCommanders;
 
     //==============================================================================
-    std::map<int, bool> m_inputMuteStates;
-    std::map<int, bool> m_outputMuteStates;
+    std::map<std::uint16_t, bool> m_inputMuteStates;
+    std::map<std::uint16_t, bool> m_outputMuteStates;
 
     //==============================================================================
     int m_inputChannelCount{ 1 };
     int m_outputChannelCount{ 1 };
 
     //==============================================================================
-    std::map<int, std::map<int, std::pair<bool, float>>>  m_matrixCrosspointValues;
+    std::map<std::uint16_t, std::map<std::uint16_t, bool>>  m_matrixCrosspointStates;
+    std::map<std::uint16_t, std::map<std::uint16_t, float>>  m_matrixCrosspointValues;
 
     //==============================================================================
     std::unique_ptr<MemaProcessorEditor>  m_processorEditor;
@@ -242,7 +255,12 @@ private:
 #else
     std::unique_ptr<juce::NetworkServiceDiscovery::Advertiser>  m_serviceAdvertiser;
 #endif
-    std::unique_ptr<InterprocessConnectionServerImpl> m_networkServer;
+    std::shared_ptr<InterprocessConnectionServerImpl> m_networkServer;
+    std::unique_ptr<MemaNetworkClientCommanderWrapper> m_networkCommanderWrapper;
+    std::map<int, std::vector<SerializableMessage::SerializableMessageType>> m_trafficTypesPerConnection;
+
+    std::unique_ptr<juce::TimedCallback>   m_timedConfigurationDumper;
+    bool    m_timedConfigurationDumpPending = false;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MemaProcessor)
 };
