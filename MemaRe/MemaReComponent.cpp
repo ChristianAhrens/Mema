@@ -18,8 +18,6 @@
 
 #include "MemaReComponent.h"
 
-#include "MemaClientCommon/MemaClientControlComponents.h"
-
 #include <MemaProcessor/MemaMessages.h>
 #include <MemaProcessor/MemaProcessor.h>
 
@@ -60,21 +58,25 @@ MemaReComponent::MemaReComponent()
     m_panningCtrlComponent = std::make_unique<Mema::PanningControlComponent>();
     addChildComponent(m_panningCtrlComponent.get());
 
-    setOutputFaderbankCtrlActive();
+    setOutputFaderbankCtrlActive(Mema::FaderbankControlComponent::ControlsSize::S);
 }
 
 MemaReComponent::~MemaReComponent()
 {
 }
 
-void MemaReComponent::setOutputFaderbankCtrlActive()
+void MemaReComponent::setOutputFaderbankCtrlActive(const Mema::FaderbankControlComponent::ControlsSize& ctrlsSize)
 {
     auto resizeRequired = false;
     
-    if (m_faderbankCtrlComponent && !m_faderbankCtrlComponent->isVisible())
+    if (m_faderbankCtrlComponent)
     {
-        m_faderbankCtrlComponent->setVisible(true);
-        resizeRequired = true;
+        if (!m_faderbankCtrlComponent->isVisible())
+        {
+            m_faderbankCtrlComponent->setVisible(true);
+            resizeRequired = true;
+        }
+        m_faderbankCtrlComponent->setControlsSize(ctrlsSize);
     }
     if (m_panningCtrlComponent && m_panningCtrlComponent->isVisible())
     {

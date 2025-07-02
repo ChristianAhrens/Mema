@@ -20,11 +20,7 @@
 
 #include <JuceHeader.h>
 
-namespace Mema
-{
-    class FaderbankControlComponent;
-    class PanningControlComponent;
-}
+#include "MemaClientCommon/MemaClientControlComponents.h"
 
 class MemaReComponent :   public juce::Component, juce::MessageListener
 {
@@ -40,7 +36,7 @@ public:
     MemaReComponent();
     ~MemaReComponent() override;
 
-    void setOutputFaderbankCtrlActive();
+    void setOutputFaderbankCtrlActive(const Mema::FaderbankControlComponent::ControlsSize& ctrlsSize);
     void setOutputPanningCtrlActive(const juce::AudioChannelSet& channelConfiguration);
     void resetCtrl();
 

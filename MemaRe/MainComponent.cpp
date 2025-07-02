@@ -133,7 +133,9 @@ MainComponent::MainComponent()
     m_settingsItems[MemaReSettingsOption::LookAndFeel_Dark] = std::make_pair("Dark", 1);
     m_settingsItems[MemaReSettingsOption::LookAndFeel_Light] = std::make_pair("Light", 0);
     // default output visu is normal meterbridge
-    m_settingsItems[MemaReSettingsOption::OutputPanningType_RawChannels] = std::make_pair("Faderbank", 1);
+    m_settingsItems[MemaReSettingsOption::OutputPanningType_RawChannels_S] = std::make_pair("Faderbank (S)", 1);
+    m_settingsItems[MemaReSettingsOption::OutputPanningType_RawChannels_M] = std::make_pair("Faderbank (M)", 0);
+    m_settingsItems[MemaReSettingsOption::OutputPanningType_RawChannels_L] = std::make_pair("Faderbank (L)", 0);
     m_settingsItems[MemaReSettingsOption::OutputPanningType_LRS] = std::make_pair(juce::AudioChannelSet::createLRS().getDescription().toStdString(), 0);
     m_settingsItems[MemaReSettingsOption::OutputPanningType_LCRS] = std::make_pair(juce::AudioChannelSet::createLCRS().getDescription().toStdString(), 0);
     m_settingsItems[MemaReSettingsOption::OutputPanningType_5point0] = std::make_pair(juce::AudioChannelSet::create5point0().getDescription().toStdString(), 0);
@@ -358,68 +360,80 @@ void MainComponent::handleSettingsLookAndFeelMenuResult(int selectedId)
 void MainComponent::handleSettingsOutputPanningTypeMenuResult(int selectedId)
 {
     // helper internal function to avoid code clones
-    std::function<void(int, int, int, int, int, int, int, int, int, int)> setSettingsItemsCheckState = [=](int a, int b, int c, int d, int e, int f, int g, int h, int i, int j) {
-        m_settingsItems[MemaReSettingsOption::OutputPanningType_RawChannels].second = a;
-        m_settingsItems[MemaReSettingsOption::OutputPanningType_LRS].second = b;
-        m_settingsItems[MemaReSettingsOption::OutputPanningType_LCRS].second = c;
-        m_settingsItems[MemaReSettingsOption::OutputPanningType_5point0].second = d;
-        m_settingsItems[MemaReSettingsOption::OutputPanningType_5point1].second = e;
-        m_settingsItems[MemaReSettingsOption::OutputPanningType_5point1point2].second = f;
-        m_settingsItems[MemaReSettingsOption::OutputPanningType_7point0].second = g;
-        m_settingsItems[MemaReSettingsOption::OutputPanningType_7point1].second = h;
-        m_settingsItems[MemaReSettingsOption::OutputPanningType_7point1point4].second = i;
-        m_settingsItems[MemaReSettingsOption::OutputPanningType_9point1point6].second = j;
+    std::function<void(int, int, int, int, int, int, int, int, int, int, int, int)> setSettingsItemsCheckState = [=](int a, int b, int c, int d, int e, int f, int g, int h, int i, int j, int k, int l) {
+        m_settingsItems[MemaReSettingsOption::OutputPanningType_RawChannels_S].second = a;
+        m_settingsItems[MemaReSettingsOption::OutputPanningType_RawChannels_M].second = b;
+        m_settingsItems[MemaReSettingsOption::OutputPanningType_RawChannels_L].second = c;
+        m_settingsItems[MemaReSettingsOption::OutputPanningType_LRS].second = d;
+        m_settingsItems[MemaReSettingsOption::OutputPanningType_LCRS].second = e;
+        m_settingsItems[MemaReSettingsOption::OutputPanningType_5point0].second = f;
+        m_settingsItems[MemaReSettingsOption::OutputPanningType_5point1].second = g;
+        m_settingsItems[MemaReSettingsOption::OutputPanningType_5point1point2].second = h;
+        m_settingsItems[MemaReSettingsOption::OutputPanningType_7point0].second = i;
+        m_settingsItems[MemaReSettingsOption::OutputPanningType_7point1].second = j;
+        m_settingsItems[MemaReSettingsOption::OutputPanningType_7point1point4].second = k;
+        m_settingsItems[MemaReSettingsOption::OutputPanningType_9point1point6].second = l;
     };
 
     switch (selectedId)
     {
-    case MemaReSettingsOption::OutputPanningType_RawChannels:
-        setSettingsItemsCheckState(1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    case MemaReSettingsOption::OutputPanningType_RawChannels_S:
+        setSettingsItemsCheckState(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         if (m_remoteComponent)
-            m_remoteComponent->setOutputFaderbankCtrlActive();
+            m_remoteComponent->setOutputFaderbankCtrlActive(Mema::FaderbankControlComponent::ControlsSize::S);
+        break;
+    case MemaReSettingsOption::OutputPanningType_RawChannels_M:
+        setSettingsItemsCheckState(0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        if (m_remoteComponent)
+            m_remoteComponent->setOutputFaderbankCtrlActive(Mema::FaderbankControlComponent::ControlsSize::M);
+        break;
+    case MemaReSettingsOption::OutputPanningType_RawChannels_L:
+        setSettingsItemsCheckState(0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        if (m_remoteComponent)
+            m_remoteComponent->setOutputFaderbankCtrlActive(Mema::FaderbankControlComponent::ControlsSize::L);
         break;
     case MemaReSettingsOption::OutputPanningType_LRS:
-        setSettingsItemsCheckState(0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::createLRS());
         break;
     case MemaReSettingsOption::OutputPanningType_LCRS:
-        setSettingsItemsCheckState(0, 0, 1, 0, 0, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::createLCRS());
         break;
     case MemaReSettingsOption::OutputPanningType_5point0:
-        setSettingsItemsCheckState(0, 0, 0, 1, 0, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create5point0());
         break;
     case MemaReSettingsOption::OutputPanningType_5point1:
-        setSettingsItemsCheckState(0, 0, 0, 0, 1, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create5point1());
         break;
     case MemaReSettingsOption::OutputPanningType_5point1point2:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 1, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create5point1point2());
         break;
     case MemaReSettingsOption::OutputPanningType_7point0:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 1, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create7point0());
         break;
     case MemaReSettingsOption::OutputPanningType_7point1:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 1, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create7point1());
         break;
     case MemaReSettingsOption::OutputPanningType_7point1point4:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 1, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create7point1point4());
         break;
     case MemaReSettingsOption::OutputPanningType_9point1point6:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 1);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create9point1point6());
         break;

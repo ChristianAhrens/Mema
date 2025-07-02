@@ -36,7 +36,6 @@ class MemaClientControlComponentBase : public juce::Component
 {
 public:
     static constexpr int gap = 3;
-    static constexpr int rc_size = 35;
     static constexpr int scrollbarsize = 8;
 
 public:
@@ -100,6 +99,12 @@ public:
         Input,
         Output
     };
+    enum ControlsSize
+    {
+        S = 35,
+        M = 50,
+        L = 65
+    };
 
 public:
     FaderbankControlComponent();
@@ -109,6 +114,9 @@ public:
     void paint(Graphics&) override;
     void resized() override;
     void lookAndFeelChanged() override;
+    
+    //==============================================================================
+    void setControlsSize(const ControlsSize& ctrlsSize);
 
     //==============================================================================
     void resetCtrl() override;
@@ -127,10 +135,10 @@ public:
 protected:
     //==============================================================================
     void selectIOChannel(const ControlDirection& direction, int channel);
-    void rebuildControls();
-    void rebuildInputControls();
-    void rebuildOutputControls();
-    void rebuildCrosspointControls();
+    void rebuildControls(bool force = false);
+    void rebuildInputControls(bool force = false);
+    void rebuildOutputControls(bool force = false);
+    void rebuildCrosspointControls(bool force = false);
     void updateCrosspointFaderValues();
 
 private:
@@ -153,6 +161,8 @@ private:
     std::unique_ptr<juce::Label>                                    m_crosspointsNoSelectionLabel;
 
     std::pair<ControlDirection, int>    m_currentIOChannel = { ControlDirection::None, 0 };
+    
+    ControlsSize m_controlsSize = ControlsSize::S;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FaderbankControlComponent)
 };
