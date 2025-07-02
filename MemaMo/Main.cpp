@@ -36,12 +36,22 @@ public:
     //==============================================================================
     void initialise(const String& commandLine) override
     {
-        mainWindow.reset(std::make_unique<MainWindow>(getApplicationName(), commandLine).release());
+        m_mainWindow.reset(std::make_unique<MainWindow>(getApplicationName(), commandLine).release());
+
+#if JUCE_MAC
+        // Ignore SIGPIPE globally, to prevent occasional unexpected app
+        // termination when Mema.Mo instances disconnect while sending by
+        // writing to socket is ongoing
+        signal(SIGPIPE, SIG_IGN);
+#endif
+
+        // a single instance of tooltip window is required and used by JUCE everywhere a tooltip is required.
+        m_toolTipWindowInstance = std::make_unique<TooltipWindow>();
     }
 
     void shutdown() override
     {
-        mainWindow.reset();
+        m_mainWindow.reset();
     }
 
     //==============================================================================
@@ -140,7 +150,8 @@ public:
     };
 
 private:
-    std::unique_ptr<MainWindow> mainWindow;
+    std::unique_ptr<MainWindow>             m_mainWindow;
+    std::unique_ptr<juce::TooltipWindow>    m_toolTipWindowInstance;
 };
 
 //==============================================================================

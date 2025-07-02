@@ -1,0 +1,46 @@
+version: 1.0.{build}
+branches:
+  only:
+  - main
+  - develop
+image: Ubuntu
+init:
+# C++ compiler:           g++-11 gcc-11 make
+# juce_core:              libcurl4-openssl-dev
+# juce_graphics:          libfreetype6-dev libfontconfig1-dev
+# juce_audio_devices:     libasound2-dev libjack-jackd2-dev
+# juce_audio_processors:  ladspa-sdk
+# juce_gui_basics:        libx11-dev libxcomposite-dev libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libxrender-dev libwebkit2gtk-4.0-dev
+# juce_opengl:            libglu1-mesa-dev mesa-common-dev
+- sh: >-
+    yes | sudo apt-get update
+    
+    yes | sudo apt install  g++-11 gcc-11 make  \
+                            libcurl4-openssl-dev  \
+                            libfreetype6-dev libfontconfig1-dev  \
+                            libasound2-dev libjack-jackd2-dev  \
+                            ladspa-sdk  \
+                            libx11-dev libxcomposite-dev libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libxrender-dev libwebkit2gtk-4.0-dev  \
+                            libglu1-mesa-dev mesa-common-dev
+    
+    yes | sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 --slave /usr/bin/g++ g++ /usr/bin/g++-11 --slave /usr/bin/gcov gcov /usr/bin/gcov-11
+    
+install:
+- sh: >-
+    cd "$APPVEYOR_BUILD_FOLDER"
+
+    git submodule update --init --recursive
+build_script:
+- sh: >-
+    cd Resources/Deployment/Linux
+
+    sudo chmod +x build_MemaRe.sh
+
+    ./build_MemaRe.sh
+notifications:
+- provider: Email
+  to:
+  - christianahrens@me.com
+  on_build_success: false
+  on_build_failure: true
+  on_build_status_changed: false

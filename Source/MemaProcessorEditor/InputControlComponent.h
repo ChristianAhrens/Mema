@@ -54,7 +54,7 @@ public:
     virtual void processChanges() override;
 
     //==============================================================================
-    void setInputMute(unsigned int channel, bool muteState) override;
+    void setInputMute(std::uint16_t channel, bool muteState) override;
 
     //==============================================================================
     void buttonClicked(juce::Button*) override;
@@ -64,14 +64,14 @@ public:
     std::function<void()> onBoundsRequirementChange;
 
     //==============================================================================
-    void setChannelCount(int channelCount) override;
+    void setChannelCount(std::uint16_t channelCount) override;
 
 private:
     //==============================================================================
-    ProcessorLevelData                          m_levelData;
-    std::unique_ptr<MeterbridgeComponent>       m_inputLevels;
-    std::map<int, std::unique_ptr<TextButton>>  m_inputMutes;
-    int m_channelCount = 0;
+    ProcessorLevelData                                      m_levelData;
+    std::unique_ptr<MeterbridgeComponent>                   m_inputLevels;
+    std::map<std::uint16_t, std::unique_ptr<TextButton>>    m_inputMutes;
+    std::uint16_t                                           m_channelCount = 0;
 
     static constexpr int s_channelSize = 24;
     static constexpr double s_channelGap = 1;

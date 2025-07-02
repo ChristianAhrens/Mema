@@ -40,9 +40,9 @@ public:
 
     int getId();
 
-    std::function<void(int)>                onConnectionMade;
-    std::function<void(int)>                onConnectionLost;
-    std::function<void(const MemoryBlock&)> onMessageReceived;
+    std::function<void(int)>                        onConnectionMade;
+    std::function<void(int)>                        onConnectionLost;
+    std::function<void(int, const MemoryBlock&)>    onMessageReceived;
 
 private:
     int m_id;
@@ -63,9 +63,9 @@ public:
     bool hasActiveConnection(int id);
     bool hasActiveConnections();
     const std::unique_ptr<InterprocessConnectionImpl>& getActiveConnection(int id);
-    void cleanupDeadConnections();
+    const std::vector<int> cleanupDeadConnections();
 
-    bool enqueueMessage(const MemoryBlock& message);
+    bool enqueueMessage(const MemoryBlock& message, std::vector<int> sendIds = {});
 
     std::function<void(int)>   onConnectionCreated;
 
