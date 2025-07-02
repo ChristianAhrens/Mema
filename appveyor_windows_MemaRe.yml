@@ -1,0 +1,24 @@
+version: 1.0.{build}
+branches:
+  only:
+  - main
+  - develop
+image: Visual Studio 2022
+install:
+  - cd %APPVEYOR_BUILD_FOLDER%
+  - git submodule update --init --recursive
+build_script:
+- cmd: >-
+    cd Resources/Deployment/Windows
+    
+    create_MemaRe-Installer.bat
+artifacts:
+- path: MemaRe*.exe
+  name: Installer Binary
+notifications:
+- provider: Email
+  to:
+  - christianahrens@me.com
+  on_build_success: false
+  on_build_failure: true
+  on_build_status_changed: false
