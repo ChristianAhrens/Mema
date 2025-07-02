@@ -186,9 +186,15 @@ void FaderbankControlComponent::resized()
     if (m_crosspointsControlsGrid && m_currentIOChannel.first != ControlDirection::None)
     {
         if (ControlDirection::Input == m_currentIOChannel.first)
+        {
             crosspointControlBounds.removeFromLeft(ctrlsSize);
+            crosspointControlBounds.removeFromRight(gap);
+        }
         else if (ControlDirection::Output == m_currentIOChannel.first)
+        {
             crosspointControlBounds.removeFromTop(ctrlsSize);
+            crosspointControlBounds.removeFromBottom(gap);
+        }
         m_crosspointsControlsGrid->performLayout(crosspointControlBounds);
         m_crosspointsNoSelectionLabel->setVisible(false);
     }
