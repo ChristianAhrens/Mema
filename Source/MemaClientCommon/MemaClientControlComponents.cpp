@@ -173,17 +173,15 @@ void FaderbankControlComponent::paint(Graphics& g)
 void FaderbankControlComponent::resized()
 {
     auto ctrlsSize = 75;
-    auto inputControlBounds = getLocalBounds().removeFromTop(ctrlsSize); inputControlBounds.removeFromBottom(gap);
-    auto outputControlBounds = getLocalBounds().removeFromLeft(ctrlsSize); outputControlBounds.removeFromRight(gap);
+    auto currentInputsWidth = (m_inputControlsGrid->getNumberOfColumns() * (rc_size + gap)) - gap;
+    auto currentOutputsHeight = (m_outputControlsGrid->getNumberOfRows() * (rc_size + gap)) - gap;
     auto crosspointControlBounds = getLocalBounds();
 
     if (m_inputControlsGrid)
-        m_inputControlsGrid->performLayout(inputControlBounds);
-    auto currentInputsWidth = (m_inputControlsGrid->getNumberOfColumns() * (rc_size + gap)) - gap;
+        m_inputControlsGrid->performLayout({ 0, 0, currentInputsWidth, ctrlsSize - scrollbarsize });
 
     if (m_outputControlsGrid)
-        m_outputControlsGrid->performLayout(outputControlBounds);
-    auto currentOutputsHeight = (m_outputControlsGrid->getNumberOfRows() * (rc_size + gap)) - gap;
+        m_outputControlsGrid->performLayout({ 0, 0, ctrlsSize - scrollbarsize, currentOutputsHeight });
 
     if (m_crosspointsControlsGrid && m_currentIOChannel.first != ControlDirection::None)
     {
@@ -207,23 +205,23 @@ void FaderbankControlComponent::resized()
 
     if (ControlDirection::Input == m_currentIOChannel.first)
     {
-        m_horizontalScrollContainerComponent->setBounds({ 0, 0, currentInputsWidth, ctrlsSize });
+        m_horizontalScrollContainerComponent->setBounds({ 0, 0, currentInputsWidth, ctrlsSize - scrollbarsize });
         m_horizontalScrollViewport->setBounds(getLocalBounds().removeFromTop(ctrlsSize).removeFromRight(getWidth() - ctrlsSize));
-        m_verticalScrollContainerComponent->setBounds({ 0, 0, getWidth(), currentOutputsHeight});
+        m_verticalScrollContainerComponent->setBounds({ 0, 0, getWidth() - scrollbarsize, currentOutputsHeight });
         m_verticalScrollViewport->setBounds(getLocalBounds().removeFromBottom(getHeight() - ctrlsSize));
     }
     else if (ControlDirection::Output == m_currentIOChannel.first)
     {
-        m_horizontalScrollContainerComponent->setBounds({ 0, 0, currentInputsWidth, getHeight()});
+        m_horizontalScrollContainerComponent->setBounds({ 0, 0, currentInputsWidth, getHeight() - scrollbarsize });
         m_horizontalScrollViewport->setBounds(getLocalBounds().removeFromRight(getWidth() - ctrlsSize));
-        m_verticalScrollContainerComponent->setBounds({ 0, 0, ctrlsSize, currentOutputsHeight });
+        m_verticalScrollContainerComponent->setBounds({ 0, 0, ctrlsSize - scrollbarsize, currentOutputsHeight });
         m_verticalScrollViewport->setBounds(getLocalBounds().removeFromBottom(getHeight() - ctrlsSize));
     }
     else //if (ControlDirection::None == m_currentIOChannel.first)
     {
-        m_horizontalScrollContainerComponent->setBounds({ 0, 0, currentInputsWidth, ctrlsSize });
+        m_horizontalScrollContainerComponent->setBounds({ 0, 0, currentInputsWidth, ctrlsSize - scrollbarsize });
         m_horizontalScrollViewport->setBounds(getLocalBounds().removeFromRight(getWidth() - ctrlsSize));
-        m_verticalScrollContainerComponent->setBounds({ 0, 0, ctrlsSize, currentOutputsHeight });
+        m_verticalScrollContainerComponent->setBounds({ 0, 0, ctrlsSize - scrollbarsize, currentOutputsHeight });
         m_verticalScrollViewport->setBounds(getLocalBounds().removeFromBottom(getHeight() - ctrlsSize));
 
         m_crosspointsNoSelectionLabel->setBounds(getLocalBounds().removeFromBottom(getHeight() - ctrlsSize).removeFromRight(getWidth() - ctrlsSize));
