@@ -20,7 +20,7 @@
 
 #include <JuceHeader.h>
 
-#include "AbstractAudioVisualizer.h"
+#include "../MemaProcessorEditor/AbstractAudioVisualizer.h"
 
 namespace Mema
 {

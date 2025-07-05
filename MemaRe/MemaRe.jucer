@@ -49,6 +49,10 @@
             file="../Resources/MemaReDefault.config"/>
     </GROUP>
     <GROUP id="{B4C42B10-6A29-1C3A-435D-5CB7A9DE671E}" name="Source">
+      <FILE id="PYcLvt" name="TwoDFieldMultisliderComponent.cpp" compile="1"
+            resource="0" file="../Source/MemaClientCommon/TwoDFieldMultisliderComponent.cpp"/>
+      <FILE id="TZMWx9" name="TwoDFieldMultisliderComponent.h" compile="0"
+            resource="0" file="../Source/MemaClientCommon/TwoDFieldMultisliderComponent.h"/>
       <FILE id="Tt8bEQ" name="ProcessorDataAnalyzer.h" compile="0" resource="0"
             file="../Source/MemaProcessor/ProcessorDataAnalyzer.h"/>
       <FILE id="wfVH30" name="AboutComponent.cpp" compile="1" resource="0"
