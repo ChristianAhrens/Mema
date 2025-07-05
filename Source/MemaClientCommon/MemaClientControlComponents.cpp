@@ -21,6 +21,7 @@
 #include <CustomLookAndFeel.h>
 #include <ToggleStateSlider.h>
 #include <MemaProcessor/ProcessorDataAnalyzer.h>
+#include <MemaClientCommon/TwoDFieldMultisliderComponent.h>
 
 
 namespace Mema
@@ -656,6 +657,8 @@ void FaderbankControlComponent::updateCrosspointFaderValues()
 PanningControlComponent::PanningControlComponent()
     : MemaClientControlComponentBase()
 {
+    m_multiSlider = std::make_unique<Mema::TwoDFieldMultisliderComponent>();
+    addAndMakeVisible(m_multiSlider.get());
 }
 
 PanningControlComponent::~PanningControlComponent()
@@ -672,15 +675,21 @@ void PanningControlComponent::paint(Graphics& g)
 
 void PanningControlComponent::resized()
 {
+    if (m_multiSlider)
+        m_multiSlider->setBounds(getLocalBounds());
 }
 
 void PanningControlComponent::resetCtrl()
 {
+    setIOCount({ 0,0 });
 }
 
 void PanningControlComponent::setChannelConfig(const juce::AudioChannelSet& channelConfiguration)
 {
     m_channelConfiguration = channelConfiguration;
+
+    if (m_multiSlider)
+        m_multiSlider->setChannelConfiguration(channelConfiguration);
 }
 
 const juce::AudioChannelSet& PanningControlComponent::getChannelConfig()

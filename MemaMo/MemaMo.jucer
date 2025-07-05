@@ -108,10 +108,10 @@
             file="../Source/MemaProcessor/ProcessorSpectrumData.cpp"/>
       <FILE id="qCeR2y" name="ProcessorSpectrumData.h" compile="0" resource="0"
             file="../Source/MemaProcessor/ProcessorSpectrumData.h"/>
-      <FILE id="WhHDmY" name="TwoDFieldOutputComponent.cpp" compile="1" resource="0"
-            file="../Source/MemaProcessorEditor/TwoDFieldOutputComponent.cpp"/>
-      <FILE id="CHiFIG" name="TwoDFieldOutputComponent.h" compile="0" resource="0"
-            file="../Source/MemaProcessorEditor/TwoDFieldOutputComponent.h"/>
+      <FILE id="qUZJQI" name="TwoDFieldOutputComponent.cpp" compile="1" resource="0"
+            file="../Source/MemaClientCommon/TwoDFieldOutputComponent.cpp"/>
+      <FILE id="FncK9u" name="TwoDFieldOutputComponent.h" compile="0" resource="0"
+            file="../Source/MemaClientCommon/TwoDFieldOutputComponent.h"/>
     </GROUP>
   </MAINGROUP>
   <MODULES>

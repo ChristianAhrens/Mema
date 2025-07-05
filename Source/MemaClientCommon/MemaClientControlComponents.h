@@ -28,6 +28,10 @@ namespace JUCEAppBasics
 {
     class ToggleStateSlider;
 }
+namespace Mema
+{
+    class TwoDFieldMultisliderComponent;
+}
 
 namespace Mema
 {
@@ -190,6 +194,7 @@ public:
 private:
     //==============================================================================
     juce::AudioChannelSet   m_channelConfiguration;
+    std::unique_ptr<Mema::TwoDFieldMultisliderComponent>  m_multiSlider;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PanningControlComponent)
 };
