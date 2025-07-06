@@ -92,11 +92,14 @@ void MemaReComponent::setOutputPanningCtrlActive(const juce::AudioChannelSet& ch
 {
     auto resizeRequired = false;
 
-    if (m_panningCtrlComponent && !m_panningCtrlComponent->isVisible())
+    if (m_panningCtrlComponent)
     {
+        if (!m_panningCtrlComponent->isVisible())
+        {
+            m_panningCtrlComponent->setVisible(true);
+            resizeRequired = true;
+        }
         m_panningCtrlComponent->setChannelConfig(channelConfiguration);
-        m_panningCtrlComponent->setVisible(true);
-        resizeRequired = true;
     }
     if (m_faderbankCtrlComponent && m_faderbankCtrlComponent->isVisible())
     {
