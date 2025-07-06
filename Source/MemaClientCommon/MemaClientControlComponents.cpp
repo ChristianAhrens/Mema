@@ -668,15 +668,28 @@ PanningControlComponent::~PanningControlComponent()
 void PanningControlComponent::paint(Graphics& g)
 {
     g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::ColourIds::backgroundColourId));
-
-    g.setColour(getLookAndFeel().findColour(juce::TextEditor::ColourIds::textColourId));
-    g.drawFittedText("Panning control not yet implemented.\n(Panning config is " + m_channelConfiguration.getSpeakerArrangementAsString() + ")\n\n" + getClientControlParametersAsString(), getLocalBounds().reduced(35), juce::Justification::topLeft, 24);
 }
 
 void PanningControlComponent::resized()
 {
-    if (m_multiSlider)
-        m_multiSlider->setBounds(getLocalBounds());
+    auto margin = 8;
+    auto bounds = getLocalBounds().reduced(margin, margin);
+    auto boundsAspect = bounds.toFloat().getAspectRatio();
+    auto fieldAspect = m_multiSlider->getRequiredAspectRatio();
+    if (boundsAspect >= 1 / fieldAspect)
+    {
+        // landscape
+        auto multiSliderBounds = juce::Rectangle<int>(int(bounds.getHeight() / fieldAspect), bounds.getHeight()).withCentre(bounds.getCentre());
+        if (m_multiSlider)
+            m_multiSlider->setBounds(multiSliderBounds);
+    }
+    else
+    {
+        // portrait
+        auto multiSliderBounds = juce::Rectangle<int>(bounds.getWidth(), int(bounds.getWidth() * fieldAspect)).withCentre(bounds.getCentre());
+        if (m_multiSlider)
+            m_multiSlider->setBounds(multiSliderBounds);
+    }
 }
 
 void PanningControlComponent::resetCtrl()
