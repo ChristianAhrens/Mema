@@ -124,6 +124,16 @@ juce::Component* Mema::getDeviceSetupComponent()
         return nullptr;
 }
 
+void Mema::clearUICallbacks()
+{
+    onEditorSizeChangeRequested = nullptr;
+    onCpuUsageUpdate = nullptr;
+    onNetworkUsageUpdate = nullptr;
+    
+    if (auto editor = dynamic_cast<MemaProcessorEditor*>(m_MemaProcessor->getActiveEditor()))
+        editor->onEditorSizeChangeRequested = nullptr;
+}
+
 void Mema::performConfigurationDump()
 {
     if (m_config)

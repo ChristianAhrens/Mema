@@ -200,9 +200,7 @@ public:
         memaUIComponent->onDeleted = [this]() {
             if (Mema::Mema::getInstanceWithoutCreating())
             {
-                Mema::Mema::getInstance()->onEditorSizeChangeRequested = nullptr;
-                Mema::Mema::getInstance()->onCpuUsageUpdate = nullptr;
-                Mema::Mema::getInstance()->onNetworkUsageUpdate = nullptr;
+                Mema::Mema::getInstance()->clearUICallbacks();
             }
 
             m_memaUIComponent.release();
