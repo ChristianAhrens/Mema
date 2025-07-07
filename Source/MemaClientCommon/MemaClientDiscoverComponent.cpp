@@ -18,6 +18,8 @@
 
 #include "MemaClientDiscoverComponent.h"
 
+#include <MemaProcessor/MemaServiceData.h>
+
 MemaClientDiscoverComponent::MemaClientDiscoverComponent()
     : juce::Component()
 {
@@ -34,6 +36,8 @@ MemaClientDiscoverComponent::MemaClientDiscoverComponent()
     m_discoveredServicesSelection->setTextWhenNoChoicesAvailable("Select an instance to connect");
     m_discoveredServicesSelection->setTextWhenNoChoicesAvailable("None");
     addAndMakeVisible(m_discoveredServicesSelection.get());
+
+    setupServiceDiscovery();
 }
 
 MemaClientDiscoverComponent::~MemaClientDiscoverComponent()
@@ -68,3 +72,39 @@ void MemaClientDiscoverComponent::setDiscoveredServices(const std::vector<juce::
         i++;
     }
 }
+
+void MemaClientDiscoverComponent::setupServiceDiscovery()
+{
+    // scope to autodestruct testSocket
+    {
+        auto testSocket = std::make_unique<juce::DatagramSocket>();
+        if (!testSocket->bindToPort(Mema::ServiceData::getBroadcastPort()))
+        {
+            auto conflictTitle = "Service discovery error";
+            auto conflictInfo = "Unable to discover Mema instances\nas the discovery broadcast port is already in use.\n\nMaybe another Mema client\nis running on this host?";
+            juce::AlertWindow::showOkCancelBox(juce::MessageBoxIconType::WarningIcon, conflictTitle, conflictInfo, "Retry", "Quit", nullptr, juce::ModalCallbackFunction::create([this](int result) {
+                if (1 == result)
+                    setupServiceDiscovery();
+                else
+                    juce::JUCEApplication::getInstance()->quit();
+            }));
+        }
+    }
+
+    m_availableServices = std::make_unique<juce::NetworkServiceDiscovery::AvailableServiceList>(
+        Mema::ServiceData::getServiceTypeUID(),
+        Mema::ServiceData::getBroadcastPort());
+
+    m_availableServices->onChange = [=]() {
+        setDiscoveredServices(m_availableServices->getServices());
+    };
+}
+
+std::vector<NetworkServiceDiscovery::Service> MemaClientDiscoverComponent::getAvailableServices()
+{
+    if (m_availableServices)
+        return m_availableServices->getServices();
+    else
+        return {};
+}
+

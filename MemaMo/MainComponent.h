@@ -137,13 +137,12 @@ private:
     void connectToMema();
 
     //==============================================================================
-    std::unique_ptr<juce::NetworkServiceDiscovery::AvailableServiceList>    m_availableServices;
     juce::NetworkServiceDiscovery::Service                                  m_selectedService;
     std::unique_ptr<InterprocessConnectionImpl>                             m_networkConnection;
 
     std::unique_ptr<MemaMoComponent>                                        m_monitorComponent;
-    std::unique_ptr<MemaClientDiscoverComponent>                                  m_discoverComponent;
-    std::unique_ptr<MemaClientConnectingComponent>                                m_connectingComponent;
+    std::unique_ptr<MemaClientDiscoverComponent>                            m_discoverComponent;
+    std::unique_ptr<MemaClientConnectingComponent>                          m_connectingComponent;
 
     std::unique_ptr<juce::DrawableButton>                                   m_settingsButton;
     std::map<int, std::pair<std::string, int>>                              m_settingsItems;

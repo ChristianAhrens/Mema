@@ -139,7 +139,6 @@ private:
     void connectToMema();
 
     //==============================================================================
-    std::unique_ptr<juce::NetworkServiceDiscovery::AvailableServiceList>    m_availableServices;
     juce::NetworkServiceDiscovery::Service                                  m_selectedService;
     std::unique_ptr<InterprocessConnectionImpl>                             m_networkConnection;
 
