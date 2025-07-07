@@ -28,7 +28,6 @@
 #include <WebUpdateDetector.h>
 
 #include <MemaProcessor/MemaMessages.h>
-#include <MemaProcessor/MemaServiceData.h>
 
 #include <iOS_utils.h>
 
@@ -89,9 +88,6 @@ MainComponent::MainComponent()
 
     m_monitorComponent = std::make_unique<MemaMoComponent>();
     m_monitorComponent->onExitClick = [=]() {
-        if (m_discoverComponent)
-            m_discoverComponent->setDiscoveredServices(m_availableServices->getServices());
-
         setStatus(Status::Discovering);
     };
     addAndMakeVisible(m_monitorComponent.get());
@@ -184,23 +180,12 @@ MainComponent::MainComponent()
         if (m_config)
             m_config->triggerConfigurationDump();
 
-        if (m_discoverComponent)
-            m_discoverComponent->setDiscoveredServices(m_availableServices->getServices());
-
         setStatus(Status::Discovering);
     };
     m_disconnectButton->setAlwaysOnTop(true);
     m_disconnectButton->setColour(juce::DrawableButton::ColourIds::backgroundColourId, juce::Colours::transparentBlack);
     m_disconnectButton->setColour(juce::DrawableButton::ColourIds::backgroundOnColourId, juce::Colours::transparentBlack);
     addAndMakeVisible(m_disconnectButton.get());
-
-    m_availableServices = std::make_unique<juce::NetworkServiceDiscovery::AvailableServiceList>(
-        Mema::ServiceData::getServiceTypeUID(), 
-        Mema::ServiceData::getBroadcastPort());
-    m_availableServices->onChange = [=]() { 
-        if (m_discoverComponent)
-            m_discoverComponent->setDiscoveredServices(m_availableServices->getServices());
-    };
 
 #ifdef RUN_MESSAGE_TESTS
     Mema::runTests();
@@ -509,7 +494,7 @@ void MainComponent::timerCallback()
 {
     if (Status::Connecting == getStatus())
     {
-        auto sl = m_availableServices->getServices();
+        auto sl = m_discoverComponent->getAvailableServices();
         auto const& iter = std::find_if(sl.begin(), sl.end(), [=](const auto& service) { return service.description == m_selectedService.description; });
         if (iter != sl.end())
         {

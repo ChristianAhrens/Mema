@@ -57,6 +57,8 @@ public:
     std::function<void(int)> onCpuUsageUpdate;
     std::function<void(std::map<int, std::pair<double, bool>>)> onNetworkUsageUpdate;
     std::function<void(juce::Rectangle<int>)> onEditorSizeChangeRequested;
+    
+    void clearUICallbacks();
 
     //==========================================================================
     void performConfigurationDump() override;

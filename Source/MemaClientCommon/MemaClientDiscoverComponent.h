@@ -31,16 +31,23 @@ public:
     void paint(Graphics&) override;
     void resized() override;
 
-    //==============================================================================
-    void setDiscoveredServices(const std::vector<juce::NetworkServiceDiscovery::Service>& services);
+    void setupServiceDiscovery();
+
+    std::vector<NetworkServiceDiscovery::Service> getAvailableServices();
 
     //==============================================================================
     std::function<void(const juce::NetworkServiceDiscovery::Service&)> onServiceSelected;
 
 private:
+    //==============================================================================
+    void setDiscoveredServices(const std::vector<juce::NetworkServiceDiscovery::Service>& services);
+    
+    //==============================================================================
     std::unique_ptr<juce::Label>                        m_discoveredServicesLabel;
     std::unique_ptr<juce::ComboBox>                     m_discoveredServicesSelection;
     std::vector<juce::NetworkServiceDiscovery::Service> m_discoveredServices;
+
+    std::unique_ptr<juce::NetworkServiceDiscovery::AvailableServiceList>    m_availableServices;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MemaClientDiscoverComponent)
 };
