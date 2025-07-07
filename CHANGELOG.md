@@ -4,12 +4,15 @@ All notable changes to Mema will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.6.1] 2025-07-07
 ### Added
+- Added Mema.Mo and Mema.Re coexistance awareness to prompt the user with discovery inavailablity when running at the same time
 
 ### Changed
+- Updated JUCE framework to 8.0.8
 
 ### Fixed
+- Fixed Mema crash when currently used audio device is removed from host
 
 ## [0.6.0] 2025-07-02
 ### Added
@@ -141,7 +144,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 - Fixed macOS, iOS provisioning
-- Fixed typo and UI sizing issues 
+- Fixed typo and UI sizing issues
 
 ## [0.1.1] 2024-10-26
 ### Added
