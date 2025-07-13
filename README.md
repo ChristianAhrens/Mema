@@ -2,16 +2,18 @@
 ![Showreel.002.png](Resources/Documentation/Showreel/Showreel.002.png "Mema.Mo Headline Icons")
 ![Showreel.003.png](Resources/Documentation/Showreel/Showreel.003.png "Mema.Re Headline Icons")
 
-See [LATEST RELEASE](https://github.com/ChristianAhrens/Mema/releases/latest) for available binary packages or join iOS TestFlight Beta:
+See [LATEST RELEASE](https://github.com/ChristianAhrens/Mema/releases/latest) for available binary packages or join iOS TestFlight Betas:
 
-<img src="Resources/AppStore/TestFlightQRCode.png" alt="TestFlight QR Code" width="15%">
+|Mema.Mo Testflight|Mema.Re Testflight|
+|:-----------------|:-----------------|
+| <img src="Resources/AppStore/MemaMoTestFlightQRCode.png" alt="Mema.Mo TestFlight QR Code" width="40%"> | <img src="Resources/AppStore/MemaReTestFlightQRCode.png" alt="Mema.Re TestFlight QR Code" width="40%"> |
 
 
-|Appveyor CI build status|Mema|Mema.Mo|
-|:----------------|:-----|:-----|
-|macOS Xcode| [![Build status](https://ci.appveyor.com/api/projects/status/42rpdmi560qotdfb/branch/main?svg=true)](https://ci.appveyor.com/project/ChristianAhrens/mema-macos) | [![Build status](https://ci.appveyor.com/api/projects/status/v7uy57s7peoiqw71/branch/main?svg=true)](https://ci.appveyor.com/project/ChristianAhrens/memamo-macos) |
-|Windows Visual Studio| [![Build status](https://ci.appveyor.com/api/projects/status/pth9bd9r42l7n42r/branch/main?svg=true)](https://ci.appveyor.com/project/ChristianAhrens/mema-windows) | [![Build status](https://ci.appveyor.com/api/projects/status/jjb3xuxm8oe94fc6/branch/main?svg=true)](https://ci.appveyor.com/project/ChristianAhrens/memamo-windows) |
-|Linux makefile| [![Build status](https://ci.appveyor.com/api/projects/status/4mkms53fa8acra9d/branch/main?svg=true)](https://ci.appveyor.com/project/ChristianAhrens/mema-linux) | [![Build status](https://ci.appveyor.com/api/projects/status/uraaj3kbmsce52tt/branch/main?svg=true)](https://ci.appveyor.com/project/ChristianAhrens/memamo-linux) |
+|Appveyor CI build status|Mema|Mema.Mo|Mema.Re|
+|:----------------|:-----|:-----|:-----|
+|macOS Xcode| [![Build status](https://ci.appveyor.com/api/projects/status/42rpdmi560qotdfb/branch/main?svg=true)](https://ci.appveyor.com/project/ChristianAhrens/mema-macos) | [![Build status](https://ci.appveyor.com/api/projects/status/v7uy57s7peoiqw71/branch/main?svg=true)](https://ci.appveyor.com/project/ChristianAhrens/memamo-macos) | [![Build status](https://ci.appveyor.com/api/projects/status/iyqwj0vyqsb8x23d/branch/main?svg=true)](https://ci.appveyor.com/project/ChristianAhrens/memare-macos/branch/main) |
+|Windows Visual Studio| [![Build status](https://ci.appveyor.com/api/projects/status/pth9bd9r42l7n42r/branch/main?svg=true)](https://ci.appveyor.com/project/ChristianAhrens/mema-windows) | [![Build status](https://ci.appveyor.com/api/projects/status/jjb3xuxm8oe94fc6/branch/main?svg=true)](https://ci.appveyor.com/project/ChristianAhrens/memamo-windows) | [![Build status](https://ci.appveyor.com/api/projects/status/nwtd41h7mm7rhabo/branch/main?svg=true)](https://ci.appveyor.com/project/ChristianAhrens/memare-windows/branch/main) |
+|Linux makefile| [![Build status](https://ci.appveyor.com/api/projects/status/4mkms53fa8acra9d/branch/main?svg=true)](https://ci.appveyor.com/project/ChristianAhrens/mema-linux) | [![Build status](https://ci.appveyor.com/api/projects/status/uraaj3kbmsce52tt/branch/main?svg=true)](https://ci.appveyor.com/project/ChristianAhrens/memamo-linux) | [![Build status](https://ci.appveyor.com/api/projects/status/rg933r3m3b2t6hti/branch/main?svg=true)](https://ci.appveyor.com/project/ChristianAhrens/memare-linux/branch/main) |
 
 
 <a name="toc" />
