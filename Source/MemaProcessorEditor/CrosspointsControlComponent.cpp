@@ -65,10 +65,11 @@ void CrosspointsControlComponent::setCrosspointFactorValue(std::uint16_t input, 
 
 void CrosspointsControlComponent::setIOCount(std::uint16_t inputCount, std::uint16_t outputCount)
 {
-    if (m_ioCount != std::make_pair(inputCount, outputCount))
+    auto newIOCount = std::make_pair(int(inputCount), int(outputCount));
+    if (m_ioCount != newIOCount)
     {
-        m_ioCount = std::make_pair(inputCount, outputCount);
-        DBG(__FUNCTION__ << " " << int(inputCount) << " " << int(outputCount));
+        m_ioCount = newIOCount;
+        DBG(__FUNCTION__ << " " << newIOCount.first << " " << newIOCount.second);
 
         std::function<void(std::uint16_t, std::uint16_t)> initCrosspoint = [=](std::uint16_t input, std::uint16_t output) {
             DBG(__FUNCTION__ << " " << int(input) << " " << int(output));
