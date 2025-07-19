@@ -71,6 +71,8 @@ public:
     void setClockwiseOrderedChannelTypesForCurrentConfiguration();
 
     float getRequiredAspectRatio();
+
+    void setIOCount(const std::pair<int, int>& ioCount);
     
     //==============================================================================
     void paint (Graphics&) override;

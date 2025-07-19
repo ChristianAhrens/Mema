@@ -39,6 +39,19 @@ namespace Mema
 class MemaClientControlComponentBase : public juce::Component
 {
 public:
+    enum ControlDirection
+    {
+        None = 0,
+        Input,
+        Output
+    };
+    enum ControlsSize
+    {
+        S = 35,
+        M = 50,
+        L = 65
+    };
+
     static constexpr int gap = 3;
     static constexpr int scrollbarsize = 8;
 
@@ -54,6 +67,8 @@ public:
     virtual void resetCtrl() = 0;
 
     //==============================================================================
+    virtual void setControlsSize(const ControlsSize& ctrlsSize);
+
     virtual void setIOCount(const std::pair<int, int>& ioCount);
     const std::pair<int, int>& getIOCount();
 
@@ -82,6 +97,10 @@ public:
     const juce::String getOutputMuteParametersAsString();
     const juce::String getCrosspointParametersAsString();
 
+protected:
+    //==============================================================================
+    ControlsSize    m_controlsSize = ControlsSize::S;
+
 private:
     //==============================================================================
     std::pair<int, int>                                     m_ioCount = { 0, 0 };
@@ -97,20 +116,6 @@ private:
 class FaderbankControlComponent : public MemaClientControlComponentBase
 {
 public:
-    enum ControlDirection
-    {
-        None = 0,
-        Input,
-        Output
-    };
-    enum ControlsSize
-    {
-        S = 35,
-        M = 50,
-        L = 65
-    };
-
-public:
     FaderbankControlComponent();
     virtual ~FaderbankControlComponent();
 
@@ -118,12 +123,12 @@ public:
     void paint(Graphics&) override;
     void resized() override;
     void lookAndFeelChanged() override;
-    
-    //==============================================================================
-    void setControlsSize(const ControlsSize& ctrlsSize);
 
     //==============================================================================
     void resetCtrl() override;
+
+    //==============================================================================
+    void setControlsSize(const ControlsSize& ctrlsSize) override;
 
     //==============================================================================
     void setIOCount(const std::pair<int, int>& ioCount) override;
@@ -165,8 +170,6 @@ private:
     std::unique_ptr<juce::Label>                                    m_crosspointsNoSelectionLabel;
 
     std::pair<ControlDirection, int>    m_currentIOChannel = { ControlDirection::None, 0 };
-    
-    ControlsSize m_controlsSize = ControlsSize::S;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FaderbankControlComponent)
 };
@@ -186,15 +189,36 @@ public:
     void resetCtrl() override;
 
     //==============================================================================
+    void setControlsSize(const ControlsSize& ctrlsSize) override;
+
+    //==============================================================================
+    void setIOCount(const std::pair<int, int>& ioCount) override;
+    void setInputMuteStates(const std::map<std::uint16_t, bool>& inputMuteStates) override;
+
+    //==============================================================================
     void setChannelConfig(const juce::AudioChannelSet& channelConfiguration);
     const juce::AudioChannelSet& getChannelConfig();
 
+protected:
     //==============================================================================
+    void selectInputChannel(int channel);
+    void rebuildControls(bool force = false);
+    void rebuildInputControls(bool force = false);
 
 private:
     //==============================================================================
-    juce::AudioChannelSet   m_channelConfiguration;
+    std::unique_ptr<juce::Viewport>     m_horizontalScrollViewport;
+    std::unique_ptr<juce::Component>    m_horizontalScrollContainerComponent;
+
+    std::unique_ptr<juce::Grid>                     m_inputControlsGrid;
+    std::vector<std::unique_ptr<juce::TextButton>>  m_inputSelectButtons;
+    std::vector<std::unique_ptr<juce::TextButton>>  m_inputMuteButtons;
+
     std::unique_ptr<Mema::TwoDFieldMultisliderComponent>  m_multiSlider;
+
+    juce::AudioChannelSet   m_channelConfiguration;
+
+    int m_currentInputChannel = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PanningControlComponent)
 };

@@ -31,16 +31,6 @@ TwoDFieldMultisliderComponent::TwoDFieldMultisliderComponent()
     :   juce::Component()
 {
     //setUsesValuesInDB(true);
-
-    m_inputPositions[1] = { ChannelLayer::Positioned, { 0.5f, 0.5f }, false, false };
-    m_inputPositions[2] = { ChannelLayer::Positioned, { 0.5f, -0.5f }, false, false };
-    m_inputPositions[3] = { ChannelLayer::Positioned, { -0.5f, -0.5f }, false, false };
-    m_inputPositions[4] = { ChannelLayer::Positioned, { -0.5f, 0.5f }, false, false };
-    m_inputPositions[5] = { ChannelLayer::PositionedHeight, { 0.5f, 0.5f }, false, false };
-    m_inputPositions[6] = { ChannelLayer::PositionedHeight, { 0.5f, -0.5f }, false, false };
-    m_inputPositions[7] = { ChannelLayer::PositionedHeight, { -0.5f, -0.5f }, false, false };
-    m_inputPositions[8] = { ChannelLayer::PositionedHeight, { -0.5f, 0.5f }, false, false };
-    m_inputPositions[9] = { ChannelLayer::Directionless, { 0.0f, 0.5f }, false, false };
 }
 
 TwoDFieldMultisliderComponent::~TwoDFieldMultisliderComponent()
@@ -65,7 +55,8 @@ void TwoDFieldMultisliderComponent::paint (juce::Graphics& g)
     // paint slider knobs
     for (auto const& inputPosition : m_inputPositions)
     {
-        auto& area = juce::Rectangle<float>();
+        auto emptyRect = juce::Rectangle<float>();
+        auto& area = emptyRect;
         if (ChannelLayer::Positioned == inputPosition.second.layer && !m_positionedChannelsArea.isEmpty())
             area = m_positionedChannelsArea;
         else if (ChannelLayer::PositionedHeight == inputPosition.second.layer && !m_positionedHeightChannelsArea.isEmpty())
@@ -449,7 +440,8 @@ void TwoDFieldMultisliderComponent::mouseDown(const juce::MouseEvent& e)
     // hit-test slider knobs
     for (auto& inputPosition : m_inputPositions)
     {
-        auto& area = juce::Rectangle<float>();
+        auto emptyRect = juce::Rectangle<float>();
+        auto& area = emptyRect;
         if (ChannelLayer::Positioned == inputPosition.second.layer && !m_positionedChannelsArea.isEmpty())
             area = m_positionedChannelsArea;
         else if (ChannelLayer::PositionedHeight == inputPosition.second.layer && !m_positionedHeightChannelsArea.isEmpty())
@@ -489,7 +481,8 @@ void TwoDFieldMultisliderComponent::mouseDrag(const MouseEvent& e)
         {
             if (inputPosition.second.isSliding)
             {
-                auto& area = juce::Rectangle<float>();
+                auto emptyRect = juce::Rectangle<float>();
+                auto& area = emptyRect;
                 if (ChannelLayer::Positioned == inputPosition.second.layer && !m_positionedChannelsArea.isEmpty())
                     area = m_positionedChannelsArea;
                 else if (ChannelLayer::PositionedHeight == inputPosition.second.layer && !m_positionedHeightChannelsArea.isEmpty())
@@ -559,6 +552,17 @@ void TwoDFieldMultisliderComponent::mouseDrag(const MouseEvent& e)
     repaint();
 
     juce::Component::mouseDrag(e);
+}
+
+void TwoDFieldMultisliderComponent::setIOCount(const std::pair<int, int>& ioCount)
+{
+    m_inputPositions.clear();
+    for (auto i = 1, p = 50; i <= ioCount.first; i++, p-=5)
+    {
+        m_inputPositions[i] = { ChannelLayer::Positioned, { 0.01f * float(p), 0.5f }, false, false };
+    }
+
+    repaint();
 }
 
 //void TwoDFieldMultisliderComponent::processingDataChanged(AbstractProcessorData *data)

@@ -37,6 +37,11 @@ MemaClientControlComponentBase::~MemaClientControlComponentBase()
 {
 }
 
+void MemaClientControlComponentBase::setControlsSize(const ControlsSize& ctrlsSize)
+{
+    m_controlsSize = ctrlsSize;
+}
+
 void MemaClientControlComponentBase::setIOCount(const std::pair<int, int>& ioCount)
 {
     m_ioCount = ioCount;
@@ -256,7 +261,7 @@ void FaderbankControlComponent::lookAndFeelChanged()
 
 void FaderbankControlComponent::setControlsSize(const ControlsSize& ctrlsSize)
 {
-    m_controlsSize = ctrlsSize;
+    MemaClientControlComponentBase::setControlsSize(ctrlsSize);
     
     rebuildControls(true);
     selectIOChannel(m_currentIOChannel.first, m_currentIOChannel.second);
@@ -659,6 +664,14 @@ PanningControlComponent::PanningControlComponent()
 {
     m_multiSlider = std::make_unique<Mema::TwoDFieldMultisliderComponent>();
     addAndMakeVisible(m_multiSlider.get());
+
+    m_horizontalScrollContainerComponent = std::make_unique<juce::Component>();
+    m_horizontalScrollViewport = std::make_unique<juce::Viewport>();
+    m_horizontalScrollViewport->setViewedComponent(m_horizontalScrollContainerComponent.get(), false);
+    addAndMakeVisible(m_horizontalScrollViewport.get());
+
+    m_inputControlsGrid = std::make_unique<juce::Grid>();
+    m_inputControlsGrid->setGap(juce::Grid::Px(gap));
 }
 
 PanningControlComponent::~PanningControlComponent()
@@ -692,9 +705,29 @@ void PanningControlComponent::resized()
     }
 }
 
+void PanningControlComponent::setControlsSize(const ControlsSize& ctrlsSize)
+{
+    MemaClientControlComponentBase::setControlsSize(ctrlsSize);
+
+    rebuildControls(true);
+    selectInputChannel(m_currentInputChannel);
+}
+
 void PanningControlComponent::resetCtrl()
 {
     setIOCount({ 0,0 });
+    selectInputChannel(0);
+}
+
+void PanningControlComponent::setIOCount(const std::pair<int, int>& ioCount)
+{
+    MemaClientControlComponentBase::setIOCount(ioCount);
+
+    rebuildControls();
+    selectInputChannel(m_currentInputChannel);
+
+    if (m_multiSlider)
+        m_multiSlider->setIOCount(ioCount);
 }
 
 void PanningControlComponent::setChannelConfig(const juce::AudioChannelSet& channelConfiguration)
@@ -708,6 +741,103 @@ void PanningControlComponent::setChannelConfig(const juce::AudioChannelSet& chan
 const juce::AudioChannelSet& PanningControlComponent::getChannelConfig()
 {
     return m_channelConfiguration;
+}
+
+void PanningControlComponent::rebuildControls(bool force)
+{
+    rebuildInputControls(force);
+    resized();
+}
+
+void PanningControlComponent::rebuildInputControls(bool force)
+{
+    auto ioCount = getIOCount();
+
+    if (ioCount.first != m_inputSelectButtons.size() || ioCount.first != m_inputMuteButtons.size() || force)
+    {
+        auto templateColums = juce::Array<juce::Grid::TrackInfo>();
+        for (auto in = 0; in < ioCount.first; in++)
+            templateColums.add(juce::Grid::TrackInfo(juce::Grid::Px(m_controlsSize)));
+
+        m_inputMuteButtons.resize(ioCount.first);
+        m_inputSelectButtons.resize(ioCount.first);
+        m_inputControlsGrid->items.clear();
+        m_inputControlsGrid->templateRows = { juce::Grid::TrackInfo(juce::Grid::Fr(1)), juce::Grid::TrackInfo(juce::Grid::Fr(1)) };
+        m_inputControlsGrid->templateColumns = templateColums;
+
+        for (auto i = 0; i < ioCount.first; i++)
+        {
+            auto in = std::uint16_t(i + 1);
+            m_inputSelectButtons.at(i) = std::make_unique<juce::TextButton>("In " + juce::String(in));
+            m_inputSelectButtons.at(i)->setClickingTogglesState(true);
+            m_inputSelectButtons.at(i)->setColour(juce::TextButton::ColourIds::buttonOnColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
+            m_inputSelectButtons.at(i)->onClick = [this, i] {
+                if (m_inputSelectButtons.size() > i)
+                {
+                    auto in = std::uint16_t(i + 1);
+                    if (m_inputSelectButtons.at(i)->getToggleState())
+                        selectInputChannel(in);
+                    else
+                        selectInputChannel(0);
+                }
+                else
+                    jassertfalse;
+                };
+            m_horizontalScrollContainerComponent->addAndMakeVisible(m_inputSelectButtons.at(i).get());
+            m_inputControlsGrid->items.add(juce::GridItem(m_inputSelectButtons.at(i).get()));
+        }
+        for (auto i = 0; i < ioCount.first; i++)
+        {
+            auto in = std::uint16_t(i + 1);
+            m_inputMuteButtons.at(i) = std::make_unique<juce::TextButton>("M");
+            m_inputMuteButtons.at(i)->setClickingTogglesState(true);
+            m_inputMuteButtons.at(i)->setToggleState((getInputMuteStates().count(in) != 0 ? getInputMuteStates().at(in) : false), juce::dontSendNotification);
+            m_inputMuteButtons.at(i)->setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::red);
+            m_inputMuteButtons.at(i)->onClick = [this, i] {
+                auto inputMuteStates = std::map<std::uint16_t, bool>();
+                auto in = std::uint16_t(i + 1);
+                inputMuteStates[in] = m_inputMuteButtons.at(i)->getToggleState();
+                MemaClientControlComponentBase::setInputMuteStates(inputMuteStates);
+                if (onInputMutesChanged)
+                    onInputMutesChanged(inputMuteStates);
+                };
+            m_horizontalScrollContainerComponent->addAndMakeVisible(m_inputMuteButtons.at(i).get());
+            m_inputControlsGrid->items.add(juce::GridItem(m_inputMuteButtons.at(i).get()));
+        }
+    }
+}
+
+void PanningControlComponent::setInputMuteStates(const std::map<std::uint16_t, bool>& inputMuteStates)
+{
+    MemaClientControlComponentBase::setInputMuteStates(inputMuteStates);
+
+    for (auto const& inputMuteStateKV : inputMuteStates)
+    {
+        auto& in = inputMuteStateKV.first;
+        auto i = in - 1;
+        auto& state = inputMuteStateKV.second;
+        if (m_inputMuteButtons.size() > i && nullptr != m_inputMuteButtons.at(i))
+            m_inputMuteButtons.at(i)->setToggleState(state, juce::dontSendNotification);
+    }
+}
+
+void PanningControlComponent::selectInputChannel(int channel)
+{
+    auto oldChannel = m_currentInputChannel;
+    m_currentInputChannel = channel;
+    if (oldChannel != channel)
+        rebuildControls();
+
+    auto ioCount = getIOCount();
+    for (auto i = 0; i < ioCount.first; i++)
+    {
+        if (nullptr != m_inputSelectButtons.at(i))
+        {
+            auto in = std::uint16_t(i + 1);
+            auto state = channel == in;
+            m_inputSelectButtons.at(i)->setToggleState(state, juce::dontSendNotification);
+        }
+    }
 }
 
 
