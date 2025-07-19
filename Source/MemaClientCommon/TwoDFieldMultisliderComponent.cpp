@@ -31,6 +31,16 @@ TwoDFieldMultisliderComponent::TwoDFieldMultisliderComponent()
     :   juce::Component()
 {
     //setUsesValuesInDB(true);
+
+    m_inputPositions[1] = { ChannelLayer::Positioned, { 0.5f, 0.5f }, false, false };
+    m_inputPositions[2] = { ChannelLayer::Positioned, { 0.5f, -0.5f }, false, false };
+    m_inputPositions[3] = { ChannelLayer::Positioned, { -0.5f, -0.5f }, false, false };
+    m_inputPositions[4] = { ChannelLayer::Positioned, { -0.5f, 0.5f }, false, false };
+    m_inputPositions[5] = { ChannelLayer::PositionedHeight, { 0.5f, 0.5f }, false, false };
+    m_inputPositions[6] = { ChannelLayer::PositionedHeight, { 0.5f, -0.5f }, false, false };
+    m_inputPositions[7] = { ChannelLayer::PositionedHeight, { -0.5f, -0.5f }, false, false };
+    m_inputPositions[8] = { ChannelLayer::PositionedHeight, { -0.5f, 0.5f }, false, false };
+    m_inputPositions[9] = { ChannelLayer::Directionless, { 0.0f, 0.5f }, false, false };
 }
 
 TwoDFieldMultisliderComponent::~TwoDFieldMultisliderComponent()
@@ -51,6 +61,21 @@ void TwoDFieldMultisliderComponent::paint (juce::Graphics& g)
         paintCircularLevelIndication(g, m_positionedHeightChannelsArea, m_channelHeightLevelMaxPoints, m_clockwiseOrderedHeightChannelTypes);
     if (!m_directionlessChannelsArea.isEmpty())
         paintLevelMeterIndication(g, m_directionlessChannelsArea, m_directionLessChannelTypes);
+
+    // paint slider knobs
+    for (auto const& inputPosition : m_inputPositions)
+    {
+        auto& area = juce::Rectangle<float>();
+        if (ChannelLayer::Positioned == inputPosition.second.layer && !m_positionedChannelsArea.isEmpty())
+            area = m_positionedChannelsArea;
+        else if (ChannelLayer::PositionedHeight == inputPosition.second.layer && !m_positionedHeightChannelsArea.isEmpty())
+            area = m_positionedHeightChannelsArea;
+        else if (ChannelLayer::Directionless == inputPosition.second.layer && !m_directionlessChannelsArea.isEmpty())
+            area = m_directionlessChannelsArea;
+
+        if (!area.isEmpty())
+            paintSliderKnob(g, area, inputPosition.second.value.relXPos, inputPosition.second.value.relYPos, inputPosition.first, inputPosition.second.isOn, inputPosition.second.isSliding);
+    }
 
     // draw dBFS
     g.setFont(12.0f);
@@ -86,42 +111,42 @@ void TwoDFieldMultisliderComponent::paintCircularLevelIndication(juce::Graphics&
     const float halfMeterWidth = 2.0f;
 
 
-    // helper std::function to avoid codeclones below
-    auto calcLevelVals = [=](std::map<int, float>& levels, bool isHold, bool isPeak, bool isRms) {
-        for (auto const& channelType : channelsToPaint)
-        {
-            if (isHold)
-            {
-                //if (getUsesValuesInDB())
-                //    levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).GetFactorHOLDdB();
-                //else
-                //    levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).hold;
-            }
-            else if (isPeak)
-            {
-                //if (getUsesValuesInDB())
-                //    levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).GetFactorPEAKdB();
-                //else
-                //    levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).peak;
-            }
-            else if (isRms)
-            {
-                //if (getUsesValuesInDB())
-                //    levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).GetFactorRMSdB();
-                //else
-                //    levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).rms;
-            }
-        }
-    };
+    //// helper std::function to avoid codeclones below
+    //auto calcLevelVals = [=](std::map<int, float>& levels, bool isHold, bool isPeak, bool isRms) {
+    //    for (auto const& channelType : channelsToPaint)
+    //    {
+    //        if (isHold)
+    //        {
+    //            if (getUsesValuesInDB())
+    //                levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).GetFactorHOLDdB();
+    //            else
+    //                levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).hold;
+    //        }
+    //        else if (isPeak)
+    //        {
+    //            if (getUsesValuesInDB())
+    //                levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).GetFactorPEAKdB();
+    //            else
+    //                levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).peak;
+    //        }
+    //        else if (isRms)
+    //        {
+    //            if (getUsesValuesInDB())
+    //                levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).GetFactorRMSdB();
+    //            else
+    //                levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).rms;
+    //        }
+    //    }
+    //};
     // calculate hold values
     std::map<int, float> holdLevels;
-    calcLevelVals(holdLevels, true, false, false);
+    //calcLevelVals(holdLevels, true, false, false);
     // calculate peak values
     std::map<int, float> peakLevels;
-    calcLevelVals(peakLevels, false, true, false);
+    //calcLevelVals(peakLevels, false, true, false);
     // calculate rms values    
     std::map<int, float> rmsLevels;
-    calcLevelVals(rmsLevels, false, false, true);
+    //calcLevelVals(rmsLevels, false, false, true);
 
 
     auto circleCenter = circleArea.getCentre();
@@ -258,7 +283,7 @@ void TwoDFieldMultisliderComponent::paintLevelMeterIndication(juce::Graphics& g,
     // draw meters
     auto meterSpacing = margin;
     auto meterThickness = float(visuArea.getWidth() - (channelCount)*meterSpacing) / float(channelCount);
-    auto meterMaxLength = visuArea.getHeight();
+    //auto meterMaxLength = visuArea.getHeight();
     auto meterLeft = levelMeterArea.getX() + 0.5f * meterSpacing;
 
     g.setFont(14.0f);
@@ -300,6 +325,51 @@ void TwoDFieldMultisliderComponent::paintLevelMeterIndication(juce::Graphics& g,
     // draw a simple baseline
     g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
     g.drawLine(juce::Line<float>(levelMeterArea.getX(), visuAreaOrigY, levelMeterArea.getX() + visuArea.getWidth(), visuAreaOrigY));
+}
+
+void TwoDFieldMultisliderComponent::paintSliderKnob(juce::Graphics& g, const juce::Rectangle<float>& sliderArea, const float& relXPos, const float& relYPos, const int& silderNumber, bool isSliderOn, bool isSliderSliding)
+{
+    juce::Path valueTrack;
+    auto minPoint = sliderArea.getCentre();
+    auto maxPoint = sliderArea.getCentre() - juce::Point<float>((sliderArea.getWidth() / 2) * relXPos, (sliderArea.getHeight() / 2) * relYPos);
+
+    if (isSliderOn)
+    {
+        if (isSliderSliding)
+        {
+            valueTrack.startNewSubPath(minPoint);
+            valueTrack.lineTo(maxPoint);
+            g.setColour(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
+            g.strokePath(valueTrack, { s_trackWidth, juce::PathStrokeType::curved, juce::PathStrokeType::rounded });
+        }
+
+        g.setColour(getLookAndFeel().findColour(juce::Slider::thumbColourId));
+        g.fillEllipse(juce::Rectangle<float>(static_cast<float>(s_thumbWidth), static_cast<float>(s_thumbWidth)).withCentre(maxPoint));
+
+        g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOnId));
+        g.drawText(juce::String(silderNumber), juce::Rectangle<float>(static_cast<float>(s_thumbWidth), static_cast<float>(s_thumbWidth)).withCentre(maxPoint), juce::Justification::centred);
+    }
+    else
+    {
+        if (isSliderSliding)
+        {
+            valueTrack.startNewSubPath(minPoint);
+            valueTrack.lineTo(maxPoint);
+            auto valueTrackOutline = valueTrack;
+            juce::PathStrokeType pt(s_trackWidth, juce::PathStrokeType::curved, juce::PathStrokeType::rounded);
+            pt.createStrokedPath(valueTrackOutline, valueTrack);
+            g.setColour(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
+            g.strokePath(valueTrackOutline, juce::PathStrokeType(1.0f));
+        }
+
+        g.setColour(getLookAndFeel().findColour(juce::ResizableWindow::ColourIds::backgroundColourId));
+        g.fillEllipse(juce::Rectangle<float>(static_cast<float>(s_thumbWidth - 1), static_cast<float>(s_thumbWidth - 1)).withCentre(maxPoint));
+
+        g.setColour(getLookAndFeel().findColour(juce::Slider::thumbColourId));
+        g.drawEllipse(juce::Rectangle<float>(static_cast<float>(s_thumbWidth), static_cast<float>(s_thumbWidth)).withCentre(maxPoint), 1.0f);
+
+        g.drawText(juce::String(silderNumber), juce::Rectangle<float>(static_cast<float> (s_thumbWidth), static_cast<float> (s_thumbWidth)).withCentre(maxPoint), juce::Justification::centred);
+    }
 }
 
 void TwoDFieldMultisliderComponent::resized()
@@ -372,6 +442,123 @@ void TwoDFieldMultisliderComponent::resized()
     }
 
     //AbstractAudioVisualizer::resized();
+}
+
+void TwoDFieldMultisliderComponent::mouseDown(const juce::MouseEvent& e)
+{
+    // hit-test slider knobs
+    for (auto& inputPosition : m_inputPositions)
+    {
+        auto& area = juce::Rectangle<float>();
+        if (ChannelLayer::Positioned == inputPosition.second.layer && !m_positionedChannelsArea.isEmpty())
+            area = m_positionedChannelsArea;
+        else if (ChannelLayer::PositionedHeight == inputPosition.second.layer && !m_positionedHeightChannelsArea.isEmpty())
+            area = m_positionedHeightChannelsArea;
+        else if (ChannelLayer::Directionless == inputPosition.second.layer && !m_directionlessChannelsArea.isEmpty())
+            area = m_directionlessChannelsArea;
+
+        auto maxPoint = area.getCentre() - juce::Point<float>((area.getWidth() / 2) * inputPosition.second.value.relXPos, (area.getHeight() / 2) * inputPosition.second.value.relYPos);
+        auto sliderKnob = juce::Rectangle<float>(static_cast<float>(s_thumbWidth), static_cast<float>(s_thumbWidth)).withCentre(maxPoint);
+        if (sliderKnob.contains(e.getMouseDownPosition().toFloat()))
+        {
+            inputPosition.second.isSliding = true;
+            inputPosition.second.isOn = true;
+        }
+    }
+
+    repaint();
+
+    juce::Component::mouseDown(e);
+}
+
+void TwoDFieldMultisliderComponent::mouseUp(const MouseEvent& e)
+{
+    // reset any sliding states slider knobs
+    for (auto& inputPosition : m_inputPositions)
+        inputPosition.second.isSliding = false;
+    
+    juce::Component::mouseUp(e);
+}
+
+void TwoDFieldMultisliderComponent::mouseDrag(const MouseEvent& e)
+{
+    if (e.mouseWasDraggedSinceMouseDown())
+    {
+        // reset any sliding states slider knobs
+        for (auto& inputPosition : m_inputPositions)
+        {
+            if (inputPosition.second.isSliding)
+            {
+                auto& area = juce::Rectangle<float>();
+                if (ChannelLayer::Positioned == inputPosition.second.layer && !m_positionedChannelsArea.isEmpty())
+                    area = m_positionedChannelsArea;
+                else if (ChannelLayer::PositionedHeight == inputPosition.second.layer && !m_positionedHeightChannelsArea.isEmpty())
+                    area = m_positionedHeightChannelsArea;
+                else if (ChannelLayer::Directionless == inputPosition.second.layer && !m_directionlessChannelsArea.isEmpty())
+                    area = m_directionlessChannelsArea;
+
+                auto mousePosition = e.getMouseDownPosition() + e.getOffsetFromDragStart();
+                
+                juce::Path ellipsePath;
+                ellipsePath.addEllipse(area);
+                // if the mouse is within the resp. circle, do the regular calculation of knob pos
+                if (ellipsePath.contains(mousePosition.toFloat()))
+                {
+                    auto positionInArea = area.getCentre() - area.getConstrainedPoint(mousePosition.toFloat());
+                    auto relXPos = positionInArea.getX() / (0.5f * area.getWidth());
+                    auto relYPos = positionInArea.getY() / (0.5f * area.getHeight());
+                    inputPosition.second.value = { relXPos, relYPos };
+                }
+                else
+                {
+                    juce::Path positionedChannelsEllipsePath, positionedHeightChannelsEllipsePath, directionlessChannelsEllipsePath;
+                    positionedChannelsEllipsePath.addEllipse(m_positionedChannelsArea);
+                    positionedHeightChannelsEllipsePath.addEllipse(m_positionedHeightChannelsArea);
+                    directionlessChannelsEllipsePath.addEllipse(m_directionlessChannelsArea);
+                    // check if the mouse has entered another circle area while dragging
+                    if (positionedChannelsEllipsePath.contains(mousePosition.toFloat()))
+                    {
+                        auto positionInArea = m_positionedChannelsArea.getCentre() - m_positionedChannelsArea.getConstrainedPoint(mousePosition.toFloat());
+                        auto relXPos = positionInArea.getX() / (0.5f * m_positionedChannelsArea.getWidth());
+                        auto relYPos = positionInArea.getY() / (0.5f * m_positionedChannelsArea.getHeight());
+                        inputPosition.second.value = { relXPos, relYPos };
+                        inputPosition.second.layer = ChannelLayer::Positioned;
+                    }
+                    else if (positionedHeightChannelsEllipsePath.contains(mousePosition.toFloat()))
+                    {
+                        auto positionInArea = m_positionedHeightChannelsArea.getCentre() - m_positionedHeightChannelsArea.getConstrainedPoint(mousePosition.toFloat());
+                        auto relXPos = positionInArea.getX() / (0.5f * m_positionedHeightChannelsArea.getWidth());
+                        auto relYPos = positionInArea.getY() / (0.5f * m_positionedHeightChannelsArea.getHeight());
+                        inputPosition.second.value = { relXPos, relYPos };
+                        inputPosition.second.layer = ChannelLayer::PositionedHeight;
+                    }
+                    else if (directionlessChannelsEllipsePath.contains(mousePosition.toFloat()))
+                    {
+                        auto positionInArea = m_directionlessChannelsArea.getCentre() - m_directionlessChannelsArea.getConstrainedPoint(mousePosition.toFloat());
+                        auto relXPos = positionInArea.getX() / (0.5f * m_directionlessChannelsArea.getWidth());
+                        auto relYPos = positionInArea.getY() / (0.5f * m_directionlessChannelsArea.getHeight());
+                        inputPosition.second.value = { relXPos, relYPos };
+                        inputPosition.second.layer = ChannelLayer::Directionless;
+                    }
+                    // finally do the clipping to original circle, if the dragging happens somewhere outside everything
+                    else
+                    {
+                        juce::Point<float> constrainedPoint;
+                        ellipsePath.getNearestPoint(mousePosition.toFloat(), constrainedPoint);
+                        auto positionInArea = area.getCentre() - constrainedPoint;
+                        auto relXPos = positionInArea.getX() / (0.5f * area.getWidth());
+                        auto relYPos = positionInArea.getY() / (0.5f * area.getHeight());
+                        inputPosition.second.value = { relXPos, relYPos };
+                    }
+
+                }
+            }
+        }
+    }
+
+    repaint();
+
+    juce::Component::mouseDrag(e);
 }
 
 //void TwoDFieldMultisliderComponent::processingDataChanged(AbstractProcessorData *data)

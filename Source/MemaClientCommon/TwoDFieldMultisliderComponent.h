@@ -25,11 +25,40 @@
 namespace Mema
 {
 
+
 //==============================================================================
 /*
 */
 class TwoDFieldMultisliderComponent  :   public juce::Component
 {
+public:
+    enum ChannelLayer
+    {
+        Positioned,
+        PositionedHeight,
+        Directionless
+    };
+
+    struct TwoDMultisliderValue
+    {
+        TwoDMultisliderValue() = default;
+        TwoDMultisliderValue(float rX, float rY) { relXPos = rX; relYPos = rY; };
+
+        float relXPos = 0.0f;
+        float relYPos = 0.0f;
+    };
+
+    struct TwoDMultisliderSourcePosition
+    {
+        TwoDMultisliderSourcePosition() = default;
+        TwoDMultisliderSourcePosition(ChannelLayer l, TwoDMultisliderValue v, bool iS, bool iO) { layer = l; value = v; isSliding = iS; isOn = iO; };
+
+        ChannelLayer layer = ChannelLayer::Positioned;
+        TwoDMultisliderValue value = { 0.0f, 0.0f };
+        bool isSliding = false;
+        bool isOn = true;
+    };
+
 public:
     TwoDFieldMultisliderComponent();
     ~TwoDFieldMultisliderComponent();
@@ -46,14 +75,24 @@ public:
     //==============================================================================
     void paint (Graphics&) override;
     void resized() override;
+
+    //==============================================================================
+    void mouseDown(const juce::MouseEvent& e) override;
+    void mouseUp(const MouseEvent& e) override;
+    void mouseDrag(const MouseEvent& e) override;
     
     //==============================================================================
     //void processingDataChanged(AbstractProcessorData *data) override;
+
+    //==============================================================================
+    static constexpr int s_thumbWidth = 20;
+    static constexpr float s_trackWidth = 8.0f;
 
 private:
     //==============================================================================
     void paintCircularLevelIndication(juce::Graphics& g, const juce::Rectangle<float>& circleArea, const std::map<int, juce::Point<float>>& channelLevelMaxPoints, const juce::Array<juce::AudioChannelSet::ChannelType>& channelsToPaint);
     void paintLevelMeterIndication(juce::Graphics& g, const juce::Rectangle<float>& levelMeterArea, const juce::Array<juce::AudioChannelSet::ChannelType>& channelsToPaint);
+    void paintSliderKnob(juce::Graphics& g, const juce::Rectangle<float>& sliderArea, const float& relXPos, const float& relYPos, const int& silderNumber, bool isSliderOn, bool isSliderSliding);
 
     //==============================================================================
     bool usesPositionedChannels() { return !m_clockwiseOrderedChannelTypes.isEmpty(); };
@@ -87,6 +126,7 @@ private:
         juce::AudioChannelSet::create9point1point6() };
 
     //ProcessorLevelData  m_levelData;
+    std::map<int, TwoDMultisliderSourcePosition>   m_inputPositions;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TwoDFieldMultisliderComponent)
 };
