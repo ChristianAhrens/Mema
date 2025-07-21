@@ -52,8 +52,8 @@ public:
         L = 65
     };
 
-    static constexpr int gap = 3;
-    static constexpr int scrollbarsize = 8;
+    static constexpr int s_gap = 3;
+    static constexpr int s_scrollbarsize = 8;
 
 public:
     MemaClientControlComponentBase();

@@ -87,6 +87,9 @@ public:
     //void processingDataChanged(AbstractProcessorData *data) override;
 
     //==============================================================================
+    std::function<void(int channel, const TwoDMultisliderValue& value, std::optional<ChannelLayer> layer)> onInputPositionChanged;
+
+    //==============================================================================
     static constexpr int s_thumbWidth = 20;
     static constexpr float s_trackWidth = 8.0f;
 
@@ -100,6 +103,10 @@ private:
     bool usesPositionedChannels() { return !m_clockwiseOrderedChannelTypes.isEmpty(); };
     bool usesPositionedHeightChannels() { return !m_clockwiseOrderedHeightChannelTypes.isEmpty(); };
     bool usesDirectionlessChannels() { return !m_directionLessChannelTypes.isEmpty(); };
+
+    //==============================================================================
+    void updateInputPosition(int channel, const TwoDMultisliderValue& value, std::optional<ChannelLayer> layer);
+    void updateDirectionslessChannelSliders();
     
     //==============================================================================
     juce::Rectangle<float>  m_positionedChannelsArea;
@@ -126,6 +133,8 @@ private:
         juce::AudioChannelSet::create7point1(),
         juce::AudioChannelSet::create7point1point4(),
         juce::AudioChannelSet::create9point1point6() };
+
+    std::map<juce::AudioChannelSet::ChannelType, std::unique_ptr<JUCEAppBasics::ToggleStateSlider>>    m_directionslessChannelSliders;
 
     //ProcessorLevelData  m_levelData;
     std::map<int, TwoDMultisliderSourcePosition>   m_inputPositions;

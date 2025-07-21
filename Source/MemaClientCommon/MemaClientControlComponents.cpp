@@ -155,13 +155,13 @@ FaderbankControlComponent::FaderbankControlComponent()
     addAndMakeVisible(m_verticalScrollViewport.get());
 
     m_inputControlsGrid = std::make_unique<juce::Grid>();
-    m_inputControlsGrid->setGap(juce::Grid::Px(gap));
+    m_inputControlsGrid->setGap(juce::Grid::Px(s_gap));
 
     m_outputControlsGrid = std::make_unique<juce::Grid>();
-    m_outputControlsGrid->setGap(juce::Grid::Px(gap));
+    m_outputControlsGrid->setGap(juce::Grid::Px(s_gap));
 
     m_crosspointsControlsGrid = std::make_unique<juce::Grid>();
-    m_crosspointsControlsGrid->setGap(juce::Grid::Px(gap));
+    m_crosspointsControlsGrid->setGap(juce::Grid::Px(s_gap));
     m_crosspointsNoSelectionLabel = std::make_unique<juce::Label>("NoSelectLabel", "Select a channel to control crosspoints.");
     m_crosspointsNoSelectionLabel->setJustificationType(juce::Justification::centred);
     addAndMakeVisible(m_crosspointsNoSelectionLabel.get());
@@ -178,28 +178,28 @@ void FaderbankControlComponent::paint(Graphics& g)
 
 void FaderbankControlComponent::resized()
 {
-    auto ctrlsSize = 2 * (m_controlsSize + gap) + scrollbarsize;
-    auto currentInputsWidth = (m_inputControlsGrid->getNumberOfColumns() * (m_controlsSize + gap)) - gap;
-    auto currentOutputsHeight = (m_outputControlsGrid->getNumberOfRows() * (m_controlsSize + gap)) - gap;
+    auto ctrlsSize = 2 * (m_controlsSize + s_gap) + s_scrollbarsize;
+    auto currentInputsWidth = (m_inputControlsGrid->getNumberOfColumns() * (m_controlsSize + s_gap)) - s_gap;
+    auto currentOutputsHeight = (m_outputControlsGrid->getNumberOfRows() * (m_controlsSize + s_gap)) - s_gap;
     auto crosspointControlBounds = getLocalBounds();
 
     if (m_inputControlsGrid)
-        m_inputControlsGrid->performLayout({ 0, 0, currentInputsWidth, ctrlsSize - scrollbarsize });
+        m_inputControlsGrid->performLayout({ 0, 0, currentInputsWidth, ctrlsSize - s_scrollbarsize });
 
     if (m_outputControlsGrid)
-        m_outputControlsGrid->performLayout({ 0, 0, ctrlsSize - scrollbarsize, currentOutputsHeight });
+        m_outputControlsGrid->performLayout({ 0, 0, ctrlsSize - s_scrollbarsize, currentOutputsHeight });
 
     if (m_crosspointsControlsGrid && m_currentIOChannel.first != ControlDirection::None)
     {
         if (ControlDirection::Input == m_currentIOChannel.first)
         {
             crosspointControlBounds.removeFromLeft(ctrlsSize);
-            crosspointControlBounds.removeFromRight(gap);
+            crosspointControlBounds.removeFromRight(s_gap);
         }
         else if (ControlDirection::Output == m_currentIOChannel.first)
         {
             crosspointControlBounds.removeFromTop(ctrlsSize);
-            crosspointControlBounds.removeFromBottom(gap);
+            crosspointControlBounds.removeFromBottom(s_gap);
         }
         m_crosspointsControlsGrid->performLayout(crosspointControlBounds);
         m_crosspointsNoSelectionLabel->setVisible(false);
@@ -217,23 +217,23 @@ void FaderbankControlComponent::resized()
 
     if (ControlDirection::Input == m_currentIOChannel.first)
     {
-        m_horizontalScrollContainerComponent->setBounds({ 0, 0, currentInputsWidth, ctrlsSize - scrollbarsize });
+        m_horizontalScrollContainerComponent->setBounds({ 0, 0, currentInputsWidth, ctrlsSize - s_scrollbarsize });
         m_horizontalScrollViewport->setBounds(getLocalBounds().removeFromTop(ctrlsSize).removeFromRight(getWidth() - ctrlsSize));
-        m_verticalScrollContainerComponent->setBounds({ 0, 0, getWidth() - scrollbarsize, currentOutputsHeight });
+        m_verticalScrollContainerComponent->setBounds({ 0, 0, getWidth() - s_scrollbarsize, currentOutputsHeight });
         m_verticalScrollViewport->setBounds(getLocalBounds().removeFromBottom(getHeight() - ctrlsSize));
     }
     else if (ControlDirection::Output == m_currentIOChannel.first)
     {
-        m_horizontalScrollContainerComponent->setBounds({ 0, 0, currentInputsWidth, getHeight() - scrollbarsize });
+        m_horizontalScrollContainerComponent->setBounds({ 0, 0, currentInputsWidth, getHeight() - s_scrollbarsize });
         m_horizontalScrollViewport->setBounds(getLocalBounds().removeFromRight(getWidth() - ctrlsSize));
-        m_verticalScrollContainerComponent->setBounds({ 0, 0, ctrlsSize - scrollbarsize, currentOutputsHeight });
+        m_verticalScrollContainerComponent->setBounds({ 0, 0, ctrlsSize - s_scrollbarsize, currentOutputsHeight });
         m_verticalScrollViewport->setBounds(getLocalBounds().removeFromBottom(getHeight() - ctrlsSize));
     }
     else //if (ControlDirection::None == m_currentIOChannel.first)
     {
-        m_horizontalScrollContainerComponent->setBounds({ 0, 0, currentInputsWidth, ctrlsSize - scrollbarsize });
+        m_horizontalScrollContainerComponent->setBounds({ 0, 0, currentInputsWidth, ctrlsSize - s_scrollbarsize });
         m_horizontalScrollViewport->setBounds(getLocalBounds().removeFromRight(getWidth() - ctrlsSize));
-        m_verticalScrollContainerComponent->setBounds({ 0, 0, ctrlsSize - scrollbarsize, currentOutputsHeight });
+        m_verticalScrollContainerComponent->setBounds({ 0, 0, ctrlsSize - s_scrollbarsize, currentOutputsHeight });
         m_verticalScrollViewport->setBounds(getLocalBounds().removeFromBottom(getHeight() - ctrlsSize));
 
         m_crosspointsNoSelectionLabel->setBounds(getLocalBounds().removeFromBottom(getHeight() - ctrlsSize).removeFromRight(getWidth() - ctrlsSize));
@@ -671,7 +671,7 @@ PanningControlComponent::PanningControlComponent()
     addAndMakeVisible(m_horizontalScrollViewport.get());
 
     m_inputControlsGrid = std::make_unique<juce::Grid>();
-    m_inputControlsGrid->setGap(juce::Grid::Px(gap));
+    m_inputControlsGrid->setGap(juce::Grid::Px(s_gap));
 }
 
 PanningControlComponent::~PanningControlComponent()
@@ -687,6 +687,18 @@ void PanningControlComponent::resized()
 {
     auto margin = 8;
     auto bounds = getLocalBounds().reduced(margin, margin);
+
+    auto ctrlsSize = 2 * (m_controlsSize + s_gap) + s_scrollbarsize;
+    auto currentInputsWidth = (m_inputControlsGrid->getNumberOfColumns() * (m_controlsSize + s_gap)) - s_gap;
+
+    if (m_inputControlsGrid)
+        m_inputControlsGrid->performLayout({ 0, 0, currentInputsWidth, ctrlsSize - s_scrollbarsize });
+
+    m_horizontalScrollContainerComponent->setBounds({ 0, 0, currentInputsWidth, ctrlsSize - s_scrollbarsize });
+    m_horizontalScrollViewport->setBounds(getLocalBounds().removeFromTop(ctrlsSize).removeFromRight(getWidth() - ctrlsSize));
+
+    bounds.removeFromTop(ctrlsSize);
+
     auto boundsAspect = bounds.toFloat().getAspectRatio();
     auto fieldAspect = m_multiSlider->getRequiredAspectRatio();
     if (boundsAspect >= 1 / fieldAspect)
