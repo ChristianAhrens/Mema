@@ -201,6 +201,7 @@ public:
 
 protected:
     //==============================================================================
+    void changeInputPosition(int channel, float xVal, float yVal, int layer);
     void selectInputChannel(int channel);
     void rebuildControls(bool force = false);
     void rebuildInputControls(bool force = false);

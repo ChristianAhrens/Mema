@@ -441,6 +441,7 @@ void TwoDFieldMultisliderComponent::resized()
 void TwoDFieldMultisliderComponent::mouseDown(const juce::MouseEvent& e)
 {
     // hit-test slider knobs
+    auto hadHit = false;
     for (auto& inputPosition : m_inputPositions)
     {
         auto emptyRect = juce::Rectangle<float>();
@@ -454,12 +455,17 @@ void TwoDFieldMultisliderComponent::mouseDown(const juce::MouseEvent& e)
 
         auto maxPoint = area.getCentre() - juce::Point<float>((area.getWidth() / 2) * inputPosition.second.value.relXPos, (area.getHeight() / 2) * inputPosition.second.value.relYPos);
         auto sliderKnob = juce::Rectangle<float>(static_cast<float>(s_thumbWidth), static_cast<float>(s_thumbWidth)).withCentre(maxPoint);
-        if (sliderKnob.contains(e.getMouseDownPosition().toFloat()))
+        if (sliderKnob.contains(e.getMouseDownPosition().toFloat()) && false == hadHit)
         {
-            inputPosition.second.isSliding = true;
             inputPosition.second.isOn = true;
 
-            repaint();
+            selectInput(inputPosition.first, true, juce::sendNotification);
+
+            hadHit = true;
+        }
+        else
+        {
+            selectInput(inputPosition.first, false, juce::sendNotification);
         }
     }
 
@@ -468,10 +474,6 @@ void TwoDFieldMultisliderComponent::mouseDown(const juce::MouseEvent& e)
 
 void TwoDFieldMultisliderComponent::mouseUp(const MouseEvent& e)
 {
-    // reset any sliding states slider knobs
-    for (auto& inputPosition : m_inputPositions)
-        inputPosition.second.isSliding = false;
-    
     juce::Component::mouseUp(e);
 }
 
@@ -503,7 +505,7 @@ void TwoDFieldMultisliderComponent::mouseDrag(const MouseEvent& e)
                     auto positionInArea = area.getCentre() - area.getConstrainedPoint(mousePosition.toFloat());
                     auto relXPos = positionInArea.getX() / (0.5f * area.getWidth());
                     auto relYPos = positionInArea.getY() / (0.5f * area.getHeight());
-                    updateInputPosition(inputPosition.first, { relXPos, relYPos }, std::nullopt);
+                    setInputPosition(inputPosition.first, { relXPos, relYPos }, inputPosition.second.layer, juce::sendNotification);
                 }
                 else
                 {
@@ -516,14 +518,14 @@ void TwoDFieldMultisliderComponent::mouseDrag(const MouseEvent& e)
                         auto positionInArea = m_positionedChannelsArea.getCentre() - m_positionedChannelsArea.getConstrainedPoint(mousePosition.toFloat());
                         auto relXPos = positionInArea.getX() / (0.5f * m_positionedChannelsArea.getWidth());
                         auto relYPos = positionInArea.getY() / (0.5f * m_positionedChannelsArea.getHeight());
-                        updateInputPosition(inputPosition.first, { relXPos, relYPos }, ChannelLayer::Positioned);
+                        setInputPosition(inputPosition.first, { relXPos, relYPos }, ChannelLayer::Positioned, juce::sendNotification);
                     }
                     else if (positionedHeightChannelsEllipsePath.contains(mousePosition.toFloat()))
                     {
                         auto positionInArea = m_positionedHeightChannelsArea.getCentre() - m_positionedHeightChannelsArea.getConstrainedPoint(mousePosition.toFloat());
                         auto relXPos = positionInArea.getX() / (0.5f * m_positionedHeightChannelsArea.getWidth());
                         auto relYPos = positionInArea.getY() / (0.5f * m_positionedHeightChannelsArea.getHeight());
-                        updateInputPosition(inputPosition.first, { relXPos, relYPos }, ChannelLayer::PositionedHeight);
+                        setInputPosition(inputPosition.first, { relXPos, relYPos }, ChannelLayer::PositionedHeight, juce::sendNotification);
                     }
                     // finally do the clipping to original circle, if the dragging happens somewhere outside everything
                     else
@@ -534,7 +536,7 @@ void TwoDFieldMultisliderComponent::mouseDrag(const MouseEvent& e)
                         auto relXPos = positionInArea.getX() / (0.5f * area.getWidth());
                         auto relYPos = positionInArea.getY() / (0.5f * area.getHeight());
                         inputPosition.second.value = { relXPos, relYPos };
-                        updateInputPosition(inputPosition.first, { relXPos, relYPos }, std::nullopt);
+                        setInputPosition(inputPosition.first, { relXPos, relYPos }, std::nullopt, juce::sendNotification);
                     }
 
                 }
@@ -543,6 +545,28 @@ void TwoDFieldMultisliderComponent::mouseDrag(const MouseEvent& e)
     }
 
     juce::Component::mouseDrag(e);
+}
+
+void TwoDFieldMultisliderComponent::setInputPosition(int channel, const TwoDMultisliderValue& value, std::optional<ChannelLayer> layer, juce::NotificationType notification)
+{
+    m_inputPositions[channel].value = value;
+    if (layer)
+        m_inputPositions[channel].layer = layer.value();
+
+    repaint();
+
+    if (juce::dontSendNotification != notification && onInputPositionChanged)
+        onInputPositionChanged(channel, value, layer);
+}
+
+void TwoDFieldMultisliderComponent::selectInput(int channel, bool selectOn, juce::NotificationType notification)
+{
+    m_inputPositions[channel].isSliding = selectOn;
+
+    repaint();
+
+    if (juce::dontSendNotification != notification && onInputSelected && selectOn)
+        onInputSelected(channel);
 }
 
 void TwoDFieldMultisliderComponent::setIOCount(const std::pair<int, int>& ioCount)
@@ -554,18 +578,6 @@ void TwoDFieldMultisliderComponent::setIOCount(const std::pair<int, int>& ioCoun
     }
 
     repaint();
-}
-
-void TwoDFieldMultisliderComponent::updateInputPosition(int channel, const TwoDMultisliderValue& value, std::optional<ChannelLayer> layer)
-{
-    m_inputPositions[channel].value = value;
-    if (layer)
-        m_inputPositions[channel].layer = layer.value();
-
-    repaint();
-
-    if (onInputPositionChanged)
-        onInputPositionChanged(channel, value, layer);
 }
 
 //void TwoDFieldMultisliderComponent::processingDataChanged(AbstractProcessorData *data)

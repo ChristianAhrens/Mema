@@ -663,6 +663,12 @@ PanningControlComponent::PanningControlComponent()
     : MemaClientControlComponentBase()
 {
     m_multiSlider = std::make_unique<Mema::TwoDFieldMultisliderComponent>();
+    m_multiSlider->onInputPositionChanged = [=](int channel, const Mema::TwoDFieldMultisliderComponent::TwoDMultisliderValue& value, std::optional<Mema::TwoDFieldMultisliderComponent::ChannelLayer> layer) {
+        changeInputPosition(channel, value.relXPos, value.relYPos, layer.has_value() ? layer.value() : 0);
+    };
+    m_multiSlider->onInputSelected = [=](int channel) {
+        selectInputChannel(channel);
+    };
     addAndMakeVisible(m_multiSlider.get());
 
     m_horizontalScrollContainerComponent = std::make_unique<juce::Component>();
@@ -843,13 +849,18 @@ void PanningControlComponent::selectInputChannel(int channel)
     auto ioCount = getIOCount();
     for (auto i = 0; i < ioCount.first; i++)
     {
+        auto in = std::uint16_t(i + 1);
+        auto state = channel == in;
         if (nullptr != m_inputSelectButtons.at(i))
-        {
-            auto in = std::uint16_t(i + 1);
-            auto state = channel == in;
             m_inputSelectButtons.at(i)->setToggleState(state, juce::dontSendNotification);
-        }
+        if (nullptr != m_multiSlider)
+            m_multiSlider->selectInput(in, state);
     }
+}
+
+void PanningControlComponent::changeInputPosition(int channel, float xVal, float yVal, int layer)
+{
+    DBG(juce::String(__FUNCTION__) << " " << channel << " " << xVal << "," << yVal << "(" << layer << ")");
 }
 
 

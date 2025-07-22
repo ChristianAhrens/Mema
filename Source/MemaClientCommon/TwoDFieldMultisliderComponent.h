@@ -87,7 +87,12 @@ public:
     //void processingDataChanged(AbstractProcessorData *data) override;
 
     //==============================================================================
+    void setInputPosition(int channel, const TwoDMultisliderValue& value, std::optional<ChannelLayer> layer = {}, juce::NotificationType notification = juce::dontSendNotification);
+    void selectInput(int channel, bool selectOn, juce::NotificationType notification = juce::dontSendNotification);
+    
+    //==============================================================================
     std::function<void(int channel, const TwoDMultisliderValue& value, std::optional<ChannelLayer> layer)> onInputPositionChanged;
+    std::function<void(int channel)> onInputSelected;
 
     //==============================================================================
     static constexpr int s_thumbWidth = 20;
@@ -105,7 +110,6 @@ private:
     bool usesDirectionlessChannels() { return !m_directionLessChannelTypes.isEmpty(); };
 
     //==============================================================================
-    void updateInputPosition(int channel, const TwoDMultisliderValue& value, std::optional<ChannelLayer> layer);
     void updateDirectionslessChannelSliders();
     
     //==============================================================================
