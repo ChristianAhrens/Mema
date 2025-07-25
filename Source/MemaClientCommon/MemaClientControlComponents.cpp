@@ -666,6 +666,16 @@ PanningControlComponent::PanningControlComponent()
     m_multiSlider->onInputPositionChanged = [=](std::uint16_t channel, const Mema::TwoDFieldMultisliderComponent::TwoDMultisliderValue& value, std::optional<Mema::TwoDFieldMultisliderComponent::ChannelLayer> layer) {
         changeInputPosition(channel, value.relXPos, value.relYPos, layer.has_value() ? layer.value() : 0);
     };
+    m_multiSlider->onInputToOutputStatesChanged = [=](const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& inputToOutputStates) {
+        addCrosspointStates(inputToOutputStates);
+        if (onCrosspointStatesChanged)
+            onCrosspointStatesChanged(getCrosspointStates());
+    };
+    m_multiSlider->onInputToOutputValuesChanged = [=](const std::map<std::uint16_t, std::map<std::uint16_t, float>>& inputToOutputValues) {
+        addCrosspointValues(inputToOutputValues);
+        if (onCrosspointValuesChanged)
+            onCrosspointValuesChanged(getCrosspointValues());
+    };
     m_multiSlider->onInputSelected = [=](std::uint16_t channel) {
         selectInputChannel(channel);
     };
@@ -886,7 +896,39 @@ void PanningControlComponent::selectInputChannel(std::uint16_t channel)
 
 void PanningControlComponent::changeInputPosition(std::uint16_t channel, float xVal, float yVal, int layer)
 {
-    DBG(juce::String(__FUNCTION__) << " " << int(channel) << " " << xVal << "," << yVal << "(" << layer << ")");
+    DBG(juce::String(__FUNCTION__) << " new pos: " << int(channel) << " " << xVal << "," << yVal << "(" << layer << ")");
+
+    if (m_multiSlider)
+    {
+        std::map<juce::AudioChannelSet::ChannelType, juce::Point<float>> outputsMaxPoints;
+        std::map<juce::AudioChannelSet::ChannelType, float> channelToOutputsDists;
+
+        auto h = 2.0f;
+        auto w = 2.0f;
+        auto c = juce::Point<float>(0.0f, 0.0f);
+
+        auto outputs = m_multiSlider->getOutputsInLayer(TwoDFieldMultisliderComponent::ChannelLayer(layer));
+        for (auto const& channelType : outputs)
+        {
+            auto angleRad = juce::degreesToRadians(m_multiSlider->getAngleForChannelTypeInCurrentConfiguration(channelType));
+            auto xLength = sinf(angleRad) * (h / 2.0f);
+            auto yLength = cosf(angleRad) * (w / 2.0f);
+            outputsMaxPoints[channelType] = c + juce::Point<float>(xLength, -yLength);
+            channelToOutputsDists[channelType] = 0.5f * outputsMaxPoints[channelType].getDistanceFrom({ xVal, yVal });
+        }
+
+        std::map<std::uint16_t, std::map<std::uint16_t, bool>> crosspointStates;
+        std::map<std::uint16_t, std::map<std::uint16_t, float>> crosspointValues;
+        for (auto const& cToOdKV : channelToOutputsDists)
+        {
+            crosspointStates[channel][std::uint16_t(m_multiSlider->getChannelNumberForChannelTypeInCurrentConfiguration(cToOdKV.first))] = true;
+            crosspointValues[channel][std::uint16_t(m_multiSlider->getChannelNumberForChannelTypeInCurrentConfiguration(cToOdKV.first))] = cToOdKV.second;
+
+            DBG(juce::String(__FUNCTION__) << " " << juce::AudioChannelSet::getAbbreviatedChannelTypeName(cToOdKV.first) << ": " << cToOdKV.second);
+        }
+        addCrosspointStates(crosspointStates);
+        addCrosspointValues(crosspointValues);
+    }
 }
 
 

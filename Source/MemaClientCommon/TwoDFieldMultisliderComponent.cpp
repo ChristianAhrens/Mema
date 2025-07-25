@@ -173,8 +173,7 @@ void TwoDFieldMultisliderComponent::paintCircularLevelIndication(juce::Graphics&
         }
 
         juce::Colour colour;
-        auto anyInputSelected = isAnyInputSelected();
-        if (anyInputSelected.has_value() && anyInputSelected.value() == vKV.first)
+        if (m_currentlySelectedInput == vKV.first)
             colour = getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId).withAlpha(0.8f);
         else
             colour = getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId).withAlpha(0.4f);
@@ -496,8 +495,10 @@ void TwoDFieldMultisliderComponent::setInputPosition(std::uint16_t channel, cons
 void TwoDFieldMultisliderComponent::selectInput(std::uint16_t channel, bool selectOn, juce::NotificationType notification)
 {
     m_inputPositions[channel].isSliding = selectOn;
-
-    auto anyInputSelected = isAnyInputSelected();
+    if (m_currentlySelectedInput == channel && !selectOn)
+        m_currentlySelectedInput = 0;
+    else if (m_currentlySelectedInput != channel && selectOn)
+        m_currentlySelectedInput = channel;
 
     repaint();
 
@@ -511,38 +512,23 @@ void TwoDFieldMultisliderComponent::selectInput(std::uint16_t channel, bool sele
                 if (selectOn)
                 {
                     slider.second->setTitle(juce::String(channel));
+                    slider.second->setRange(0.0, 1.0, 0.01);
                     slider.second->setValue(m_inputToOutputVals[channel][output].second);
                     slider.second->setToggleState(m_inputToOutputVals[channel][output].first, juce::dontSendNotification);
                 }
-                //else if (anyInputSelected)
-                //{
-                //    slider.second->setTitle("");
-                //    slider.second->setValue(0.5f); // relative starting point at half scale
-                //    slider.second->setToggleState(true, juce::dontSendNotification);
-                //}
+                else if (0 == m_currentlySelectedInput)
+                {
+                    slider.second->setTitle("");
+                    slider.second->setRange(-0.5, 0.5, 0.01);
+                    slider.second->setValue(0.0); // relative starting
+                    slider.second->setToggleState(true, juce::dontSendNotification);
+                }
             }
         }
     }
 
     if (juce::dontSendNotification != notification && onInputSelected && selectOn)
         onInputSelected(channel);
-}
-
-std::optional<std::uint16_t> TwoDFieldMultisliderComponent::isAnyInputSelected()
-{
-    bool isAnyInputSelected = false;
-    std::uint16_t selectedInput = 0;
-    for (auto const& ipKV : m_inputPositions)
-    {
-        if (!isAnyInputSelected && ipKV.second.isSliding)
-            selectedInput = ipKV.first;
-        isAnyInputSelected = isAnyInputSelected || ipKV.second.isSliding;
-    }
-
-    if(isAnyInputSelected)
-        return selectedInput;
-    else
-        return std::nullopt;
 }
 
 void TwoDFieldMultisliderComponent::setIOCount(const std::pair<int, int>& ioCount)
@@ -565,6 +551,8 @@ void TwoDFieldMultisliderComponent::setInputToOutputStates(const std::map<std::u
             auto output = getChannelTypeForChannelNumberInCurrentConfiguration(oKV.first);
             if (juce::AudioChannelSet::ChannelType::unknown != output)
                 m_inputToOutputVals[iKV.first][output].first = oKV.second;
+            if (m_directionLessChannelTypes.contains(output) && m_directionslessChannelSliders.at(output) && m_currentlySelectedInput == iKV.first)
+                m_directionslessChannelSliders.at(output)->setValue(oKV.second, juce::dontSendNotification);
         }
     }
 
@@ -580,6 +568,8 @@ void TwoDFieldMultisliderComponent::setInputToOutputLevels(const std::map<std::u
             auto output = getChannelTypeForChannelNumberInCurrentConfiguration(oKV.first);
             if (juce::AudioChannelSet::ChannelType::unknown != output)
                 m_inputToOutputVals[iKV.first][output].second = oKV.second;
+            if (m_directionLessChannelTypes.contains(output) && m_directionslessChannelSliders.at(output) && m_currentlySelectedInput == iKV.first)
+                m_directionslessChannelSliders.at(output)->setValue(oKV.second, juce::dontSendNotification);
         }
     }
 
@@ -1301,6 +1291,39 @@ void TwoDFieldMultisliderComponent::rebuildDirectionslessChannelSliders()
         m_directionslessChannelSliders[channelType]->setRange(0.0, 1.0, 0.01);
         m_directionslessChannelSliders[channelType]->setToggleState(false, juce::dontSendNotification);
         m_directionslessChannelSliders[channelType]->displayValueConverter = [](double val) { return juce::String(juce::Decibels::gainToDecibels(val, static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())), 1) + " dB"; };
+        m_directionslessChannelSliders[channelType]->onToggleStateChange = [this, channelType]() {
+            std::map<std::uint16_t, std::map<std::uint16_t, bool >> states;
+            if (0 != m_currentlySelectedInput)
+                states[m_currentlySelectedInput][std::uint16_t(getChannelNumberForChannelTypeInCurrentConfiguration(channelType))] = m_directionslessChannelSliders[channelType]->getToggleState();
+            else
+            {
+                for (auto& ioValKV : m_inputToOutputVals)
+                {
+                    ioValKV.second[channelType].first = m_directionslessChannelSliders[channelType]->getToggleState();
+                    states[ioValKV.first][std::uint16_t(getChannelNumberForChannelTypeInCurrentConfiguration(channelType))] = m_directionslessChannelSliders[channelType]->getToggleState();
+                }
+            }
+
+            if (onInputToOutputStatesChanged)
+                onInputToOutputStatesChanged(states);
+        };
+        m_directionslessChannelSliders[channelType]->onValueChange = [this, channelType]() {
+            std::map<std::uint16_t, std::map<std::uint16_t, float >> values;
+            if (0 != m_currentlySelectedInput)
+                values[m_currentlySelectedInput][std::uint16_t(getChannelNumberForChannelTypeInCurrentConfiguration(channelType))] = float(m_directionslessChannelSliders[channelType]->getValue());
+            else
+            {
+                for (auto& ioValKV : m_inputToOutputVals)
+                {
+                    // hier muss noch statt absolut das diff zum letzten getValue genommen werden, sonst haut's exp ab
+                    ioValKV.second[channelType].second += float(m_directionslessChannelSliders[channelType]->getValue());
+                    values[ioValKV.first][std::uint16_t(getChannelNumberForChannelTypeInCurrentConfiguration(channelType))] = ioValKV.second[channelType].second;
+                }
+            }
+
+            if (onInputToOutputValuesChanged)
+                onInputToOutputValuesChanged(values);
+        };
         addAndMakeVisible(m_directionslessChannelSliders[channelType].get());
 
         m_directionslessChannelLabels[channelType] = std::make_unique<juce::Label>();
@@ -1327,6 +1350,16 @@ float TwoDFieldMultisliderComponent::getRequiredAspectRatio()
     
     jassertfalse;
     return 0.0f;
+}
+
+const juce::Array<juce::AudioChannelSet::ChannelType>& TwoDFieldMultisliderComponent::getOutputsInLayer(const ChannelLayer& layer)
+{
+    if (ChannelLayer::Positioned == layer)
+        return m_clockwiseOrderedChannelTypes;
+    else if (ChannelLayer::PositionedHeight == layer)
+        return m_clockwiseOrderedHeightChannelTypes;
+    else
+        return m_directionLessChannelTypes;
 }
 
 

@@ -56,6 +56,34 @@ MemaReComponent::MemaReComponent()
     addChildComponent(m_faderbankCtrlComponent.get());
 
     m_panningCtrlComponent = std::make_unique<Mema::PanningControlComponent>();
+    m_panningCtrlComponent->onInputMutesChanged = [=](const std::map<std::uint16_t, bool>& inputMuteStates) {
+        std::map<std::uint16_t, bool> outputMuteStates;
+        std::map<std::uint16_t, std::map<std::uint16_t, bool>> crosspointStates;
+        std::map<std::uint16_t, std::map<std::uint16_t, float>> crosspointValues;
+        if (onMessageReadyToSend)
+            onMessageReadyToSend(std::make_unique<Mema::ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage());
+        };
+    m_panningCtrlComponent->onOutputMutesChanged = [=](const std::map<std::uint16_t, bool>& outputMuteStates) {
+        std::map<std::uint16_t, bool> inputMuteStates;
+        std::map<std::uint16_t, std::map<std::uint16_t, bool>> crosspointStates;
+        std::map<std::uint16_t, std::map<std::uint16_t, float>> crosspointValues;
+        if (onMessageReadyToSend)
+            onMessageReadyToSend(std::make_unique<Mema::ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage());
+        };
+    m_panningCtrlComponent->onCrosspointStatesChanged = [=](const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& crosspointStates) {
+        std::map<std::uint16_t, bool> inputMuteStates;
+        std::map<std::uint16_t, bool> outputMuteStates;
+        std::map<std::uint16_t, std::map<std::uint16_t, float>> crosspointValues;
+        if (onMessageReadyToSend)
+            onMessageReadyToSend(std::make_unique<Mema::ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage());
+        };
+    m_panningCtrlComponent->onCrosspointValuesChanged = [=](const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues) {
+        std::map<std::uint16_t, bool> inputMuteStates;
+        std::map<std::uint16_t, bool> outputMuteStates;
+        std::map<std::uint16_t, std::map<std::uint16_t, bool>> crosspointStates;
+        if (onMessageReadyToSend)
+            onMessageReadyToSend(std::make_unique<Mema::ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage());
+        };
     addChildComponent(m_panningCtrlComponent.get());
 
     setOutputFaderbankCtrlActive(Mema::FaderbankControlComponent::ControlsSize::S);

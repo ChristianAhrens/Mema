@@ -92,10 +92,15 @@ public:
     //==============================================================================
     void setInputPosition(std::uint16_t channel, const TwoDMultisliderValue& value, std::optional<ChannelLayer> layer = {}, juce::NotificationType notification = juce::dontSendNotification);
     void selectInput(std::uint16_t channel, bool selectOn, juce::NotificationType notification = juce::dontSendNotification);
+
+    //==============================================================================
+    const juce::Array<juce::AudioChannelSet::ChannelType>& getOutputsInLayer(const ChannelLayer& layer);
     
     //==============================================================================
     std::function<void(std::uint16_t channel, const TwoDMultisliderValue& value, std::optional<ChannelLayer> layer)> onInputPositionChanged;
     std::function<void(std::uint16_t channel)> onInputSelected;
+    std::function<void(const std::map<std::uint16_t, std::map<std::uint16_t, bool>>&)>  onInputToOutputStatesChanged;
+    std::function<void(const std::map<std::uint16_t, std::map<std::uint16_t, float>>&)> onInputToOutputValuesChanged;
 
     //==============================================================================
     static constexpr int s_thumbWidth = 20;
@@ -110,8 +115,6 @@ private:
     bool usesPositionedChannels() { return !m_clockwiseOrderedChannelTypes.isEmpty(); };
     bool usesPositionedHeightChannels() { return !m_clockwiseOrderedHeightChannelTypes.isEmpty(); };
     bool usesDirectionlessChannels() { return !m_directionLessChannelTypes.isEmpty(); };
-
-    std::optional<std::uint16_t> isAnyInputSelected();
 
     //==============================================================================
     void rebuildDirectionslessChannelSliders();
@@ -147,6 +150,8 @@ private:
 
     std::map<std::uint16_t, std::map<juce::AudioChannelSet::ChannelType, std::pair<bool, float>>> m_inputToOutputVals;
     std::map<std::uint16_t, TwoDMultisliderSourcePosition>  m_inputPositions;
+
+    std::uint16_t m_currentlySelectedInput = 0;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TwoDFieldMultisliderComponent)
 };
