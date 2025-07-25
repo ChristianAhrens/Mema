@@ -84,6 +84,9 @@ public:
     virtual void setCrosspointValues(const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues);
     const std::map<std::uint16_t, std::map<std::uint16_t, float>>& getCrosspointValues();
 
+    virtual void addCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& crosspointStates);
+    virtual void addCrosspointValues(const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues);
+
     //==============================================================================
     std::function<void(const std::map<std::uint16_t, bool>&)>                           onInputMutesChanged;
     std::function<void(const std::map<std::uint16_t, bool>&)>                           onOutputMutesChanged;
@@ -137,10 +140,6 @@ public:
     void setCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& crosspointStates) override;
     void setCrosspointValues(const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues) override;
 
-    //==============================================================================
-    void addCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& crosspointStates);
-    void addCrosspointValues(const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues);
-
 protected:
     //==============================================================================
     void selectIOChannel(const ControlDirection& direction, int channel);
@@ -184,6 +183,7 @@ public:
     //==============================================================================
     void paint(Graphics&) override;
     void resized() override;
+    void lookAndFeelChanged() override;
 
     //==============================================================================
     void resetCtrl() override;
@@ -194,6 +194,8 @@ public:
     //==============================================================================
     void setIOCount(const std::pair<int, int>& ioCount) override;
     void setInputMuteStates(const std::map<std::uint16_t, bool>& inputMuteStates) override;
+    void setCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& crosspointStates) override;
+    void setCrosspointValues(const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues) override;
 
     //==============================================================================
     void setChannelConfig(const juce::AudioChannelSet& channelConfiguration);
@@ -201,8 +203,8 @@ public:
 
 protected:
     //==============================================================================
-    void changeInputPosition(int channel, float xVal, float yVal, int layer);
-    void selectInputChannel(int channel);
+    void changeInputPosition(std::uint16_t channel, float xVal, float yVal, int layer);
+    void selectInputChannel(std::uint16_t channel);
     void rebuildControls(bool force = false);
     void rebuildInputControls(bool force = false);
 
@@ -219,7 +221,7 @@ private:
 
     juce::AudioChannelSet   m_channelConfiguration;
 
-    int m_currentInputChannel = 0;
+    std::uint16_t m_currentInputChannel = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PanningControlComponent)
 };

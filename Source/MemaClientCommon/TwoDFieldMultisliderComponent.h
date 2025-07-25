@@ -68,6 +68,7 @@ public:
 
     float getAngleForChannelTypeInCurrentConfiguration(const juce::AudioChannelSet::ChannelType& channelType);
     int getChannelNumberForChannelTypeInCurrentConfiguration(const juce::AudioChannelSet::ChannelType& channelType);
+    const juce::AudioChannelSet::ChannelType getChannelTypeForChannelNumberInCurrentConfiguration(int channelNumber);
     void setClockwiseOrderedChannelTypesForCurrentConfiguration();
 
     float getRequiredAspectRatio();
@@ -77,6 +78,7 @@ public:
     //==============================================================================
     void paint (Graphics&) override;
     void resized() override;
+    void lookAndFeelChanged() override;
 
     //==============================================================================
     void mouseDown(const juce::MouseEvent& e) override;
@@ -84,15 +86,16 @@ public:
     void mouseDrag(const MouseEvent& e) override;
     
     //==============================================================================
-    //void processingDataChanged(AbstractProcessorData *data) override;
+    void setInputToOutputStates(const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& inputToOutputStates);
+    void setInputToOutputLevels(const std::map<std::uint16_t, std::map<std::uint16_t, float>>& inputToOutputLevels);
 
     //==============================================================================
-    void setInputPosition(int channel, const TwoDMultisliderValue& value, std::optional<ChannelLayer> layer = {}, juce::NotificationType notification = juce::dontSendNotification);
-    void selectInput(int channel, bool selectOn, juce::NotificationType notification = juce::dontSendNotification);
+    void setInputPosition(std::uint16_t channel, const TwoDMultisliderValue& value, std::optional<ChannelLayer> layer = {}, juce::NotificationType notification = juce::dontSendNotification);
+    void selectInput(std::uint16_t channel, bool selectOn, juce::NotificationType notification = juce::dontSendNotification);
     
     //==============================================================================
-    std::function<void(int channel, const TwoDMultisliderValue& value, std::optional<ChannelLayer> layer)> onInputPositionChanged;
-    std::function<void(int channel)> onInputSelected;
+    std::function<void(std::uint16_t channel, const TwoDMultisliderValue& value, std::optional<ChannelLayer> layer)> onInputPositionChanged;
+    std::function<void(std::uint16_t channel)> onInputSelected;
 
     //==============================================================================
     static constexpr int s_thumbWidth = 20;
@@ -101,7 +104,6 @@ public:
 private:
     //==============================================================================
     void paintCircularLevelIndication(juce::Graphics& g, const juce::Rectangle<float>& circleArea, const std::map<int, juce::Point<float>>& channelLevelMaxPoints, const juce::Array<juce::AudioChannelSet::ChannelType>& channelsToPaint);
-    void paintLevelMeterIndication(juce::Graphics& g, const juce::Rectangle<float>& levelMeterArea, const juce::Array<juce::AudioChannelSet::ChannelType>& channelsToPaint);
     void paintSliderKnob(juce::Graphics& g, const juce::Rectangle<float>& sliderArea, const float& relXPos, const float& relYPos, const int& silderNumber, bool isSliderOn, bool isSliderSliding);
 
     //==============================================================================
@@ -109,8 +111,10 @@ private:
     bool usesPositionedHeightChannels() { return !m_clockwiseOrderedHeightChannelTypes.isEmpty(); };
     bool usesDirectionlessChannels() { return !m_directionLessChannelTypes.isEmpty(); };
 
+    std::optional<std::uint16_t> isAnyInputSelected();
+
     //==============================================================================
-    void updateDirectionslessChannelSliders();
+    void rebuildDirectionslessChannelSliders();
     
     //==============================================================================
     juce::Rectangle<float>  m_positionedChannelsArea;
@@ -138,10 +142,11 @@ private:
         juce::AudioChannelSet::create7point1point4(),
         juce::AudioChannelSet::create9point1point6() };
 
-    std::map<juce::AudioChannelSet::ChannelType, std::unique_ptr<JUCEAppBasics::ToggleStateSlider>>    m_directionslessChannelSliders;
+    std::map<juce::AudioChannelSet::ChannelType, std::unique_ptr<JUCEAppBasics::ToggleStateSlider>> m_directionslessChannelSliders;
+    std::map<juce::AudioChannelSet::ChannelType, std::unique_ptr<juce::Label>>                      m_directionslessChannelLabels;
 
-    //ProcessorLevelData  m_levelData;
-    std::map<int, TwoDMultisliderSourcePosition>   m_inputPositions;
+    std::map<std::uint16_t, std::map<juce::AudioChannelSet::ChannelType, std::pair<bool, float>>> m_inputToOutputVals;
+    std::map<std::uint16_t, TwoDMultisliderSourcePosition>  m_inputPositions;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TwoDFieldMultisliderComponent)
 };

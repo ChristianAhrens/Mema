@@ -92,6 +92,24 @@ const std::map<std::uint16_t, std::map<std::uint16_t, float>>& MemaClientControl
     return m_crosspointValues;
 }
 
+void MemaClientControlComponentBase::addCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& crosspointStates)
+{
+    auto crosspointStatesCpy = getCrosspointStates();
+
+    for (auto const& crosspointStateKV : crosspointStates)
+        crosspointStatesCpy[crosspointStateKV.first] = crosspointStateKV.second;
+    setCrosspointStates(crosspointStatesCpy);
+}
+
+void MemaClientControlComponentBase::addCrosspointValues(const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues)
+{
+    auto crosspointValuesCpy = getCrosspointValues();
+
+    for (auto const& crosspointValueKV : crosspointValues)
+        crosspointValuesCpy[crosspointValueKV.first] = crosspointValueKV.second;
+    setCrosspointValues(crosspointValuesCpy);
+}
+
 const juce::String MemaClientControlComponentBase::getClientControlParametersAsString()
 {
     auto controlParametersStr = getIOCountParametersAsString() + "\n";
@@ -578,24 +596,6 @@ void FaderbankControlComponent::setCrosspointValues(const std::map<std::uint16_t
     updateCrosspointFaderValues();
 }
 
-void FaderbankControlComponent::addCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& crosspointStates)
-{
-    auto crosspointStatesCpy = getCrosspointStates();
-
-    for (auto const& crosspointStateKV : crosspointStates)
-        crosspointStatesCpy[crosspointStateKV.first] = crosspointStateKV.second;
-    MemaClientControlComponentBase::setCrosspointStates(crosspointStatesCpy);
-}
-
-void FaderbankControlComponent::addCrosspointValues(const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues)
-{
-    auto crosspointValuesCpy = getCrosspointValues();
-
-    for (auto const& crosspointValueKV : crosspointValues)
-        crosspointValuesCpy[crosspointValueKV.first] = crosspointValueKV.second;
-    MemaClientControlComponentBase::setCrosspointValues(crosspointValuesCpy);
-}
-
 void FaderbankControlComponent::selectIOChannel(const ControlDirection& direction, int channel)
 {
     jassert((direction == ControlDirection::None && channel == 0) || (direction != ControlDirection::None && channel != 0));
@@ -663,10 +663,10 @@ PanningControlComponent::PanningControlComponent()
     : MemaClientControlComponentBase()
 {
     m_multiSlider = std::make_unique<Mema::TwoDFieldMultisliderComponent>();
-    m_multiSlider->onInputPositionChanged = [=](int channel, const Mema::TwoDFieldMultisliderComponent::TwoDMultisliderValue& value, std::optional<Mema::TwoDFieldMultisliderComponent::ChannelLayer> layer) {
+    m_multiSlider->onInputPositionChanged = [=](std::uint16_t channel, const Mema::TwoDFieldMultisliderComponent::TwoDMultisliderValue& value, std::optional<Mema::TwoDFieldMultisliderComponent::ChannelLayer> layer) {
         changeInputPosition(channel, value.relXPos, value.relYPos, layer.has_value() ? layer.value() : 0);
     };
-    m_multiSlider->onInputSelected = [=](int channel) {
+    m_multiSlider->onInputSelected = [=](std::uint16_t channel) {
         selectInputChannel(channel);
     };
     addAndMakeVisible(m_multiSlider.get());
@@ -720,6 +720,16 @@ void PanningControlComponent::resized()
         auto multiSliderBounds = juce::Rectangle<int>(bounds.getWidth(), int(bounds.getWidth() * fieldAspect)).withCentre(bounds.getCentre());
         if (m_multiSlider)
             m_multiSlider->setBounds(multiSliderBounds);
+    }
+}
+
+void PanningControlComponent::lookAndFeelChanged()
+{
+    auto ioCount = getIOCount();
+    for (auto in = 0; in < ioCount.first; in++)
+    {
+        if (nullptr != m_inputSelectButtons.at(in))
+            m_inputSelectButtons.at(in)->setColour(juce::TextButton::ColourIds::buttonOnColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
     }
 }
 
@@ -839,7 +849,23 @@ void PanningControlComponent::setInputMuteStates(const std::map<std::uint16_t, b
     }
 }
 
-void PanningControlComponent::selectInputChannel(int channel)
+void PanningControlComponent::setCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& crosspointStates)
+{
+    MemaClientControlComponentBase::setCrosspointStates(crosspointStates);
+
+    if (m_multiSlider)
+        m_multiSlider->setInputToOutputStates(crosspointStates);
+}
+
+void PanningControlComponent::setCrosspointValues(const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues)
+{
+    MemaClientControlComponentBase::setCrosspointValues(crosspointValues);
+
+    if (m_multiSlider)
+        m_multiSlider->setInputToOutputLevels(crosspointValues);
+}
+
+void PanningControlComponent::selectInputChannel(std::uint16_t channel)
 {
     auto oldChannel = m_currentInputChannel;
     m_currentInputChannel = channel;
@@ -858,9 +884,9 @@ void PanningControlComponent::selectInputChannel(int channel)
     }
 }
 
-void PanningControlComponent::changeInputPosition(int channel, float xVal, float yVal, int layer)
+void PanningControlComponent::changeInputPosition(std::uint16_t channel, float xVal, float yVal, int layer)
 {
-    DBG(juce::String(__FUNCTION__) << " " << channel << " " << xVal << "," << yVal << "(" << layer << ")");
+    DBG(juce::String(__FUNCTION__) << " " << int(channel) << " " << xVal << "," << yVal << "(" << layer << ")");
 }
 
 

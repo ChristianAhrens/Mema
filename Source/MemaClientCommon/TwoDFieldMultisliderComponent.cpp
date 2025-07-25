@@ -64,15 +64,15 @@ void TwoDFieldMultisliderComponent::paint (juce::Graphics& g)
             paintSliderKnob(g, area, inputPosition.second.value.relXPos, inputPosition.second.value.relYPos, inputPosition.first, inputPosition.second.isOn, inputPosition.second.isSliding);
     }
 
-    // draw dBFS
-    g.setFont(12.0f);
-    g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
-    juce::String rangeText;
-    //if (getUsesValuesInDB())
-    //    rangeText = juce::String(ProcessorDataAnalyzer::getGlobalMindB()) + " ... " + juce::String(ProcessorDataAnalyzer::getGlobalMaxdB()) + " dBFS";
-    //else
-        rangeText = "0 ... 1";
-    g.drawText(rangeText, getLocalBounds().removeFromLeft(getLocalBounds().getWidth() - m_directionlessChannelsArea.toNearestInt().getWidth()), juce::Justification::topRight, true);
+    //// draw dBFS
+    //g.setFont(12.0f);
+    //g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
+    //juce::String rangeText;
+    ////if (getUsesValuesInDB())
+    ////    rangeText = juce::String(ProcessorDataAnalyzer::getGlobalMindB()) + " ... " + juce::String(ProcessorDataAnalyzer::getGlobalMaxdB()) + " dBFS";
+    ////else
+    //    rangeText = "0 ... 1";
+    //g.drawText(rangeText, getLocalBounds().removeFromLeft(getLocalBounds().getWidth() - m_directionlessChannelsArea.toNearestInt().getWidth()), juce::Justification::topRight, true);
 }
 
 void TwoDFieldMultisliderComponent::paintCircularLevelIndication(juce::Graphics& g, const juce::Rectangle<float>& circleArea, const std::map<int, juce::Point<float>>& channelLevelMaxPoints, const juce::Array<juce::AudioChannelSet::ChannelType>& channelsToPaint)
@@ -98,44 +98,6 @@ void TwoDFieldMultisliderComponent::paintCircularLevelIndication(juce::Graphics&
     const float halfMeterWidth = 2.0f;
 
 
-    //// helper std::function to avoid codeclones below
-    //auto calcLevelVals = [=](std::map<int, float>& levels, bool isHold, bool isPeak, bool isRms) {
-    //    for (auto const& channelType : channelsToPaint)
-    //    {
-    //        if (isHold)
-    //        {
-    //            if (getUsesValuesInDB())
-    //                levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).GetFactorHOLDdB();
-    //            else
-    //                levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).hold;
-    //        }
-    //        else if (isPeak)
-    //        {
-    //            if (getUsesValuesInDB())
-    //                levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).GetFactorPEAKdB();
-    //            else
-    //                levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).peak;
-    //        }
-    //        else if (isRms)
-    //        {
-    //            if (getUsesValuesInDB())
-    //                levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).GetFactorRMSdB();
-    //            else
-    //                levels[channelType] = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType)).rms;
-    //        }
-    //    }
-    //};
-    // calculate hold values
-    std::map<int, float> holdLevels;
-    //calcLevelVals(holdLevels, true, false, false);
-    // calculate peak values
-    std::map<int, float> peakLevels;
-    //calcLevelVals(peakLevels, false, true, false);
-    // calculate rms values    
-    std::map<int, float> rmsLevels;
-    //calcLevelVals(rmsLevels, false, false, true);
-
-
     auto circleCenter = circleArea.getCentre();
 
     // prepare max points
@@ -144,31 +106,33 @@ void TwoDFieldMultisliderComponent::paintCircularLevelIndication(juce::Graphics&
     for (int i = 0; i < channelsToPaint.size(); i++)
     {
         auto const& channelType = channelsToPaint[i];
-        if (0 < channelLevelMaxPoints.count(channelType))
+        auto iTy = int(channelType);
+        if (0 < channelLevelMaxPoints.count(iTy))
         {
             auto angleRad = juce::degreesToRadians(getAngleForChannelTypeInCurrentConfiguration(channelType));
-            centerToMaxVectors[channelType] = circleCenter - channelLevelMaxPoints.at(channelType);
-            meterWidthOffsetVectors[channelType] = { cosf(angleRad) * halfMeterWidth, sinf(angleRad) * halfMeterWidth };
+            centerToMaxVectors[iTy] = circleCenter - channelLevelMaxPoints.at(iTy);
+            meterWidthOffsetVectors[iTy] = { cosf(angleRad) * halfMeterWidth, sinf(angleRad) * halfMeterWidth };
         }
     }
 
-    // helper std::function to avoid codeclones below
-    auto createAndPaintLevelPath = [=](std::map<int, juce::Point<float>>& centerToMaxPoints, std::map<int, juce::Point<float>>& meterWidthOffsetPoints, std::map<int, float>& levels, juce::Graphics& g, const juce::Colour& colour, bool stroke) {
+    // helper std::functions to avoid codeclones below
+    auto createAndPaintLevelPath = [=](std::map<int, juce::Point<float>>& centerToMaxPoints, std::map<int, juce::Point<float>>& meterWidthOffsetPoints, std::map<juce::AudioChannelSet::ChannelType, float>& levels, juce::Graphics& g, const juce::Colour& colour, bool stroke) {
         juce::Path path;
         auto pathStarted = false;
         for (auto const& channelType : channelsToPaint)
         {
-            auto channelMaxPoint = circleCenter - (centerToMaxPoints[channelType] * levels[channelType]);
+            auto iTy = int(channelType);
+            auto channelMaxPoint = circleCenter - (centerToMaxPoints[iTy] * levels[channelType]);
 
             if (!pathStarted)
             {
-                path.startNewSubPath(channelMaxPoint - meterWidthOffsetPoints[channelType]);
+                path.startNewSubPath(channelMaxPoint - meterWidthOffsetPoints[iTy]);
                 pathStarted = true;
             }
             else
-                path.lineTo(channelMaxPoint - meterWidthOffsetPoints[channelType]);
+                path.lineTo(channelMaxPoint - meterWidthOffsetPoints[iTy]);
 
-            path.lineTo(channelMaxPoint + meterWidthOffsetPoints[channelType]);
+            path.lineTo(channelMaxPoint + meterWidthOffsetPoints[iTy]);
         }
         path.closeSubPath();
 
@@ -182,33 +146,44 @@ void TwoDFieldMultisliderComponent::paintCircularLevelIndication(juce::Graphics&
         g.drawRect(path.getBounds());
 #endif
     };
-    // paint hold values as path
-    createAndPaintLevelPath(centerToMaxVectors, meterWidthOffsetVectors, holdLevels, g, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringHoldColourId), true);
-    // paint peak values as path
-    createAndPaintLevelPath(centerToMaxVectors, meterWidthOffsetVectors, peakLevels, g, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId), false);
-    // paint rms values as path
-    createAndPaintLevelPath(centerToMaxVectors, meterWidthOffsetVectors, rmsLevels, g, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId), false);
-
-
-    // helper std::function to avoid codeclones below
-    auto paintLevelMeterLines = [=](std::map<int, juce::Point<float>>& centerToMaxPoints, std::map<int, juce::Point<float>>& meterWidthOffsetPoints, std::map<int, float>& levels, juce::Graphics& g, const juce::Colour& colour, bool isHoldLine) {
+    auto paintLevelMeterLines = [=](std::map<int, juce::Point<float>>& centerToMaxPoints, std::map<int, juce::Point<float>>& meterWidthOffsetPoints, std::map<juce::AudioChannelSet::ChannelType, float>& levels, juce::Graphics& g, const juce::Colour& colour, bool isHoldLine) {
         g.setColour(colour);
         for (auto const& channelType : channelsToPaint)
         {
-            auto channelMaxPoint = circleCenter - (centerToMaxPoints[channelType] * levels[channelType]);
+            auto iTy = int(channelType);
+            auto channelMaxPoint = circleCenter - (centerToMaxPoints[iTy] * levels[channelType]);
 
             if (isHoldLine)
-                g.drawLine(juce::Line<float>(channelMaxPoint - meterWidthOffsetPoints[channelType], channelMaxPoint + meterWidthOffsetPoints[channelType]), 1.0f);
+                g.drawLine(juce::Line<float>(channelMaxPoint - meterWidthOffsetPoints[iTy], channelMaxPoint + meterWidthOffsetPoints[iTy]), 1.0f);
             else
                 g.drawLine(juce::Line<float>(circleCenter, channelMaxPoint), meterWidth);
         }
-    };
-    // paint hold values as max line
-    paintLevelMeterLines(centerToMaxVectors, meterWidthOffsetVectors, holdLevels, g, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringHoldColourId), true);
-    // paint peak values as line
-    paintLevelMeterLines(centerToMaxVectors, meterWidthOffsetVectors, peakLevels, g, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId), false);
-    // paint rms values as line
-    paintLevelMeterLines(centerToMaxVectors, meterWidthOffsetVectors, rmsLevels, g, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId), false);
+        };
+    
+    std::map<juce::AudioChannelSet::ChannelType, float> levels;
+    for (auto& vKV : m_inputToOutputVals)
+    {
+        levels.clear();
+        for (auto const& oVals : vKV.second)
+        {
+            auto& channel = oVals.first;
+            auto& state = oVals.second.first;
+            auto& level = oVals.second.second;
+            levels[channel] = state ? level : 0.0f;
+        }
+
+        juce::Colour colour;
+        auto anyInputSelected = isAnyInputSelected();
+        if (anyInputSelected.has_value() && anyInputSelected.value() == vKV.first)
+            colour = getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId).withAlpha(0.8f);
+        else
+            colour = getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId).withAlpha(0.4f);
+
+        // paint hold values as path
+        createAndPaintLevelPath(centerToMaxVectors, meterWidthOffsetVectors, levels, g, colour, false);
+        // paint hold values as max line
+        paintLevelMeterLines(centerToMaxVectors, meterWidthOffsetVectors, levels, g, colour, false);
+    }
 
     // draw a simple circle surrounding
     g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
@@ -252,66 +227,6 @@ void TwoDFieldMultisliderComponent::paintCircularLevelIndication(juce::Graphics&
 
         g.restoreState();
     }
-}
-
-void TwoDFieldMultisliderComponent::paintLevelMeterIndication(juce::Graphics& g, const juce::Rectangle<float>& levelMeterArea, const juce::Array<juce::AudioChannelSet::ChannelType>& channelsToPaint)
-{
-#if defined DEBUG && defined PAINTINGHELPER
-    g.setColour(juce::Colours::aqua);
-    g.drawRect(levelMeterArea);
-#endif
-
-    auto channelCount = channelsToPaint.size();
-    auto margin = levelMeterArea.getWidth() / ((2 * channelCount) + 1);
-
-    auto visuArea = levelMeterArea;
-    auto visuAreaOrigY = visuArea.getBottom();
-
-    // draw meters
-    auto meterSpacing = margin;
-    auto meterThickness = float(visuArea.getWidth() - (channelCount)*meterSpacing) / float(channelCount);
-    //auto meterMaxLength = visuArea.getHeight();
-    auto meterLeft = levelMeterArea.getX() + 0.5f * meterSpacing;
-
-    g.setFont(14.0f);
-    for (auto const& channelType : channelsToPaint)
-    {
-        //auto level = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType));
-        float peakMeterLength{ 0 };
-        float rmsMeterLength{ 0 };
-        float holdMeterLength{ 0 };
-        //if (getUsesValuesInDB())
-        //{
-        //    peakMeterLength = meterMaxLength * level.GetFactorPEAKdB();
-        //    rmsMeterLength = meterMaxLength * level.GetFactorRMSdB();
-        //    holdMeterLength = meterMaxLength * level.GetFactorHOLDdB();
-        //}
-        //else
-        //{
-        //    peakMeterLength = meterMaxLength * level.peak;
-        //    rmsMeterLength = meterMaxLength * level.rms;
-        //    holdMeterLength = meterMaxLength * level.hold;
-        //}
-
-        // peak bar
-        g.setColour(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId));
-        g.fillRect(juce::Rectangle<float>(meterLeft, visuAreaOrigY - peakMeterLength, meterThickness, peakMeterLength));
-        // rms bar
-        g.setColour(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
-        g.fillRect(juce::Rectangle<float>(meterLeft, visuAreaOrigY - rmsMeterLength, meterThickness, rmsMeterLength));
-        // hold strip
-        g.setColour(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringHoldColourId));
-        g.drawLine(juce::Line<float>(meterLeft, visuAreaOrigY - holdMeterLength, meterLeft + meterThickness, visuAreaOrigY - holdMeterLength));
-        // channel # label
-        g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
-        g.drawText(juce::AudioChannelSet::getAbbreviatedChannelTypeName(channelType), juce::Rectangle<float>(meterLeft - (0.5f * meterSpacing), visuAreaOrigY - float(margin + 2), meterThickness + meterSpacing, float(margin)), juce::Justification::centred);
-
-        meterLeft += meterThickness + meterSpacing;
-    }
-
-    // draw a simple baseline
-    g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
-    g.drawLine(juce::Line<float>(levelMeterArea.getX(), visuAreaOrigY, levelMeterArea.getX() + visuArea.getWidth(), visuAreaOrigY));
 }
 
 void TwoDFieldMultisliderComponent::paintSliderKnob(juce::Graphics& g, const juce::Rectangle<float>& sliderArea, const float& relXPos, const float& relYPos, const int& silderNumber, bool isSliderOn, bool isSliderSliding)
@@ -428,13 +343,32 @@ void TwoDFieldMultisliderComponent::resized()
         m_channelHeightLevelMaxPoints[channelType] = m_positionedHeightChannelsArea.getCentre() + juce::Point<float>(xLength, -yLength);
     }
 
-    if (!m_directionlessChannelsArea.isEmpty() && !m_directionslessChannelSliders.empty())
+    if (!m_directionlessChannelsArea.isEmpty() && !m_directionslessChannelSliders.empty() && !m_directionslessChannelLabels.empty())
     {
-        auto directionlessChannelSlidersWidth = m_directionlessChannelsArea.getWidth() / m_directionslessChannelSliders.size();
+        jassert(m_directionslessChannelSliders.size() == m_directionslessChannelLabels.size());
+        auto directionlessChannelsWidth = m_directionlessChannelsArea.getWidth() / m_directionslessChannelSliders.size();
         auto areaToDivide = m_directionlessChannelsArea;
+        for (auto const& sliderKV : m_directionslessChannelSliders)
+        {
+            auto const& slider = sliderKV.second;
+            auto const& label = m_directionslessChannelLabels.at(sliderKV.first);
+            auto sliderBounds = areaToDivide.removeFromLeft(directionlessChannelsWidth).toNearestInt();
+            auto labelBounds = sliderBounds.removeFromBottom(s_thumbWidth);
+            if (slider)
+                slider->setBounds(sliderBounds);
+            if (label)
+                label->setBounds(labelBounds);
+        }
+    }
+}
+
+void TwoDFieldMultisliderComponent::lookAndFeelChanged()
+{
+    if (!m_directionslessChannelSliders.empty())
+    {
         for (auto const& slider : m_directionslessChannelSliders)
             if (slider.second)
-                slider.second->setBounds(areaToDivide.removeFromLeft(directionlessChannelSlidersWidth).toNearestInt());
+                slider.second->setColour(juce::Slider::ColourIds::trackColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
     }
 }
 
@@ -547,7 +481,7 @@ void TwoDFieldMultisliderComponent::mouseDrag(const MouseEvent& e)
     juce::Component::mouseDrag(e);
 }
 
-void TwoDFieldMultisliderComponent::setInputPosition(int channel, const TwoDMultisliderValue& value, std::optional<ChannelLayer> layer, juce::NotificationType notification)
+void TwoDFieldMultisliderComponent::setInputPosition(std::uint16_t channel, const TwoDMultisliderValue& value, std::optional<ChannelLayer> layer, juce::NotificationType notification)
 {
     m_inputPositions[channel].value = value;
     if (layer)
@@ -559,14 +493,56 @@ void TwoDFieldMultisliderComponent::setInputPosition(int channel, const TwoDMult
         onInputPositionChanged(channel, value, layer);
 }
 
-void TwoDFieldMultisliderComponent::selectInput(int channel, bool selectOn, juce::NotificationType notification)
+void TwoDFieldMultisliderComponent::selectInput(std::uint16_t channel, bool selectOn, juce::NotificationType notification)
 {
     m_inputPositions[channel].isSliding = selectOn;
 
+    auto anyInputSelected = isAnyInputSelected();
+
     repaint();
+
+    if (!m_directionslessChannelSliders.empty())
+    {
+        for (auto const& slider : m_directionslessChannelSliders)
+        {
+            if (slider.second)
+            {
+                auto output = slider.first;
+                if (selectOn)
+                {
+                    slider.second->setTitle(juce::String(channel));
+                    slider.second->setValue(m_inputToOutputVals[channel][output].second);
+                    slider.second->setToggleState(m_inputToOutputVals[channel][output].first, juce::dontSendNotification);
+                }
+                //else if (anyInputSelected)
+                //{
+                //    slider.second->setTitle("");
+                //    slider.second->setValue(0.5f); // relative starting point at half scale
+                //    slider.second->setToggleState(true, juce::dontSendNotification);
+                //}
+            }
+        }
+    }
 
     if (juce::dontSendNotification != notification && onInputSelected && selectOn)
         onInputSelected(channel);
+}
+
+std::optional<std::uint16_t> TwoDFieldMultisliderComponent::isAnyInputSelected()
+{
+    bool isAnyInputSelected = false;
+    std::uint16_t selectedInput = 0;
+    for (auto const& ipKV : m_inputPositions)
+    {
+        if (!isAnyInputSelected && ipKV.second.isSliding)
+            selectedInput = ipKV.first;
+        isAnyInputSelected = isAnyInputSelected || ipKV.second.isSliding;
+    }
+
+    if(isAnyInputSelected)
+        return selectedInput;
+    else
+        return std::nullopt;
 }
 
 void TwoDFieldMultisliderComponent::setIOCount(const std::pair<int, int>& ioCount)
@@ -574,30 +550,41 @@ void TwoDFieldMultisliderComponent::setIOCount(const std::pair<int, int>& ioCoun
     m_inputPositions.clear();
     for (auto i = 1, p = 50; i <= ioCount.first; i++, p-=5)
     {
-        m_inputPositions[i] = { ChannelLayer::Positioned, { 0.01f * float(p), 0.5f }, false, false };
+        m_inputPositions[std::uint16_t(i)] = { ChannelLayer::Positioned, { 0.01f * float(p), 0.5f }, false, false };
     }
 
     repaint();
 }
 
-//void TwoDFieldMultisliderComponent::processingDataChanged(AbstractProcessorData *data)
-//{
-//    if(!data)
-//        return;
-//    
-//    switch(data->GetDataType())
-//    {
-//        case AbstractProcessorData::Level:
-//            m_levelData = *(static_cast<ProcessorLevelData*>(data));
-//            notifyChanges();
-//            break;
-//        case AbstractProcessorData::AudioSignal:
-//        case AbstractProcessorData::Spectrum:
-//        case AbstractProcessorData::Invalid:
-//        default:
-//            break;
-//    }
-//}
+void TwoDFieldMultisliderComponent::setInputToOutputStates(const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& inputToOutputStates)
+{
+    for (auto const& iKV : inputToOutputStates)
+    {
+        for (auto const& oKV : iKV.second)
+        {
+            auto output = getChannelTypeForChannelNumberInCurrentConfiguration(oKV.first);
+            if (juce::AudioChannelSet::ChannelType::unknown != output)
+                m_inputToOutputVals[iKV.first][output].first = oKV.second;
+        }
+    }
+
+    repaint();
+}
+
+void TwoDFieldMultisliderComponent::setInputToOutputLevels(const std::map<std::uint16_t, std::map<std::uint16_t, float>>& inputToOutputLevels)
+{
+    for (auto const& iKV : inputToOutputLevels)
+    {
+        for (auto const& oKV : iKV.second)
+        {
+            auto output = getChannelTypeForChannelNumberInCurrentConfiguration(oKV.first);
+            if (juce::AudioChannelSet::ChannelType::unknown != output)
+                m_inputToOutputVals[iKV.first][output].second = oKV.second;
+        }
+    }
+
+    repaint();
+}
 
 bool TwoDFieldMultisliderComponent::setChannelConfiguration(const juce::AudioChannelSet& channelLayout)
 {
@@ -616,7 +603,7 @@ bool TwoDFieldMultisliderComponent::setChannelConfiguration(const juce::AudioCha
     if (wasUpdated)
     {
         setClockwiseOrderedChannelTypesForCurrentConfiguration();
-        updateDirectionslessChannelSliders();
+        rebuildDirectionslessChannelSliders();
     }
 
     return wasUpdated;
@@ -975,6 +962,180 @@ int TwoDFieldMultisliderComponent::getChannelNumberForChannelTypeInCurrentConfig
     return 1;
 }
 
+const juce::AudioChannelSet::ChannelType TwoDFieldMultisliderComponent::getChannelTypeForChannelNumberInCurrentConfiguration(int channelNumber)
+{
+    if (juce::AudioChannelSet::mono() == m_channelConfiguration)
+    {
+        switch (channelNumber)
+        {
+        case 1:
+            return juce::AudioChannelSet::ChannelType::centre;
+        default:
+            break;
+        }
+    }
+    else if (juce::AudioChannelSet::stereo() == m_channelConfiguration)
+    {
+        switch (channelNumber)
+        {
+        case 1: 
+            return juce::AudioChannelSet::ChannelType::left;
+        case 2: 
+            return juce::AudioChannelSet::ChannelType::right;
+        default:
+            break;
+        }
+    }
+    else if (juce::AudioChannelSet::createLCR() == m_channelConfiguration)
+    {
+        switch (channelNumber)
+        {
+        case 1:
+            return juce::AudioChannelSet::ChannelType::left;
+        case 2:
+            return juce::AudioChannelSet::ChannelType::right;
+        case 3:
+            return juce::AudioChannelSet::ChannelType::centre;
+        default:
+            break;
+        }
+    }
+    else if (juce::AudioChannelSet::createLCRS() == m_channelConfiguration)
+    {
+        switch (channelNumber)
+        {
+        case 1: 
+            return juce::AudioChannelSet::ChannelType::left;
+        case 2: 
+            return juce::AudioChannelSet::ChannelType::right;
+        case 3: 
+            return juce::AudioChannelSet::ChannelType::centre;
+        case 4: 
+            return juce::AudioChannelSet::ChannelType::surround;
+        default:
+            break;
+        }
+    }
+    else if (juce::AudioChannelSet::createLRS() == m_channelConfiguration)
+    {
+        switch (channelNumber)
+        {
+        case 1: 
+            return juce::AudioChannelSet::ChannelType::left;
+        case 2: 
+            return juce::AudioChannelSet::ChannelType::right;
+        case 3: 
+            return juce::AudioChannelSet::ChannelType::surround;
+        default:
+            break;
+        }
+    }
+    else if (juce::AudioChannelSet::create5point0() == m_channelConfiguration
+        || juce::AudioChannelSet::create5point1() == m_channelConfiguration
+        || juce::AudioChannelSet::create5point1point2() == m_channelConfiguration)
+    {
+        switch (channelNumber)
+        {
+        case 1: 
+            return juce::AudioChannelSet::ChannelType::left;
+        case 2: 
+            return juce::AudioChannelSet::ChannelType::right;
+        case 3: 
+            return juce::AudioChannelSet::ChannelType::centre;
+        case 4: 
+            return juce::AudioChannelSet::ChannelType::LFE;
+        case 5: 
+            return juce::AudioChannelSet::ChannelType::leftSurround;
+        case 6: 
+            return juce::AudioChannelSet::ChannelType::rightSurround;
+        case 7: 
+            return juce::AudioChannelSet::ChannelType::topSideLeft;
+        case 8: 
+            return juce::AudioChannelSet::ChannelType::topSideRight;
+        default:
+            break;
+        }
+    }
+    else if (juce::AudioChannelSet::create7point0() == m_channelConfiguration
+        || juce::AudioChannelSet::create7point1() == m_channelConfiguration
+        || juce::AudioChannelSet::create7point1point4() == m_channelConfiguration)
+    {
+        switch (channelNumber)
+        {
+        case 1: 
+            return juce::AudioChannelSet::ChannelType::left;
+        case 2: 
+            return juce::AudioChannelSet::ChannelType::right;
+        case 3: 
+            return juce::AudioChannelSet::ChannelType::centre;
+        case 4: 
+            return juce::AudioChannelSet::ChannelType::LFE;
+        case 5: 
+            return juce::AudioChannelSet::ChannelType::leftSurroundSide;
+        case 6: 
+            return juce::AudioChannelSet::ChannelType::rightSurroundSide;
+        case 7: 
+            return juce::AudioChannelSet::ChannelType::leftSurroundRear;
+        case 8: 
+            return juce::AudioChannelSet::ChannelType::rightSurroundRear;
+        case 9: 
+            return juce::AudioChannelSet::ChannelType::topFrontLeft;
+        case 10: 
+            return juce::AudioChannelSet::ChannelType::topFrontRight;
+        case 11: 
+            return juce::AudioChannelSet::ChannelType::topRearLeft;
+        case 12: 
+            return juce::AudioChannelSet::ChannelType::topRearRight;
+        default:
+            break;
+        }
+    }
+    else if (juce::AudioChannelSet::create9point1point6() == m_channelConfiguration)
+    {
+        switch (channelNumber)
+        {
+        case 1: 
+            return juce::AudioChannelSet::ChannelType::left;
+        case 2: 
+            return juce::AudioChannelSet::ChannelType::right;
+        case 3: 
+            return juce::AudioChannelSet::ChannelType::centre;
+        case 4: 
+            return juce::AudioChannelSet::ChannelType::LFE;
+        case 5: 
+            return juce::AudioChannelSet::ChannelType::wideLeft;
+        case 6: 
+            return juce::AudioChannelSet::ChannelType::wideRight;
+        case 7: 
+            return juce::AudioChannelSet::ChannelType::leftSurroundSide;
+        case 8: 
+            return juce::AudioChannelSet::ChannelType::rightSurroundSide;
+        case 9: 
+            return juce::AudioChannelSet::ChannelType::leftSurroundRear;
+        case 10: 
+            return juce::AudioChannelSet::ChannelType::rightSurroundRear;
+        case 11: 
+            return juce::AudioChannelSet::ChannelType::topFrontLeft;
+        case 12: 
+            return juce::AudioChannelSet::ChannelType::topFrontRight;
+        case 13: 
+            return juce::AudioChannelSet::ChannelType::topSideLeft;
+        case 14: 
+            return juce::AudioChannelSet::ChannelType::topSideRight;
+        case 15: 
+            return juce::AudioChannelSet::ChannelType::topRearLeft;
+        case 16: 
+            return juce::AudioChannelSet::ChannelType::topRearRight;
+        default:
+            break;
+        }
+    }
+    else
+        jassertfalse;
+
+    return juce::AudioChannelSet::ChannelType::unknown;
+}
+
 void TwoDFieldMultisliderComponent::setClockwiseOrderedChannelTypesForCurrentConfiguration()
 {
     m_clockwiseOrderedChannelTypes.clear();
@@ -1130,7 +1291,7 @@ void TwoDFieldMultisliderComponent::setClockwiseOrderedChannelTypesForCurrentCon
         jassertfalse;
 }
 
-void TwoDFieldMultisliderComponent::updateDirectionslessChannelSliders()
+void TwoDFieldMultisliderComponent::rebuildDirectionslessChannelSliders()
 {
     m_directionslessChannelSliders.clear();
     for (auto const& channelType : m_directionLessChannelTypes)
@@ -1138,12 +1299,14 @@ void TwoDFieldMultisliderComponent::updateDirectionslessChannelSliders()
         m_directionslessChannelSliders[channelType] = std::make_unique<JUCEAppBasics::ToggleStateSlider>(juce::Slider::LinearVertical, juce::Slider::NoTextBox);
         m_directionslessChannelSliders[channelType]->setColour(juce::Slider::ColourIds::trackColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
         m_directionslessChannelSliders[channelType]->setRange(0.0, 1.0, 0.01);
-        m_directionslessChannelSliders[channelType]->setTitle(juce::AudioChannelSet::getAbbreviatedChannelTypeName(channelType));
+        m_directionslessChannelSliders[channelType]->setToggleState(false, juce::dontSendNotification);
         m_directionslessChannelSliders[channelType]->displayValueConverter = [](double val) { return juce::String(juce::Decibels::gainToDecibels(val, static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())), 1) + " dB"; };
-        //juce::Decibels::gainToDecibels(0.0, static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())),
-        //juce::Decibels::gainToDecibels(1.0, static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())),
-        //0.1);
         addAndMakeVisible(m_directionslessChannelSliders[channelType].get());
+
+        m_directionslessChannelLabels[channelType] = std::make_unique<juce::Label>();
+        m_directionslessChannelLabels[channelType]->setText(juce::AudioChannelSet::getAbbreviatedChannelTypeName(channelType), juce::dontSendNotification);
+        m_directionslessChannelLabels[channelType]->setJustificationType(juce::Justification::centred);
+        addAndMakeVisible(m_directionslessChannelLabels[channelType].get());
     }
 }
 
