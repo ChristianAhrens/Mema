@@ -119,6 +119,7 @@ private:
 
     //==============================================================================
     void rebuildDirectionslessChannelSliders();
+    void configureDirectionlessSliderToRelativeCtrl(const juce::AudioChannelSet::ChannelType& channelType, JUCEAppBasics::ToggleStateSlider& slider);
     
     //==============================================================================
     juce::Rectangle<float>  m_positionedChannelsArea;
@@ -152,6 +153,8 @@ private:
 
     std::map<std::uint16_t, std::map<juce::AudioChannelSet::ChannelType, std::pair<bool, float>>> m_inputToOutputVals;
     std::map<std::uint16_t, TwoDMultisliderSourcePosition>  m_inputPositions;
+
+    int m_currentOutputCount = 0;
 
     std::uint16_t m_currentlySelectedInput = 0;
     

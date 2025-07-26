@@ -522,13 +522,9 @@ void TwoDFieldMultisliderComponent::selectInput(std::uint16_t channel, bool sele
                         slider.second->setToggleState(m_inputToOutputVals.at(channel).at(output).first, juce::dontSendNotification);
                     }
                 }
-                else if (0 == m_currentlySelectedInput)
+                else if (0 == m_currentlySelectedInput && slider.second)
                 {
-                    slider.second->setTitle("");
-                    slider.second->setRange(0.0, 1.0, 0.01);
-                    slider.second->setValue(0.5); // relative starting
-                    slider.second->setToggleState(true, juce::dontSendNotification);
-                    m_directionlessSliderRelRef[slider.first] = 0.5;
+                    configureDirectionlessSliderToRelativeCtrl(slider.first, *slider.second);
                 }
             }
         }
@@ -541,10 +537,11 @@ void TwoDFieldMultisliderComponent::selectInput(std::uint16_t channel, bool sele
 void TwoDFieldMultisliderComponent::setIOCount(const std::pair<int, int>& ioCount)
 {
     m_inputPositions.clear();
-    for (auto i = 1, p = 50; i <= ioCount.first; i++, p-=5)
+    for (auto i = 1; i <= ioCount.first; i++)
     {
-        m_inputPositions[std::uint16_t(i)] = { ChannelLayer::Positioned, { 0.01f * float(p), 0.5f }, false, false };
+        m_inputPositions[std::uint16_t(i)] = { ChannelLayer::Positioned, { 0.0f, 0.0f }, false, false };
     }
+    m_currentOutputCount = ioCount.second;
 
     repaint();
 }
@@ -581,6 +578,11 @@ void TwoDFieldMultisliderComponent::setInputToOutputLevels(const std::map<std::u
                 m_directionslessChannelSliders.at(output)->setValue(oKV.second, juce::dontSendNotification);
         }
     }
+
+    if (0 == m_currentlySelectedInput)
+        for (auto const& slider : m_directionslessChannelSliders)
+            if (slider.second)
+                configureDirectionlessSliderToRelativeCtrl(slider.first, *slider.second);
 
     repaint();
 }
@@ -1309,7 +1311,9 @@ void TwoDFieldMultisliderComponent::rebuildDirectionslessChannelSliders()
                 for (auto& ioValKV : m_inputToOutputVals)
                 {
                     ioValKV.second[channelType].first = m_directionslessChannelSliders[channelType]->getToggleState();
-                    states[ioValKV.first][std::uint16_t(getChannelNumberForChannelTypeInCurrentConfiguration(channelType))] = m_directionslessChannelSliders[channelType]->getToggleState();
+                    auto outputChannel = getChannelNumberForChannelTypeInCurrentConfiguration(channelType);
+                    if (outputChannel <= m_currentOutputCount)
+                        states[ioValKV.first][std::uint16_t(outputChannel)] = m_directionslessChannelSliders[channelType]->getToggleState();
                 }
             }
 
@@ -1327,7 +1331,9 @@ void TwoDFieldMultisliderComponent::rebuildDirectionslessChannelSliders()
                 for (auto& ioValKV : m_inputToOutputVals)
                 {
                     ioValKV.second[channelType].second += float(latestDelta);
-                    values[ioValKV.first][std::uint16_t(getChannelNumberForChannelTypeInCurrentConfiguration(channelType))] = ioValKV.second[channelType].second;
+                    auto outputChannel = getChannelNumberForChannelTypeInCurrentConfiguration(channelType);
+                    if (outputChannel <= m_currentOutputCount)
+                        values[ioValKV.first][std::uint16_t(outputChannel)] = ioValKV.second[channelType].second;
                     //DBG(juce::String(ioValKV.first) << ">" << juce::AudioChannelSet::getAbbreviatedChannelTypeName(channelType) << " val:" << ioValKV.second[channelType].second);
                 }
                 m_directionlessSliderRelRef[channelType] = latestValue;
@@ -1386,6 +1392,25 @@ const juce::Array<juce::AudioChannelSet::ChannelType> TwoDFieldMultisliderCompon
         types.addArray(m_clockwiseOrderedHeightChannelTypes);
         return types;
     }
+}
+
+void TwoDFieldMultisliderComponent::configureDirectionlessSliderToRelativeCtrl(const juce::AudioChannelSet::ChannelType& channelType, JUCEAppBasics::ToggleStateSlider& slider)
+{
+    auto anyInputToDirectionLessOff = false;
+    for (auto const& iKV : m_inputToOutputVals)
+    {
+        if (0 < iKV.second.count(channelType) && !iKV.second.at(channelType).first)
+        {
+            anyInputToDirectionLessOff = true;
+            break;
+        }
+    }
+
+    slider.setTitle("");
+    slider.setRange(0.0, 1.0, 0.01);
+    slider.setValue(0.5); // relative starting
+    slider.setToggleState(!anyInputToDirectionLessOff, juce::dontSendNotification);
+    m_directionlessSliderRelRef[channelType] = 0.5;
 }
 
 
