@@ -926,7 +926,11 @@ void PanningControlComponent::changeInputPosition(std::uint16_t channel, float x
 
             DBG(juce::String(__FUNCTION__) << " " << juce::AudioChannelSet::getAbbreviatedChannelTypeName(cToOdKV.first) << ": " << cToOdKV.second);
         }
+        if (onCrosspointStatesChanged)
+            onCrosspointStatesChanged(crosspointStates);
         addCrosspointStates(crosspointStates);
+        if (onCrosspointValuesChanged)
+            onCrosspointValuesChanged(crosspointValues);
         addCrosspointValues(crosspointValues);
     }
 }

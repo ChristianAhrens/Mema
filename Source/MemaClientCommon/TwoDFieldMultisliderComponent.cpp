@@ -240,7 +240,7 @@ void TwoDFieldMultisliderComponent::paintSliderKnob(juce::Graphics& g, const juc
         {
             valueTrack.startNewSubPath(minPoint);
             valueTrack.lineTo(maxPoint);
-            g.setColour(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
+            g.setColour(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId));
             g.strokePath(valueTrack, { s_trackWidth, juce::PathStrokeType::curved, juce::PathStrokeType::rounded });
         }
 
@@ -259,7 +259,7 @@ void TwoDFieldMultisliderComponent::paintSliderKnob(juce::Graphics& g, const juc
             auto valueTrackOutline = valueTrack;
             juce::PathStrokeType pt(s_trackWidth, juce::PathStrokeType::curved, juce::PathStrokeType::rounded);
             pt.createStrokedPath(valueTrackOutline, valueTrack);
-            g.setColour(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
+            g.setColour(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId));
             g.strokePath(valueTrackOutline, juce::PathStrokeType(1.0f));
         }
 
@@ -509,12 +509,17 @@ void TwoDFieldMultisliderComponent::selectInput(std::uint16_t channel, bool sele
             if (slider.second)
             {
                 auto output = slider.first;
-                if (selectOn)
+                jassert(0 < m_inputToOutputVals.count(channel));
+                if (selectOn && 0 < m_inputToOutputVals.count(channel))
                 {
-                    slider.second->setTitle(juce::String(channel));
-                    slider.second->setRange(0.0, 1.0, 0.01);
-                    slider.second->setValue(m_inputToOutputVals[channel][output].second);
-                    slider.second->setToggleState(m_inputToOutputVals[channel][output].first, juce::dontSendNotification);
+                    jassert(0 < m_inputToOutputVals.at(channel).count(output));
+                    if(0 < m_inputToOutputVals.at(channel).count(output))
+                    {
+                        slider.second->setTitle(juce::String(channel));
+                        slider.second->setRange(0.0, 1.0, 0.01);
+                        slider.second->setValue(m_inputToOutputVals.at(channel).at(output).second);
+                        slider.second->setToggleState(m_inputToOutputVals.at(channel).at(output).first, juce::dontSendNotification);
+                    }
                 }
                 else if (0 == m_currentlySelectedInput)
                 {
@@ -548,6 +553,7 @@ void TwoDFieldMultisliderComponent::setInputToOutputStates(const std::map<std::u
     {
         for (auto const& oKV : iKV.second)
         {
+            jassert(0 < iKV.first);
             auto output = getChannelTypeForChannelNumberInCurrentConfiguration(oKV.first);
             if (juce::AudioChannelSet::ChannelType::unknown != output)
                 m_inputToOutputVals[iKV.first][output].first = oKV.second;
@@ -565,6 +571,7 @@ void TwoDFieldMultisliderComponent::setInputToOutputLevels(const std::map<std::u
     {
         for (auto const& oKV : iKV.second)
         {
+            jassert(0 < iKV.first);
             auto output = getChannelTypeForChannelNumberInCurrentConfiguration(oKV.first);
             if (juce::AudioChannelSet::ChannelType::unknown != output)
                 m_inputToOutputVals[iKV.first][output].second = oKV.second;
