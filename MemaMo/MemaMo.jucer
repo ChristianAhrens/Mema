@@ -112,6 +112,10 @@
             file="../Source/MemaClientCommon/TwoDFieldOutputComponent.cpp"/>
       <FILE id="FncK9u" name="TwoDFieldOutputComponent.h" compile="0" resource="0"
             file="../Source/MemaClientCommon/TwoDFieldOutputComponent.h"/>
+      <FILE id="EWonfJ" name="WaveformAudioComponent.cpp" compile="1" resource="0"
+            file="../Source/MemaClientCommon/WaveformAudioComponent.cpp"/>
+      <FILE id="A8eFKM" name="WaveformAudioComponent.h" compile="0" resource="0"
+            file="../Source/MemaClientCommon/WaveformAudioComponent.h"/>
     </GROUP>
   </MAINGROUP>
   <MODULES>

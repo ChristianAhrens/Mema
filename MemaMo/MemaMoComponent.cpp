@@ -20,6 +20,7 @@
 
 #include "MemaProcessorEditor/MeterbridgeComponent.h"
 #include "MemaClientCommon/TwoDFieldOutputComponent.h"
+#include "MemaClientCommon/WaveformAudioComponent.h"
 #include "MemaProcessor/MemaMessages.h"
 #include "MemaProcessor/MemaProcessor.h"
 #include "MemaProcessor/ProcessorDataAnalyzer.h"
@@ -65,6 +66,16 @@ void MemaMoComponent::setOutputMeteringVisuActive()
         resizeRequired = true;
     }
 
+    if (m_waveformComponent)
+    {
+        if (m_outputDataAnalyzer)
+            m_outputDataAnalyzer->removeListener(m_waveformComponent.get());
+
+        removeChildComponent(m_waveformComponent.get());
+        m_waveformComponent.reset();
+        resizeRequired = true;
+    }
+
     if (resizeRequired && !getLocalBounds().isEmpty())
         resized();
 }
@@ -93,6 +104,52 @@ void MemaMoComponent::setOutputFieldVisuActive(const juce::AudioChannelSet& chan
         resizeRequired = true;
     }
 
+    if (m_waveformComponent)
+    {
+        if (m_outputDataAnalyzer)
+            m_outputDataAnalyzer->removeListener(m_waveformComponent.get());
+
+        removeChildComponent(m_waveformComponent.get());
+        m_waveformComponent.reset();
+        resizeRequired = true;
+    }
+
+    if (resizeRequired && !getLocalBounds().isEmpty())
+        resized();
+}
+
+void MemaMoComponent::setWaveformVisuActive()
+{
+    auto resizeRequired = false;
+    if (!m_waveformComponent)
+    {
+        m_waveformComponent = std::make_unique<Mema::WaveformAudioComponent>();
+        addAndMakeVisible(m_waveformComponent.get());
+        if (m_outputDataAnalyzer)
+            m_outputDataAnalyzer->addListener(m_waveformComponent.get());
+        resizeRequired = true;
+    }
+
+    if (m_outputMeteringComponent)
+    {
+        if (m_outputDataAnalyzer)
+            m_outputDataAnalyzer->removeListener(m_outputMeteringComponent.get());
+
+        removeChildComponent(m_outputMeteringComponent.get());
+        m_outputMeteringComponent.reset();
+        resizeRequired = true;
+    }
+
+    if (m_outputFieldComponent)
+    {
+        if (m_outputDataAnalyzer)
+            m_outputDataAnalyzer->removeListener(m_outputFieldComponent.get());
+
+        removeChildComponent(m_outputFieldComponent.get());
+        m_outputFieldComponent.reset();
+        resizeRequired = true;
+    }
+    
     if (resizeRequired && !getLocalBounds().isEmpty())
         resized();
 }
@@ -168,6 +225,12 @@ void MemaMoComponent::resized()
             m_inputMeteringComponent->setBounds(inputBounds);
             m_outputMeteringComponent->setBounds(outputBounds);
         }
+    }
+    else if (m_waveformComponent)
+    {
+        auto margin = 8;
+        auto bounds = getLocalBounds().reduced(margin, margin);
+        m_waveformComponent->setBounds(bounds);
     }
 }
 
