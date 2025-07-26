@@ -84,11 +84,31 @@ const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& MemaClientControlC
 
 void MemaClientControlComponentBase::setCrosspointValues(const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues)
 {
+    //juce::String dbgStr;
+    //for (auto const& iKV : crosspointValues)
+    //{
+    //    dbgStr << int(iKV.first) << " - ";
+    //    for (auto const& oKV : iKV.second)
+    //        dbgStr << int(oKV.first) << ":" << oKV.second << ";";
+    //    dbgStr << "\n";
+    //}
+    //DBG(juce::String(__FUNCTION__) + "\n" + dbgStr);
+
     m_crosspointValues = crosspointValues;
 }
 
 const std::map<std::uint16_t, std::map<std::uint16_t, float>>& MemaClientControlComponentBase::getCrosspointValues()
 {
+    //juce::String dbgStr;
+    //for (auto const& iKV : m_crosspointValues)
+    //{
+    //    dbgStr << int(iKV.first) << " - ";
+    //    for (auto const& oKV : iKV.second)
+    //        dbgStr << int(oKV.first) << ":" << oKV.second << ";";
+    //    dbgStr << "\n";
+    //}
+    //DBG(juce::String(__FUNCTION__) + "\n" + dbgStr);
+
     return m_crosspointValues;
 }
 
@@ -96,8 +116,16 @@ void MemaClientControlComponentBase::addCrosspointStates(const std::map<std::uin
 {
     auto crosspointStatesCpy = getCrosspointStates();
 
-    for (auto const& crosspointStateKV : crosspointStates)
-        crosspointStatesCpy[crosspointStateKV.first] = crosspointStateKV.second;
+    for (auto const& iKV : crosspointStates)
+    {
+        auto& input = iKV.first;
+        for (auto const& oKV : iKV.second)
+        {
+            auto& output = oKV.first;
+            auto& state = oKV.second;
+            crosspointStatesCpy[input][output] = state;
+        }
+    }
     setCrosspointStates(crosspointStatesCpy);
 }
 
@@ -105,8 +133,16 @@ void MemaClientControlComponentBase::addCrosspointValues(const std::map<std::uin
 {
     auto crosspointValuesCpy = getCrosspointValues();
 
-    for (auto const& crosspointValueKV : crosspointValues)
-        crosspointValuesCpy[crosspointValueKV.first] = crosspointValueKV.second;
+    for (auto const& iKV : crosspointValues)
+    {
+        auto& input = iKV.first;
+        for (auto const& oKV : iKV.second)
+        {
+            auto& output = oKV.first;
+            auto& value = oKV.second;
+            crosspointValuesCpy[input][output] = value;
+        }
+    }
     setCrosspointValues(crosspointValuesCpy);
 }
 
@@ -762,10 +798,11 @@ void PanningControlComponent::setIOCount(const std::pair<int, int>& ioCount)
     MemaClientControlComponentBase::setIOCount(ioCount);
 
     rebuildControls();
-    selectInputChannel(m_currentInputChannel);
 
     if (m_multiSlider)
         m_multiSlider->setIOCount(ioCount);
+
+    selectInputChannel(m_currentInputChannel);
 }
 
 void PanningControlComponent::setChannelConfig(const juce::AudioChannelSet& channelConfiguration)
@@ -896,7 +933,7 @@ void PanningControlComponent::selectInputChannel(std::uint16_t channel)
 
 void PanningControlComponent::changeInputPosition(std::uint16_t channel, float xVal, float yVal, int layer)
 {
-    DBG(juce::String(__FUNCTION__) << " new pos: " << int(channel) << " " << xVal << "," << yVal << "(" << layer << ")");
+    //DBG(juce::String(__FUNCTION__) << " new pos: " << int(channel) << " " << xVal << "," << yVal << "(" << layer << ")");
 
     if (m_multiSlider)
     {
@@ -910,11 +947,17 @@ void PanningControlComponent::changeInputPosition(std::uint16_t channel, float x
         auto outputs = m_multiSlider->getOutputsInLayer(TwoDFieldMultisliderComponent::ChannelLayer(layer));
         for (auto const& channelType : outputs)
         {
+            // this is the actual primitive sourceposition-to-output level calculation algorithm
             auto angleRad = juce::degreesToRadians(m_multiSlider->getAngleForChannelTypeInCurrentConfiguration(channelType));
             auto xLength = sinf(angleRad) * (h / 2.0f);
             auto yLength = cosf(angleRad) * (w / 2.0f);
             outputsMaxPoints[channelType] = c + juce::Point<float>(xLength, -yLength);
             channelToOutputsDists[channelType] = 0.5f * outputsMaxPoints[channelType].getDistanceFrom({ xVal, yVal });
+        }
+        auto outputsNotInLayer = m_multiSlider->getDirectiveOutputsNotInLayer(TwoDFieldMultisliderComponent::ChannelLayer(layer));
+        for (auto const& channelType : outputsNotInLayer)
+        {
+            channelToOutputsDists[channelType] = 0.0f;
         }
 
         std::map<std::uint16_t, std::map<std::uint16_t, bool>> crosspointStates;
@@ -924,7 +967,7 @@ void PanningControlComponent::changeInputPosition(std::uint16_t channel, float x
             crosspointStates[channel][std::uint16_t(m_multiSlider->getChannelNumberForChannelTypeInCurrentConfiguration(cToOdKV.first))] = true;
             crosspointValues[channel][std::uint16_t(m_multiSlider->getChannelNumberForChannelTypeInCurrentConfiguration(cToOdKV.first))] = cToOdKV.second;
 
-            DBG(juce::String(__FUNCTION__) << " " << juce::AudioChannelSet::getAbbreviatedChannelTypeName(cToOdKV.first) << ": " << cToOdKV.second);
+            //DBG(juce::String(__FUNCTION__) << " " << juce::AudioChannelSet::getAbbreviatedChannelTypeName(cToOdKV.first) << ": " << cToOdKV.second);
         }
         if (onCrosspointStatesChanged)
             onCrosspointStatesChanged(crosspointStates);

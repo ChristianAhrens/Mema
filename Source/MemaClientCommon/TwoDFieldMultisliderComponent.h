@@ -90,11 +90,12 @@ public:
     void setInputToOutputLevels(const std::map<std::uint16_t, std::map<std::uint16_t, float>>& inputToOutputLevels);
 
     //==============================================================================
-    void setInputPosition(std::uint16_t channel, const TwoDMultisliderValue& value, std::optional<ChannelLayer> layer = {}, juce::NotificationType notification = juce::dontSendNotification);
+    void setInputPosition(std::uint16_t channel, const TwoDMultisliderValue& value, const ChannelLayer& layer, juce::NotificationType notification = juce::dontSendNotification);
     void selectInput(std::uint16_t channel, bool selectOn, juce::NotificationType notification = juce::dontSendNotification);
 
     //==============================================================================
     const juce::Array<juce::AudioChannelSet::ChannelType>& getOutputsInLayer(const ChannelLayer& layer);
+    const juce::Array<juce::AudioChannelSet::ChannelType> getDirectiveOutputsNotInLayer(const ChannelLayer& layer);
     
     //==============================================================================
     std::function<void(std::uint16_t channel, const TwoDMultisliderValue& value, std::optional<ChannelLayer> layer)> onInputPositionChanged;
@@ -147,6 +148,7 @@ private:
 
     std::map<juce::AudioChannelSet::ChannelType, std::unique_ptr<JUCEAppBasics::ToggleStateSlider>> m_directionslessChannelSliders;
     std::map<juce::AudioChannelSet::ChannelType, std::unique_ptr<juce::Label>>                      m_directionslessChannelLabels;
+    std::map<juce::AudioChannelSet::ChannelType, double>                                            m_directionlessSliderRelRef;
 
     std::map<std::uint16_t, std::map<juce::AudioChannelSet::ChannelType, std::pair<bool, float>>> m_inputToOutputVals;
     std::map<std::uint16_t, TwoDMultisliderSourcePosition>  m_inputPositions;

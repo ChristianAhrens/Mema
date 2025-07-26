@@ -469,7 +469,7 @@ void TwoDFieldMultisliderComponent::mouseDrag(const MouseEvent& e)
                         auto relXPos = positionInArea.getX() / (0.5f * area.getWidth());
                         auto relYPos = positionInArea.getY() / (0.5f * area.getHeight());
                         inputPosition.second.value = { relXPos, relYPos };
-                        setInputPosition(inputPosition.first, { relXPos, relYPos }, std::nullopt, juce::sendNotification);
+                        setInputPosition(inputPosition.first, { relXPos, relYPos }, inputPosition.second.layer, juce::sendNotification);
                     }
 
                 }
@@ -480,13 +480,14 @@ void TwoDFieldMultisliderComponent::mouseDrag(const MouseEvent& e)
     juce::Component::mouseDrag(e);
 }
 
-void TwoDFieldMultisliderComponent::setInputPosition(std::uint16_t channel, const TwoDMultisliderValue& value, std::optional<ChannelLayer> layer, juce::NotificationType notification)
+void TwoDFieldMultisliderComponent::setInputPosition(std::uint16_t channel, const TwoDMultisliderValue& value, const ChannelLayer& layer, juce::NotificationType notification)
 {
     m_inputPositions[channel].value = value;
-    if (layer)
-        m_inputPositions[channel].layer = layer.value();
+    m_inputPositions[channel].layer = layer;
 
     repaint();
+
+    //DBG(juce::String(__FUNCTION__) << " new pos: " << int(channel) << " " << value.relXPos << "," << value.relYPos << "(" << layer << ")");
 
     if (juce::dontSendNotification != notification && onInputPositionChanged)
         onInputPositionChanged(channel, value, layer);
@@ -502,7 +503,7 @@ void TwoDFieldMultisliderComponent::selectInput(std::uint16_t channel, bool sele
 
     repaint();
 
-    if (!m_directionslessChannelSliders.empty())
+    if (!m_directionslessChannelSliders.empty() && !m_inputToOutputVals.empty())
     {
         for (auto const& slider : m_directionslessChannelSliders)
         {
@@ -524,9 +525,10 @@ void TwoDFieldMultisliderComponent::selectInput(std::uint16_t channel, bool sele
                 else if (0 == m_currentlySelectedInput)
                 {
                     slider.second->setTitle("");
-                    slider.second->setRange(-0.5, 0.5, 0.01);
-                    slider.second->setValue(0.0); // relative starting
+                    slider.second->setRange(0.0, 1.0, 0.01);
+                    slider.second->setValue(0.5); // relative starting
                     slider.second->setToggleState(true, juce::dontSendNotification);
+                    m_directionlessSliderRelRef[slider.first] = 0.5;
                 }
             }
         }
@@ -1320,12 +1322,15 @@ void TwoDFieldMultisliderComponent::rebuildDirectionslessChannelSliders()
                 values[m_currentlySelectedInput][std::uint16_t(getChannelNumberForChannelTypeInCurrentConfiguration(channelType))] = float(m_directionslessChannelSliders[channelType]->getValue());
             else
             {
+                auto latestValue = m_directionslessChannelSliders[channelType]->getValue();
+                auto latestDelta = latestValue - m_directionlessSliderRelRef[channelType];
                 for (auto& ioValKV : m_inputToOutputVals)
                 {
-                    // hier muss noch statt absolut das diff zum letzten getValue genommen werden, sonst haut's exp ab
-                    ioValKV.second[channelType].second += float(m_directionslessChannelSliders[channelType]->getValue());
+                    ioValKV.second[channelType].second += float(latestDelta);
                     values[ioValKV.first][std::uint16_t(getChannelNumberForChannelTypeInCurrentConfiguration(channelType))] = ioValKV.second[channelType].second;
+                    //DBG(juce::String(ioValKV.first) << ">" << juce::AudioChannelSet::getAbbreviatedChannelTypeName(channelType) << " val:" << ioValKV.second[channelType].second);
                 }
+                m_directionlessSliderRelRef[channelType] = latestValue;
             }
 
             if (onInputToOutputValuesChanged)
@@ -1367,6 +1372,20 @@ const juce::Array<juce::AudioChannelSet::ChannelType>& TwoDFieldMultisliderCompo
         return m_clockwiseOrderedHeightChannelTypes;
     else
         return m_directionLessChannelTypes;
+}
+
+const juce::Array<juce::AudioChannelSet::ChannelType> TwoDFieldMultisliderComponent::getDirectiveOutputsNotInLayer(const ChannelLayer& layer)
+{
+    if (ChannelLayer::Positioned == layer)
+        return m_clockwiseOrderedHeightChannelTypes;
+    else if (ChannelLayer::PositionedHeight == layer)
+        return m_clockwiseOrderedChannelTypes;
+    else
+    {
+        auto types = m_clockwiseOrderedChannelTypes;
+        types.addArray(m_clockwiseOrderedHeightChannelTypes);
+        return types;
+    }
 }
 
 
