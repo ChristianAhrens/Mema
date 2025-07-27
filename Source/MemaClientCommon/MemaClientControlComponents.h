@@ -202,6 +202,9 @@ public:
     void setChannelConfig(const juce::AudioChannelSet& channelConfiguration);
     const juce::AudioChannelSet& getChannelConfig();
 
+    //==============================================================================
+    void setPanningSharpness(float sharpness);
+
 protected:
     //==============================================================================
     void changeInputPosition(std::uint16_t channel, float xVal, float yVal, int layer);
@@ -218,7 +221,11 @@ private:
     std::vector<std::unique_ptr<juce::TextButton>>  m_inputSelectButtons;
     std::vector<std::unique_ptr<juce::TextButton>>  m_inputMuteButtons;
 
-    std::unique_ptr<Mema::TwoDFieldMultisliderComponent>  m_multiSlider;
+    float m_panningSharpness = 0.4f;
+
+    std::unique_ptr<Mema::TwoDFieldMultisliderComponent>    m_multiSlider;
+    std::unique_ptr<juce::Label>                            m_sharpnessLabel;
+    std::unique_ptr<juce::TextEditor>    m_sharpnessEdit;
 
     juce::AudioChannelSet   m_channelConfiguration;
 

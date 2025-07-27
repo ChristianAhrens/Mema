@@ -722,6 +722,16 @@ PanningControlComponent::PanningControlComponent()
     };
     addAndMakeVisible(m_multiSlider.get());
 
+    m_sharpnessEdit = std::make_unique<juce::TextEditor>("SharpnessEdit");
+    m_sharpnessEdit->setTooltip("Panning sharpness 0.0 ... 1.0");
+    m_sharpnessEdit->setText(juce::String(m_panningSharpness), false);
+    m_sharpnessEdit->setInputFilter(new juce::TextEditor::LengthAndCharacterRestriction(3, "0123456789."), true);
+    m_sharpnessEdit->onReturnKey = [=]() { setPanningSharpness(m_sharpnessEdit->getText().getFloatValue()); };
+    addAndMakeVisible(m_sharpnessEdit.get());
+    m_sharpnessLabel = std::make_unique<juce::Label>("Sharpness");
+    m_sharpnessLabel->setText("Sharpness", juce::dontSendNotification);
+    m_sharpnessLabel->attachToComponent(m_sharpnessEdit.get(), true);
+
     m_horizontalScrollContainerComponent = std::make_unique<juce::Component>();
     m_horizontalScrollViewport = std::make_unique<juce::Viewport>();
     m_horizontalScrollViewport->setViewedComponent(m_horizontalScrollContainerComponent.get(), false);
@@ -769,6 +779,8 @@ void PanningControlComponent::resized()
         auto multiSliderBounds = juce::Rectangle<int>(int(bounds.getHeight() / fieldAspect), bounds.getHeight()).withCentre(bounds.getCentre());
         if (m_multiSlider)
             m_multiSlider->setBounds(multiSliderBounds);
+        if (m_sharpnessEdit)
+            m_sharpnessEdit->setBounds(multiSliderBounds.removeFromBottom(20).removeFromLeft(50));
     }
     else
     {
@@ -776,6 +788,8 @@ void PanningControlComponent::resized()
         auto multiSliderBounds = juce::Rectangle<int>(bounds.getWidth(), int(bounds.getWidth() * fieldAspect)).withCentre(bounds.getCentre());
         if (m_multiSlider)
             m_multiSlider->setBounds(multiSliderBounds);
+        if (m_sharpnessEdit)
+            m_sharpnessEdit->setBounds(multiSliderBounds.removeFromBottom(20).removeFromLeft(50));
     }
 }
 
@@ -950,19 +964,25 @@ void PanningControlComponent::changeInputPosition(std::uint16_t channel, float x
         std::map<juce::AudioChannelSet::ChannelType, juce::Point<float>> outputsMaxPoints;
         std::map<juce::AudioChannelSet::ChannelType, float> channelToOutputsDists;
 
-        auto h = 2.0f;
-        auto w = 2.0f;
         auto c = juce::Point<float>(0.0f, 0.0f);
 
         auto outputs = m_multiSlider->getOutputsInLayer(TwoDFieldMultisliderComponent::ChannelLayer(layer));
         for (auto const& channelType : outputs)
         {
-            // this is the actual primitive sourceposition-to-output level calculation algorithm
             auto angleRad = juce::degreesToRadians(m_multiSlider->getAngleForChannelTypeInCurrentConfiguration(channelType));
-            auto xLength = sinf(angleRad) * (h / 2.0f);
-            auto yLength = cosf(angleRad) * (w / 2.0f);
-            outputsMaxPoints[channelType] = c + juce::Point<float>(xLength, -yLength);
-            channelToOutputsDists[channelType] = 0.5f * outputsMaxPoints[channelType].getDistanceFrom({ xVal, yVal });
+            auto xLength = sinf(angleRad);
+            auto yLength = cosf(angleRad);
+            outputsMaxPoints[channelType] = juce::Point<float>(xLength, -yLength);
+
+            // this is the actual primitive sourceposition-to-output level calculation algorithm
+            auto inputPosition = juce::Point<float>(xVal, yVal);
+            auto outputMaxPoint = outputsMaxPoints[channelType];
+            auto distance = outputMaxPoint.getDistanceFrom(inputPosition);
+            auto base = 0.5f * distance;
+            auto exp = jmap(m_panningSharpness, 1.0f, 5.0f);
+            channelToOutputsDists[channelType] = powf(base, exp);
+
+            //DBG(juce::String(__FUNCTION__) << " " << juce::AudioChannelSet::getAbbreviatedChannelTypeName(channelType) << ": " << channelToOutputsDists[channelType]);
         }
         auto outputsNotInLayer = m_multiSlider->getDirectiveOutputsNotInLayer(TwoDFieldMultisliderComponent::ChannelLayer(layer));
         for (auto const& channelType : outputsNotInLayer)
@@ -976,8 +996,6 @@ void PanningControlComponent::changeInputPosition(std::uint16_t channel, float x
         {
             crosspointStates[channel][std::uint16_t(m_multiSlider->getChannelNumberForChannelTypeInCurrentConfiguration(cToOdKV.first))] = true;
             crosspointValues[channel][std::uint16_t(m_multiSlider->getChannelNumberForChannelTypeInCurrentConfiguration(cToOdKV.first))] = cToOdKV.second;
-
-            //DBG(juce::String(__FUNCTION__) << " " << juce::AudioChannelSet::getAbbreviatedChannelTypeName(cToOdKV.first) << ": " << cToOdKV.second);
         }
         if (onCrosspointStatesChanged)
             onCrosspointStatesChanged(crosspointStates);
@@ -986,6 +1004,16 @@ void PanningControlComponent::changeInputPosition(std::uint16_t channel, float x
             onCrosspointValuesChanged(crosspointValues);
         addCrosspointValues(crosspointValues);
     }
+}
+
+void PanningControlComponent::setPanningSharpness(float sharpness)
+{
+    m_panningSharpness = jlimit(0.0f, 1.0f, sharpness);
+
+    if (m_panningSharpness != sharpness && m_sharpnessEdit)
+        m_sharpnessEdit->setText(juce::String(m_panningSharpness));
+    else if (m_multiSlider)
+        m_multiSlider->triggerInputPositionsDump();
 }
 
 

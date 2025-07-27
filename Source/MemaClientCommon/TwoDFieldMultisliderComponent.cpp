@@ -493,6 +493,13 @@ void TwoDFieldMultisliderComponent::setInputPosition(std::uint16_t channel, cons
         onInputPositionChanged(channel, value, layer);
 }
 
+void TwoDFieldMultisliderComponent::triggerInputPositionsDump()
+{
+    for (auto const& inputPosition : m_inputPositions)
+        if (onInputPositionChanged)
+            onInputPositionChanged(inputPosition.first, inputPosition.second.value, inputPosition.second.layer);
+}
+
 void TwoDFieldMultisliderComponent::selectInput(std::uint16_t channel, bool selectOn, juce::NotificationType notification)
 {
     m_inputPositions[channel].isSliding = selectOn;
@@ -1340,7 +1347,7 @@ void TwoDFieldMultisliderComponent::rebuildDirectionslessChannelSliders()
                     auto outputChannel = getChannelNumberForChannelTypeInCurrentConfiguration(channelType);
                     if (outputChannel <= m_currentOutputCount)
                         values[ioValKV.first][std::uint16_t(outputChannel)] = ioValKV.second[channelType].second;
-                    DBG(juce::String(ioValKV.first) << ">" << juce::AudioChannelSet::getAbbreviatedChannelTypeName(channelType) << " val:" << ioValKV.second[channelType].second);
+                    //DBG(juce::String(ioValKV.first) << ">" << juce::AudioChannelSet::getAbbreviatedChannelTypeName(channelType) << " val:" << ioValKV.second[channelType].second);
                 }
                 m_directionlessSliderRelRef[channelType] = latestValue;
             }
