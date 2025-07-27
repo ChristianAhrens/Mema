@@ -56,6 +56,34 @@ MemaReComponent::MemaReComponent()
     addChildComponent(m_faderbankCtrlComponent.get());
 
     m_panningCtrlComponent = std::make_unique<Mema::PanningControlComponent>();
+    m_panningCtrlComponent->onInputMutesChanged = [=](const std::map<std::uint16_t, bool>& inputMuteStates) {
+        std::map<std::uint16_t, bool> outputMuteStates;
+        std::map<std::uint16_t, std::map<std::uint16_t, bool>> crosspointStates;
+        std::map<std::uint16_t, std::map<std::uint16_t, float>> crosspointValues;
+        if (onMessageReadyToSend)
+            onMessageReadyToSend(std::make_unique<Mema::ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage());
+        };
+    m_panningCtrlComponent->onOutputMutesChanged = [=](const std::map<std::uint16_t, bool>& outputMuteStates) {
+        std::map<std::uint16_t, bool> inputMuteStates;
+        std::map<std::uint16_t, std::map<std::uint16_t, bool>> crosspointStates;
+        std::map<std::uint16_t, std::map<std::uint16_t, float>> crosspointValues;
+        if (onMessageReadyToSend)
+            onMessageReadyToSend(std::make_unique<Mema::ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage());
+        };
+    m_panningCtrlComponent->onCrosspointStatesChanged = [=](const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& crosspointStates) {
+        std::map<std::uint16_t, bool> inputMuteStates;
+        std::map<std::uint16_t, bool> outputMuteStates;
+        std::map<std::uint16_t, std::map<std::uint16_t, float>> crosspointValues;
+        if (onMessageReadyToSend)
+            onMessageReadyToSend(std::make_unique<Mema::ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage());
+        };
+    m_panningCtrlComponent->onCrosspointValuesChanged = [=](const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues) {
+        std::map<std::uint16_t, bool> inputMuteStates;
+        std::map<std::uint16_t, bool> outputMuteStates;
+        std::map<std::uint16_t, std::map<std::uint16_t, bool>> crosspointStates;
+        if (onMessageReadyToSend)
+            onMessageReadyToSend(std::make_unique<Mema::ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage());
+        };
     addChildComponent(m_panningCtrlComponent.get());
 
     setOutputFaderbankCtrlActive(Mema::FaderbankControlComponent::ControlsSize::S);
@@ -73,6 +101,7 @@ void MemaReComponent::setOutputFaderbankCtrlActive(const Mema::FaderbankControlC
     {
         if (!m_faderbankCtrlComponent->isVisible())
         {
+            m_faderbankCtrlComponent->setIOCount(m_currentIOCount);
             m_faderbankCtrlComponent->setVisible(true);
             resizeRequired = true;
         }
@@ -80,6 +109,7 @@ void MemaReComponent::setOutputFaderbankCtrlActive(const Mema::FaderbankControlC
     }
     if (m_panningCtrlComponent && m_panningCtrlComponent->isVisible())
     {
+        m_panningCtrlComponent->resetCtrl();
         m_panningCtrlComponent->setVisible(false);
         resizeRequired = true;
     }
@@ -92,14 +122,19 @@ void MemaReComponent::setOutputPanningCtrlActive(const juce::AudioChannelSet& ch
 {
     auto resizeRequired = false;
 
-    if (m_panningCtrlComponent && !m_panningCtrlComponent->isVisible())
+    if (m_panningCtrlComponent)
     {
+        if (!m_panningCtrlComponent->isVisible())
+        {
+            m_panningCtrlComponent->setIOCount(m_currentIOCount);
+            m_panningCtrlComponent->setVisible(true);
+            resizeRequired = true;
+        }
         m_panningCtrlComponent->setChannelConfig(channelConfiguration);
-        m_panningCtrlComponent->setVisible(true);
-        resizeRequired = true;
     }
     if (m_faderbankCtrlComponent && m_faderbankCtrlComponent->isVisible())
     {
+        m_faderbankCtrlComponent->resetCtrl();
         m_faderbankCtrlComponent->setVisible(false);
         resizeRequired = true;
     }
@@ -169,9 +204,9 @@ void MemaReComponent::handleMessage(const Message& message)
             m_inputMuteStates[inputMuteState.first] = inputMuteState.second;
         if (!m_inputMuteStates.empty())
         {
-            if (m_faderbankCtrlComponent)
+            if (m_faderbankCtrlComponent && m_faderbankCtrlComponent->isVisible())
                 m_faderbankCtrlComponent->setInputMuteStates(m_inputMuteStates);
-            if (m_panningCtrlComponent)
+            if (m_panningCtrlComponent && m_panningCtrlComponent->isVisible())
                 m_panningCtrlComponent->setInputMuteStates(m_inputMuteStates);
         }
 
@@ -179,9 +214,9 @@ void MemaReComponent::handleMessage(const Message& message)
             m_outputMuteStates[outputMuteState.first] = outputMuteState.second;
         if (!m_outputMuteStates.empty())
         {
-            if (m_faderbankCtrlComponent)
+            if (m_faderbankCtrlComponent && m_faderbankCtrlComponent->isVisible())
                 m_faderbankCtrlComponent->setOutputMuteStates(m_outputMuteStates);
-            if (m_panningCtrlComponent)
+            if (m_panningCtrlComponent && m_panningCtrlComponent->isVisible())
                 m_panningCtrlComponent->setOutputMuteStates(m_outputMuteStates);
         }
 
@@ -190,9 +225,9 @@ void MemaReComponent::handleMessage(const Message& message)
                 m_crosspointStates[cpsIKV.first][cpsOKV.first] = cpsOKV.second;
         if (!m_crosspointStates.empty())
         {
-            if (m_faderbankCtrlComponent)
+            if (m_faderbankCtrlComponent && m_faderbankCtrlComponent->isVisible())
                 m_faderbankCtrlComponent->setCrosspointStates(m_crosspointStates);
-            if (m_panningCtrlComponent)
+            if (m_panningCtrlComponent && m_panningCtrlComponent->isVisible())
                 m_panningCtrlComponent->setCrosspointStates(m_crosspointStates);
         }
 
@@ -201,9 +236,9 @@ void MemaReComponent::handleMessage(const Message& message)
                 m_crosspointValues[cpvIKV.first][cpvOKV.first] = cpvOKV.second;
         if (!m_crosspointValues.empty())
         {
-            if (m_faderbankCtrlComponent)
+            if (m_faderbankCtrlComponent && m_faderbankCtrlComponent->isVisible())
                 m_faderbankCtrlComponent->setCrosspointValues(m_crosspointValues);
-            if (m_panningCtrlComponent)
+            if (m_panningCtrlComponent && m_panningCtrlComponent->isVisible())
                 m_panningCtrlComponent->setCrosspointValues(m_crosspointValues);
         }
 

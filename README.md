@@ -74,15 +74,23 @@ Use what is provided here at your own risk!
 
 ![Showreel.008.png](Resources/Documentation/Showreel/Showreel.008.png "Mema.Mo UI output formats")
 
+#### Mema.Mo UI waveforms visualization details
+
+![Showreel.009.png](Resources/Documentation/Showreel/Showreel.009.png "Mema.Mo UI waveforms visualization")
+
 #### Supported UI coloring
 
-![Showreel.009.png](Resources/Documentation/Showreel/Showreel.009.png "UI colouring options")
+![Showreel.010.png](Resources/Documentation/Showreel/Showreel.010.png "UI colouring options")
 
 <a name="MemaReUI" />
 
 ### Mema.Re UI details
 
-![Showreel.010.png](Resources/Documentation/Showreel/Showreel.010.png "Mema.Re UI")
+![Showreel.011.png](Resources/Documentation/Showreel/Showreel.011.png "Mema.Re UI")
+
+### Mema.Re UI 2D sound field panning details
+
+![Showreel.012.png](Resources/Documentation/Showreel/Showreel.012.png "Mema.Re output panning")
 
 
 <a name="howtobuild" />
@@ -141,9 +149,9 @@ This does only work up to Raspberry Pi OS Bullseye versions, that use X server a
 
 ## Usecase: Studio rack monitoring
 
-![Showreel.011.png](Resources/Documentation/Showreel/Showreel.011.png "Homestudio setup")
+![Showreel.013.png](Resources/Documentation/Showreel/Showreel.013.png "Homestudio setup")
 
-![Showreel.012.png](Resources/Documentation/Showreel/Showreel.012.png "RaspberryPi rack DIY device")
+![Showreel.014.png](Resources/Documentation/Showreel/Showreel.014.png "RaspberryPi rack DIY device")
 
 ![Studio_rack_monitoring_usecase.png](Resources/Documentation/Studio_rack_monitoring_usecase.png "Homestudio setup signalflow schematic")
 
@@ -159,7 +167,7 @@ This does only work up to Raspberry Pi OS Bullseye versions, that use X server a
 
 ## Usecase: Mobile recording monitoring
 
-![Showreel.013.png](Resources/Documentation/Showreel/Showreel.013.png "Mobile rig")
+![Showreel.015.png](Resources/Documentation/Showreel/Showreel.015.png "Mobile rig")
 
 * Mema on macOS
   * BlackHole 16ch used to route signal from LogicPro, Apple Music, etc. to Mema
