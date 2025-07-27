@@ -22,7 +22,7 @@ namespace Mema
 {
 
 #define USE_LEVEL_PROCESSING
-//#define USE_BUFFER_PROCESSING
+#define USE_BUFFER_PROCESSING
 //#define USE_SPECTRUM_PROCESSING
 
 

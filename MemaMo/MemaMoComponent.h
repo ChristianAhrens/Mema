@@ -25,6 +25,7 @@ namespace Mema
     class ProcessorDataAnalyzer;
     class MeterbridgeComponent;
     class TwoDFieldOutputComponent;
+    class WaveformAudioComponent;
 }
 
 class MemaMoComponent :   public juce::Component, juce::MessageListener
@@ -43,6 +44,7 @@ public:
 
     void setOutputMeteringVisuActive();
     void setOutputFieldVisuActive(const juce::AudioChannelSet& channelConfiguration);
+    void setWaveformVisuActive();
 
     //==============================================================================
     void resized() override;
@@ -62,6 +64,7 @@ private:
     std::unique_ptr<Mema::MeterbridgeComponent> m_inputMeteringComponent;
     std::unique_ptr<Mema::MeterbridgeComponent> m_outputMeteringComponent;
     std::unique_ptr<Mema::TwoDFieldOutputComponent> m_outputFieldComponent;
+    std::unique_ptr<Mema::WaveformAudioComponent> m_waveformComponent;
 
     //==============================================================================
     RunningStatus m_runningStatus = RunningStatus::Inactive;
