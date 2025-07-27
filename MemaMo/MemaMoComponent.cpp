@@ -46,6 +46,16 @@ MemaMoComponent::~MemaMoComponent()
 void MemaMoComponent::setOutputMeteringVisuActive()
 {
     auto resizeRequired = false;
+    // if ioMeter should be visualized, make sure the components existis
+    if (!m_inputMeteringComponent)
+    {
+        m_inputMeteringComponent = std::make_unique<Mema::MeterbridgeComponent>(Mema::MeterbridgeComponent::Direction::Horizontal);
+        m_inputMeteringComponent->setChannelCount(m_currentIOCount.first);
+        addAndMakeVisible(m_inputMeteringComponent.get());
+        if (m_inputDataAnalyzer)
+            m_inputDataAnalyzer->addListener(m_inputMeteringComponent.get());
+        resizeRequired = true;
+    }
     if (!m_outputMeteringComponent)
     {
         m_outputMeteringComponent = std::make_unique<Mema::MeterbridgeComponent>(Mema::MeterbridgeComponent::Direction::Horizontal);
@@ -56,6 +66,7 @@ void MemaMoComponent::setOutputMeteringVisuActive()
         resizeRequired = true;
     }
 
+    // none of the other components outputfields/waveF are required - cleanup
     if (m_outputFieldComponent)
     {
         if (m_outputDataAnalyzer)
@@ -83,6 +94,16 @@ void MemaMoComponent::setOutputMeteringVisuActive()
 void MemaMoComponent::setOutputFieldVisuActive(const juce::AudioChannelSet& channelConfiguration)
 {
     auto resizeRequired = false;
+    // if outputfields (incl. iMeter) should be visualized, make sure the components existis
+    if (!m_inputMeteringComponent)
+    {
+        m_inputMeteringComponent = std::make_unique<Mema::MeterbridgeComponent>(Mema::MeterbridgeComponent::Direction::Horizontal);
+        m_inputMeteringComponent->setChannelCount(m_currentIOCount.first);
+        addAndMakeVisible(m_inputMeteringComponent.get());
+        if (m_inputDataAnalyzer)
+            m_inputDataAnalyzer->addListener(m_inputMeteringComponent.get());
+        resizeRequired = true;
+    }
     if (!m_outputFieldComponent)
     {
         m_outputFieldComponent = std::make_unique<Mema::TwoDFieldOutputComponent>();
@@ -94,6 +115,7 @@ void MemaMoComponent::setOutputFieldVisuActive(const juce::AudioChannelSet& chan
     if (m_outputFieldComponent->setChannelConfiguration(channelConfiguration))
         resizeRequired = true;
 
+    // none of the other components oMeter/waveF are required - cleanup
     if (m_outputMeteringComponent)
     {
         if (m_outputDataAnalyzer)
@@ -121,12 +143,24 @@ void MemaMoComponent::setOutputFieldVisuActive(const juce::AudioChannelSet& chan
 void MemaMoComponent::setWaveformVisuActive()
 {
     auto resizeRequired = false;
+    // if waveform should be visualized, make sure the component existis
     if (!m_waveformComponent)
     {
         m_waveformComponent = std::make_unique<Mema::WaveformAudioComponent>();
         addAndMakeVisible(m_waveformComponent.get());
         if (m_outputDataAnalyzer)
             m_outputDataAnalyzer->addListener(m_waveformComponent.get());
+        resizeRequired = true;
+    }
+
+    // none of the other components ioMeter/outpField are required - cleanup
+    if (m_inputMeteringComponent)
+    {
+        if (m_inputDataAnalyzer)
+            m_inputDataAnalyzer->removeListener(m_inputMeteringComponent.get());
+
+        removeChildComponent(m_inputMeteringComponent.get());
+        m_inputMeteringComponent.reset();
         resizeRequired = true;
     }
 
