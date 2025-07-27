@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+## [0.6.2] 2025-07-27
+### Added
+- Added Mema.Mo waveform visualizer option
+- Added Mema.Re 2D surround field panner, incl. sharpness parameter
+
+### Changed
+
+### Fixed
+
 ## [0.6.1] 2025-07-07
 ### Added
 - Added Mema.Mo and Mema.Re coexistance awareness to prompt the user with discovery inavailablity when running at the same time
