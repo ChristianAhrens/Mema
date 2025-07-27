@@ -509,22 +509,22 @@ void TwoDFieldMultisliderComponent::selectInput(std::uint16_t channel, bool sele
         {
             if (slider.second)
             {
-                auto output = slider.first;
-                jassert(0 < m_inputToOutputVals.count(channel));
-                if (selectOn && 0 < m_inputToOutputVals.count(channel))
+                if (0 == m_currentlySelectedInput && slider.second)
                 {
+                    configureDirectionlessSliderToRelativeCtrl(slider.first, *slider.second);
+                }
+                else if (selectOn && 0 < m_inputToOutputVals.count(channel))
+                {
+                    auto output = slider.first;
                     jassert(0 < m_inputToOutputVals.at(channel).count(output));
                     if(0 < m_inputToOutputVals.at(channel).count(output))
                     {
                         slider.second->setTitle(juce::String(channel));
                         slider.second->setRange(0.0, 1.0, 0.01);
+                        slider.second->displayValueConverter = [](double val) { return juce::String(juce::Decibels::gainToDecibels(val, static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())), 1) + " dB"; };
                         slider.second->setValue(m_inputToOutputVals.at(channel).at(output).second);
                         slider.second->setToggleState(m_inputToOutputVals.at(channel).at(output).first, juce::dontSendNotification);
                     }
-                }
-                else if (0 == m_currentlySelectedInput && slider.second)
-                {
-                    configureDirectionlessSliderToRelativeCtrl(slider.first, *slider.second);
                 }
             }
         }
@@ -580,9 +580,9 @@ void TwoDFieldMultisliderComponent::setInputToOutputLevels(const std::map<std::u
     }
 
     if (0 == m_currentlySelectedInput)
-        for (auto const& slider : m_directionslessChannelSliders)
-            if (slider.second)
-                configureDirectionlessSliderToRelativeCtrl(slider.first, *slider.second);
+        for (auto const& sliderKV : m_directionslessChannelSliders)
+            if (sliderKV.second && sliderKV.second->displayValueConverter) // hacky: use the presence of the valueconverter as indicator if we need to switch to relctrl or not
+                configureDirectionlessSliderToRelativeCtrl(sliderKV.first, *sliderKV.second);
 
     repaint();
 }
@@ -1305,7 +1305,10 @@ void TwoDFieldMultisliderComponent::rebuildDirectionslessChannelSliders()
         m_directionslessChannelSliders[channelType]->onToggleStateChange = [this, channelType]() {
             std::map<std::uint16_t, std::map<std::uint16_t, bool >> states;
             if (0 != m_currentlySelectedInput)
+            {
+                m_inputToOutputVals[m_currentlySelectedInput][channelType].first = m_directionslessChannelSliders[channelType]->getToggleState();
                 states[m_currentlySelectedInput][std::uint16_t(getChannelNumberForChannelTypeInCurrentConfiguration(channelType))] = m_directionslessChannelSliders[channelType]->getToggleState();
+            }
             else
             {
                 for (auto& ioValKV : m_inputToOutputVals)
@@ -1323,18 +1326,21 @@ void TwoDFieldMultisliderComponent::rebuildDirectionslessChannelSliders()
         m_directionslessChannelSliders[channelType]->onValueChange = [this, channelType]() {
             std::map<std::uint16_t, std::map<std::uint16_t, float >> values;
             if (0 != m_currentlySelectedInput)
+            {
+                m_inputToOutputVals[m_currentlySelectedInput][channelType].second = m_directionslessChannelSliders[channelType]->getValue();
                 values[m_currentlySelectedInput][std::uint16_t(getChannelNumberForChannelTypeInCurrentConfiguration(channelType))] = float(m_directionslessChannelSliders[channelType]->getValue());
+            }
             else
             {
                 auto latestValue = m_directionslessChannelSliders[channelType]->getValue();
                 auto latestDelta = latestValue - m_directionlessSliderRelRef[channelType];
                 for (auto& ioValKV : m_inputToOutputVals)
                 {
-                    ioValKV.second[channelType].second += float(latestDelta);
+                    ioValKV.second[channelType].second = jlimit(0.0f, 1.0f, ioValKV.second[channelType].second + float(latestDelta));
                     auto outputChannel = getChannelNumberForChannelTypeInCurrentConfiguration(channelType);
                     if (outputChannel <= m_currentOutputCount)
                         values[ioValKV.first][std::uint16_t(outputChannel)] = ioValKV.second[channelType].second;
-                    //DBG(juce::String(ioValKV.first) << ">" << juce::AudioChannelSet::getAbbreviatedChannelTypeName(channelType) << " val:" << ioValKV.second[channelType].second);
+                    DBG(juce::String(ioValKV.first) << ">" << juce::AudioChannelSet::getAbbreviatedChannelTypeName(channelType) << " val:" << ioValKV.second[channelType].second);
                 }
                 m_directionlessSliderRelRef[channelType] = latestValue;
             }
@@ -1409,6 +1415,7 @@ void TwoDFieldMultisliderComponent::configureDirectionlessSliderToRelativeCtrl(c
     slider.setTitle("");
     slider.setRange(0.0, 1.0, 0.01);
     slider.setValue(0.5); // relative starting
+    slider.displayValueConverter = {};
     slider.setToggleState(!anyInputToDirectionLessOff, juce::dontSendNotification);
     m_directionlessSliderRelRef[channelType] = 0.5;
 }

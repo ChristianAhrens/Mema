@@ -101,6 +101,7 @@ void MemaReComponent::setOutputFaderbankCtrlActive(const Mema::FaderbankControlC
     {
         if (!m_faderbankCtrlComponent->isVisible())
         {
+            m_faderbankCtrlComponent->setIOCount(m_currentIOCount);
             m_faderbankCtrlComponent->setVisible(true);
             resizeRequired = true;
         }
@@ -108,6 +109,7 @@ void MemaReComponent::setOutputFaderbankCtrlActive(const Mema::FaderbankControlC
     }
     if (m_panningCtrlComponent && m_panningCtrlComponent->isVisible())
     {
+        m_panningCtrlComponent->resetCtrl();
         m_panningCtrlComponent->setVisible(false);
         resizeRequired = true;
     }
@@ -124,6 +126,7 @@ void MemaReComponent::setOutputPanningCtrlActive(const juce::AudioChannelSet& ch
     {
         if (!m_panningCtrlComponent->isVisible())
         {
+            m_panningCtrlComponent->setIOCount(m_currentIOCount);
             m_panningCtrlComponent->setVisible(true);
             resizeRequired = true;
         }
@@ -131,6 +134,7 @@ void MemaReComponent::setOutputPanningCtrlActive(const juce::AudioChannelSet& ch
     }
     if (m_faderbankCtrlComponent && m_faderbankCtrlComponent->isVisible())
     {
+        m_faderbankCtrlComponent->resetCtrl();
         m_faderbankCtrlComponent->setVisible(false);
         resizeRequired = true;
     }

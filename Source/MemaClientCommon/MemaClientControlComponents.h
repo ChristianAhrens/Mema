@@ -36,6 +36,7 @@ namespace Mema
 namespace Mema
 {
 
+
 class MemaClientControlComponentBase : public juce::Component
 {
 public:

@@ -225,9 +225,14 @@ FaderbankControlComponent::~FaderbankControlComponent()
 {
 }
 
-void FaderbankControlComponent::paint(Graphics& g)
+void FaderbankControlComponent::paint(juce::Graphics& g)
 {
-    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::ColourIds::backgroundColourId));
+    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
+
+    auto ctrlsSize = 2 * (m_controlsSize + s_gap);
+    g.setColour(getLookAndFeel().findColour(juce::Slider::backgroundColourId));
+    g.fillRect(getLocalBounds().removeFromTop(ctrlsSize + s_scrollbarsize).removeFromRight(getWidth() - ctrlsSize));
+    g.fillRect(getLocalBounds().removeFromLeft(ctrlsSize + s_scrollbarsize).removeFromBottom(getHeight() - ctrlsSize));
 }
 
 void FaderbankControlComponent::resized()
@@ -730,9 +735,14 @@ PanningControlComponent::~PanningControlComponent()
 {
 }
 
-void PanningControlComponent::paint(Graphics& g)
+void PanningControlComponent::paint(juce::Graphics& g)
 {
-    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::ColourIds::backgroundColourId));
+    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
+
+    auto ctrlsSize = 2 * (m_controlsSize + s_gap);
+    g.setColour(getLookAndFeel().findColour(juce::Slider::backgroundColourId));
+    g.fillRect(getLocalBounds().removeFromTop(ctrlsSize).removeFromRight(getWidth() - ctrlsSize));
+    g.fillRect(getLocalBounds().removeFromTop(ctrlsSize + s_scrollbarsize).removeFromBottom(s_scrollbarsize));
 }
 
 void PanningControlComponent::resized()
