@@ -34,6 +34,9 @@ public:
     //==============================================================================
     WaveformAudioComponent();
     ~WaveformAudioComponent();
+
+    //==============================================================================
+    void setNumVisibleChannels(int numChannels);
     
     //==============================================================================
     void paint (juce::Graphics&) override;
@@ -46,9 +49,11 @@ public:
 private:
     //==============================================================================
     std::unique_ptr<juce::AudioVisualiserComponent> m_waveformsComponent;
+    std::unique_ptr<juce::DrawableButton>           m_chNumSelButton;
 
     //==============================================================================
-    int m_numChannels = 1;
+    int m_numAvailableChannels = 0;
+    int m_numVisibleChannels = 1;
     int m_legendWidth = 20;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (WaveformAudioComponent)

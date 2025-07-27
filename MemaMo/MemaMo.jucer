@@ -30,8 +30,6 @@
     </GROUP>
     <GROUP id="{72AB56DC-8637-938F-3846-2BD91435687D}" name="Resources">
       <GROUP id="{5418C8BA-AFDC-83EF-A716-D3FB9CE9A772}" name="Images">
-        <FILE id="hHtooO" name="grid_4x4_24dp.svg" compile="0" resource="1"
-              file="../submodules/JUCE-AppBasics/Resources/Images/grid_4x4_24dp.svg"/>
         <FILE id="LsoMoI" name="link_off_24dp.svg" compile="0" resource="1"
               file="../submodules/JUCE-AppBasics/Resources/Images/link_off_24dp.svg"/>
         <FILE id="SM2kRq" name="Mema.png" compile="0" resource="1" file="../Resources/Images/Mema.png"/>
@@ -43,7 +41,7 @@
               file="../submodules/JUCE-AppBasics/Resources/Images/question_mark_24dp.svg"/>
         <FILE id="PU3KWa" name="settings_24dp.svg" compile="0" resource="1"
               file="../submodules/JUCE-AppBasics/Resources/Images/settings_24dp.svg"/>
-        <FILE id="uY5jnL" name="tune_24dp.svg" compile="0" resource="1" file="../submodules/JUCE-AppBasics/Resources/Images/tune_24dp.svg"/>
+        <FILE id="DZGGSO" name="waves-24px.svg" compile="0" resource="1" file="../submodules/JUCE-AppBasics/Resources/Images/waves-24px.svg"/>
       </GROUP>
       <FILE id="jMyrFg" name="MemaMoDefault.config" compile="0" resource="1"
             file="../Resources/MemaMoDefault.config"/>
