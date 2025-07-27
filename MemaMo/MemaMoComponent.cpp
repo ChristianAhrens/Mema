@@ -292,7 +292,8 @@ void MemaMoComponent::handleMessage(const Message& message)
     {
         auto inputCount = iom->getInputCount();
         jassert(inputCount > 0);
-        m_inputMeteringComponent->setChannelCount(inputCount);
+        if (m_inputMeteringComponent)
+            m_inputMeteringComponent->setChannelCount(inputCount);
         auto outputCount = iom->getOutputCount();
         jassert(outputCount > 0);
         if (m_outputMeteringComponent)
