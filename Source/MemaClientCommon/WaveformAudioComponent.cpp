@@ -52,53 +52,48 @@ void WaveformAudioComponent::paint(Graphics& g)
 {
     AbstractAudioVisualizer::paint(g);
 
-    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));   // clear the background
+    auto visuArea = getLocalBounds();
+    auto legendArea = visuArea.removeFromRight(20);
 
-    auto outerMargin = 20;
-
-    juce::Rectangle<int> visuArea = getLocalBounds().reduced(outerMargin);
-
-    // fill our visualization area background
+    // fill visu and legend area background
     g.setColour(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId).darker());
     g.fillRect(visuArea);
+    g.setColour(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
+    g.fillRect(legendArea);
 
-    if (m_thumbnail->getTotalLength() > 0.0)
+    // get thumbnail details that internally are locking once before using multiple times later
+    auto numChannels = m_thumbnail->getNumChannels();
+    auto totalLength = m_thumbnail->getTotalLength();
+
+    // draw legend, simply number the waveforms from 1..n
+    if (numChannels > 0)
+    {
+        g.setFont(14.0f);
+        g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOnId));
+        auto thumbWaveHeight = legendArea.getHeight() / numChannels;
+        for (int i = 1; i <= numChannels; ++i)
+            g.drawText(juce::String(i), legendArea.removeFromTop(thumbWaveHeight), juce::Justification::centred, true);
+    }
+
+    // draw the waveform thumbnails
+    if (totalLength > 0.0)
     {
         g.setColour(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::MeteringRmsColourId));
         m_thumbnail->drawChannels(g, visuArea, 0, THUMB_TIME, 1.0f);
     }
     else
     {
-        g.setColour(Colours::white);
         g.setFont(14.0f);
+        g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOnId));
         g.drawFittedText("(No waveform data to paint)", visuArea, juce::Justification::centred, 2);
     }
 
     // draw moving cursor
     if (m_bufferTime > 0)
     {
-        g.setColour(Colours::white);
+        g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOnId));
         auto cursorPos = int(visuArea.getWidth() * (float(m_bufferPos) / float(m_bufferTime)));
         g.drawRect(juce::Rectangle<int>(visuArea.getX() + cursorPos, visuArea.getY(), 1, visuArea.getHeight()));
-    }
-
-    // draw an outline around the visu area
-    g.setColour(Colours::white);
-    g.drawRect(visuArea, 1);
-
-    // draw legend, simply number the waveforms from 1..n
-    if (m_thumbnail->getNumChannels() > 0)
-    {
-        g.setFont(14.0f);
-        auto thumbWaveHeight = visuArea.getHeight() / m_thumbnail->getNumChannels();
-        auto yPos = outerMargin / 2 + thumbWaveHeight / 2;
-        for (int i = 1; i <= m_thumbnail->getNumChannels(); ++i)
-        {
-            g.setColour(Colours::white);
-            g.drawText(String(i), juce::Rectangle<int>(0, yPos, outerMargin, outerMargin).toFloat(), Justification::centred, true);
-
-            yPos += thumbWaveHeight;
-        }
     }
 }
 
