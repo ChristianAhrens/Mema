@@ -28,15 +28,33 @@ namespace JUCEAppBasics
 {
     class ToggleStateSlider;
 }
+namespace Mema
+{
+    class TwoDFieldMultisliderComponent;
+}
 
 namespace Mema
 {
 
+
 class MemaClientControlComponentBase : public juce::Component
 {
 public:
-    static constexpr int gap = 3;
-    static constexpr int scrollbarsize = 8;
+    enum ControlDirection
+    {
+        None = 0,
+        Input,
+        Output
+    };
+    enum ControlsSize
+    {
+        S = 35,
+        M = 50,
+        L = 65
+    };
+
+    static constexpr int s_gap = 3;
+    static constexpr int s_scrollbarsize = 8;
 
 public:
     MemaClientControlComponentBase();
@@ -50,6 +68,8 @@ public:
     virtual void resetCtrl() = 0;
 
     //==============================================================================
+    virtual void setControlsSize(const ControlsSize& ctrlsSize);
+
     virtual void setIOCount(const std::pair<int, int>& ioCount);
     const std::pair<int, int>& getIOCount();
 
@@ -65,6 +85,9 @@ public:
     virtual void setCrosspointValues(const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues);
     const std::map<std::uint16_t, std::map<std::uint16_t, float>>& getCrosspointValues();
 
+    virtual void addCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& crosspointStates);
+    virtual void addCrosspointValues(const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues);
+
     //==============================================================================
     std::function<void(const std::map<std::uint16_t, bool>&)>                           onInputMutesChanged;
     std::function<void(const std::map<std::uint16_t, bool>&)>                           onOutputMutesChanged;
@@ -77,6 +100,10 @@ public:
     const juce::String getInputMuteParametersAsString();
     const juce::String getOutputMuteParametersAsString();
     const juce::String getCrosspointParametersAsString();
+
+protected:
+    //==============================================================================
+    ControlsSize    m_controlsSize = ControlsSize::S;
 
 private:
     //==============================================================================
@@ -93,20 +120,6 @@ private:
 class FaderbankControlComponent : public MemaClientControlComponentBase
 {
 public:
-    enum ControlDirection
-    {
-        None = 0,
-        Input,
-        Output
-    };
-    enum ControlsSize
-    {
-        S = 35,
-        M = 50,
-        L = 65
-    };
-
-public:
     FaderbankControlComponent();
     virtual ~FaderbankControlComponent();
 
@@ -114,12 +127,12 @@ public:
     void paint(Graphics&) override;
     void resized() override;
     void lookAndFeelChanged() override;
-    
-    //==============================================================================
-    void setControlsSize(const ControlsSize& ctrlsSize);
 
     //==============================================================================
     void resetCtrl() override;
+
+    //==============================================================================
+    void setControlsSize(const ControlsSize& ctrlsSize) override;
 
     //==============================================================================
     void setIOCount(const std::pair<int, int>& ioCount) override;
@@ -127,10 +140,6 @@ public:
     void setOutputMuteStates(const std::map<std::uint16_t, bool>& outputMuteStates) override;
     void setCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& crosspointStates) override;
     void setCrosspointValues(const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues) override;
-
-    //==============================================================================
-    void addCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& crosspointStates);
-    void addCrosspointValues(const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues);
 
 protected:
     //==============================================================================
@@ -161,8 +170,6 @@ private:
     std::unique_ptr<juce::Label>                                    m_crosspointsNoSelectionLabel;
 
     std::pair<ControlDirection, int>    m_currentIOChannel = { ControlDirection::None, 0 };
-    
-    ControlsSize m_controlsSize = ControlsSize::S;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FaderbankControlComponent)
 };
@@ -177,19 +184,52 @@ public:
     //==============================================================================
     void paint(Graphics&) override;
     void resized() override;
+    void lookAndFeelChanged() override;
 
     //==============================================================================
     void resetCtrl() override;
+
+    //==============================================================================
+    void setControlsSize(const ControlsSize& ctrlsSize) override;
+
+    //==============================================================================
+    void setIOCount(const std::pair<int, int>& ioCount) override;
+    void setInputMuteStates(const std::map<std::uint16_t, bool>& inputMuteStates) override;
+    void setCrosspointStates(const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& crosspointStates) override;
+    void setCrosspointValues(const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues) override;
 
     //==============================================================================
     void setChannelConfig(const juce::AudioChannelSet& channelConfiguration);
     const juce::AudioChannelSet& getChannelConfig();
 
     //==============================================================================
+    void setPanningSharpness(float sharpness);
+
+protected:
+    //==============================================================================
+    void changeInputPosition(std::uint16_t channel, float xVal, float yVal, int layer);
+    void selectInputChannel(std::uint16_t channel);
+    void rebuildControls(bool force = false);
+    void rebuildInputControls(bool force = false);
 
 private:
     //==============================================================================
+    std::unique_ptr<juce::Viewport>     m_horizontalScrollViewport;
+    std::unique_ptr<juce::Component>    m_horizontalScrollContainerComponent;
+
+    std::unique_ptr<juce::Grid>                     m_inputControlsGrid;
+    std::vector<std::unique_ptr<juce::TextButton>>  m_inputSelectButtons;
+    std::vector<std::unique_ptr<juce::TextButton>>  m_inputMuteButtons;
+
+    float m_panningSharpness = 0.4f;
+
+    std::unique_ptr<Mema::TwoDFieldMultisliderComponent>    m_multiSlider;
+    std::unique_ptr<juce::Label>                            m_sharpnessLabel;
+    std::unique_ptr<juce::TextEditor>    m_sharpnessEdit;
+
     juce::AudioChannelSet   m_channelConfiguration;
+
+    std::uint16_t m_currentInputChannel = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PanningControlComponent)
 };
