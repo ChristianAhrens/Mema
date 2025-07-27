@@ -204,9 +204,9 @@ void MemaReComponent::handleMessage(const Message& message)
             m_inputMuteStates[inputMuteState.first] = inputMuteState.second;
         if (!m_inputMuteStates.empty())
         {
-            if (m_faderbankCtrlComponent)
+            if (m_faderbankCtrlComponent && m_faderbankCtrlComponent->isVisible())
                 m_faderbankCtrlComponent->setInputMuteStates(m_inputMuteStates);
-            if (m_panningCtrlComponent)
+            if (m_panningCtrlComponent && m_panningCtrlComponent->isVisible())
                 m_panningCtrlComponent->setInputMuteStates(m_inputMuteStates);
         }
 
@@ -214,9 +214,9 @@ void MemaReComponent::handleMessage(const Message& message)
             m_outputMuteStates[outputMuteState.first] = outputMuteState.second;
         if (!m_outputMuteStates.empty())
         {
-            if (m_faderbankCtrlComponent)
+            if (m_faderbankCtrlComponent && m_faderbankCtrlComponent->isVisible())
                 m_faderbankCtrlComponent->setOutputMuteStates(m_outputMuteStates);
-            if (m_panningCtrlComponent)
+            if (m_panningCtrlComponent && m_panningCtrlComponent->isVisible())
                 m_panningCtrlComponent->setOutputMuteStates(m_outputMuteStates);
         }
 
@@ -225,9 +225,9 @@ void MemaReComponent::handleMessage(const Message& message)
                 m_crosspointStates[cpsIKV.first][cpsOKV.first] = cpsOKV.second;
         if (!m_crosspointStates.empty())
         {
-            if (m_faderbankCtrlComponent)
+            if (m_faderbankCtrlComponent && m_faderbankCtrlComponent->isVisible())
                 m_faderbankCtrlComponent->setCrosspointStates(m_crosspointStates);
-            if (m_panningCtrlComponent)
+            if (m_panningCtrlComponent && m_panningCtrlComponent->isVisible())
                 m_panningCtrlComponent->setCrosspointStates(m_crosspointStates);
         }
 
@@ -236,9 +236,9 @@ void MemaReComponent::handleMessage(const Message& message)
                 m_crosspointValues[cpvIKV.first][cpvOKV.first] = cpvOKV.second;
         if (!m_crosspointValues.empty())
         {
-            if (m_faderbankCtrlComponent)
+            if (m_faderbankCtrlComponent && m_faderbankCtrlComponent->isVisible())
                 m_faderbankCtrlComponent->setCrosspointValues(m_crosspointValues);
-            if (m_panningCtrlComponent)
+            if (m_panningCtrlComponent && m_panningCtrlComponent->isVisible())
                 m_panningCtrlComponent->setCrosspointValues(m_crosspointValues);
         }
 
