@@ -71,7 +71,7 @@ void TwoDFieldOutputComponent::paintCircularLevelIndication(juce::Graphics& g, c
 #endif
 
     // fill circle background
-    g.setColour(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId).darker());
+    g.setColour(getLookAndFeel().findColour(juce::Slider::backgroundColourId));
     g.fillEllipse(circleArea);
 
 #if defined DEBUG && defined PAINTINGHELPER

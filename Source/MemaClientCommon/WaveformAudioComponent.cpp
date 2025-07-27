@@ -24,24 +24,17 @@
 namespace Mema
 {
 
-constexpr int THUMB_RES = 512;
-constexpr int THUMB_TIME = 10;
 
 //==============================================================================
 WaveformAudioComponent::WaveformAudioComponent()
     : AbstractAudioVisualizer()
 {
-    juce::AudioFormatManager formatManager;
-    formatManager.registerFormat(new juce::WavAudioFormat, true);
+    m_waveformsComponent = std::make_unique<juce::AudioVisualiserComponent>(m_numChannels);
+    m_waveformsComponent->setBufferSize(2048);
+    m_waveformsComponent->setRepaintRate(20);
+    addAndMakeVisible(m_waveformsComponent.get());
 
-    m_thumbnailCache = std::make_unique<juce::AudioThumbnailCache>(THUMB_RES * 1000);
-    m_thumbnail = std::make_unique<juce::AudioThumbnail>(THUMB_RES, formatManager, *m_thumbnailCache.get());
-
-    m_buffer.clear();
-    m_bufferPos = 0;
-    m_bufferTime = 0;
-
-    setUsesValuesInDB(false);
+    lookAndFeelChanged();
 }
 
 WaveformAudioComponent::~WaveformAudioComponent()
@@ -53,53 +46,38 @@ void WaveformAudioComponent::paint(Graphics& g)
     AbstractAudioVisualizer::paint(g);
 
     auto visuArea = getLocalBounds();
-    auto legendArea = visuArea.removeFromRight(20);
+    auto legendArea = visuArea.removeFromRight(m_legendWidth);
 
-    // fill visu and legend area background
-    g.setColour(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId).darker());
-    g.fillRect(visuArea);
+    // fill legend area background
     g.setColour(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
     g.fillRect(legendArea);
 
-    // get thumbnail details that internally are locking once before using multiple times later
-    auto numChannels = m_thumbnail->getNumChannels();
-    auto totalLength = m_thumbnail->getTotalLength();
-
     // draw legend, simply number the waveforms from 1..n
-    if (numChannels > 0)
+    if (m_numChannels > 0)
     {
         g.setFont(14.0f);
         g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOnId));
-        auto thumbWaveHeight = legendArea.getHeight() / numChannels;
-        for (int i = 1; i <= numChannels; ++i)
+        auto thumbWaveHeight = legendArea.getHeight() / m_numChannels;
+        for (int i = 1; i <= m_numChannels; ++i)
             g.drawText(juce::String(i), legendArea.removeFromTop(thumbWaveHeight), juce::Justification::centred, true);
-    }
-
-    // draw the waveform thumbnails
-    if (totalLength > 0.0)
-    {
-        g.setColour(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::MeteringRmsColourId));
-        m_thumbnail->drawChannels(g, visuArea, 0, THUMB_TIME, 1.0f);
-    }
-    else
-    {
-        g.setFont(14.0f);
-        g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOnId));
-        g.drawFittedText("(No waveform data to paint)", visuArea, juce::Justification::centred, 2);
-    }
-
-    // draw moving cursor
-    if (m_bufferTime > 0)
-    {
-        g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOnId));
-        auto cursorPos = int(visuArea.getWidth() * (float(m_bufferPos) / float(m_bufferTime)));
-        g.drawRect(juce::Rectangle<int>(visuArea.getX() + cursorPos, visuArea.getY(), 1, visuArea.getHeight()));
     }
 }
 
 void WaveformAudioComponent::resized()
 {
+    auto visuArea = getLocalBounds();
+    auto legendArea = visuArea.removeFromRight(m_legendWidth);
+
+    m_waveformsComponent->setBounds(visuArea);
+
     AbstractAudioVisualizer::resized();
+}
+
+void WaveformAudioComponent::lookAndFeelChanged()
+{
+    m_waveformsComponent->setColours(
+        getLookAndFeel().findColour(juce::Slider::backgroundColourId),
+        getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::MeteringRmsColourId));
 }
 
 void WaveformAudioComponent::processingDataChanged(AbstractProcessorData* data)
@@ -115,23 +93,15 @@ void WaveformAudioComponent::processingDataChanged(AbstractProcessorData* data)
         ProcessorAudioSignalData* sd = static_cast<ProcessorAudioSignalData*>(data);
         if (sd->GetChannelCount() > 0)
         {
-            m_bufferTime = static_cast<int>(THUMB_TIME * sd->GetSampleRate());
-
-            if (m_thumbnail->getNumChannels() != int(sd->GetChannelCount()))
-                m_thumbnail->reset(static_cast<int>(sd->GetChannelCount()), sd->GetSampleRate());
-            if(m_buffer.getNumChannels() != int(sd->GetChannelCount()))
-                m_buffer.setSize(static_cast<int>(sd->GetChannelCount()), m_bufferTime, false, true, true);
-
-            for (int i = 0; i < m_buffer.getNumChannels(); ++i)
+            if (m_numChannels != sd->getNumChannels())
             {
-                m_buffer.copyFrom(i, m_bufferPos, *sd, i, 0, sd->getNumSamples());
+                m_numChannels = sd->getNumChannels();
+                m_waveformsComponent->setNumChannels(m_numChannels);
             }
-            m_bufferPos += sd->getNumSamples();
-
-            if (m_bufferPos >= m_bufferTime)
-                m_bufferPos = 0;
-
-            m_thumbnail->addBlock(0, m_buffer, 0, m_bufferTime);
+            if (m_waveformsComponent)
+            {
+                m_waveformsComponent->pushBuffer(*sd);
+            }
         }
         else
             break;

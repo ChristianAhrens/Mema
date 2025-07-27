@@ -31,23 +31,25 @@ namespace Mema
 class WaveformAudioComponent    :   public AbstractAudioVisualizer
 {
 public:
+    //==============================================================================
     WaveformAudioComponent();
     ~WaveformAudioComponent();
     
     //==============================================================================
-    void paint (Graphics&) override;
+    void paint (juce::Graphics&) override;
     void resized() override;
+    void lookAndFeelChanged() override;
     
     //==============================================================================
     void processingDataChanged(AbstractProcessorData *data) override;
 
 private:
-    std::unique_ptr<juce::AudioThumbnail>       m_thumbnail;
-    std::unique_ptr<juce::AudioThumbnailCache>  m_thumbnailCache;
+    //==============================================================================
+    std::unique_ptr<juce::AudioVisualiserComponent> m_waveformsComponent;
 
-    juce::AudioBuffer<float>    m_buffer;
-    int                         m_bufferPos;
-    int                         m_bufferTime;
+    //==============================================================================
+    int m_numChannels = 1;
+    int m_legendWidth = 20;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (WaveformAudioComponent)
 };
