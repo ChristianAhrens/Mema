@@ -128,10 +128,6 @@
               file="Source/MemaProcessorEditor/PluginControlComponent.cpp"/>
         <FILE id="IDwnpl" name="PluginControlComponent.h" compile="0" resource="0"
               file="Source/MemaProcessorEditor/PluginControlComponent.h"/>
-        <FILE id="nK48z9" name="TwoDFieldOutputComponent.cpp" compile="1" resource="0"
-              file="Source/MemaProcessorEditor/TwoDFieldOutputComponent.cpp"/>
-        <FILE id="SpQ1vS" name="TwoDFieldOutputComponent.h" compile="0" resource="0"
-              file="Source/MemaProcessorEditor/TwoDFieldOutputComponent.h"/>
       </GROUP>
       <FILE id="M0Uva0" name="AboutComponent.cpp" compile="1" resource="0"
             file="Source/AboutComponent.cpp"/>
