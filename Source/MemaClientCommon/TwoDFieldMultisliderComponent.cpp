@@ -50,7 +50,6 @@ void TwoDFieldMultisliderComponent::paint (juce::Graphics& g)
 
     // paint slider knobs
     jassert(m_inputPositions.size() == m_inputPositionStackingOrder.size());
-    //for (auto const& inputNumber : m_inputPositionStackingOrder)
     // reverse iteration, since what we want to be painted last(on top of everything) is at the beginning of the list!
     for (auto const & inputNumber : std::vector<std::uint16_t>(m_inputPositionStackingOrder.rbegin(), m_inputPositionStackingOrder.rend()))
     {
@@ -274,7 +273,7 @@ void TwoDFieldMultisliderComponent::resized()
     auto bothTwoDFieldsWithMeterbridge = usesPositionedChannels() && usesPositionedHeightChannels() && usesDirectionlessChannels();
 
     auto margin = 12.0f;
-    auto bounds = getLocalBounds().toFloat();
+    auto bounds = getLocalBounds().reduced(8).toFloat();
     auto width = bounds.getWidth();
     auto height = bounds.getHeight();
     if (coreTwoDFieldOnly)
@@ -1393,7 +1392,6 @@ float TwoDFieldMultisliderComponent::getRequiredAspectRatio()
     else if (bothTwoDFieldsWithMeterbridge)
         return (10.0f / 13.0f);
     
-    jassertfalse;
     return 0.0f;
 }
 

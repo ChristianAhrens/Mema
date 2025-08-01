@@ -26,6 +26,7 @@
  */
 namespace JUCEAppBasics
 {
+    class FixedFontTextEditor;
     class ToggleStateSlider;
 }
 namespace Mema
@@ -225,7 +226,7 @@ private:
 
     std::unique_ptr<Mema::TwoDFieldMultisliderComponent>    m_multiSlider;
     std::unique_ptr<juce::Label>                            m_sharpnessLabel;
-    std::unique_ptr<juce::TextEditor>    m_sharpnessEdit;
+    std::unique_ptr<JUCEAppBasics::FixedFontTextEditor>     m_sharpnessEdit;
 
     juce::AudioChannelSet   m_channelConfiguration;
 
