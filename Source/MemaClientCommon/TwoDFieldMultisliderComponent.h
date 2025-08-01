@@ -154,11 +154,12 @@ private:
     std::map<juce::AudioChannelSet::ChannelType, double>                                            m_directionlessSliderRelRef;
 
     std::map<std::uint16_t, std::map<juce::AudioChannelSet::ChannelType, std::pair<bool, float>>> m_inputToOutputVals;
+    
     std::map<std::uint16_t, TwoDMultisliderSourcePosition>  m_inputPositions;
+    std::vector<std::uint16_t>                              m_inputPositionStackingOrder;
+    std::uint16_t                                           m_currentlySelectedInput = 0;
 
     int m_currentOutputCount = 0;
-
-    std::uint16_t m_currentlySelectedInput = 0;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TwoDFieldMultisliderComponent)
 };
