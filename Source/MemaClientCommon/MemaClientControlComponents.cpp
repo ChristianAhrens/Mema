@@ -19,7 +19,6 @@
 #include "MemaClientControlComponents.h"
 
 #include <CustomLookAndFeel.h>
-#include <FixedFontTextEditor.h>
 #include <ToggleStateSlider.h>
 #include <MemaProcessor/ProcessorDataAnalyzer.h>
 #include <MemaClientCommon/TwoDFieldMultisliderComponent.h>
@@ -705,8 +704,8 @@ PanningControlComponent::PanningControlComponent()
     : MemaClientControlComponentBase()
 {
     m_multiSlider = std::make_unique<Mema::TwoDFieldMultisliderComponent>();
-    m_multiSlider->onInputPositionChanged = [=](std::uint16_t channel, const Mema::TwoDFieldMultisliderComponent::TwoDMultisliderValue& value, std::optional<Mema::TwoDFieldMultisliderComponent::ChannelLayer> layer) {
-        changeInputPosition(channel, value.relXPos, value.relYPos, layer.has_value() ? layer.value() : 0);
+    m_multiSlider->onInputPositionChanged = [=](std::uint16_t channel, const Mema::TwoDFieldMultisliderComponent::TwoDMultisliderValue& value, const float& sharpness, std::optional<Mema::TwoDFieldMultisliderComponent::ChannelLayer> layer) {
+        changeInputPosition(channel, value.relXPos, value.relYPos, sharpness, layer.has_value() ? layer.value() : 0);
     };
     m_multiSlider->onInputToOutputStatesChanged = [=](const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& inputToOutputStates) {
         addCrosspointStates(inputToOutputStates);
@@ -722,18 +721,6 @@ PanningControlComponent::PanningControlComponent()
         selectInputChannel(channel);
     };
     addAndMakeVisible(m_multiSlider.get());
-
-    m_sharpnessEdit = std::make_unique<JUCEAppBasics::FixedFontTextEditor>("SharpnessEdit");
-    m_sharpnessEdit->setTooltip("Panning sharpness 0.0 ... 1.0");
-    m_sharpnessEdit->setText(juce::String(m_panningSharpness), false);
-    m_sharpnessEdit->setInputFilter(new juce::TextEditor::LengthAndCharacterRestriction(3, "0123456789."), true);
-    m_sharpnessEdit->setJustification(juce::Justification::centred);
-    m_sharpnessEdit->onReturnKey = [=]() { setPanningSharpness(m_sharpnessEdit->getText().getFloatValue()); };
-    addAndMakeVisible(m_sharpnessEdit.get());
-    m_sharpnessLabel = std::make_unique<juce::Label>("SharpnessLabel");
-    m_sharpnessLabel->setText("Sharpness", juce::dontSendNotification);
-    m_sharpnessLabel->setJustificationType(juce::Justification::centredLeft);
-    addAndMakeVisible(m_sharpnessLabel.get());
 
     m_horizontalScrollContainerComponent = std::make_unique<juce::Component>();
     m_horizontalScrollViewport = std::make_unique<juce::Viewport>();
@@ -782,12 +769,6 @@ void PanningControlComponent::resized()
         auto multiSliderBounds = juce::Rectangle<int>(int(panningBounds.getHeight() / fieldAspect), panningBounds.getHeight()).withCentre(panningBounds.getCentre());
         if (m_multiSlider)
             m_multiSlider->setBounds(multiSliderBounds);
-
-        auto sharpnessBounds = multiSliderBounds.reduced(s_scrollbarsize).removeFromBottom(40);
-        if (m_sharpnessEdit)
-            m_sharpnessEdit->setBounds(sharpnessBounds.removeFromBottom(20).removeFromLeft(40));
-        if (m_sharpnessLabel)
-            m_sharpnessLabel->setBounds(sharpnessBounds.removeFromLeft(65));
     }
     else
     {
@@ -795,12 +776,6 @@ void PanningControlComponent::resized()
         auto multiSliderBounds = juce::Rectangle<int>(panningBounds.getWidth(), int(panningBounds.getWidth() * fieldAspect)).withCentre(panningBounds.getCentre());
         if (m_multiSlider)
             m_multiSlider->setBounds(multiSliderBounds);
-
-        auto sharpnessBounds = multiSliderBounds.reduced(s_scrollbarsize).removeFromBottom(40);
-        if (m_sharpnessEdit)
-            m_sharpnessEdit->setBounds(sharpnessBounds.removeFromBottom(20).removeFromLeft(40));
-        if (m_sharpnessLabel)
-            m_sharpnessLabel->setBounds(sharpnessBounds.removeFromLeft(65));
     }
 }
 
@@ -966,7 +941,7 @@ void PanningControlComponent::selectInputChannel(std::uint16_t channel)
     }
 }
 
-void PanningControlComponent::changeInputPosition(std::uint16_t channel, float xVal, float yVal, int layer)
+void PanningControlComponent::changeInputPosition(std::uint16_t channel, float xVal, float yVal, float sharpness, int layer)
 {
     //DBG(juce::String(__FUNCTION__) << " new pos: " << int(channel) << " " << xVal << "," << yVal << "(" << layer << ")");
 
@@ -990,7 +965,7 @@ void PanningControlComponent::changeInputPosition(std::uint16_t channel, float x
             auto outputMaxPoint = outputsMaxPoints[channelType];
             auto distance = outputMaxPoint.getDistanceFrom(inputPosition);
             auto base = 0.5f * distance;
-            auto exp = jmap(m_panningSharpness, 1.0f, 5.0f);
+            auto exp = jmap(sharpness, 1.0f, 5.0f);
             channelToOutputsDists[channelType] = powf(base, exp);
 
             //DBG(juce::String(__FUNCTION__) << " " << juce::AudioChannelSet::getAbbreviatedChannelTypeName(channelType) << ": " << channelToOutputsDists[channelType]);
@@ -1017,15 +992,15 @@ void PanningControlComponent::changeInputPosition(std::uint16_t channel, float x
     }
 }
 
-void PanningControlComponent::setPanningSharpness(float sharpness)
-{
-    m_panningSharpness = jlimit(0.0f, 1.0f, sharpness);
-
-    if (m_panningSharpness != sharpness && m_sharpnessEdit)
-        m_sharpnessEdit->setText(juce::String(m_panningSharpness));
-    else if (m_multiSlider)
-        m_multiSlider->triggerInputPositionsDump();
-}
+//void PanningControlComponent::setPanningSharpness(float sharpness)
+//{
+//    m_panningSharpness = jlimit(0.0f, 1.0f, sharpness);
+//
+//    if (m_panningSharpness != sharpness && m_sharpnessEdit)
+//        m_sharpnessEdit->setText(juce::String(m_panningSharpness));
+//    else if (m_multiSlider)
+//        m_multiSlider->triggerInputPositionsDump();
+//}
 
 
 } // namespace Mema

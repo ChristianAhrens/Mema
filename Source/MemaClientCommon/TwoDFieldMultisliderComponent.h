@@ -22,6 +22,14 @@
 
 #include "../MemaProcessorEditor/AbstractAudioVisualizer.h"
 
+ /**
+  * Fwd. Decls.
+  */
+namespace JUCEAppBasics
+{
+    class FixedFontTextEditor;
+}
+
 namespace Mema
 {
 
@@ -51,10 +59,11 @@ public:
     struct TwoDMultisliderSourcePosition
     {
         TwoDMultisliderSourcePosition() = default;
-        TwoDMultisliderSourcePosition(ChannelLayer l, TwoDMultisliderValue v, bool iS, bool iO) { layer = l; value = v; isSliding = iS; isOn = iO; };
+        TwoDMultisliderSourcePosition(ChannelLayer l, TwoDMultisliderValue v, float s, bool iS, bool iO) { layer = l; value = v; sharpness = s; isSliding = iS; isOn = iO; };
 
         ChannelLayer layer = ChannelLayer::Positioned;
         TwoDMultisliderValue value = { 0.0f, 0.0f };
+        float sharpness = 0.4f;
         bool isSliding = false;
         bool isOn = true;
     };
@@ -90,7 +99,7 @@ public:
     void setInputToOutputLevels(const std::map<std::uint16_t, std::map<std::uint16_t, float>>& inputToOutputLevels);
 
     //==============================================================================
-    void setInputPosition(std::uint16_t channel, const TwoDMultisliderValue& value, const ChannelLayer& layer, juce::NotificationType notification = juce::dontSendNotification);
+    void setInputPosition(std::uint16_t channel, const TwoDMultisliderValue& value, const float& panningSharpness, const ChannelLayer& layer, juce::NotificationType notification = juce::dontSendNotification);
     void selectInput(std::uint16_t channel, bool selectOn, juce::NotificationType notification = juce::dontSendNotification);
 
     void triggerInputPositionsDump();
@@ -100,7 +109,7 @@ public:
     const juce::Array<juce::AudioChannelSet::ChannelType> getDirectiveOutputsNotInLayer(const ChannelLayer& layer);
     
     //==============================================================================
-    std::function<void(std::uint16_t channel, const TwoDMultisliderValue& value, std::optional<ChannelLayer> layer)> onInputPositionChanged;
+    std::function<void(std::uint16_t channel, const TwoDMultisliderValue& value, const float& sharpness, std::optional<ChannelLayer> layer)> onInputPositionChanged;
     std::function<void(std::uint16_t channel)> onInputSelected;
     std::function<void(const std::map<std::uint16_t, std::map<std::uint16_t, bool>>&)>  onInputToOutputStatesChanged;
     std::function<void(const std::map<std::uint16_t, std::map<std::uint16_t, float>>&)> onInputToOutputValuesChanged;
@@ -158,6 +167,9 @@ private:
     std::map<std::uint16_t, TwoDMultisliderSourcePosition>  m_inputPositions;
     std::vector<std::uint16_t>                              m_inputPositionStackingOrder;
     std::uint16_t                                           m_currentlySelectedInput = 0;
+
+    std::unique_ptr<juce::Label>                            m_sharpnessLabel;
+    std::unique_ptr<JUCEAppBasics::FixedFontTextEditor>     m_sharpnessEdit;
 
     int m_currentOutputCount = 0;
     

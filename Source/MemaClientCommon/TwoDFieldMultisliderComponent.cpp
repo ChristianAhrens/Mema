@@ -19,6 +19,7 @@
 #include "TwoDFieldMultisliderComponent.h"
 
 #include <CustomLookAndFeel.h>
+#include <FixedFontTextEditor.h>
 
 
 namespace Mema
@@ -31,6 +32,34 @@ TwoDFieldMultisliderComponent::TwoDFieldMultisliderComponent()
     :   juce::Component()
 {
     //setUsesValuesInDB(true);
+
+    m_sharpnessEdit = std::make_unique<JUCEAppBasics::FixedFontTextEditor>("SharpnessEdit");
+    m_sharpnessEdit->setTooltip("Panning sharpness 0.0 ... 1.0");
+    m_sharpnessEdit->setText(juce::String(0.4), false);
+    m_sharpnessEdit->setInputFilter(new juce::TextEditor::LengthAndCharacterRestriction(3, "0123456789."), true);
+    m_sharpnessEdit->setJustification(juce::Justification::centred);
+    m_sharpnessEdit->onReturnKey = [=]() {
+        if (0 != m_currentlySelectedInput)
+        {
+            m_inputPositions[m_currentlySelectedInput].sharpness = jlimit(0.0f, 1.0f, m_sharpnessEdit->getText().getFloatValue());
+            if (onInputPositionChanged)
+                onInputPositionChanged(m_currentlySelectedInput, m_inputPositions[m_currentlySelectedInput].value, m_inputPositions[m_currentlySelectedInput].sharpness, m_inputPositions[m_currentlySelectedInput].layer);
+        }
+        else
+        {
+            for (auto& inputPositionKV : m_inputPositions)
+            {
+                inputPositionKV.second.sharpness = jlimit(0.0f, 1.0f, m_sharpnessEdit->getText().getFloatValue());
+                if (onInputPositionChanged)
+                    onInputPositionChanged(inputPositionKV.first, inputPositionKV.second.value, inputPositionKV.second.sharpness, inputPositionKV.second.layer);
+            }
+        }
+    };
+    addAndMakeVisible(m_sharpnessEdit.get());
+    m_sharpnessLabel = std::make_unique<juce::Label>("SharpnessLabel");
+    m_sharpnessLabel->setText("Sharpness", juce::dontSendNotification);
+    m_sharpnessLabel->setJustificationType(juce::Justification::centredLeft);
+    addAndMakeVisible(m_sharpnessLabel.get());
 }
 
 TwoDFieldMultisliderComponent::~TwoDFieldMultisliderComponent()
@@ -276,6 +305,14 @@ void TwoDFieldMultisliderComponent::resized()
     auto bounds = getLocalBounds().reduced(8).toFloat();
     auto width = bounds.getWidth();
     auto height = bounds.getHeight();
+
+    auto sharpnessBounds = bounds.toNearestInt();
+    sharpnessBounds = sharpnessBounds.removeFromBottom(40);
+    if (m_sharpnessEdit)
+        m_sharpnessEdit->setBounds(sharpnessBounds.removeFromBottom(20).removeFromLeft(40));
+    if (m_sharpnessLabel)
+        m_sharpnessLabel->setBounds(sharpnessBounds.removeFromLeft(75));
+
     if (coreTwoDFieldOnly)
     {
         m_positionedChannelsArea = bounds.reduced(margin);
@@ -433,7 +470,7 @@ void TwoDFieldMultisliderComponent::mouseDrag(const MouseEvent& e)
                     auto positionInArea = area.getCentre() - area.getConstrainedPoint(mousePosition.toFloat());
                     auto relXPos = positionInArea.getX() / (0.5f * area.getWidth());
                     auto relYPos = positionInArea.getY() / (0.5f * area.getHeight());
-                    setInputPosition(inputNumber, { relXPos, relYPos }, inputPosition.layer, juce::sendNotification);
+                    setInputPosition(inputNumber, { relXPos, relYPos }, inputPosition.sharpness, inputPosition.layer, juce::sendNotification);
                 }
                 else
                 {
@@ -446,14 +483,14 @@ void TwoDFieldMultisliderComponent::mouseDrag(const MouseEvent& e)
                         auto positionInArea = m_positionedChannelsArea.getCentre() - m_positionedChannelsArea.getConstrainedPoint(mousePosition.toFloat());
                         auto relXPos = positionInArea.getX() / (0.5f * m_positionedChannelsArea.getWidth());
                         auto relYPos = positionInArea.getY() / (0.5f * m_positionedChannelsArea.getHeight());
-                        setInputPosition(inputNumber, { relXPos, relYPos }, ChannelLayer::Positioned, juce::sendNotification);
+                        setInputPosition(inputNumber, { relXPos, relYPos }, inputPosition.sharpness, ChannelLayer::Positioned, juce::sendNotification);
                     }
                     else if (positionedHeightChannelsEllipsePath.contains(mousePosition.toFloat()))
                     {
                         auto positionInArea = m_positionedHeightChannelsArea.getCentre() - m_positionedHeightChannelsArea.getConstrainedPoint(mousePosition.toFloat());
                         auto relXPos = positionInArea.getX() / (0.5f * m_positionedHeightChannelsArea.getWidth());
                         auto relYPos = positionInArea.getY() / (0.5f * m_positionedHeightChannelsArea.getHeight());
-                        setInputPosition(inputNumber, { relXPos, relYPos }, ChannelLayer::PositionedHeight, juce::sendNotification);
+                        setInputPosition(inputNumber, { relXPos, relYPos }, inputPosition.sharpness, ChannelLayer::PositionedHeight, juce::sendNotification);
                     }
                     // finally do the clipping to original circle, if the dragging happens somewhere outside everything
                     else
@@ -464,7 +501,7 @@ void TwoDFieldMultisliderComponent::mouseDrag(const MouseEvent& e)
                         auto relXPos = positionInArea.getX() / (0.5f * area.getWidth());
                         auto relYPos = positionInArea.getY() / (0.5f * area.getHeight());
                         inputPosition.value = { relXPos, relYPos };
-                        setInputPosition(inputNumber, { relXPos, relYPos }, inputPosition.layer, juce::sendNotification);
+                        setInputPosition(inputNumber, { relXPos, relYPos }, inputPosition.sharpness, inputPosition.layer, juce::sendNotification);
                     }
 
                 }
@@ -475,10 +512,11 @@ void TwoDFieldMultisliderComponent::mouseDrag(const MouseEvent& e)
     juce::Component::mouseDrag(e);
 }
 
-void TwoDFieldMultisliderComponent::setInputPosition(std::uint16_t channel, const TwoDMultisliderValue& value, const ChannelLayer& layer, juce::NotificationType notification)
+void TwoDFieldMultisliderComponent::setInputPosition(std::uint16_t channel, const TwoDMultisliderValue& value, const float& sharpness, const ChannelLayer& layer, juce::NotificationType notification)
 {
     jassert(m_inputPositions.size() == m_inputPositionStackingOrder.size());
     m_inputPositions[channel].value = value;
+    m_inputPositions[channel].sharpness = sharpness;
     m_inputPositions[channel].layer = layer;
 
     repaint();
@@ -486,7 +524,7 @@ void TwoDFieldMultisliderComponent::setInputPosition(std::uint16_t channel, cons
     //DBG(juce::String(__FUNCTION__) << " new pos: " << int(channel) << " " << value.relXPos << "," << value.relYPos << "(" << layer << ")");
 
     if (juce::dontSendNotification != notification && onInputPositionChanged)
-        onInputPositionChanged(channel, value, layer);
+        onInputPositionChanged(channel, value, sharpness, layer);
 }
 
 void TwoDFieldMultisliderComponent::triggerInputPositionsDump()
@@ -496,7 +534,7 @@ void TwoDFieldMultisliderComponent::triggerInputPositionsDump()
     {
         auto& inputPosition = m_inputPositions[inputNumber];
         if (onInputPositionChanged)
-            onInputPositionChanged(inputNumber, inputPosition.value, inputPosition.layer);
+            onInputPositionChanged(inputNumber, inputPosition.value, inputPosition.sharpness, inputPosition.layer);
     }
 }
 
@@ -547,6 +585,21 @@ void TwoDFieldMultisliderComponent::selectInput(std::uint16_t channel, bool sele
         }
     }
 
+    if (m_sharpnessEdit)
+    {
+        if (0 != m_currentlySelectedInput)
+        {
+            m_sharpnessLabel->setText("In" + juce::String(m_currentlySelectedInput) + " sharpness", juce::dontSendNotification);
+            m_sharpnessEdit->setText(juce::String(m_inputPositions[m_currentlySelectedInput].sharpness), juce::dontSendNotification);
+        }
+        else
+        {
+            m_sharpnessLabel->setText("All sharpness", juce::dontSendNotification);
+            m_sharpnessEdit->setTextToShowWhenEmpty("0.5", getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOffId));
+            m_sharpnessEdit->setText("", juce::dontSendNotification);
+        }
+    }
+
     if (juce::dontSendNotification != notification && onInputSelected && selectOn)
         onInputSelected(channel);
 }
@@ -558,7 +611,7 @@ void TwoDFieldMultisliderComponent::setIOCount(const std::pair<int, int>& ioCoun
     for (auto i = 1; i <= ioCount.first; i++)
     {
         m_inputPositionStackingOrder.push_back(std::uint16_t(i));
-        m_inputPositions[std::uint16_t(i)] = { ChannelLayer::Positioned, { 0.0f, 0.0f }, false, false };
+        m_inputPositions[std::uint16_t(i)] = { ChannelLayer::Positioned, { 0.0f, 0.0f }, 0.4f, false, false };
     }
     m_currentOutputCount = ioCount.second;
 
