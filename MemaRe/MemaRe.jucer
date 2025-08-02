@@ -53,6 +53,20 @@
             file="../Resources/MemaReDefault.config"/>
     </GROUP>
     <GROUP id="{B4C42B10-6A29-1C3A-435D-5CB7A9DE671E}" name="Source">
+      <FILE id="E5ADOY" name="InputPositionMapper.h" compile="0" resource="0"
+            file="../Source/MemaClientCommon/InputPositionMapper.h"/>
+      <FILE id="ze7fR8" name="FaderbankControlComponent.cpp" compile="1"
+            resource="0" file="../Source/MemaClientCommon/FaderbankControlComponent.cpp"/>
+      <FILE id="KWHLOd" name="FaderbankControlComponent.h" compile="0" resource="0"
+            file="../Source/MemaClientCommon/FaderbankControlComponent.h"/>
+      <FILE id="b1lRMW" name="MemaClientControlComponentBase.cpp" compile="1"
+            resource="0" file="../Source/MemaClientCommon/MemaClientControlComponentBase.cpp"/>
+      <FILE id="Uavmb3" name="MemaClientControlComponentBase.h" compile="0"
+            resource="0" file="../Source/MemaClientCommon/MemaClientControlComponentBase.h"/>
+      <FILE id="tGPKmB" name="PanningControlComponent.cpp" compile="1" resource="0"
+            file="../Source/MemaClientCommon/PanningControlComponent.cpp"/>
+      <FILE id="PFJ6ii" name="PanningControlComponent.h" compile="0" resource="0"
+            file="../Source/MemaClientCommon/PanningControlComponent.h"/>
       <FILE id="PYcLvt" name="TwoDFieldMultisliderComponent.cpp" compile="1"
             resource="0" file="../Source/MemaClientCommon/TwoDFieldMultisliderComponent.cpp"/>
       <FILE id="TZMWx9" name="TwoDFieldMultisliderComponent.h" compile="0"
@@ -77,10 +91,6 @@
             resource="0" file="../Source/MemaClientCommon/MemaClientDiscoverComponent.cpp"/>
       <FILE id="D4YQYR" name="MemaClientDiscoverComponent.h" compile="0"
             resource="0" file="../Source/MemaClientCommon/MemaClientDiscoverComponent.h"/>
-      <FILE id="UYJMAM" name="MemaClientControlComponents.cpp" compile="1"
-            resource="0" file="../Source/MemaClientCommon/MemaClientControlComponents.cpp"/>
-      <FILE id="nOGjRy" name="MemaClientControlComponents.h" compile="0"
-            resource="0" file="../Source/MemaClientCommon/MemaClientControlComponents.h"/>
       <FILE id="avbo06" name="MemaMessages.h" compile="0" resource="0" file="../Source/MemaProcessor/MemaMessages.h"/>
       <FILE id="yRPcEF" name="MemaReAppConfiguration.cpp" compile="1" resource="0"
             file="MemaReAppConfiguration.cpp"/>
