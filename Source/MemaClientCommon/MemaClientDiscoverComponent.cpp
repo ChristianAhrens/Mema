@@ -60,11 +60,19 @@ void MemaClientDiscoverComponent::resized()
     m_discoveredServicesSelection->setBounds(elementsBounds);
 }
 
+void MemaClientDiscoverComponent::resetServices()
+{
+    if (m_discoveredServicesSelection)
+        m_discoveredServicesSelection->setSelectedId(-1, juce::dontSendNotification);
+}
+
 void MemaClientDiscoverComponent::setDiscoveredServices(const std::vector<juce::NetworkServiceDiscovery::Service>& services)
 {
     m_discoveredServices = services;
 
-    m_discoveredServicesSelection->clear();
+    if (m_discoveredServicesSelection)
+        m_discoveredServicesSelection->clear();
+
     int i = 1;
     for (auto const& service : services)
     {

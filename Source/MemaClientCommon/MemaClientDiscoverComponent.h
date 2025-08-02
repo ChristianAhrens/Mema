@@ -32,6 +32,7 @@ public:
     void resized() override;
 
     void setupServiceDiscovery();
+    void resetServices();
 
     std::vector<NetworkServiceDiscovery::Service> getAvailableServices();
 
