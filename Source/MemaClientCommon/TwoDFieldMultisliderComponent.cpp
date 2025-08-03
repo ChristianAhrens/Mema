@@ -35,7 +35,7 @@ TwoDFieldMultisliderComponent::TwoDFieldMultisliderComponent()
 
     m_sharpnessEdit = std::make_unique<JUCEAppBasics::FixedFontTextEditor>("SharpnessEdit");
     m_sharpnessEdit->setTooltip("Panning sharpness 0.0 ... 1.0");
-    m_sharpnessEdit->setText(juce::String(0.4), false);
+    m_sharpnessEdit->setText(juce::String(0.5), false);
     m_sharpnessEdit->setInputFilter(new juce::TextEditor::LengthAndCharacterRestriction(3, "0123456789."), true);
     m_sharpnessEdit->setJustification(juce::Justification::centred);
     m_sharpnessEdit->onReturnKey = [=]() {
@@ -540,6 +540,10 @@ void TwoDFieldMultisliderComponent::triggerInputPositionsDump()
 
 void TwoDFieldMultisliderComponent::selectInput(std::uint16_t channel, bool selectOn, juce::NotificationType notification)
 {
+    jassert(0 != m_inputPositions.count(channel));
+    if (0 == m_inputPositions.count(channel))
+        return;
+
     if (selectOn)
     {
         auto posIter = std::find(m_inputPositionStackingOrder.begin(), m_inputPositionStackingOrder.end(), channel);
@@ -606,13 +610,39 @@ void TwoDFieldMultisliderComponent::selectInput(std::uint16_t channel, bool sele
 
 void TwoDFieldMultisliderComponent::setIOCount(const std::pair<int, int>& ioCount)
 {
-    m_inputPositions.clear();
-    m_inputPositionStackingOrder.clear();
-    for (auto i = 1; i <= ioCount.first; i++)
+    auto channelsToRemove = std::vector<std::uint16_t>();
+    auto channelsToAdd = std::vector<std::uint16_t>();
+    for (auto const& inputPositionKV : m_inputPositions)
     {
-        m_inputPositionStackingOrder.push_back(std::uint16_t(i));
-        m_inputPositions[std::uint16_t(i)] = { ChannelLayer::Positioned, { 0.0f, 0.0f }, 0.4f, false, false };
+        if (inputPositionKV.first > ioCount.first)
+            channelsToRemove.push_back(inputPositionKV.first);
     }
+    for (auto i = std::uint16_t(1); i <= ioCount.first; i++)
+    {
+        if (0 == m_inputPositions.count(i))
+            channelsToAdd.push_back(i);
+    }
+
+    for (auto const& channelToRemove : channelsToRemove)
+    {
+        m_inputPositions.erase(channelToRemove);
+        auto iterToRemove = std::find(m_inputPositionStackingOrder.begin(), m_inputPositionStackingOrder.end(), channelToRemove);
+        if (iterToRemove != m_inputPositionStackingOrder.end())
+            m_inputPositionStackingOrder.erase(iterToRemove);
+    }
+
+    auto angleRadDistributionSegment = channelsToAdd.empty() ? 1.0f : juce::degreesToRadians(360.0f / channelsToAdd.size());
+    auto defaultPosAngleRad = 0.0f;
+    for (auto const& channelToAdd : channelsToAdd)
+    {
+        m_inputPositionStackingOrder.push_back(channelToAdd);
+
+        auto defaultXPos = 0.5f * sinf(defaultPosAngleRad);
+        auto defaultYPos = 0.5f * cosf(defaultPosAngleRad);
+        m_inputPositions[channelToAdd] = { ChannelLayer::Positioned, { defaultXPos, defaultYPos }, 0.5f, false, false };
+        defaultPosAngleRad -= angleRadDistributionSegment;
+    }
+
     m_currentOutputCount = ioCount.second;
 
     repaint();
