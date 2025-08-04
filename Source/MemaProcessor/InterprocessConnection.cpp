@@ -186,6 +186,14 @@ const std::vector<int> InterprocessConnectionServerImpl::cleanupDeadConnections(
     return idsToErase;
 }
 
+const std::vector<int> InterprocessConnectionServerImpl::getActiveConnectionIds()
+{
+    auto ids = std::vector<int>(m_connections.size());
+    for (auto const& connection : m_connections)
+        ids.push_back(connection.first);
+    return ids;
+}
+
 bool InterprocessConnectionServerImpl::enqueueMessage(const MemoryBlock& message, std::vector<int> sendIds)
 {
     auto rVal = true;

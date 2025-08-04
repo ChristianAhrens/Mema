@@ -176,8 +176,8 @@ public:
     void resized() override;
 
     //==============================================================================
-    void setCrosspointEnabledValue(std::uint16_t input, std::uint16_t output, bool enabledState) override;
-    void setCrosspointFactorValue(std::uint16_t input, std::uint16_t output, float factor) override;
+    void setCrosspointEnabledValue(std::uint16_t input, std::uint16_t output, bool enabledState, int userId = -1) override;
+    void setCrosspointFactorValue(std::uint16_t input, std::uint16_t output, float factor, int userId = -1) override;
 
     //==============================================================================
     std::function<void()> onBoundsRequirementChange;

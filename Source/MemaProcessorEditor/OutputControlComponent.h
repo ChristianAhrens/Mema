@@ -54,7 +54,7 @@ public:
     virtual void processChanges() override;
 
     //==============================================================================
-    void setOutputMute(std::uint16_t channel, bool muteState) override;
+    void setOutputMute(std::uint16_t channel, bool muteState, int userId = -1) override;
 
     //==============================================================================
     void buttonClicked(juce::Button*) override;

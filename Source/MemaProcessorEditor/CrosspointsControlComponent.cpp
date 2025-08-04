@@ -45,7 +45,7 @@ void CrosspointsControlComponent::paint(Graphics& g)
 	g.fillAll(getLookAndFeel().findColour(ResizableWindow::backgroundColourId));
 }
 
-void CrosspointsControlComponent::setCrosspointEnabledValue(std::uint16_t input, std::uint16_t output, bool enabledState)
+void CrosspointsControlComponent::setCrosspointEnabledValue(std::uint16_t input, std::uint16_t output, bool enabledState, int /*userId*/)
 {
     m_crosspointEnabledValues[input][output] = enabledState;
     if (1 == m_crosspointComponent.count(input) && 1 == m_crosspointComponent.at(input).count(output) && m_crosspointComponent.at(input).at(output))
@@ -54,7 +54,7 @@ void CrosspointsControlComponent::setCrosspointEnabledValue(std::uint16_t input,
     repaint();
 }
 
-void CrosspointsControlComponent::setCrosspointFactorValue(std::uint16_t input, std::uint16_t output, float factor)
+void CrosspointsControlComponent::setCrosspointFactorValue(std::uint16_t input, std::uint16_t output, float factor, int /*userId*/)
 {
     m_crosspointFactorValues[input][output] = factor;
     if (1 == m_crosspointComponent.count(input) && 1 == m_crosspointComponent.at(input).count(output) && m_crosspointComponent.at(input).at(output))
@@ -78,11 +78,11 @@ void CrosspointsControlComponent::setIOCount(std::uint16_t inputCount, std::uint
             m_crosspointComponent[input][output] = std::make_unique<CrosspointComponent>(std::make_pair(input, output));
             m_crosspointComponent[input][output]->onCheckedChanged = [=](bool checkedState, CrosspointComponent* sender) {
                 if (nullptr != sender && CrosspointComponent::CrosspointIdent(-1, -1) != sender->getIdent())
-                    crosspointEnabledChange(std::uint16_t(sender->getIdent().first), std::uint16_t(sender->getIdent().second), checkedState);
+                    crosspointEnabledChange(std::uint16_t(sender->getIdent().first), std::uint16_t(sender->getIdent().second), checkedState, this);
             };
             m_crosspointComponent[input][output]->onFactorChanged = [=](float factor, CrosspointComponent* sender) {
                 if (nullptr != sender && CrosspointComponent::CrosspointIdent(-1, -1) != sender->getIdent())
-                    crosspointFactorChange(std::uint16_t(sender->getIdent().first), std::uint16_t(sender->getIdent().second), factor);
+                    crosspointFactorChange(std::uint16_t(sender->getIdent().first), std::uint16_t(sender->getIdent().second), factor, this);
             };
             addAndMakeVisible(m_crosspointComponent[input][output].get());
 

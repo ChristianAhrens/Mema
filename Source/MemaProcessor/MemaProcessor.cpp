@@ -109,7 +109,7 @@ private:
 class MemaNetworkClientCommanderWrapper : public MemaInputCommander, public MemaOutputCommander, public MemaCrosspointCommander
 {
 public:
-	void setInputMute(std::uint16_t channel, bool muteState) override
+	void setInputMute(std::uint16_t channel, bool muteState, int userId) override
 	{
 		if (m_networkServer && m_networkServer->hasActiveConnections())
 		{
@@ -120,11 +120,13 @@ public:
 
 			inputMuteStates[channel] = muteState;
 
-			m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage());
+			auto sendIds = m_networkServer->getActiveConnectionIds();
+			sendIds.erase(std::remove(sendIds.begin(), sendIds.end(), userId), sendIds.end());
+			m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage(), sendIds);
 		}
 	};
 
-	void setOutputMute(std::uint16_t channel, bool muteState) override
+	void setOutputMute(std::uint16_t channel, bool muteState, int userId) override
 	{
 		if (m_networkServer && m_networkServer->hasActiveConnections())
 		{
@@ -135,11 +137,13 @@ public:
 
 			outputMuteStates[channel] = muteState;
 
-			m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage());
+			auto sendIds = m_networkServer->getActiveConnectionIds();
+			sendIds.erase(std::remove(sendIds.begin(), sendIds.end(), userId), sendIds.end());
+			m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage(), sendIds);
 		}
 	};
 
-	void setCrosspointEnabledValue(std::uint16_t input, std::uint16_t output, bool enabledState) override
+	void setCrosspointEnabledValue(std::uint16_t input, std::uint16_t output, bool enabledState, int userId) override
 	{
 		if (m_networkServer && m_networkServer->hasActiveConnections())
 		{
@@ -150,11 +154,13 @@ public:
 
 			crosspointStates[input][output] = enabledState;
 
-			m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage());
+			auto sendIds = m_networkServer->getActiveConnectionIds();
+			sendIds.erase(std::remove(sendIds.begin(), sendIds.end(), userId), sendIds.end());
+			m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage(), sendIds);
 		}
 	};
 
-	void setCrosspointFactorValue(std::uint16_t input, std::uint16_t output, float factor) override
+	void setCrosspointFactorValue(std::uint16_t input, std::uint16_t output, float factor, int userId) override
 	{
 		if (m_networkServer && m_networkServer->hasActiveConnections())
 		{
@@ -165,7 +171,9 @@ public:
 
 			crosspointValues[input][output] = factor;
 
-			m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage());
+			auto sendIds = m_networkServer->getActiveConnectionIds();
+			sendIds.erase(std::remove(sendIds.begin(), sendIds.end(), userId), sendIds.end());
+			m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage(), sendIds);
 		}
 	};
 
@@ -685,14 +693,14 @@ bool MemaProcessor::getInputMuteState(std::uint16_t inputChannelNumber)
 	return m_inputMuteStates[inputChannelNumber];
 }
 
-void MemaProcessor::setInputMuteState(std::uint16_t inputChannelNumber, bool muted, MemaChannelCommander* sender)
+void MemaProcessor::setInputMuteState(std::uint16_t inputChannelNumber, bool muted, MemaChannelCommander* sender, int userId)
 {
 	jassert(inputChannelNumber > 0);
 
 	for (auto const& inputCommander : m_inputCommanders)
 	{
-		if (inputCommander != reinterpret_cast<MemaInputCommander*>(sender))
-			inputCommander->setInputMute(inputChannelNumber, muted);
+		if (inputCommander != reinterpret_cast<MemaInputCommander*>(sender) || nullptr != reinterpret_cast<MemaNetworkClientCommanderWrapper*>(sender))
+			inputCommander->setInputMute(inputChannelNumber, muted, userId);
 	}
 
 	{
@@ -716,14 +724,14 @@ bool MemaProcessor::getMatrixCrosspointEnabledValue(std::uint16_t inputNumber, s
 	return false;
 }
 
-void MemaProcessor::setMatrixCrosspointEnabledValue(std::uint16_t inputNumber, std::uint16_t outputNumber, bool enabled, MemaChannelCommander* sender)
+void MemaProcessor::setMatrixCrosspointEnabledValue(std::uint16_t inputNumber, std::uint16_t outputNumber, bool enabled, MemaChannelCommander* sender, int userId)
 {
     jassert(inputNumber > 0 && outputNumber > 0);
 
     for (auto const& crosspointCommander : m_crosspointCommanders)
     {
-        if (crosspointCommander != reinterpret_cast<MemaCrosspointCommander*>(sender))
-            crosspointCommander->setCrosspointEnabledValue(inputNumber, outputNumber, enabled);
+        if (crosspointCommander != reinterpret_cast<MemaCrosspointCommander*>(sender) || nullptr != reinterpret_cast<MemaNetworkClientCommanderWrapper*>(sender))
+            crosspointCommander->setCrosspointEnabledValue(inputNumber, outputNumber, enabled, userId);
     }
 
 	{
@@ -747,14 +755,14 @@ float MemaProcessor::getMatrixCrosspointFactorValue(std::uint16_t inputNumber, s
 	return 0.0f;
 }
 
-void MemaProcessor::setMatrixCrosspointFactorValue(std::uint16_t inputNumber, std::uint16_t outputNumber, float factor, MemaChannelCommander* sender)
+void MemaProcessor::setMatrixCrosspointFactorValue(std::uint16_t inputNumber, std::uint16_t outputNumber, float factor, MemaChannelCommander* sender, int userId)
 {
 	jassert(inputNumber > 0 && outputNumber > 0);
 
 	for (auto const& crosspointCommander : m_crosspointCommanders)
 	{
-		if (crosspointCommander != reinterpret_cast<MemaCrosspointCommander*>(sender))
-			crosspointCommander->setCrosspointFactorValue(inputNumber, outputNumber, factor);
+		if (crosspointCommander != reinterpret_cast<MemaCrosspointCommander*>(sender) || nullptr != reinterpret_cast<MemaNetworkClientCommanderWrapper*>(sender))
+			crosspointCommander->setCrosspointFactorValue(inputNumber, outputNumber, factor, userId);
 	}
 
 	{
@@ -772,14 +780,14 @@ bool MemaProcessor::getOutputMuteState(std::uint16_t outputChannelNumber)
 	return m_outputMuteStates[outputChannelNumber];
 }
 
-void MemaProcessor::setOutputMuteState(std::uint16_t outputChannelNumber, bool muted, MemaChannelCommander* sender)
+void MemaProcessor::setOutputMuteState(std::uint16_t outputChannelNumber, bool muted, MemaChannelCommander* sender, int userId)
 {
 	jassert(outputChannelNumber > 0);
 
 	for (auto const& outputCommander : m_outputCommanders)
 	{
-		if (outputCommander != reinterpret_cast<MemaOutputCommander*>(sender))
-			outputCommander->setOutputMute(outputChannelNumber, muted);
+		if (outputCommander != reinterpret_cast<MemaOutputCommander*>(sender) || nullptr != reinterpret_cast<MemaNetworkClientCommanderWrapper*>(sender))
+			outputCommander->setOutputMute(outputChannelNumber, muted, userId);
 	}
 
 	{

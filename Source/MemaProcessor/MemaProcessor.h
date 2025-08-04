@@ -104,16 +104,16 @@ public:
 
     //==============================================================================
     bool getInputMuteState(std::uint16_t channelNumber);
-    void setInputMuteState(std::uint16_t channelNumber, bool muted, MemaChannelCommander* sender = nullptr);
+    void setInputMuteState(std::uint16_t channelNumber, bool muted, MemaChannelCommander* sender = nullptr, int userId = -1);
 
     bool getMatrixCrosspointEnabledValue(std::uint16_t inputNumber, std::uint16_t outputNumber);
-    void setMatrixCrosspointEnabledValue(std::uint16_t inputNumber, std::uint16_t outputNumber, bool enabled, MemaChannelCommander* sender = nullptr);
+    void setMatrixCrosspointEnabledValue(std::uint16_t inputNumber, std::uint16_t outputNumber, bool enabled, MemaChannelCommander* sender = nullptr, int userId = -1);
 
     float getMatrixCrosspointFactorValue(std::uint16_t inputNumber, std::uint16_t outputNumber);
-    void setMatrixCrosspointFactorValue(std::uint16_t inputNumber, std::uint16_t outputNumber, float factor, MemaChannelCommander* sender = nullptr);
+    void setMatrixCrosspointFactorValue(std::uint16_t inputNumber, std::uint16_t outputNumber, float factor, MemaChannelCommander* sender = nullptr, int userId = -1);
 
     bool getOutputMuteState(std::uint16_t channelNumber);
-    void setOutputMuteState(std::uint16_t channelNumber, bool muted, MemaChannelCommander* sender = nullptr);
+    void setOutputMuteState(std::uint16_t channelNumber, bool muted, MemaChannelCommander* sender = nullptr, int userId = -1);
 
     void setChannelCounts(std::uint16_t inputChannelCount, std::uint16_t outputChannelCount);
 
