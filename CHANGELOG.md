@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+## [0.6.3] 2025-08-04
+### Added
+
+### Changed
+- Changed Mema.Re input position sharpness parameter to be a per-input parameter
+
+### Fixed
+- Fixed Mema.Mo and Mema.Re to be able to connect to Mema instances while running on the same UNIX host
+- Fixed Mema to correctly forward client control data to other connected clients
+- Fixed Mema.Re 2D surround field panner to distribute inputs in a full circle by default and preserve manually modified positions
+- Fixed Mema.Re 2D surround field panner input position stacking order and painting
+- Fixed Mema.Mo and Mema.Re to allow new Mema instance selection on manual disconnect
+
 ## [0.6.2] 2025-07-27
 ### Added
 - Added Mema.Mo waveform visualizer option
