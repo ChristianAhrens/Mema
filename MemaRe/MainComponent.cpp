@@ -186,6 +186,8 @@ MainComponent::MainComponent()
             m_remoteComponent->resetCtrl();
 
         m_selectedService = {};
+        if (m_discoverComponent)
+            m_discoverComponent->resetServices();
 
         if (m_config)
             m_config->triggerConfigurationDump();

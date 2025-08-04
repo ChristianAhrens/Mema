@@ -49,15 +49,15 @@ public:
     void setInputMutePollCallback(const std::function<void(MemaInputCommander* sender, std::uint16_t)>& callback);
     void setInputLevelPollCallback(const std::function<void(MemaInputCommander* sender, std::uint16_t)>& callback);
 
-    virtual void setInputMute(std::uint16_t channel, bool muteState) = 0;
-    virtual void setInputLevel(std::uint16_t channel, float levelValue) { ignoreUnused(channel); ignoreUnused(levelValue); };
+    virtual void setInputMute(std::uint16_t channel, bool muteState, int userId = -1) = 0;
+    virtual void setInputLevel(std::uint16_t channel, float levelValue, int userId = -1) { ignoreUnused(channel); ignoreUnused(levelValue); ignoreUnused(userId); };
 
 protected:
-    void inputMuteChange(std::uint16_t channel, bool muteState);
-    void inputLevelChange(std::uint16_t channel, float levelValue);
-        
-    void inputMutePoll(std::uint16_t channel);
-    void inputLevelPoll(std::uint16_t channel);
+    void inputMuteChange(std::uint16_t channel, bool muteState, MemaInputCommander* sender);
+    void inputLevelChange(std::uint16_t channel, float levelValue, MemaInputCommander* sender);
+
+    void inputMutePoll(std::uint16_t channel, MemaInputCommander* sender);
+    void inputLevelPoll(std::uint16_t channel, MemaInputCommander* sender);
 
 private:
     std::function<void(MemaInputCommander* sender, std::uint16_t, float)> m_inputLevelChangeCallback{ nullptr };
@@ -79,15 +79,16 @@ public:
     void setOutputMutePollCallback(const std::function<void(MemaOutputCommander* sender, std::uint16_t)>& callback);
     void setOutputLevelPollCallback(const std::function<void(MemaOutputCommander* sender, std::uint16_t)>& callback);
 
-    virtual void setOutputMute(std::uint16_t channel, bool muteState) = 0;
-    virtual void setOutputLevel(std::uint16_t channel, float levelValue) { ignoreUnused(channel); ignoreUnused(levelValue); };
+    virtual void setOutputMute(std::uint16_t channel, bool muteState, int userId = -1) = 0;
+    virtual void setOutputLevel(std::uint16_t channel, float levelValue, int userId = -1) { ignoreUnused(channel); ignoreUnused(levelValue); ignoreUnused(userId);
+    };
 
 protected:
-    void outputMuteChange(std::uint16_t channel, bool muteState);
-    void outputLevelChange(std::uint16_t channel, float levelValue);
-        
-    void outputMutePoll(std::uint16_t channel);
-    void outputLevelPoll(std::uint16_t channel);
+    void outputMuteChange(std::uint16_t channel, bool muteState, MemaOutputCommander* sender);
+    void outputLevelChange(std::uint16_t channel, float levelValue, MemaOutputCommander* sender);
+
+    void outputMutePoll(std::uint16_t channel, MemaOutputCommander* sender);
+    void outputLevelPoll(std::uint16_t channel, MemaOutputCommander* sender);
 
 private:
     std::function<void(MemaOutputCommander* sender, std::uint16_t, float)>    m_outputLevelChangeCallback{ nullptr };
@@ -106,20 +107,20 @@ public:
 
     void setCrosspointEnabledChangeCallback(const std::function<void(MemaCrosspointCommander* sender, std::uint16_t, std::uint16_t, bool)>& callback);
     void setCrosspointEnabledPollCallback(const std::function<void(MemaCrosspointCommander* sender, std::uint16_t, std::uint16_t)>& callback);
-    virtual void setCrosspointEnabledValue(std::uint16_t input, std::uint16_t output, bool enabledState) = 0;
+    virtual void setCrosspointEnabledValue(std::uint16_t input, std::uint16_t output, bool enabledState, int userId = -1) = 0;
 
     void setCrosspointFactorChangeCallback(const std::function<void(MemaCrosspointCommander* sender, std::uint16_t, std::uint16_t, float)>& callback);
     void setCrosspointFactorPollCallback(const std::function<void(MemaCrosspointCommander* sender, std::uint16_t, std::uint16_t)>& callback);
-    virtual void setCrosspointFactorValue(std::uint16_t input, std::uint16_t output, float factor) = 0;
+    virtual void setCrosspointFactorValue(std::uint16_t input, std::uint16_t output, float factor, int userId = -1) = 0;
 
     virtual void setIOCount(std::uint16_t inputCount, std::uint16_t outputCount) = 0;
 
 protected:
-    void crosspointEnabledChange(std::uint16_t input, std::uint16_t output, bool enabledState);
-    void crosspointEnabledPoll(std::uint16_t input, std::uint16_t output);
+    void crosspointEnabledChange(std::uint16_t input, std::uint16_t output, bool enabledState, MemaCrosspointCommander* sender);
+    void crosspointEnabledPoll(std::uint16_t input, std::uint16_t output, MemaCrosspointCommander* sender);
 
-    void crosspointFactorChange(std::uint16_t input, std::uint16_t output, float factor);
-    void crosspointFactorPoll(std::uint16_t input, std::uint16_t output);
+    void crosspointFactorChange(std::uint16_t input, std::uint16_t output, float factor, MemaCrosspointCommander* sender);
+    void crosspointFactorPoll(std::uint16_t input, std::uint16_t output, MemaCrosspointCommander* sender);
 
 private:
     void setChannelCount(std::uint16_t channelCount) override { ignoreUnused(channelCount); jassertfalse; };

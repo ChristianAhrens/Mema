@@ -45,7 +45,7 @@ public:
     std::function<void(int, const MemoryBlock&)>    onMessageReceived;
 
 private:
-    int m_id;
+    int m_id = -1;
 
 };
 
@@ -64,6 +64,8 @@ public:
     bool hasActiveConnections();
     const std::unique_ptr<InterprocessConnectionImpl>& getActiveConnection(int id);
     const std::vector<int> cleanupDeadConnections();
+
+    const std::vector<int> getActiveConnectionIds();
 
     bool enqueueMessage(const MemoryBlock& message, std::vector<int> sendIds = {});
 

@@ -177,6 +177,8 @@ MainComponent::MainComponent()
             m_networkConnection->disconnect();
 
         m_selectedService = {};
+        if (m_discoverComponent)
+            m_discoverComponent->resetServices();
 
         if (m_config)
             m_config->triggerConfigurationDump();

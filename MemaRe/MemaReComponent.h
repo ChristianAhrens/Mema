@@ -20,7 +20,8 @@
 
 #include <JuceHeader.h>
 
-#include "MemaClientCommon/MemaClientControlComponents.h"
+#include "MemaClientCommon/FaderbankControlComponent.h"
+#include "MemaClientCommon/PanningControlComponent.h"
 
 class MemaReComponent :   public juce::Component, juce::MessageListener
 {

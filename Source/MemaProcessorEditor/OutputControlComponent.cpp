@@ -69,7 +69,7 @@ void OutputControlComponent::paint(Graphics& g)
     AbstractAudioVisualizer::paint(g);
 }
 
-void OutputControlComponent::setOutputMute(std::uint16_t channel, bool muteState)
+void OutputControlComponent::setOutputMute(std::uint16_t channel, bool muteState, int /*userId*/)
 {
     if (m_outputMutes.count(channel) != 1)
         return;
@@ -152,7 +152,7 @@ void OutputControlComponent::buttonClicked(juce::Button* button)
 {
     auto iter = std::find_if(m_outputMutes.begin(), m_outputMutes.end(), [=](const auto& outputMuteKV) { return outputMuteKV.second.get() == button; });
     if (iter != m_outputMutes.end() && nullptr != iter->second)
-        outputMuteChange(iter->first, iter->second->getToggleState());
+        outputMuteChange(iter->first, iter->second->getToggleState(), this);
 }
 
 juce::Rectangle<int> OutputControlComponent::getRequiredSize()
