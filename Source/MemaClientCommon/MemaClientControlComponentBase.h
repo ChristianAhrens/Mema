@@ -57,6 +57,7 @@ public:
 
     //==============================================================================
     virtual void setControlsSize(const ControlsSize& ctrlsSize);
+    const ControlsSize& getControlsSize();
 
     virtual void setIOCount(const std::pair<int, int>& ioCount);
     const std::pair<int, int>& getIOCount();

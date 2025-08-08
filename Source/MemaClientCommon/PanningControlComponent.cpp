@@ -134,6 +134,9 @@ void PanningControlComponent::setControlsSize(const ControlsSize& ctrlsSize)
 
     rebuildControls(true);
     selectInputChannel(m_currentInputChannel);
+
+    if (m_multiSlider)
+        m_multiSlider->setControlsSize(ctrlsSize);
 }
 
 void PanningControlComponent::resetCtrl()

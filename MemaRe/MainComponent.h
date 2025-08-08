@@ -22,6 +22,8 @@
 
 #include "MemaReAppConfiguration.h"
 
+#include "MemaClientCommon/MemaClientControlComponentBase.h"
+
 
 class MemaReComponent;
 class MemaClientDiscoverComponent;
@@ -49,9 +51,7 @@ public:
         LookAndFeel_Light,
         LookAndFeel_Last = LookAndFeel_Light,
         OutputPanningType_First,
-        OutputPanningType_RawChannels_S = OutputPanningType_First,
-        OutputPanningType_RawChannels_M,
-        OutputPanningType_RawChannels_L,
+        OutputPanningType_RawChannels = OutputPanningType_First,
         OutputPanningType_LRS,
         OutputPanningType_LCRS,
         OutputPanningType_5point0,
@@ -67,7 +67,12 @@ public:
         PanningColour_Red,
         PanningColour_Blue,
         PanningColour_Pink,
-        PanningColour_Last = PanningColour_Pink
+        PanningColour_Last = PanningColour_Pink,
+        ControlsSize_First,
+        ControlsSize_S = ControlsSize_First,
+        ControlsSize_M,
+        ControlsSize_L,
+        ControlsSize_Last = ControlsSize_L,
     };
 
 public:
@@ -129,9 +134,12 @@ private:
     void handleSettingsLookAndFeelMenuResult(int selectedId);
     void handleSettingsOutputPanningTypeMenuResult(int selectedId);
     void handleSettingsPanningColourMenuResult(int selectedId);
+    void handleSettingsControlsSizeMenuResult(int selectedId);
 
     void setPanningColour(const juce::Colour& meteringColour);
     void applyPanningColour();
+
+    void setControlsSize(const Mema::MemaClientControlComponentBase::ControlsSize& controlsSize);
 
     void setStatus(const Status& s);
     const Status getStatus();
@@ -139,27 +147,27 @@ private:
     void connectToMema();
 
     //==============================================================================
-    juce::NetworkServiceDiscovery::Service                                  m_selectedService;
-    std::unique_ptr<InterprocessConnectionImpl>                             m_networkConnection;
+    juce::NetworkServiceDiscovery::Service              m_selectedService;
+    std::unique_ptr<InterprocessConnectionImpl>         m_networkConnection;
 
-    std::unique_ptr<MemaReComponent>                                        m_remoteComponent;
-    std::unique_ptr<MemaClientDiscoverComponent>                            m_discoverComponent;
-    std::unique_ptr<MemaClientConnectingComponent>                          m_connectingComponent;
+    std::unique_ptr<MemaReComponent>                    m_remoteComponent;
+    std::unique_ptr<MemaClientDiscoverComponent>        m_discoverComponent;
+    std::unique_ptr<MemaClientConnectingComponent>      m_connectingComponent;
 
-    std::unique_ptr<juce::DrawableButton>                                   m_settingsButton;
-    std::map<int, std::pair<std::string, int>>                              m_settingsItems;
-    int                                                                     m_settingsHostLookAndFeelId = -1;
+    std::unique_ptr<juce::DrawableButton>               m_settingsButton;
+    std::map<int, std::pair<std::string, int>>          m_settingsItems;
+    int                                                 m_settingsHostLookAndFeelId = -1;
 
-    std::unique_ptr<juce::DrawableButton>                                   m_disconnectButton;
+    std::unique_ptr<juce::DrawableButton>               m_disconnectButton;
 
-    std::unique_ptr<juce::DrawableButton>                                   m_aboutButton;
-    std::unique_ptr<AboutComponent>                                         m_aboutComponent;
+    std::unique_ptr<juce::DrawableButton>               m_aboutButton;
+    std::unique_ptr<AboutComponent>                     m_aboutComponent;
 
-    Status                                                                  m_currentStatus = Status::Discovering;
+    Status                                              m_currentStatus = Status::Discovering;
 
-    juce::Colour                                                            m_panningColour = juce::Colours::forestgreen;
+    juce::Colour                                        m_panningColour = juce::Colours::forestgreen;
 
-    std::unique_ptr<MemaReAppConfiguration>                                 m_config;
+    std::unique_ptr<MemaReAppConfiguration>             m_config;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
