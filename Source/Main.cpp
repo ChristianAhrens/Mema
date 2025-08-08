@@ -214,6 +214,10 @@ public:
                 JUCEAppBasics::AppConfigurationBase::getInstance()->triggerConfigurationDump();
             }
         };
+        memaUIComponent->onPaletteStyleChange = [=](const JUCEAppBasics::CustomLookAndFeel::PaletteStyle& paletteStyle) {
+            m_lookAndFeel = std::make_unique<JUCEAppBasics::CustomLookAndFeel>(paletteStyle);
+            juce::Desktop::getInstance().setDefaultLookAndFeel(m_lookAndFeel.get());
+        };
 
         memaUIComponent->handleEditorSizeChangeRequest(m_lastRequestedEditorSize);
         memaUIComponent->lookAndFeelChanged();
@@ -296,6 +300,7 @@ private:
     std::unique_ptr<Mema::MemaUIComponent>  m_memaUIComponent;
     std::unique_ptr<juce::Component>        m_taskbarComponent;
     std::unique_ptr<juce::TooltipWindow>    m_toolTipWindowInstance;
+    std::unique_ptr<juce::LookAndFeel>      m_lookAndFeel;
     
 #if JUCE_MAC
     std::unique_ptr<MemaMacMainMenuMenuBarModel>    m_macMainMenu;

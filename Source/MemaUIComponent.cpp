@@ -372,8 +372,8 @@ void MemaUIComponent::darkModeSettingChanged()
 
 void MemaUIComponent::applyPaletteStyle(const JUCEAppBasics::CustomLookAndFeel::PaletteStyle& paletteStyle)
 {
-    m_lookAndFeel = std::make_unique<JUCEAppBasics::CustomLookAndFeel>(paletteStyle);
-    juce::Desktop::getInstance().setDefaultLookAndFeel(m_lookAndFeel.get());
+    if (onPaletteStyleChange)
+        onPaletteStyleChange(paletteStyle);
 }
 
 void MemaUIComponent::lookAndFeelChanged()
@@ -409,9 +409,9 @@ std::unique_ptr<XmlElement> MemaUIComponent::createStateXml()
     auto stateXml = std::make_unique<juce::XmlElement>(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::UICONFIG));
 
     int paletteStyle = -1;
-    if (!m_followLocalStyle && m_lookAndFeel)
+    if (!m_followLocalStyle)
     {
-        if (auto customLAF = dynamic_cast<JUCEAppBasics::CustomLookAndFeel*>(m_lookAndFeel.get()))
+        if (auto customLAF = dynamic_cast<JUCEAppBasics::CustomLookAndFeel*>(&getLookAndFeel()))
             paletteStyle = customLAF->getPaletteStyle();
     }
     stateXml->setAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::PALETTESTYLE), paletteStyle);

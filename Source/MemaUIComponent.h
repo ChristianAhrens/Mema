@@ -86,6 +86,7 @@ public:
     std::function<void()>       onLookAndFeelChanged;
     std::function<void()>       onDeleted;
     std::function<void()>       onSettingsChanged;
+    std::function<void(const JUCEAppBasics::CustomLookAndFeel::PaletteStyle&)>  onPaletteStyleChange;
 
 private:
     //========================================================================*
@@ -115,7 +116,6 @@ private:
 
     std::map<int, std::pair<std::string, int>>  m_settingsItems;
 
-    std::unique_ptr<juce::LookAndFeel>          m_lookAndFeel;
     bool m_followLocalStyle = true;
 
     bool m_isStandaloneWindow = false;
