@@ -132,6 +132,8 @@ private:
     void setMeteringColour(const juce::Colour& meteringColour);
     void applyMeteringColour();
 
+    std::optional<int>  getNumVisibleChannels();
+
     void setStatus(const Status& s);
     const Status getStatus();
 

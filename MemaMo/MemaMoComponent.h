@@ -46,6 +46,9 @@ public:
     void setOutputFieldVisuActive(const juce::AudioChannelSet& channelConfiguration);
     void setWaveformVisuActive();
 
+    std::optional<std::uint16_t> getNumVisibleChannels();
+    void setNumVisibleChannels(std::uint16_t count);
+
     //==============================================================================
     void resized() override;
     void paint(juce::Graphics& g) override;

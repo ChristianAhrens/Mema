@@ -475,6 +475,16 @@ void MainComponent::applyMeteringColour()
     }
 }
 
+std::optional<int> MainComponent::getNumVisibleChannels()
+{
+    if (!m_monitorComponent)
+        return std::nullopt;
+    else if (-1 == m_monitorComponent->getNumVisibleChannels())
+        return std::nullopt;
+    else
+        return m_monitorComponent->getNumVisibleChannels();
+}
+
 void MainComponent::setStatus(const Status& s)
 {
     m_currentStatus = s;
@@ -551,6 +561,8 @@ void MainComponent::performConfigurationDump()
             if (m_settingsItems[i].second == 1)
                 outputVisuTypeXmlElmement->addTextElement(juce::String(i));
         }
+        if (m_monitorComponent && m_monitorComponent->getNumVisibleChannels().has_value())
+            outputVisuTypeXmlElmement->setAttribute(MemaMoAppConfiguration::getAttributeName(MemaMoAppConfiguration::AttributeID::COUNT), int(m_monitorComponent->getNumVisibleChannels().value()));
         visuConfigXmlElement->addChildElement(outputVisuTypeXmlElmement.release());
         
         auto meteringColourXmlElmement = std::make_unique<juce::XmlElement>(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::METERINGCOLOUR));
@@ -602,6 +614,9 @@ void MainComponent::onConfigUpdated()
         {
             auto outputVisuTypeSettingsOptionId = outputVisuTypeXmlElement->getAllSubText().getIntValue();
             handleSettingsOutputVisuTypeMenuResult(outputVisuTypeSettingsOptionId);
+            auto numVisibleChannels = outputVisuTypeXmlElement->getIntAttribute(MemaMoAppConfiguration::getAttributeName(MemaMoAppConfiguration::AttributeID::COUNT), -1);
+            if (m_monitorComponent && -1 < numVisibleChannels)
+                m_monitorComponent->setNumVisibleChannels(std::uint16_t(numVisibleChannels));
         }
 
         auto meteringColourXmlElement = visuConfigState->getChildByName(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::METERINGCOLOUR));

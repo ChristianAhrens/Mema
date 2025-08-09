@@ -37,6 +37,7 @@ public:
 
     //==============================================================================
     void setNumVisibleChannels(int numChannels);
+    int getNumVisibleChannels();
     
     //==============================================================================
     void paint (juce::Graphics&) override;

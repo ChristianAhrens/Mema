@@ -18,6 +18,8 @@
 
 #include "WaveformAudioComponent.h"
 
+#include "../MemaMoAppConfiguration.h" // include to enable trigger cfg dump
+
 #include <CustomLookAndFeel.h>
 
 
@@ -42,6 +44,8 @@ WaveformAudioComponent::WaveformAudioComponent()
             settingsMenu.addItem(i, juce::String(i));
         settingsMenu.showMenuAsync(juce::PopupMenu::Options(), [=](int selectedId) {
             setNumVisibleChannels(selectedId);
+            if (JUCEAppBasics::AppConfigurationBase::getInstance())
+                JUCEAppBasics::AppConfigurationBase::getInstance()->triggerConfigurationDump(false);
         });
     };
     m_chNumSelButton->setAlwaysOnTop(true);
@@ -120,7 +124,7 @@ void WaveformAudioComponent::processingDataChanged(AbstractProcessorData* data)
         {
             if (m_numAvailableChannels != sd->getNumChannels())
             {
-                auto init = (0 == m_numAvailableChannels);
+                auto init = (0 == m_numAvailableChannels) && (1 == m_numVisibleChannels);
                 m_numAvailableChannels = sd->getNumChannels();
                 if (init)
                     setNumVisibleChannels(m_numAvailableChannels);
@@ -149,5 +153,11 @@ void WaveformAudioComponent::setNumVisibleChannels(int numChannels)
     if (m_waveformsComponent)
         m_waveformsComponent->setNumChannels(numChannels);
 }
+
+int WaveformAudioComponent::getNumVisibleChannels()
+{
+    return m_numVisibleChannels;
+}
+
 
 }

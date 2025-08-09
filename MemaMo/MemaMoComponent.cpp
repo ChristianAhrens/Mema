@@ -188,6 +188,20 @@ void MemaMoComponent::setWaveformVisuActive()
         resized();
 }
 
+std::optional<std::uint16_t> MemaMoComponent::getNumVisibleChannels()
+{
+    if (!m_waveformComponent)
+        return std::nullopt;
+    else
+        return std::uint16_t(m_waveformComponent->getNumVisibleChannels());
+}
+
+void MemaMoComponent::setNumVisibleChannels(std::uint16_t count)
+{
+    if (m_waveformComponent)
+        m_waveformComponent->setNumVisibleChannels(int(count));
+}
+
 void MemaMoComponent::paint(Graphics &g)
 {
     g.fillAll(getLookAndFeel().findColour(juce::LookAndFeel_V4::ColourScheme::widgetBackground));
