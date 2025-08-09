@@ -25,6 +25,8 @@
 namespace Mema
 {
 
+class CustomPaintingAudioVisualiserComponent;
+
 //==============================================================================
 /*
 */
@@ -49,8 +51,8 @@ public:
 
 private:
     //==============================================================================
-    std::unique_ptr<juce::AudioVisualiserComponent> m_waveformsComponent;
-    std::unique_ptr<juce::DrawableButton>           m_chNumSelButton;
+    std::unique_ptr<CustomPaintingAudioVisualiserComponent> m_waveformsComponent;
+    std::unique_ptr<juce::DrawableButton>                   m_chNumSelButton;
 
     //==============================================================================
     int m_numAvailableChannels = 0;
