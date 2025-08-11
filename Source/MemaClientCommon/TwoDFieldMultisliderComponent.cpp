@@ -388,8 +388,9 @@ void TwoDFieldMultisliderComponent::resized()
     }
     else if (coreTwoDFieldWithMeterbridge)
     {
-        m_positionedChannelsArea = bounds.reduced(margin);
+        m_positionedChannelsArea = bounds;
         m_directionlessChannelsArea = m_positionedChannelsArea.removeFromRight(float(m_directionLessChannelTypes.size() * m_ctrlsSize));
+        m_positionedChannelsArea.reduce(margin, margin);
 
         m_positionedHeightChannelsArea = {};
     }
