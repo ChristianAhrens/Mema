@@ -31,8 +31,6 @@ namespace Mema
 TwoDFieldMultisliderComponent::TwoDFieldMultisliderComponent()
     :   juce::Component()
 {
-    //setUsesValuesInDB(true);
-
     m_sharpnessEdit = std::make_unique<JUCEAppBasics::FixedFontTextEditor>("SharpnessEdit");
     m_sharpnessEdit->setTooltip("Panning sharpness 0.0 ... 1.0");
     m_sharpnessEdit->setText(juce::String(0.5), false);
@@ -322,7 +320,7 @@ void TwoDFieldMultisliderComponent::resized()
     else if (coreTwoDFieldWithMeterbridge)
     {
         m_positionedChannelsArea = bounds.reduced(margin);
-        m_directionlessChannelsArea = m_positionedChannelsArea.removeFromRight(m_directionLessChannelTypes.size() * m_ctrlsSize);
+        m_directionlessChannelsArea = m_positionedChannelsArea.removeFromRight(float(m_directionLessChannelTypes.size() * m_ctrlsSize));
 
         m_positionedHeightChannelsArea = {};
     }
@@ -345,7 +343,7 @@ void TwoDFieldMultisliderComponent::resized()
         m_positionedHeightChannelsArea.removeFromBottom(height * (5.4f / 10.0f));
 
         m_positionedChannelsArea = bounds;
-        m_directionlessChannelsArea = m_positionedChannelsArea.removeFromRight(m_directionLessChannelTypes.size() * m_ctrlsSize);
+        m_directionlessChannelsArea = m_positionedChannelsArea.removeFromRight(float(m_directionLessChannelTypes.size() * m_ctrlsSize));
         m_positionedChannelsArea.reduce(margin, margin);
         m_positionedChannelsArea.removeFromLeft(width * (3.4f / 13.0f));
         m_positionedChannelsArea.removeFromTop(height * (1.4f / 10.0f));
@@ -649,7 +647,7 @@ void TwoDFieldMultisliderComponent::setControlsSize(int ctrlsSize)
 {
     m_ctrlsSize = ctrlsSize;
     m_thumbWidth = int(float(4 * ctrlsSize) / 7.0f);
-    m_trackWidth = int(float(8 * ctrlsSize) / 35.0f);
+    m_trackWidth = float(8 * ctrlsSize) / 35.0f;
 
     resized();
     repaint();
