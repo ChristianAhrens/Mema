@@ -27,6 +27,69 @@ namespace Mema
 
 //#define PAINTINGHELPER
 
+
+//==============================================================================
+class TwoDFieldMultisliderKeyboardFocusTraverser : public juce::KeyboardFocusTraverser
+{
+public:
+    //==============================================================================
+    TwoDFieldMultisliderKeyboardFocusTraverser(const std::vector<juce::Component*>& focusElements)
+        : juce::KeyboardFocusTraverser()
+    {
+        m_focusElements = focusElements;
+    };
+    virtual ~TwoDFieldMultisliderKeyboardFocusTraverser() = default;
+
+    juce::Component* getDefaultComponent(juce::Component* parentComponent) override
+    {
+        if (m_focusElements.empty() || m_focusElements.front() == parentComponent)
+            return nullptr;
+        else
+            return m_focusElements.front();
+    };
+    juce::Component* getNextComponent(juce::Component* current) override
+    {
+        if (m_focusElements.empty())
+            return nullptr;
+
+        auto currentIter = std::find(m_focusElements.begin(), m_focusElements.end(), current);
+        if (currentIter == m_focusElements.end())
+            return nullptr;
+        else
+        {
+            if (currentIter == (m_focusElements.end() - 1))
+                return *(m_focusElements.begin());
+            else
+                return *(currentIter + 1);
+        }
+    };
+    juce::Component* getPreviousComponent(juce::Component* current) override
+    {
+        if (m_focusElements.empty())
+            return nullptr;
+
+        auto currentIter = std::find(m_focusElements.begin(), m_focusElements.end(), current);
+        if (currentIter == m_focusElements.end())
+            return nullptr;
+        else
+        {
+            if (currentIter == m_focusElements.begin())
+                return *(m_focusElements.end() - 1);
+            else
+                return *(currentIter - 1);
+        }
+    };
+    std::vector<juce::Component*> getAllComponents(juce::Component* /*parentComponent*/) override
+    {
+        return m_focusElements;
+    };
+
+private:
+    //==============================================================================
+    std::vector<juce::Component*>   m_focusElements;
+};
+
+
 //==============================================================================
 TwoDFieldMultisliderComponent::TwoDFieldMultisliderComponent()
     :   juce::Component()
@@ -64,7 +127,13 @@ TwoDFieldMultisliderComponent::~TwoDFieldMultisliderComponent()
 {
 }
 
-void TwoDFieldMultisliderComponent::paint (juce::Graphics& g)
+std::unique_ptr<juce::ComponentTraverser> TwoDFieldMultisliderComponent::createKeyboardFocusTraverser()
+{
+    return std::make_unique<TwoDFieldMultisliderKeyboardFocusTraverser>(std::vector<juce::Component*>({ this, m_sharpnessEdit.get() }));
+    //juce::Component::createKeyboardFocusTraverser();
+}
+
+void TwoDFieldMultisliderComponent::paint(juce::Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));

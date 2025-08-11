@@ -90,6 +90,7 @@ public:
     void paint (Graphics&) override;
     void resized() override;
     void lookAndFeelChanged() override;
+    std::unique_ptr<juce::ComponentTraverser> createKeyboardFocusTraverser() override;
 
     //==============================================================================
     void mouseDown(const juce::MouseEvent& e) override;
