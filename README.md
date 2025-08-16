@@ -1,6 +1,8 @@
-![Showreel.001.png](Resources/Documentation/Showreel/Showreel.001.png "Mema Headline Icons")
-![Showreel.002.png](Resources/Documentation/Showreel/Showreel.002.png "Mema.Mo Headline Icons")
-![Showreel.003.png](Resources/Documentation/Showreel/Showreel.003.png "Mema.Re Headline Icons")
+<center>
+<img src="Resources/Documentation/Showreel/Showreel.001.png" alt="Mema Headline Icons" width="100%">
+<img src="Resources/Documentation/Showreel/Showreel.002.png" alt="Mema.Mo Headline Icons" width="70%">
+<img src="Resources/Documentation/Showreel/Showreel.003.png" alt="Mema.Re Headline Icons" width="70%">
+</center>
 
 See [LATEST RELEASE](https://github.com/ChristianAhrens/Mema/releases/latest) for available binary packages or join iOS TestFlight Betas:
 
@@ -21,36 +23,50 @@ See [LATEST RELEASE](https://github.com/ChristianAhrens/Mema/releases/latest) fo
 ## Table of contents
 
 * [Introduction](#introduction)
-  * [Mema and Mema.Mo](#MemaNMo)
+  * [Mema, Mema.Mo and Mema.Re](#MemaNMoNRe)
   * [Mema UI](#MemaUI)
   * [Mema.Mo UI](#MemaMoUI)
   * [Mema.Re UI](#MemaReUI)
 * [How to build the tools](#howtobuild)
   * [Mema](#buildMema)
   * [Mema.Mo](#buildMemaMo)
-    * [Note on running on RaspberryPiOS Bullseye](#runonbullseye)
+  * [Mema.Re](#buildMemaRe)
+  * [Note on running on RaspberryPiOS Bullseye](#runonbullseye)
 * [Usecase: Studio sidecar monitoring](#rackmonitoringusecase)
 * [Usecase: Mobile recording monitoring](#mobilerecordingusecase)
-* [App Architecture](#architectureoverview)
+* [App architecture](#architectureoverview)
 
 
 <a name="introduction" />
 
 ## Introduction
 
-Mema (MenubarMatrix) is a project initially created to try out if a macOS menubar tool based on JUCE C++ framework can be created, that provides audio matrix routing functionality - e.g. to route [BlackHole](https://github.com/ExistentialAudio/BlackHole) 16ch virtual device to system output to overcome AppleMusic behaviour on macOS to only play out higher order surround sound formats when exactly 16 output channels are presented by selected system audio output device.
+__Mema__ (MenubarMatrix) is a project initially created to try out JUCE C++ framework capabilities for creation of a macOS menubar tool, that provides audio matrix routing functionality - e.g. to route [BlackHole](https://github.com/ExistentialAudio/BlackHole) 16ch virtual device to system output to enable flexible application and OS audio output routing to connected audio devices.
 
-Since version 0.4.0 the optional loading of an audio processing plug-in is supported to process the incoming audio before it is feed into the routing matrix. Platform dependant, the usual VST, VST3, AU, LADSPA, LV2 plug-in formats are supported and their respective editor user interfaces can be used as a separate window. _A usecase for this could be an n-input to m-output upmix plug-in that in combination with BlackHole can serve to process stereo macOS system audio output to a 7.1.4 speaker system._
+The tool has since evolved to full IO metering, IO mute and crosspoint enabled/gain processing. The UI per default can be opened from the _macOS menubar_ or _Windows notifcation area_ and can be toggled to open as a standalone permanent OS window. The appearance can be customized (coloring, dark/light mode) and the audio UI device configuration can be configured to match the usecases needs.
+On top of that, dedicated performance metering is visible on the UI - regaring audio processing load as well as regarding network traffic load for data transmission to connected metering and control clients.
 
-It is accompanied by a separate tool Mema.Mo (MenubarMatrixMonitor) to monitor the audio IO as levelmeters via network. It connects to Mema through a TCP connection and supports discovering the available instances through a multicast service announcement done by Mema.
+Optionally the loading of an audio processing plug-in is supported to process the incoming audio before or after ('Post' UI toggle) it is fed into the routing matrix. Platform dependant, the usual __VST, VST3, AU, LADSPA, LV2__ plug-in formats are supported and their respective editor user interfaces can be used as a separate window.
+_A usecase for this is an n-input to m-output upmix plug-in that, in combination with e.g. BlackHole, can serve to process stereo macOS system audio output to a 7.1.4 speaker system._
 
-Its sourcecode and prebuilt binaries are made publicly available to enable interested users to experiment, extend and create own adaptations.
+It is accompanied by a separate tool __Mema.Mo__ (MenubarMatrixMonitor) to monitor the audio IO as levelmeters via network. It connects to Mema through a TCP connection and supports discovering the available instances through a multicast service announcement done by Mema.
+This supports different monitoring visualizations
+- IO __Meterbridge__
+- Studio speaker layout __2D field__ metering: LRS up to __9.1.6 ATMOS__ layouts
+- __Waveform__ plot
+
+Also part of the project is another tool __Mema.Re__ (MenubarMatrixRemote) to remote control the input, output and crosspoint parameters of Mema instances and connects through the same TCP server as Mema.Mo.
+It supports two different control approaches
+- __Faderbank__ mixer (single input to multiple output or multiple input to single output style)
+- __2D field__ panning: LRS up to __9.1.6 ATMOS__ layouts
+
+The sourcecode and prebuilt binaries are made publicly available to enable interested users to experiment, extend and create own adaptations.
 
 Use what is provided here at your own risk!
 
-<a name="MemaNMo" />
+<a name="MemaNMoNRe" />
 
-### Mema and Mema.Mo
+### Mema, Mema.Mo and Mema.Re
 
 ![Showreel.004.png](Resources/Documentation/Showreel/Showreel.004.png "Mema and -Monitor in action")
 
@@ -109,8 +125,6 @@ JUCE's Projucer tool can either be used from a local installation or from within
 
 In [macOS buildscripts](Resources/Deployment/macOS), shellscripts for automated building of the app, dmg and notarization are kept. These require a properly prepared machine to run on (signing certificates, provisioning profiles, notarization cretentials).
 
-In [iOS buildscripts](Resources/Deployment/iOS), shellscripts for automated building of the app and updloading to the appstore are kept. These require a properly prepared machine to run on (appstore cretentials).
-
 In [Windows buildscripts](Resources/Deployment/Windows), bash scripts for automated building of the app and installer (Innosetup based) are kept. These require a properly prepared machine to run on (innosetup installation).
 
 In [Linux buildscripts](Resources/Deployment/Linux), shell scripts for automated building of the app are kept. These are aimed at building on Debian/Ubuntu/RaspberryPiOS and TRY to collect the required dev packages via apt packetmanager automatically.
@@ -129,21 +143,37 @@ In [Windows buildscripts](Resources/Deployment/Windows), bash scripts for automa
 
 In [Linux buildscripts](Resources/Deployment/Linux), shell scripts for automated building of the app are kept. These are aimed at building on Debian/Ubuntu/RaspberryPiOS and TRY to collect the required dev packages via apt packetmanager automatically.
 
+<a name="buildMemaRe" />
+
+### Mema.Re
+
+[Mema.Re Projucer project](MemaRe/MemaRe.jucer) file can be found in /MemaRe subdirectory .
+
+In [macOS buildscripts](Resources/Deployment/macOS), shellscripts for automated building of the app, dmg and notarization are kept. These require a properly prepared machine to run on (signing certificates, provisioning profiles, notarization cretentials).
+
+In [iOS buildscripts](Resources/Deployment/iOS), shellscripts for automated building of the app and updloading to the appstore are kept. These require a properly prepared machine to run on (appstore cretentials).
+
+In [Windows buildscripts](Resources/Deployment/Windows), bash scripts for automated building of the app and installer (Innosetup based) are kept. These require a properly prepared machine to run on (innosetup installation).
+
+In [Linux buildscripts](Resources/Deployment/Linux), shell scripts for automated building of the app are kept. These are aimed at building on Debian/Ubuntu/RaspberryPiOS and TRY to collect the required dev packages via apt packetmanager automatically.
+
 <a name="runonbullseye" />
 
-#### Building and running Mema.Mo on RaspberryPiOS Bullseye
+### Building and running Mema.Mo and Mema.Re on RaspberryPiOS Bullseye/Bookworm
 
-The build script `build_MemaMo_RaspberryPIOS.sh` in `Resources/Deployment/Linux` can be used on a vanilla installation of RaspberryPi OS to build the tool.
+The build scripts `build_MemaMo_RaspberryPIOS.sh`/`build_MemaRe_RaspberryPIOS.sh` in `Resources/Deployment/Linux` can be used on a vanilla installation of RaspberryPi OS to build the tool.
 
 On RaspberriPi 3B it is required to run the build without graphical interface, to avoid the build failing due to going out of memory (e.g. `sudo raspi-config` -> System Options -> Boot -> Console Autologin).
 
-The build result can be run in kind of a kiosk configuration by changing the system to not start the desktop session when running Xserver, but instead run Mema.Mo directly in the X session. To do this, edit or create `.xsession` in user home and simply add a line
+The build result can be run in kind of a kiosk configuration by changing the system to not start the desktop session when running Xserver, but instead run Mema.Mo/Mema.Re directly in the X session. To do this, edit or create `.xsession` in user home and simply add a line
 ```
 exec <PATH_TO_REPO>/Mema/MemaMo/Builds/LinuxMakefile/build/MemaMo
+# or
+exec <PATH_TO_REPO>/Mema/MemaRe/Builds/LinuxMakefile/build/MemaRe
 ```
 Then configure the system to auto login to x session (e.g. `sudo raspi-config` -> System Options -> Boot -> Desktop Autologin).
 
-This does only work up to Raspberry Pi OS Bullseye versions, that use X server as window manager. From Bookworm on, Wayland is used that requires differing approaches.
+___This does only work when using X server as graphics backend. Using Wayland requires differing approaches.___
 
 <a name="rackmonitoringusecase" />
 
