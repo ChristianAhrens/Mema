@@ -39,6 +39,11 @@ void MemaClientControlComponentBase::setControlsSize(const ControlsSize& ctrlsSi
     m_controlsSize = ctrlsSize;
 }
 
+const MemaClientControlComponentBase::ControlsSize& MemaClientControlComponentBase::getControlsSize()
+{
+    return m_controlsSize;
+}
+
 void MemaClientControlComponentBase::setIOCount(const std::pair<int, int>& ioCount)
 {
     m_ioCount = ioCount;

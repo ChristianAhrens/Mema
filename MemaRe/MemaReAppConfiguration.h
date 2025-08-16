@@ -37,6 +37,7 @@ public:
         OUTPUTPANNINGTYPE,
         PANNINGCOLOUR,
         LOOKANDFEEL,
+        CONTROLSSIZE,
     };
     static juce::String getTagName(TagID ID)
     {
@@ -54,6 +55,8 @@ public:
             return "PANNINGCOLOUR";
         case LOOKANDFEEL:
             return "LOOKANDFEEL";
+        case CONTROLSSIZE:
+            return "CONTROLSSIZE";
         default:
             return "INVALID";
         }

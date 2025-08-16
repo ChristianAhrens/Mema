@@ -27,12 +27,73 @@ namespace Mema
 
 //#define PAINTINGHELPER
 
+
+//==============================================================================
+class TwoDFieldMultisliderKeyboardFocusTraverser : public juce::KeyboardFocusTraverser
+{
+public:
+    //==============================================================================
+    TwoDFieldMultisliderKeyboardFocusTraverser(const std::vector<juce::Component*>& focusElements)
+        : juce::KeyboardFocusTraverser()
+    {
+        m_focusElements = focusElements;
+    };
+    virtual ~TwoDFieldMultisliderKeyboardFocusTraverser() = default;
+
+    juce::Component* getDefaultComponent(juce::Component* parentComponent) override
+    {
+        if (m_focusElements.empty() || m_focusElements.front() == parentComponent)
+            return nullptr;
+        else
+            return m_focusElements.front();
+    };
+    juce::Component* getNextComponent(juce::Component* current) override
+    {
+        if (m_focusElements.empty())
+            return nullptr;
+
+        auto currentIter = std::find(m_focusElements.begin(), m_focusElements.end(), current);
+        if (currentIter == m_focusElements.end())
+            return nullptr;
+        else
+        {
+            if (currentIter == (m_focusElements.end() - 1))
+                return *(m_focusElements.begin());
+            else
+                return *(currentIter + 1);
+        }
+    };
+    juce::Component* getPreviousComponent(juce::Component* current) override
+    {
+        if (m_focusElements.empty())
+            return nullptr;
+
+        auto currentIter = std::find(m_focusElements.begin(), m_focusElements.end(), current);
+        if (currentIter == m_focusElements.end())
+            return nullptr;
+        else
+        {
+            if (currentIter == m_focusElements.begin())
+                return *(m_focusElements.end() - 1);
+            else
+                return *(currentIter - 1);
+        }
+    };
+    std::vector<juce::Component*> getAllComponents(juce::Component* /*parentComponent*/) override
+    {
+        return m_focusElements;
+    };
+
+private:
+    //==============================================================================
+    std::vector<juce::Component*>   m_focusElements;
+};
+
+
 //==============================================================================
 TwoDFieldMultisliderComponent::TwoDFieldMultisliderComponent()
     :   juce::Component()
 {
-    //setUsesValuesInDB(true);
-
     m_sharpnessEdit = std::make_unique<JUCEAppBasics::FixedFontTextEditor>("SharpnessEdit");
     m_sharpnessEdit->setTooltip("Panning sharpness 0.0 ... 1.0");
     m_sharpnessEdit->setText(juce::String(0.5), false);
@@ -66,7 +127,13 @@ TwoDFieldMultisliderComponent::~TwoDFieldMultisliderComponent()
 {
 }
 
-void TwoDFieldMultisliderComponent::paint (juce::Graphics& g)
+std::unique_ptr<juce::ComponentTraverser> TwoDFieldMultisliderComponent::createKeyboardFocusTraverser()
+{
+    return std::make_unique<TwoDFieldMultisliderKeyboardFocusTraverser>(std::vector<juce::Component*>({ this, m_sharpnessEdit.get() }));
+    //juce::Component::createKeyboardFocusTraverser();
+}
+
+void TwoDFieldMultisliderComponent::paint(juce::Graphics& g)
 {
     // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
@@ -261,14 +328,14 @@ void TwoDFieldMultisliderComponent::paintSliderKnob(juce::Graphics& g, const juc
             valueTrack.startNewSubPath(minPoint);
             valueTrack.lineTo(maxPoint);
             g.setColour(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId));
-            g.strokePath(valueTrack, { s_trackWidth, juce::PathStrokeType::curved, juce::PathStrokeType::rounded });
+            g.strokePath(valueTrack, { m_trackWidth, juce::PathStrokeType::curved, juce::PathStrokeType::rounded });
         }
 
         g.setColour(getLookAndFeel().findColour(juce::Slider::thumbColourId));
-        g.fillEllipse(juce::Rectangle<float>(static_cast<float>(s_thumbWidth), static_cast<float>(s_thumbWidth)).withCentre(maxPoint));
+        g.fillEllipse(juce::Rectangle<float>(static_cast<float>(m_thumbWidth), static_cast<float>(m_thumbWidth)).withCentre(maxPoint));
 
         g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOnId));
-        g.drawText(juce::String(silderNumber), juce::Rectangle<float>(static_cast<float>(s_thumbWidth), static_cast<float>(s_thumbWidth)).withCentre(maxPoint), juce::Justification::centred);
+        g.drawText(juce::String(silderNumber), juce::Rectangle<float>(static_cast<float>(m_thumbWidth), static_cast<float>(m_thumbWidth)).withCentre(maxPoint), juce::Justification::centred);
     }
     else
     {
@@ -277,19 +344,19 @@ void TwoDFieldMultisliderComponent::paintSliderKnob(juce::Graphics& g, const juc
             valueTrack.startNewSubPath(minPoint);
             valueTrack.lineTo(maxPoint);
             auto valueTrackOutline = valueTrack;
-            juce::PathStrokeType pt(s_trackWidth, juce::PathStrokeType::curved, juce::PathStrokeType::rounded);
+            juce::PathStrokeType pt(m_trackWidth, juce::PathStrokeType::curved, juce::PathStrokeType::rounded);
             pt.createStrokedPath(valueTrackOutline, valueTrack);
             g.setColour(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId));
             g.strokePath(valueTrackOutline, juce::PathStrokeType(1.0f));
         }
 
         g.setColour(getLookAndFeel().findColour(juce::ResizableWindow::ColourIds::backgroundColourId));
-        g.fillEllipse(juce::Rectangle<float>(static_cast<float>(s_thumbWidth - 1), static_cast<float>(s_thumbWidth - 1)).withCentre(maxPoint));
+        g.fillEllipse(juce::Rectangle<float>(static_cast<float>(m_thumbWidth - 1), static_cast<float>(m_thumbWidth - 1)).withCentre(maxPoint));
 
         g.setColour(getLookAndFeel().findColour(juce::Slider::thumbColourId));
-        g.drawEllipse(juce::Rectangle<float>(static_cast<float>(s_thumbWidth), static_cast<float>(s_thumbWidth)).withCentre(maxPoint), 1.0f);
+        g.drawEllipse(juce::Rectangle<float>(static_cast<float>(m_thumbWidth), static_cast<float>(m_thumbWidth)).withCentre(maxPoint), 1.0f);
 
-        g.drawText(juce::String(silderNumber), juce::Rectangle<float>(static_cast<float> (s_thumbWidth), static_cast<float> (s_thumbWidth)).withCentre(maxPoint), juce::Justification::centred);
+        g.drawText(juce::String(silderNumber), juce::Rectangle<float>(static_cast<float> (m_thumbWidth), static_cast<float> (m_thumbWidth)).withCentre(maxPoint), juce::Justification::centred);
     }
 }
 
@@ -321,13 +388,11 @@ void TwoDFieldMultisliderComponent::resized()
     }
     else if (coreTwoDFieldWithMeterbridge)
     {
-        m_positionedChannelsArea = bounds.reduced(margin);
-        m_positionedChannelsArea.removeFromRight(width * (1.0f / 11.0f));
+        m_positionedChannelsArea = bounds;
+        m_directionlessChannelsArea = m_positionedChannelsArea.removeFromRight(float(m_directionLessChannelTypes.size() * m_ctrlsSize));
+        m_positionedChannelsArea.reduce(margin, margin);
 
         m_positionedHeightChannelsArea = {};
-
-        m_directionlessChannelsArea = bounds;
-        m_directionlessChannelsArea.removeFromLeft(width * (10.0f / 11.0f));
     }
     else if (bothTwoDFields)
     {
@@ -346,9 +411,9 @@ void TwoDFieldMultisliderComponent::resized()
         m_positionedHeightChannelsArea = bounds.reduced(margin);
         m_positionedHeightChannelsArea.removeFromRight(width * (8.4f / 13.0f));
         m_positionedHeightChannelsArea.removeFromBottom(height * (5.4f / 10.0f));
-        
+
         m_positionedChannelsArea = bounds;
-        m_directionlessChannelsArea = m_positionedChannelsArea.removeFromRight(width * (1.0f / 13.0f));
+        m_directionlessChannelsArea = m_positionedChannelsArea.removeFromRight(float(m_directionLessChannelTypes.size() * m_ctrlsSize));
         m_positionedChannelsArea.reduce(margin, margin);
         m_positionedChannelsArea.removeFromLeft(width * (3.4f / 13.0f));
         m_positionedChannelsArea.removeFromTop(height * (1.4f / 10.0f));
@@ -380,7 +445,7 @@ void TwoDFieldMultisliderComponent::resized()
             auto const& slider = sliderKV.second;
             auto const& label = m_directionslessChannelLabels.at(sliderKV.first);
             auto sliderBounds = areaToDivide.removeFromLeft(directionlessChannelsWidth).toNearestInt();
-            auto labelBounds = sliderBounds.removeFromBottom(s_thumbWidth);
+            auto labelBounds = sliderBounds.removeFromBottom(m_thumbWidth);
             if (slider)
                 slider->setBounds(sliderBounds);
             if (label)
@@ -417,7 +482,7 @@ void TwoDFieldMultisliderComponent::mouseDown(const juce::MouseEvent& e)
             area = m_directionlessChannelsArea;
 
         auto maxPoint = area.getCentre() - juce::Point<float>((area.getWidth() / 2) * inputPosition.value.relXPos, (area.getHeight() / 2) * inputPosition.value.relYPos);
-        auto sliderKnob = juce::Rectangle<float>(static_cast<float>(s_thumbWidth), static_cast<float>(s_thumbWidth)).withCentre(maxPoint);
+        auto sliderKnob = juce::Rectangle<float>(static_cast<float>(m_thumbWidth), static_cast<float>(m_thumbWidth)).withCentre(maxPoint);
         if (sliderKnob.contains(e.getMouseDownPosition().toFloat()) && false == hadHit)
         {
             inputPosition.isOn = true;
@@ -645,6 +710,16 @@ void TwoDFieldMultisliderComponent::setIOCount(const std::pair<int, int>& ioCoun
 
     m_currentOutputCount = ioCount.second;
 
+    repaint();
+}
+
+void TwoDFieldMultisliderComponent::setControlsSize(int ctrlsSize)
+{
+    m_ctrlsSize = ctrlsSize;
+    m_thumbWidth = int(float(4 * ctrlsSize) / 7.0f);
+    m_trackWidth = float(8 * ctrlsSize) / 35.0f;
+
+    resized();
     repaint();
 }
 

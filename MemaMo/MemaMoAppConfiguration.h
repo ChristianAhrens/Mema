@@ -62,6 +62,7 @@ public:
     enum AttributeID
     {
         ENABLED,
+        COUNT,
     };
     static juce::String getAttributeName(AttributeID ID)
     {
@@ -69,6 +70,8 @@ public:
         {
         case ENABLED:
             return "ENABLED";
+        case COUNT:
+            return "COUNT";
         default:
             return "-";
         }

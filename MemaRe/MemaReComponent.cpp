@@ -86,14 +86,14 @@ MemaReComponent::MemaReComponent()
         };
     addChildComponent(m_panningCtrlComponent.get());
 
-    setOutputFaderbankCtrlActive(Mema::FaderbankControlComponent::ControlsSize::S);
+    setOutputFaderbankCtrlActive();
 }
 
 MemaReComponent::~MemaReComponent()
 {
 }
 
-void MemaReComponent::setOutputFaderbankCtrlActive(const Mema::FaderbankControlComponent::ControlsSize& ctrlsSize)
+void MemaReComponent::setOutputFaderbankCtrlActive()
 {
     auto resizeRequired = false;
     
@@ -105,7 +105,6 @@ void MemaReComponent::setOutputFaderbankCtrlActive(const Mema::FaderbankControlC
             m_faderbankCtrlComponent->setVisible(true);
             resizeRequired = true;
         }
-        m_faderbankCtrlComponent->setControlsSize(ctrlsSize);
     }
     if (m_panningCtrlComponent && m_panningCtrlComponent->isVisible())
     {
@@ -149,6 +148,24 @@ void MemaReComponent::resetCtrl()
         m_faderbankCtrlComponent->resetCtrl();
     if (m_panningCtrlComponent)
         m_panningCtrlComponent->resetCtrl();
+}
+
+void MemaReComponent::setControlsSize(const Mema::MemaClientControlComponentBase::ControlsSize& ctrlsSize)
+{
+    if (m_faderbankCtrlComponent)
+        m_faderbankCtrlComponent->setControlsSize(ctrlsSize);
+    if (m_panningCtrlComponent)
+        m_panningCtrlComponent->setControlsSize(ctrlsSize);
+}
+
+const Mema::MemaClientControlComponentBase::ControlsSize& MemaReComponent::getControlsSize()
+{
+    if (m_faderbankCtrlComponent)
+        return m_faderbankCtrlComponent->getControlsSize();
+    else if (m_panningCtrlComponent)
+        return m_panningCtrlComponent->getControlsSize();
+    else
+        return Mema::MemaClientControlComponentBase::ControlsSize::S;
 }
 
 void MemaReComponent::paint(Graphics &g)

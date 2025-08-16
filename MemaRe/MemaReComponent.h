@@ -37,9 +37,12 @@ public:
     MemaReComponent();
     ~MemaReComponent() override;
 
-    void setOutputFaderbankCtrlActive(const Mema::FaderbankControlComponent::ControlsSize& ctrlsSize);
+    void setOutputFaderbankCtrlActive();
     void setOutputPanningCtrlActive(const juce::AudioChannelSet& channelConfiguration);
     void resetCtrl();
+
+    void setControlsSize(const Mema::FaderbankControlComponent::ControlsSize& ctrlsSize);
+    const Mema::FaderbankControlComponent::ControlsSize& getControlsSize();
 
     //==============================================================================
     void resized() override;

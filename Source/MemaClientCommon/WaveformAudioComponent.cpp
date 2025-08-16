@@ -18,18 +18,63 @@
 
 #include "WaveformAudioComponent.h"
 
+#include "../MemaMoAppConfiguration.h" // include to enable trigger cfg dump
+
 #include <CustomLookAndFeel.h>
 
 
 namespace Mema
 {
 
+//==============================================================================
+class CustomPaintingAudioVisualiserComponent : public juce::AudioVisualiserComponent
+{
+public:
+    //==============================================================================
+    CustomPaintingAudioVisualiserComponent(int initialNumChannels)
+        : juce::AudioVisualiserComponent(initialNumChannels) {};
+    virtual ~CustomPaintingAudioVisualiserComponent() = default;
+
+    void setColours(juce::Colour tc,  juce::Colour bc, juce::Colour wc)
+    {
+        m_trackColour = tc;
+        m_waveformColour = wc;
+        
+        juce::AudioVisualiserComponent::setColours(bc, wc);
+    };
+
+    //==============================================================================
+    void paintChannel(juce::Graphics& g, juce::Rectangle<float> area,
+        const Range<float>* levels, int numLevels, int nextSample) override
+    {
+        auto margin = area.getHeight() * 0.05f;
+        margin = jlimit(1.0f, 3.0f, margin);
+
+        area.reduce(margin, margin);
+
+        g.setColour(m_trackColour);
+        g.fillRect(area);
+
+        juce::Path p;
+        getChannelAsPath(p, levels, numLevels, nextSample);
+
+        g.setColour(m_waveformColour);
+        g.fillPath(p, juce::AffineTransform::fromTargetPoints(0.0f, -1.0f, area.getX(), area.getY(),
+            0.0f, 1.0f, area.getX(), area.getBottom(),
+            (float)numLevels, -1.0f, area.getRight(), area.getY()));
+    }
+
+private:
+    juce::Colour m_trackColour = juce::Colours::white;
+    juce::Colour m_waveformColour = juce::Colours::grey;
+};
+
 
 //==============================================================================
 WaveformAudioComponent::WaveformAudioComponent()
     : AbstractAudioVisualizer()
 {
-    m_waveformsComponent = std::make_unique<juce::AudioVisualiserComponent>(m_numVisibleChannels);
+    m_waveformsComponent = std::make_unique<CustomPaintingAudioVisualiserComponent>(m_numVisibleChannels);
     m_waveformsComponent->setBufferSize(2048);
     m_waveformsComponent->setRepaintRate(20);
     addAndMakeVisible(m_waveformsComponent.get());
@@ -42,6 +87,8 @@ WaveformAudioComponent::WaveformAudioComponent()
             settingsMenu.addItem(i, juce::String(i));
         settingsMenu.showMenuAsync(juce::PopupMenu::Options(), [=](int selectedId) {
             setNumVisibleChannels(selectedId);
+            if (JUCEAppBasics::AppConfigurationBase::getInstance())
+                JUCEAppBasics::AppConfigurationBase::getInstance()->triggerConfigurationDump(false);
         });
     };
     m_chNumSelButton->setAlwaysOnTop(true);
@@ -98,6 +145,7 @@ void WaveformAudioComponent::lookAndFeelChanged()
     if (m_waveformsComponent)
         m_waveformsComponent->setColours(
             getLookAndFeel().findColour(juce::Slider::backgroundColourId),
+            getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId),
             getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::MeteringRmsColourId));
 
     auto chNumSelButtonDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::waves24px_svg).get());
@@ -120,7 +168,7 @@ void WaveformAudioComponent::processingDataChanged(AbstractProcessorData* data)
         {
             if (m_numAvailableChannels != sd->getNumChannels())
             {
-                auto init = (0 == m_numAvailableChannels);
+                auto init = (0 == m_numAvailableChannels) && (1 == m_numVisibleChannels);
                 m_numAvailableChannels = sd->getNumChannels();
                 if (init)
                     setNumVisibleChannels(m_numAvailableChannels);
@@ -149,5 +197,11 @@ void WaveformAudioComponent::setNumVisibleChannels(int numChannels)
     if (m_waveformsComponent)
         m_waveformsComponent->setNumChannels(numChannels);
 }
+
+int WaveformAudioComponent::getNumVisibleChannels()
+{
+    return m_numVisibleChannels;
+}
+
 
 }

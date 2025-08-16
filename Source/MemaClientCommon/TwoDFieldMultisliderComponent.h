@@ -83,11 +83,14 @@ public:
     float getRequiredAspectRatio();
 
     void setIOCount(const std::pair<int, int>& ioCount);
+
+    void setControlsSize(int ctrlsSize);
     
     //==============================================================================
     void paint (Graphics&) override;
     void resized() override;
     void lookAndFeelChanged() override;
+    std::unique_ptr<juce::ComponentTraverser> createKeyboardFocusTraverser() override;
 
     //==============================================================================
     void mouseDown(const juce::MouseEvent& e) override;
@@ -113,10 +116,6 @@ public:
     std::function<void(std::uint16_t channel)> onInputSelected;
     std::function<void(const std::map<std::uint16_t, std::map<std::uint16_t, bool>>&)>  onInputToOutputStatesChanged;
     std::function<void(const std::map<std::uint16_t, std::map<std::uint16_t, float>>&)> onInputToOutputValuesChanged;
-
-    //==============================================================================
-    static constexpr int s_thumbWidth = 20;
-    static constexpr float s_trackWidth = 8.0f;
 
 private:
     //==============================================================================
@@ -172,6 +171,11 @@ private:
     std::unique_ptr<JUCEAppBasics::FixedFontTextEditor>     m_sharpnessEdit;
 
     int m_currentOutputCount = 0;
+
+    //==============================================================================
+    int m_thumbWidth = 0;
+    float m_trackWidth = 0.0f;
+    int m_ctrlsSize = 0;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TwoDFieldMultisliderComponent)
 };

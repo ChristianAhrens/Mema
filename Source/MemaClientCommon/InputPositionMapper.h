@@ -43,7 +43,7 @@ public:
     };
     void setOutputIgnorePositions(const juce::Array<juce::AudioChannelSet::ChannelType>& outputIgnorePositions)
     {
-        if (outputIgnorePositions != outputIgnorePositions)
+        if (m_outputIgnorePositions != outputIgnorePositions)
             m_outputIgnorePositions = outputIgnorePositions;
     };
 
@@ -69,11 +69,13 @@ public:
                 auto exp = jmap(sharpness, 1.0f, 5.0f);
                 channelToOutputsDists[channelType] = powf(base, exp);
 
-                //DBG(juce::String(__FUNCTION__) << " " << juce::AudioChannelSet::getAbbreviatedChannelTypeName(channelType) << ": " << channelToOutputsDists[channelType]);
+                //DBG(juce::String(__FUNCTION__) << " incl. " << juce::AudioChannelSet::getAbbreviatedChannelTypeName(channelType) << ": " << channelToOutputsDists[channelType]);
             }
             for (auto const& channelType : m_outputIgnorePositions)
             {
                 channelToOutputsDists[channelType] = 0.0f;
+                
+                //DBG(juce::String(__FUNCTION__) << " excl. " << juce::AudioChannelSet::getAbbreviatedChannelTypeName(channelType) << ": " << channelToOutputsDists[channelType]);
             }
 
             onInputPositionMapped(channel, channelToOutputsDists);
