@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+## [0.7.0] 2025-08-16
+### Added
+- Added Mema.Re panning control to be available in s,m,l sizing
+- Added Mema.Mo waveform visualization channel cound selection to be persisted in xml config
+
+### Changed
+- Changed Mema.Mo waveform visualizer track separation
+- Changed readme contents to include more Mema.Re related infos and overall update
+
+### Fixed
+- Fixed Mema UI custom lookandfeel availability for pluginloader popup
+- Fixed Mema.Re panning control sharpness edit focus grab and UI area resizing
+
 ## [0.6.3] 2025-08-04
 ### Added
 
