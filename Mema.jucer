@@ -2,11 +2,47 @@
 
 <JUCERPROJECT id="ja98xe" name="Mema" projectType="guiapp" useAppConfig="0"
               jucerFormatVersion="1" version="0.7.1" companyWebsite="github.com/ChristianAhrens/Mema"
-              bundleIdentifier="com.ChristianAhrens.Mema" headerPath="../../submodules/JUCE-AppBasics/Source"
+              bundleIdentifier="com.ChristianAhrens.Mema" headerPath="../../submodules/JUCE-AppBasics/Source&#10;../../submodules/Servus"
               defines="JUCE_USE_LAME_AUDIO_FORMAT=1,&#10;JUCE_USE_MP3AUDIOFORMAT=1,&#10;JUCE_DISPLAY_SPLASH_SCREEN=0"
               companyName="ChristianAhrens" companyCopyright="Copyright (c) 2024 Christian Ahrens.">
   <MAINGROUP id="YIs3Nm" name="Mema">
     <GROUP id="{60526C8C-38C9-8A62-4BE8-08FDFBF21423}" name="submodules">
+      <GROUP id="{7653811E-D730-658E-A565-A564209E34FD}" name="Servus">
+        <GROUP id="{ED3C7B2D-D3DA-B577-38E0-E342CE2B3A4C}" name="servus">
+          <FILE id="QJ2xU3" name="api.h" compile="0" resource="0" file="submodules/Servus/servus/api.h"/>
+          <FILE id="KEs7YJ" name="defines.h" compile="0" resource="0" file="submodules/Servus/servus/defines.h"/>
+          <FILE id="g0vghR" name="definesDarwin.h" compile="0" resource="0" file="submodules/Servus/servus/definesDarwin.h"/>
+          <FILE id="o5U7fn" name="definesLinux.h" compile="0" resource="0" file="submodules/Servus/servus/definesLinux.h"/>
+          <FILE id="Hq7IMc" name="definesWin32.h" compile="0" resource="0" file="submodules/Servus/servus/definesWin32.h"/>
+          <FILE id="CiCGyu" name="listener.h" compile="0" resource="0" file="submodules/Servus/servus/listener.h"/>
+          <FILE id="VyT5Bu" name="result.h" compile="0" resource="0" file="submodules/Servus/servus/result.h"/>
+          <FILE id="rTn6Sg" name="serializable.cpp" compile="1" resource="0"
+                file="submodules/Servus/servus/serializable.cpp"/>
+          <FILE id="GQH7p0" name="serializable.h" compile="0" resource="0" file="submodules/Servus/servus/serializable.h"/>
+          <FILE id="fgBoZF" name="servus.cpp" compile="1" resource="0" file="submodules/Servus/servus/servus.cpp"/>
+          <FILE id="kBqvju" name="servus.h" compile="0" resource="0" file="submodules/Servus/servus/servus.h"/>
+          <FILE id="WMCVr3" name="types.h" compile="0" resource="0" file="submodules/Servus/servus/types.h"/>
+          <FILE id="kFOxRe" name="uint128_t.cpp" compile="1" resource="0" file="submodules/Servus/servus/uint128_t.cpp"/>
+          <FILE id="v092gZ" name="uint128_t.h" compile="0" resource="0" file="submodules/Servus/servus/uint128_t.h"/>
+          <FILE id="cEK2f4" name="uri.cpp" compile="1" resource="0" file="submodules/Servus/servus/uri.cpp"/>
+          <FILE id="EfDSSQ" name="uri.h" compile="0" resource="0" file="submodules/Servus/servus/uri.h"/>
+          <FILE id="Jlyaie" name="version.cpp" compile="1" resource="0" file="submodules/Servus/servus/version.cpp"/>
+          <FILE id="dlw3Nh" name="version.h" compile="0" resource="0" file="submodules/Servus/servus/version.h"/>
+          <GROUP id="{A0A42983-6987-F6DA-A18B-18FE9DC45F71}" name="none">
+            <FILE id="ZNUAKJ" name="servus.h" compile="0" resource="0" file="submodules/Servus/servus/none/servus.h"/>
+          </GROUP>
+          <GROUP id="{226F1620-694C-128E-46F5-BC5AFDF08AD0}" name="md5">
+            <FILE id="q0Fjbh" name="md5.cc" compile="1" resource="0" file="submodules/Servus/servus/md5/md5.cc"/>
+            <FILE id="VemHaq" name="md5.hh" compile="0" resource="0" file="submodules/Servus/servus/md5/md5.hh"/>
+          </GROUP>
+          <GROUP id="{3AB2CA44-03B1-6D14-2DEC-37CC0F6ACEA3}" name="dnssd">
+            <FILE id="CBnDPK" name="servus.h" compile="0" resource="0" file="submodules/Servus/servus/dnssd/servus.h"/>
+          </GROUP>
+          <GROUP id="{01579381-EED0-CBAC-1479-ADAC14C3EF5C}" name="avahi">
+            <FILE id="uiYzgL" name="servus.h" compile="0" resource="0" file="submodules/Servus/servus/avahi/servus.h"/>
+          </GROUP>
+        </GROUP>
+      </GROUP>
       <GROUP id="{A748DC48-D24B-A4B1-772D-A48B7873F767}" name="JUCEAppBascics">
         <FILE id="eZ7Mzl" name="AppConfigurationBase.cpp" compile="1" resource="0"
               file="submodules/JUCE-AppBasics/Source/AppConfigurationBase.cpp"/>

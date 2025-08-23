@@ -25,6 +25,8 @@
 #include "../MemaProcessorEditor/MemaProcessorEditor.h"
 #include "../MemaAppConfiguration.h"
 
+#include <servus/servus.h>
+
 
 namespace Mema
 {
@@ -261,6 +263,8 @@ private:
     std::shared_ptr<InterprocessConnectionServerImpl> m_networkServer;
     std::unique_ptr<MemaNetworkClientCommanderWrapper> m_networkCommanderWrapper;
     std::map<int, std::vector<SerializableMessage::SerializableMessageType>> m_trafficTypesPerConnection;
+
+    std::unique_ptr<servus::Servus> m_servusMdns;
 
     std::unique_ptr<juce::TimedCallback>   m_timedConfigurationDumper;
     bool    m_timedConfigurationDumpPending = false;

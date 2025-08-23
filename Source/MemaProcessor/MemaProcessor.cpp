@@ -294,6 +294,9 @@ MemaProcessor::MemaProcessor(XmlElement* stateXml) :
 		}
 	});
 	m_timedConfigurationDumper->startTimer(100);
+
+	m_servusMdns = std::make_unique<servus::Servus>("_oca._tcp");
+	m_servusMdns->announce(50014, Mema::ServiceData::getServiceDescription().toStdString());
 }
 
 MemaProcessor::~MemaProcessor()
