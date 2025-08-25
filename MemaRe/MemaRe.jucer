@@ -8,6 +8,10 @@
   <MAINGROUP id="YIs3Nm" name="Mema.Re">
     <GROUP id="{60526C8C-38C9-8A62-4BE8-08FDFBF21423}" name="submodules">
       <GROUP id="{A748DC48-D24B-A4B1-772D-A48B7873F767}" name="JUCEAppBascics">
+        <FILE id="KOJ8ko" name="mDNSServiceAdvertiser.cpp" compile="1" resource="0"
+              file="../submodules/JUCE-AppBasics/Source/mDNSServiceAdvertiser.cpp"/>
+        <FILE id="JiZKDd" name="mDNSServiceAdvertiser.h" compile="0" resource="0"
+              file="../submodules/JUCE-AppBasics/Source/mDNSServiceAdvertiser.h"/>
         <FILE id="bPm9Uq" name="FixedFontTextEditor.cpp" compile="1" resource="0"
               file="../submodules/JUCE-AppBasics/Source/FixedFontTextEditor.cpp"/>
         <FILE id="G7oFg1" name="FixedFontTextEditor.h" compile="0" resource="0"

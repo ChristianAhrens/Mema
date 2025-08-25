@@ -26,10 +26,12 @@
 #include <AboutComponent.h>
 #include <CustomLookAndFeel.h>
 #include <WebUpdateDetector.h>
+#include <mDNSServiceAdvertiser.h>
 
 #include <MemaProcessor/MemaMessages.h>
 
 #include <iOS_utils.h>
+
 
 
 MainComponent::MainComponent()
@@ -231,10 +233,20 @@ MainComponent::MainComponent()
     updater->CheckForNewVersion(true, "https://raw.githubusercontent.com/ChristianAhrens/Mema/refs/heads/main/");
 #endif
 
-
     // add this main component to watchers
     m_config->addWatcher(this); // without initial update - that we have to do externally after lambdas were assigned
 
+    m_mDNSAdvertiser = std::make_unique<JUCEAppBasics::mDNSServiceAdvertiser>("_oca._tcp", std::uint16_t(50014));
+    m_mDNSAdvertiser->addTxtRecords({
+        { "db_devicename", juce::JUCEApplication::getInstance()->getApplicationName().toStdString() },
+        { "db_firmwarevers", juce::JUCEApplication::getInstance()->getApplicationVersion().toStdString() },
+        { "db_guid", "DB000CD0" },
+        { "db_matrixSize", "128x64" },
+        { "db_serialnumber", "1" },
+        { "db_txtvers", "1" },
+        { "protovers", "1" },
+        { "txtvers", "1" }
+    });
 }
 
 MainComponent::~MainComponent()
@@ -477,10 +489,10 @@ void MainComponent::handleSettingsPanningColourMenuResult(int selectedId)
 void MainComponent::handleSettingsControlsSizeMenuResult(int selectedId)
 {
     // helper internal function to avoid code clones
-    std::function<void(int, int, int)> setSettingsItemsCheckState = [=](int small, int medium, int large) {
-        m_settingsItems[MemaReSettingsOption::ControlsSize_S].second = small;
-        m_settingsItems[MemaReSettingsOption::ControlsSize_M].second = medium;
-        m_settingsItems[MemaReSettingsOption::ControlsSize_L].second = large;
+    std::function<void(int, int, int)> setSettingsItemsCheckState = [=](int s, int m, int l) {
+        m_settingsItems[MemaReSettingsOption::ControlsSize_S].second = s;
+        m_settingsItems[MemaReSettingsOption::ControlsSize_M].second = m;
+        m_settingsItems[MemaReSettingsOption::ControlsSize_L].second = l;
         };
     
     switch (selectedId)
