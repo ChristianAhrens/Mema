@@ -34,8 +34,6 @@
               file="../submodules/JUCE-AppBasics/Resources/Images/link_off_24dp.svg"/>
         <FILE id="SM2kRq" name="Mema.png" compile="0" resource="1" file="../Resources/Images/Mema.png"/>
         <FILE id="FTY1kZ" name="MemaMo.png" compile="0" resource="1" file="../Resources/Images/MemaMo.png"/>
-        <FILE id="cY8BiV" name="MemaMoCanvas.png" compile="0" resource="1"
-              file="../Resources/Images/MemaMoCanvas.png"/>
         <FILE id="P02GhK" name="MemaMoRect.png" compile="0" resource="1" file="../Resources/Images/MemaMoRect.png"/>
         <FILE id="D3JJ8C" name="question_mark_24dp.svg" compile="0" resource="1"
               file="../submodules/JUCE-AppBasics/Resources/Images/question_mark_24dp.svg"/>
@@ -132,11 +130,11 @@
   </MODULES>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
   <EXPORTFORMATS>
-    <XCODE_MAC targetFolder="Builds/MacOSX" smallIcon="P02GhK" bigIcon="P02GhK"
-               iosDevelopmentTeamID="SB7Q3PP4FQ" hardenedRuntime="1" customPList="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#10;&#10;&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;&#10;&lt;plist&gt;&#10;  &lt;dict&gt;&#10;    &lt;key&gt;NSLocalNetworkUsageDescription&lt;/key&gt;&#10;    &lt;string&gt;Mema.Mo uses multicast to discover IP Addresses of Mema instances on the network.&lt;/string&gt;&#10;  &lt;/dict&gt;&#10;&lt;/plist&gt;"
+    <XCODE_MAC targetFolder="Builds/MacOSX" smallIcon="" bigIcon="" iosDevelopmentTeamID="SB7Q3PP4FQ"
+               hardenedRuntime="1" customPList="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#10;&#10;&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;&#10;&lt;plist&gt;&#10;  &lt;dict&gt;&#10;    &lt;key&gt;NSLocalNetworkUsageDescription&lt;/key&gt;&#10;    &lt;string&gt;Mema.Mo uses multicast to discover IP Addresses of Mema instances on the network.&lt;/string&gt;&#10;    &lt;!-- New Xcode .icon integration --&gt;&#10;    &lt;key&gt;CFBundleIconName&lt;/key&gt;&#10;    &lt;string&gt;MemaMo&lt;/string&gt;&#10;  &lt;/dict&gt;&#10;&lt;/plist&gt;"
                applicationCategory="public.app-category.utilities" appSandbox="1"
                appSandboxOptions="com.apple.security.network.client,com.apple.security.network.server"
-               networkingMulticast="1">
+               networkingMulticast="1" customXcodeResourceFolders="../Resources/Images/MemaMo.icon">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" targetName="MemaMo"/>
         <CONFIGURATION isDebug="0" name="Release" customXcodeFlags="OTHER_CODE_SIGN_FLAGS = $(inherited) --timestamp -s 'Developer ID Application: Christian Ahrens', CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO"
@@ -198,12 +196,12 @@
         <MODULEPATH id="juce_gui_extra" path="../submodules/JUCE/modules"/>
       </MODULEPATHS>
     </LINUX_MAKE>
-    <XCODE_IPHONE targetFolder="Builds/iOS" smallIcon="cY8BiV" bigIcon="cY8BiV"
-                  customLaunchStoryboard="../Resources/Deployment/iOS/Launchscreen-MemaMo.storyboard"
+    <XCODE_IPHONE targetFolder="Builds/iOS" smallIcon="" bigIcon="" customLaunchStoryboard="../Resources/Deployment/iOS/Launchscreen-MemaMo.storyboard"
                   iosScreenOrientation="UIInterfaceOrientationLandscapeRight,UIInterfaceOrientationPortrait"
                   iPadScreenOrientation="UIInterfaceOrientationLandscapeLeft,UIInterfaceOrientationLandscapeRight,UIInterfaceOrientationPortrait,UIInterfaceOrientationPortraitUpsideDown"
                   UIStatusBarHidden="1" networkingMulticast="1" iosDevelopmentTeamID="SB7Q3PP4FQ"
-                  UIRequiresFullScreen="0" customPList="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#10;&#10;&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;&#10;&lt;plist&gt;&#10;  &lt;dict&gt;&#10;    &lt;key&gt;NSLocalNetworkUsageDescription&lt;/key&gt;&#10;    &lt;string&gt;Mema.Mo uses multicast to discover IP Addresses of Mema instances on the network.&lt;/string&gt;&#10;    &#9;&lt;key&gt;UIBackgroundModes&lt;/key&gt;&#10;    &#9;&lt;array&gt;&#10;&#9;      &#9;&lt;string&gt;processing&lt;/string&gt;&#10;    &#9;&lt;/array&gt;&#10;    &lt;key&gt;BGTaskSchedulerPermittedIdentifiers&lt;/key&gt;&#10;    &lt;array&gt;&#10;      &lt;string&gt;com.ChristianAhrens.MemaMo&lt;/string&gt;&#10;    &lt;/array&gt;&#10;&lt;/dict&gt;&#10;&lt;/plist&gt;">
+                  UIRequiresFullScreen="0" customPList="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#10;&#10;&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;&#10;&lt;plist&gt;&#10;  &lt;dict&gt;&#10;    &lt;key&gt;NSLocalNetworkUsageDescription&lt;/key&gt;&#10;    &lt;string&gt;Mema.Mo uses multicast to discover IP Addresses of Mema instances on the network.&lt;/string&gt;&#10;    &#9;&lt;key&gt;UIBackgroundModes&lt;/key&gt;&#10;    &#9;&lt;array&gt;&#10;&#9;      &#9;&lt;string&gt;processing&lt;/string&gt;&#10;    &#9;&lt;/array&gt;&#10;    &lt;key&gt;BGTaskSchedulerPermittedIdentifiers&lt;/key&gt;&#10;    &lt;array&gt;&#10;      &lt;string&gt;com.ChristianAhrens.MemaMo&lt;/string&gt;&#10;    &lt;/array&gt;&#10;    &lt;!-- New Xcode .icon integration --&gt;&#10;    &lt;key&gt;CFBundleIconName&lt;/key&gt;&#10;    &lt;string&gt;MemaMo&lt;/string&gt;&#10;&lt;/dict&gt;&#10;&lt;/plist&gt;"
+                  customXcodeResourceFolders="../Resources/Images/MemaMo.icon">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" iosDeploymentTarget="15" iosCompatibility="15"
                        targetName="MemaMo"/>
