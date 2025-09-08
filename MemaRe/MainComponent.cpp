@@ -139,6 +139,7 @@ MainComponent::MainComponent()
     m_settingsItems[MemaReSettingsOption::OutputPanningType_7point1] = std::make_pair(juce::AudioChannelSet::create7point1().getDescription().toStdString(), 0);
     m_settingsItems[MemaReSettingsOption::OutputPanningType_7point1point4] = std::make_pair(juce::AudioChannelSet::create7point1point4().getDescription().toStdString(), 0);
     m_settingsItems[MemaReSettingsOption::OutputPanningType_9point1point6] = std::make_pair(juce::AudioChannelSet::create9point1point6().getDescription().toStdString(), 0);
+    m_settingsItems[MemaReSettingsOption::OutputPanningType_Quadrophonic] = std::make_pair(juce::AudioChannelSet::quadraphonic().getDescription().toStdString(), 0);
     // default panning colour is green
     m_settingsItems[MemaReSettingsOption::PanningColour_Green] = std::make_pair("Green", 1);
     m_settingsItems[MemaReSettingsOption::PanningColour_Red] = std::make_pair("Red", 0);
@@ -356,7 +357,7 @@ void MainComponent::handleSettingsLookAndFeelMenuResult(int selectedId)
 void MainComponent::handleSettingsOutputPanningTypeMenuResult(int selectedId)
 {
     // helper internal function to avoid code clones
-    std::function<void(int, int, int, int, int, int, int, int, int, int)> setSettingsItemsCheckState = [=](int a, int b, int c, int d, int e, int f, int g, int h, int i, int j) {
+    std::function<void(int, int, int, int, int, int, int, int, int, int, int)> setSettingsItemsCheckState = [=](int a, int b, int c, int d, int e, int f, int g, int h, int i, int j, int k) {
         m_settingsItems[MemaReSettingsOption::OutputPanningType_RawChannels].second = a;
         m_settingsItems[MemaReSettingsOption::OutputPanningType_LRS].second = b;
         m_settingsItems[MemaReSettingsOption::OutputPanningType_LCRS].second = c;
@@ -367,59 +368,65 @@ void MainComponent::handleSettingsOutputPanningTypeMenuResult(int selectedId)
         m_settingsItems[MemaReSettingsOption::OutputPanningType_7point1].second = h;
         m_settingsItems[MemaReSettingsOption::OutputPanningType_7point1point4].second = i;
         m_settingsItems[MemaReSettingsOption::OutputPanningType_9point1point6].second = j;
+        m_settingsItems[MemaReSettingsOption::OutputPanningType_Quadrophonic].second = k;
     };
 
     switch (selectedId)
     {
     case MemaReSettingsOption::OutputPanningType_RawChannels:
-        setSettingsItemsCheckState(1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputFaderbankCtrlActive();
         break;
     case MemaReSettingsOption::OutputPanningType_LRS:
-        setSettingsItemsCheckState(0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::createLRS());
         break;
     case MemaReSettingsOption::OutputPanningType_LCRS:
-        setSettingsItemsCheckState(0, 0, 1, 0, 0, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::createLCRS());
         break;
     case MemaReSettingsOption::OutputPanningType_5point0:
-        setSettingsItemsCheckState(0, 0, 0, 1, 0, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create5point0());
         break;
     case MemaReSettingsOption::OutputPanningType_5point1:
-        setSettingsItemsCheckState(0, 0, 0, 0, 1, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create5point1());
         break;
     case MemaReSettingsOption::OutputPanningType_5point1point2:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 1, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create5point1point2());
         break;
     case MemaReSettingsOption::OutputPanningType_7point0:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 1, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create7point0());
         break;
     case MemaReSettingsOption::OutputPanningType_7point1:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 1, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create7point1());
         break;
     case MemaReSettingsOption::OutputPanningType_7point1point4:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 1, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create7point1point4());
         break;
     case MemaReSettingsOption::OutputPanningType_9point1point6:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 1);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create9point1point6());
+        break;
+    case MemaReSettingsOption::OutputPanningType_Quadrophonic:
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1);
+        if (m_remoteComponent)
+            m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::quadraphonic());
         break;
     default:
         jassertfalse; // unknown id fed in unintentionally ?!

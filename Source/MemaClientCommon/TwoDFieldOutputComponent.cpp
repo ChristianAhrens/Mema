@@ -586,6 +586,22 @@ float TwoDFieldOutputComponent::getAngleForChannelTypeInCurrentConfiguration(con
             jassertfalse;
         }
     }
+    else if (juce::AudioChannelSet::quadraphonic() == m_channelConfiguration)
+    {
+        switch (channelType)
+        {
+        case juce::AudioChannelSet::ChannelType::left:
+            return -45.0f;
+        case juce::AudioChannelSet::ChannelType::right:
+            return 45.0f;
+        case juce::AudioChannelSet::ChannelType::leftSurround:
+            return -135.0f;
+        case juce::AudioChannelSet::ChannelType::rightSurround:
+            return 135.0f;
+        default:
+            jassertfalse;
+        }
+    }
     else
         jassertfalse;
 
@@ -760,6 +776,22 @@ int TwoDFieldOutputComponent::getChannelNumberForChannelTypeInCurrentConfigurati
             jassertfalse;
         }
     }
+    else if (juce::AudioChannelSet::quadraphonic() == m_channelConfiguration)
+    {
+        switch (channelType)
+        {
+        case juce::AudioChannelSet::ChannelType::left:
+            return 1;
+        case juce::AudioChannelSet::ChannelType::right:
+            return 2;
+        case juce::AudioChannelSet::ChannelType::leftSurround:
+            return 3;
+        case juce::AudioChannelSet::ChannelType::rightSurround:
+            return 4;
+        default:
+            jassertfalse;
+        }
+    }
     else
         jassertfalse;
 
@@ -915,6 +947,15 @@ void TwoDFieldOutputComponent::setClockwiseOrderedChannelTypesForCurrentConfigur
         };
         m_directionLessChannelTypes = {
             juce::AudioChannelSet::ChannelType::LFE
+        };
+    }
+    else if (juce::AudioChannelSet::quadraphonic() == m_channelConfiguration)
+    {
+        m_clockwiseOrderedChannelTypes = {
+            juce::AudioChannelSet::ChannelType::left,
+            juce::AudioChannelSet::ChannelType::right,
+            juce::AudioChannelSet::ChannelType::rightSurround,
+            juce::AudioChannelSet::ChannelType::leftSurround,
         };
     }
     else

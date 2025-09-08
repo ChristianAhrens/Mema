@@ -155,7 +155,8 @@ private:
         juce::AudioChannelSet::create7point0(),
         juce::AudioChannelSet::create7point1(),
         juce::AudioChannelSet::create7point1point4(),
-        juce::AudioChannelSet::create9point1point6() };
+        juce::AudioChannelSet::create9point1point6(),
+        juce::AudioChannelSet::quadraphonic() };
 
     std::map<juce::AudioChannelSet::ChannelType, std::unique_ptr<JUCEAppBasics::ToggleStateSlider>> m_directionslessChannelSliders;
     std::map<juce::AudioChannelSet::ChannelType, std::unique_ptr<juce::Label>>                      m_directionslessChannelLabels;

@@ -158,7 +158,7 @@ void MemaReComponent::setControlsSize(const Mema::MemaClientControlComponentBase
         m_panningCtrlComponent->setControlsSize(ctrlsSize);
 }
 
-const Mema::MemaClientControlComponentBase::ControlsSize& MemaReComponent::getControlsSize()
+const Mema::MemaClientControlComponentBase::ControlsSize MemaReComponent::getControlsSize()
 {
     if (m_faderbankCtrlComponent)
         return m_faderbankCtrlComponent->getControlsSize();

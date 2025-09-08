@@ -960,6 +960,22 @@ float TwoDFieldMultisliderComponent::getAngleForChannelTypeInCurrentConfiguratio
             jassertfalse;
         }
     }
+    else if (juce::AudioChannelSet::quadraphonic() == m_channelConfiguration)
+    {
+        switch (channelType)
+        {
+        case juce::AudioChannelSet::ChannelType::left:
+            return -45.0f;
+        case juce::AudioChannelSet::ChannelType::right:
+            return 45.0f;
+        case juce::AudioChannelSet::ChannelType::leftSurround:
+            return -135.0f;
+        case juce::AudioChannelSet::ChannelType::rightSurround:
+            return 135.0f;
+        default:
+            jassertfalse;
+        }
+    }
     else
         jassertfalse;
 
@@ -1130,6 +1146,22 @@ int TwoDFieldMultisliderComponent::getChannelNumberForChannelTypeInCurrentConfig
             return 15;
         case juce::AudioChannelSet::ChannelType::topRearRight:
             return 16;
+        default:
+            jassertfalse;
+        }
+    }
+    else if (juce::AudioChannelSet::quadraphonic() == m_channelConfiguration)
+    {
+        switch (channelType)
+        {
+        case juce::AudioChannelSet::ChannelType::left:
+            return 1;
+        case juce::AudioChannelSet::ChannelType::right:
+            return 2;
+        case juce::AudioChannelSet::ChannelType::leftSurround:
+            return 3;
+        case juce::AudioChannelSet::ChannelType::rightSurround:
+            return 4;
         default:
             jassertfalse;
         }
@@ -1308,6 +1340,22 @@ const juce::AudioChannelSet::ChannelType TwoDFieldMultisliderComponent::getChann
             break;
         }
     }
+    else if (juce::AudioChannelSet::quadraphonic() == m_channelConfiguration)
+    {
+        switch (channelNumber)
+        {
+        case 1:
+            return juce::AudioChannelSet::ChannelType::left;
+        case 2:
+            return juce::AudioChannelSet::ChannelType::right;
+        case 3:
+            return juce::AudioChannelSet::ChannelType::leftSurround;
+        case 4:
+            return juce::AudioChannelSet::ChannelType::rightSurround;
+        default:
+            break;
+        }
+    }
     else
         jassertfalse;
 
@@ -1463,6 +1511,15 @@ void TwoDFieldMultisliderComponent::setClockwiseOrderedChannelTypesForCurrentCon
         };
         m_directionLessChannelTypes = {
             juce::AudioChannelSet::ChannelType::LFE
+        };
+    }
+    else if (juce::AudioChannelSet::quadraphonic() == m_channelConfiguration)
+    {
+        m_clockwiseOrderedChannelTypes = {
+            juce::AudioChannelSet::ChannelType::left,
+            juce::AudioChannelSet::ChannelType::right,
+            juce::AudioChannelSet::ChannelType::rightSurround,
+            juce::AudioChannelSet::ChannelType::leftSurround,
         };
     }
     else

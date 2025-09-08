@@ -42,7 +42,7 @@ public:
     void resetCtrl();
 
     void setControlsSize(const Mema::FaderbankControlComponent::ControlsSize& ctrlsSize);
-    const Mema::FaderbankControlComponent::ControlsSize& getControlsSize();
+    const Mema::FaderbankControlComponent::ControlsSize getControlsSize();
 
     //==============================================================================
     void resized() override;
