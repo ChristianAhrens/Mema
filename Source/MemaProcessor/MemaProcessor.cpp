@@ -1391,6 +1391,14 @@ void MemaProcessor::initializeCtrlValues(int inputCount, int outputCount)
 
 void MemaProcessor::initializeCtrlValuesToUnity(int inputCount, int outputCount)
 {
+	{
+		const ScopedLock sl(m_audioDeviceIOCallbackLock);
+		m_inputMuteStates.clear();
+		m_outputMuteStates.clear();
+		m_matrixCrosspointStates.clear();
+		m_matrixCrosspointValues.clear();
+	}
+
 	auto inputChannelCount = (inputCount > s_minInputsCount) ? inputCount : s_minInputsCount;
 	for (std::uint16_t channel = 1; channel <= inputChannelCount; channel++)
 		setInputMuteState(channel, false);
@@ -1407,6 +1415,11 @@ void MemaProcessor::initializeCtrlValuesToUnity(int inputCount, int outputCount)
 			setMatrixCrosspointFactorValue(in, out, 1.0f);
 		}
 	}
+}
+
+void MemaProcessor::initializeCtrlValuesToUnity()
+{
+	initializeCtrlValuesToUnity(m_inputChannelCount, m_outputChannelCount);
 }
 
 void MemaProcessor::setTrafficTypesForConnectionId(const std::vector<SerializableMessage::SerializableMessageType>& trafficTypes, int connectionId)

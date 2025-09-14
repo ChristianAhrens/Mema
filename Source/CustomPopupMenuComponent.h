@@ -31,7 +31,11 @@ public:
 
 		m_minIdealSize = minIdealSize;
 	}
-    virtual ~CustomAboutItem() = default;
+    ~CustomAboutItem()
+	{
+		if (m_component)
+			m_component->setVisible(false);
+	}
 
     void getIdealSize(int& idealWidth, int& idealHeight) override
 	{

@@ -22,7 +22,7 @@ namespace Mema
 {
 
 //==============================================================================
-AudioSelectComponent::AudioSelectComponent(AudioDeviceManager *deviceManager,
+AudioSelectComponent::AudioSelectComponent(juce::AudioDeviceManager *deviceManager,
 	int minAudioInputChannels, 
 	int maxAudioInputChannels, 
 	int minAudioOutputChannels, 
@@ -31,7 +31,7 @@ AudioSelectComponent::AudioSelectComponent(AudioDeviceManager *deviceManager,
 	bool showMidiOutputSelector, 
 	bool showChannelsAsStereoPairs, 
 	bool hideAdvancedOptionsWithButton)
-	: AudioDeviceSelectorComponent(*deviceManager, 
+	: juce::AudioDeviceSelectorComponent(*deviceManager,
 		minAudioInputChannels, 
 		maxAudioInputChannels, 
 		minAudioOutputChannels, 
@@ -41,25 +41,44 @@ AudioSelectComponent::AudioSelectComponent(AudioDeviceManager *deviceManager,
 		showChannelsAsStereoPairs, 
 		hideAdvancedOptionsWithButton)
 {
+	if (deviceManager)
+		m_selectedAudioDeviceWhenSelectionStarted = RelevantDeviceCharacteristics(deviceManager->getCurrentAudioDevice());
 }
 
 AudioSelectComponent::~AudioSelectComponent()
 {
 }
 
+void AudioSelectComponent::processAudioSelectionChanges()
+{
+	if (m_selectedAudioDeviceWhenSelectionStarted != RelevantDeviceCharacteristics(deviceManager.getCurrentAudioDevice()))
+	{
+		if (onAudioDeviceChangedDuringAudioSelection)
+			onAudioDeviceChangedDuringAudioSelection();
+
+		m_selectedAudioDeviceWhenSelectionStarted = RelevantDeviceCharacteristics(deviceManager.getCurrentAudioDevice());
+	}
+}
+
 void AudioSelectComponent::paint (Graphics& g)
 {
-	g.fillAll(getLookAndFeel().findColour(ResizableWindow::backgroundColourId).darker());
+	g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId).darker());
 
-	g.setColour(Colours::grey);
+	g.setColour(juce::Colours::grey);
 	g.drawRect(getLocalBounds(), 1);   // draw an outline around the component
 
-	AudioDeviceSelectorComponent::paint(g);
+	juce::AudioDeviceSelectorComponent::paint(g);
 }
 
 void AudioSelectComponent::resized()
 {
-	AudioDeviceSelectorComponent::resized();
+	juce::AudioDeviceSelectorComponent::resized();
+}
+
+void AudioSelectComponent::visibilityChanged()
+{
+	if (!isVisible()) // has changed to invisible after editing
+		processAudioSelectionChanges();
 }
 
 }

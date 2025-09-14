@@ -32,7 +32,6 @@ JUCE_IMPLEMENT_SINGLETON(Mema)
 //==============================================================================
 Mema::Mema() :  juce::Timer()
 {
-    DBG(__FUNCTION__);
     // create the configuration object (is being initialized from disk automatically)
     m_config = std::make_unique<MemaAppConfiguration>(JUCEAppBasics::AppConfigurationBase::getDefaultConfigFilePath());
     m_config->addDumper(this);
@@ -54,6 +53,10 @@ Mema::Mema() :  juce::Timer()
                                                                           MemaProcessor::s_minOutputsCount,
                                                                           MemaProcessor::s_maxChannelCount,
                                                                           false, false, false, false);
+    m_audioDeviceSelectComponent->onAudioDeviceChangedDuringAudioSelection = [=]() {
+        if (m_MemaProcessor)
+            m_MemaProcessor->initializeCtrlValuesToUnity();
+    };
 
     // do the initial update for the whole application with config contents
     m_config->triggerWatcherUpdate();
@@ -79,7 +82,6 @@ Mema::Mema() :  juce::Timer()
 
 Mema::~Mema()
 {
-    DBG(__FUNCTION__);
     if (m_MemaProcessor)
         m_MemaProcessor->editorBeingDeleted(m_MemaProcessor->getActiveEditor());
 }
