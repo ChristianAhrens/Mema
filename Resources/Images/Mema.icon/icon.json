@@ -48,7 +48,10 @@
           }
         },
         {
-          "glass" : false,
+          "blend-mode" : "normal",
+          "fill" : "automatic",
+          "glass" : true,
+          "hidden" : false,
           "image-name" : "Grid_Grid.svg",
           "name" : "Grid",
           "position" : {
@@ -74,7 +77,8 @@
       "hidden" : false,
       "layers" : [
         {
-          "glass" : false,
+          "glass" : true,
+          "hidden" : false,
           "image-name" : "Black circle_Black circle.svg",
           "name" : "Black circle",
           "position" : {
@@ -87,6 +91,7 @@
         },
         {
           "glass" : false,
+          "hidden" : true,
           "image-name" : "White circle_White circle.svg",
           "name" : "White circle",
           "position" : {
@@ -98,7 +103,8 @@
           }
         },
         {
-          "glass" : false,
+          "glass" : true,
+          "hidden" : true,
           "image-name" : "Inner grey circle_Inner grey circle.svg",
           "name" : "Inner grey circle",
           "position" : {
@@ -110,7 +116,7 @@
           }
         },
         {
-          "glass" : false,
+          "glass" : true,
           "image-name" : "Outer grey circle_Outer grey circle.svg",
           "name" : "Outer grey circle",
           "position" : {
