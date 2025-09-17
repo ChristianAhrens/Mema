@@ -40,8 +40,16 @@ public:
 		RelevantDeviceCharacteristics(juce::AudioIODevice* d)
 		{
 			devPtr = d;
-			numInputChannels = d->getInputChannelNames().size();
-			numOutputChannels = d->getOutputChannelNames().size();
+			if (nullptr != d)
+			{
+				numInputChannels = d->getInputChannelNames().size();
+				numOutputChannels = d->getOutputChannelNames().size();
+			}
+			else
+			{
+				numInputChannels = 0;
+				numOutputChannels = 0;
+			}
 		};
 		RelevantDeviceCharacteristics(juce::AudioIODevice* d, int i, int o)
 		{
