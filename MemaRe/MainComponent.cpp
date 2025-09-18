@@ -185,7 +185,7 @@ MainComponent::MainComponent()
     addAndMakeVisible(m_settingsButton.get());
 
     m_disconnectButton = std::make_unique<juce::DrawableButton>("Disconnect", juce::DrawableButton::ButtonStyle::ImageFitted);
-    m_disconnectButton->setTooltip(juce::String("Disconnect ") + juce::JUCEApplication::getInstance()->getApplicationName() + " from " + m_selectedService.description);
+    m_disconnectButton->setTooltip(juce::String("Disconnect ") + juce::JUCEApplication::getInstance()->getApplicationName() + " from " + (m_selectedService.description.isNotEmpty() ? m_selectedService.description : "Nothing :)"));
     m_disconnectButton->onClick = [this] {
         if (m_networkConnection)
             m_networkConnection->disconnect();
