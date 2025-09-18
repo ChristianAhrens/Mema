@@ -276,7 +276,7 @@ void Mema::triggerPromptSaveConfig()
             if (targetFile.getFileExtension() != ".config")
                 targetFile = targetFile.withFileExtension(".config");
 
-            if ((((juce::SystemStats::getOperatingSystemType() & (juce::SystemStats::OperatingSystemType::MacOSX & juce::SystemStats::OperatingSystemType::iOS)) != 0)) &&  !targetFile.hasWriteAccess())
+            if (!targetFile.hasWriteAccess())
             {
                 juce::AlertWindow::showAsync(juce::MessageBoxOptions()
                     .withIconType(juce::MessageBoxIconType::WarningIcon)

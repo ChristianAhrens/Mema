@@ -173,7 +173,7 @@
                applicationCategory="public.app-category.utilities" hardenedRuntime="1"
                hardenedRuntimeOptions="com.apple.security.cs.disable-library-validation,com.apple.security.device.audio-input"
                microphonePermissionNeeded="1" networkingMulticast="1" microphonePermissionsText="MenuBarMatrix uses audio input to route it via matrix settings to audio output."
-               appSandbox="1" appSandboxOptions="com.apple.security.device.microphone,com.apple.security.files.user-selected.read-write,com.apple.security.network.client,com.apple.security.network.server,com.apple.security.temporary-exception.audio-unit-host"
+               appSandboxOptions="com.apple.security.device.microphone,com.apple.security.files.user-selected.read-write,com.apple.security.network.client,com.apple.security.network.server,com.apple.security.temporary-exception.audio-unit-host"
                iosDevelopmentTeamID="SB7Q3PP4FQ">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug"/>
