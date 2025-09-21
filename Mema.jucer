@@ -36,7 +36,6 @@
         <FILE id="UGfTIl" name="grid_4x4_24dp.png" compile="0" resource="1"
               file="Resources/Images/grid_4x4_24dp.png"/>
         <FILE id="MIm0Wj" name="Mema.png" compile="0" resource="1" file="Resources/Images/Mema.png"/>
-        <FILE id="MVNcTE" name="MemaCanvas.png" compile="0" resource="1" file="Resources/Images/MemaCanvas.png"/>
         <FILE id="ItJQfF" name="MemaRect.png" compile="0" resource="1" file="Resources/Images/MemaRect.png"/>
         <FILE id="OsSVEQ" name="open_in_new-24px.svg" compile="0" resource="1"
               file="submodules/JUCE-AppBasics/Resources/Images/open_in_new-24px.svg"/>
@@ -169,7 +168,7 @@
                JUCE_PLUGINHOST_LADSPA="1" JUCE_PLUGINHOST_LV2="1"/>
   <EXPORTFORMATS>
     <XCODE_MAC targetFolder="Builds/MacOSX" smallIcon="ItJQfF" bigIcon="ItJQfF"
-               customPList="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#10;&#10;&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;&#10;&lt;plist&gt;&#10;  &lt;dict&gt;&#10;    &lt;key&gt;NSLocalNetworkUsageDescription&lt;/key&gt;&#10;    &lt;string&gt;Mema uses multicast to anounce its service to Mema.Mo instances on the network.&lt;/string&gt;&#10;  &lt;/dict&gt;&#10;&lt;/plist&gt;"
+               customPList="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#10;&#10;&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;&#10;&lt;plist&gt;&#10;  &lt;dict&gt;&#10;    &lt;key&gt;NSLocalNetworkUsageDescription&lt;/key&gt;&#10;    &lt;string&gt;Mema uses multicast to anounce its service to Mema.Mo instances on the network.&lt;/string&gt;&#10;    &lt;!-- New Xcode .icon integration --&gt;&#10;    &lt;key&gt;CFBundleIconName&lt;/key&gt;&#10;    &lt;string&gt;Mema&lt;/string&gt;&#10;  &lt;/dict&gt;&#10;&lt;/plist&gt;"
                applicationCategory="public.app-category.utilities" hardenedRuntime="1"
                hardenedRuntimeOptions="com.apple.security.cs.disable-library-validation,com.apple.security.device.audio-input"
                microphonePermissionNeeded="1" networkingMulticast="1" microphonePermissionsText="MenuBarMatrix uses audio input to route it via matrix settings to audio output."
