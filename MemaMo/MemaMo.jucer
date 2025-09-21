@@ -104,6 +104,9 @@
             file="../Source/MemaProcessor/ProcessorSpectrumData.cpp"/>
       <FILE id="qCeR2y" name="ProcessorSpectrumData.h" compile="0" resource="0"
             file="../Source/MemaProcessor/ProcessorSpectrumData.h"/>
+      <FILE id="OImvpX" name="TwoDFieldBase.cpp" compile="1" resource="0"
+            file="../Source/MemaClientCommon/TwoDFieldBase.cpp"/>
+      <FILE id="ID9Gbw" name="TwoDFieldBase.h" compile="0" resource="0" file="../Source/MemaClientCommon/TwoDFieldBase.h"/>
       <FILE id="qUZJQI" name="TwoDFieldOutputComponent.cpp" compile="1" resource="0"
             file="../Source/MemaClientCommon/TwoDFieldOutputComponent.cpp"/>
       <FILE id="FncK9u" name="TwoDFieldOutputComponent.h" compile="0" resource="0"

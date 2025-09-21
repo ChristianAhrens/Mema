@@ -65,6 +65,9 @@
             file="../Source/MemaClientCommon/PanningControlComponent.cpp"/>
       <FILE id="PFJ6ii" name="PanningControlComponent.h" compile="0" resource="0"
             file="../Source/MemaClientCommon/PanningControlComponent.h"/>
+      <FILE id="XDPBR5" name="TwoDFieldBase.cpp" compile="1" resource="0"
+            file="../Source/MemaClientCommon/TwoDFieldBase.cpp"/>
+      <FILE id="WGIfVA" name="TwoDFieldBase.h" compile="0" resource="0" file="../Source/MemaClientCommon/TwoDFieldBase.h"/>
       <FILE id="PYcLvt" name="TwoDFieldMultisliderComponent.cpp" compile="1"
             resource="0" file="../Source/MemaClientCommon/TwoDFieldMultisliderComponent.cpp"/>
       <FILE id="TZMWx9" name="TwoDFieldMultisliderComponent.h" compile="0"

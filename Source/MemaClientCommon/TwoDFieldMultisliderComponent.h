@@ -20,6 +20,7 @@
 
 #include <JuceHeader.h>
 
+#include "TwoDFieldBase.h"
 #include "../MemaProcessorEditor/AbstractAudioVisualizer.h"
 
  /**
@@ -37,16 +38,9 @@ namespace Mema
 //==============================================================================
 /*
 */
-class TwoDFieldMultisliderComponent  :   public juce::Component
+class TwoDFieldMultisliderComponent  :   public TwoDFieldBase, public juce::Component
 {
 public:
-    enum ChannelLayer
-    {
-        Positioned,
-        PositionedHeight,
-        Directionless
-    };
-
     struct TwoDMultisliderValue
     {
         TwoDMultisliderValue() = default;
@@ -72,15 +66,7 @@ public:
     TwoDFieldMultisliderComponent();
     ~TwoDFieldMultisliderComponent();
 
-    bool setChannelConfiguration(const juce::AudioChannelSet& channelLayout);
-    const juce::Array<juce::AudioChannelSet>& getSupportedChannelConfigurations();
-
-    float getAngleForChannelTypeInCurrentConfiguration(const juce::AudioChannelSet::ChannelType& channelType);
-    int getChannelNumberForChannelTypeInCurrentConfiguration(const juce::AudioChannelSet::ChannelType& channelType);
-    const juce::AudioChannelSet::ChannelType getChannelTypeForChannelNumberInCurrentConfiguration(int channelNumber);
-    void setClockwiseOrderedChannelTypesForCurrentConfiguration();
-
-    float getRequiredAspectRatio();
+    bool setChannelConfiguration(const juce::AudioChannelSet& channelLayout) override;
 
     void setIOCount(const std::pair<int, int>& ioCount);
 
@@ -108,10 +94,6 @@ public:
     void triggerInputPositionsDump();
 
     //==============================================================================
-    const juce::Array<juce::AudioChannelSet::ChannelType>& getOutputsInLayer(const ChannelLayer& layer);
-    const juce::Array<juce::AudioChannelSet::ChannelType> getDirectiveOutputsNotInLayer(const ChannelLayer& layer);
-    
-    //==============================================================================
     std::function<void(std::uint16_t channel, const TwoDMultisliderValue& value, const float& sharpness, std::optional<ChannelLayer> layer)> onInputPositionChanged;
     std::function<void(std::uint16_t channel)> onInputSelected;
     std::function<void(const std::map<std::uint16_t, std::map<std::uint16_t, bool>>&)>  onInputToOutputStatesChanged;
@@ -123,41 +105,10 @@ private:
     void paintSliderKnob(juce::Graphics& g, const juce::Rectangle<float>& sliderArea, const float& relXPos, const float& relYPos, const int& silderNumber, bool isSliderOn, bool isSliderSliding);
 
     //==============================================================================
-    bool usesPositionedChannels() { return !m_clockwiseOrderedChannelTypes.isEmpty(); };
-    bool usesPositionedHeightChannels() { return !m_clockwiseOrderedHeightChannelTypes.isEmpty(); };
-    bool usesDirectionlessChannels() { return !m_directionLessChannelTypes.isEmpty(); };
-
-    //==============================================================================
     void rebuildDirectionslessChannelSliders();
     void configureDirectionlessSliderToRelativeCtrl(const juce::AudioChannelSet::ChannelType& channelType, JUCEAppBasics::ToggleStateSlider& slider);
     
     //==============================================================================
-    juce::Rectangle<float>  m_positionedChannelsArea;
-    juce::Rectangle<float>  m_positionedHeightChannelsArea;
-    juce::Rectangle<float>  m_directionlessChannelsArea;
-
-    std::map<int, juce::Point<float>>   m_channelLevelMaxPoints;
-    std::map<int, juce::Point<float>>   m_channelHeightLevelMaxPoints;
-
-    juce::AudioChannelSet                           m_channelConfiguration;
-    juce::Array<juce::AudioChannelSet::ChannelType> m_clockwiseOrderedChannelTypes;
-    juce::Array<juce::AudioChannelSet::ChannelType> m_clockwiseOrderedHeightChannelTypes;
-    juce::Array<juce::AudioChannelSet::ChannelType> m_directionLessChannelTypes;
-    juce::Array<juce::AudioChannelSet>              m_supportedChannelConfigurations = { 
-        juce::AudioChannelSet::mono(),
-        juce::AudioChannelSet::stereo(),
-        juce::AudioChannelSet::createLCR(),
-        juce::AudioChannelSet::createLCRS(),
-        juce::AudioChannelSet::createLRS(),
-        juce::AudioChannelSet::create5point0(),
-        juce::AudioChannelSet::create5point1(),
-        juce::AudioChannelSet::create5point1point2(),
-        juce::AudioChannelSet::create7point0(),
-        juce::AudioChannelSet::create7point1(),
-        juce::AudioChannelSet::create7point1point4(),
-        juce::AudioChannelSet::create9point1point6(),
-        juce::AudioChannelSet::quadraphonic() };
-
     std::map<juce::AudioChannelSet::ChannelType, std::unique_ptr<JUCEAppBasics::ToggleStateSlider>> m_directionslessChannelSliders;
     std::map<juce::AudioChannelSet::ChannelType, std::unique_ptr<juce::Label>>                      m_directionslessChannelLabels;
     std::map<juce::AudioChannelSet::ChannelType, double>                                            m_directionlessSliderRelRef;

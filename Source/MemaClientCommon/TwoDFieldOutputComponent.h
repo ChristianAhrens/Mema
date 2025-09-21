@@ -21,6 +21,7 @@
 #include <JuceHeader.h>
 
 #include "../MemaProcessorEditor/AbstractAudioVisualizer.h"
+#include "TwoDFieldBase.h"
 
 namespace Mema
 {
@@ -28,21 +29,12 @@ namespace Mema
 //==============================================================================
 /*
 */
-class TwoDFieldOutputComponent  :   public AbstractAudioVisualizer
+class TwoDFieldOutputComponent  :   public TwoDFieldBase, public AbstractAudioVisualizer
 {
 public:
     TwoDFieldOutputComponent();
     ~TwoDFieldOutputComponent();
 
-    bool setChannelConfiguration(const juce::AudioChannelSet& channelLayout);
-    const juce::Array<juce::AudioChannelSet>& getSupportedChannelConfigurations();
-
-    float getAngleForChannelTypeInCurrentConfiguration(const juce::AudioChannelSet::ChannelType& channelType);
-    int getChannelNumberForChannelTypeInCurrentConfiguration(const juce::AudioChannelSet::ChannelType& channelType);
-    void setClockwiseOrderedChannelTypesForCurrentConfiguration();
-
-    float getRequiredAspectRatio();
-    
     //==============================================================================
     void paint (Graphics&) override;
     void resized() override;
@@ -54,38 +46,6 @@ private:
     //==============================================================================
     void paintCircularLevelIndication(juce::Graphics& g, const juce::Rectangle<float>& circleArea, const std::map<int, juce::Point<float>>& channelLevelMaxPoints, const juce::Array<juce::AudioChannelSet::ChannelType>& channelsToPaint);
     void paintLevelMeterIndication(juce::Graphics& g, const juce::Rectangle<float>& levelMeterArea, const juce::Array<juce::AudioChannelSet::ChannelType>& channelsToPaint);
-
-    //==============================================================================
-    bool usesPositionedChannels() { return !m_clockwiseOrderedChannelTypes.isEmpty(); };
-    bool usesPositionedHeightChannels() { return !m_clockwiseOrderedHeightChannelTypes.isEmpty(); };
-    bool usesDirectionlessChannels() { return !m_directionLessChannelTypes.isEmpty(); };
-    
-    //==============================================================================
-    juce::Rectangle<float>  m_positionedChannelsArea;
-    juce::Rectangle<float>  m_positionedHeightChannelsArea;
-    juce::Rectangle<float>  m_directionlessChannelsArea;
-
-    std::map<int, juce::Point<float>>   m_channelLevelMaxPoints;
-    std::map<int, juce::Point<float>>   m_channelHeightLevelMaxPoints;
-
-    juce::AudioChannelSet                           m_channelConfiguration;
-    juce::Array<juce::AudioChannelSet::ChannelType> m_clockwiseOrderedChannelTypes;
-    juce::Array<juce::AudioChannelSet::ChannelType> m_clockwiseOrderedHeightChannelTypes;
-    juce::Array<juce::AudioChannelSet::ChannelType> m_directionLessChannelTypes;
-    juce::Array<juce::AudioChannelSet>              m_supportedChannelConfigurations = { 
-        juce::AudioChannelSet::mono(),
-        juce::AudioChannelSet::stereo(),
-        juce::AudioChannelSet::createLCR(),
-        juce::AudioChannelSet::createLCRS(),
-        juce::AudioChannelSet::createLRS(),
-        juce::AudioChannelSet::create5point0(),
-        juce::AudioChannelSet::create5point1(),
-        juce::AudioChannelSet::create5point1point2(),
-        juce::AudioChannelSet::create7point0(),
-        juce::AudioChannelSet::create7point1(),
-        juce::AudioChannelSet::create7point1point4(),
-        juce::AudioChannelSet::create9point1point6(),
-        juce::AudioChannelSet::quadraphonic() };
 
     ProcessorLevelData  m_levelData;
     
