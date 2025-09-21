@@ -1,7 +1,7 @@
 <center>
 <img src="Resources/Documentation/Showreel/Showreel.001.png" alt="Mema Headline Icons" width="100%">
-<img src="Resources/Documentation/Showreel/Showreel.002.png" alt="Mema.Mo Headline Icons" width="70%">
-<img src="Resources/Documentation/Showreel/Showreel.003.png" alt="Mema.Re Headline Icons" width="70%">
+<img src="Resources/Documentation/Showreel/Showreel.002.png" alt="Mema.Mo Headline Icons" width="100%">
+<img src="Resources/Documentation/Showreel/Showreel.003.png" alt="Mema.Re Headline Icons" width="100%">
 </center>
 
 See [LATEST RELEASE](https://github.com/ChristianAhrens/Mema/releases/latest) for available binary packages or join iOS TestFlight Betas:

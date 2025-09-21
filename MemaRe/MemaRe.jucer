@@ -120,8 +120,8 @@
   </MODULES>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
   <EXPORTFORMATS>
-    <XCODE_MAC targetFolder="Builds/MacOSX" smallIcon="" bigIcon="" iosDevelopmentTeamID="SB7Q3PP4FQ"
-               hardenedRuntime="1" customPList="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#10;&#10;&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;&#10;&lt;plist&gt;&#10;  &lt;dict&gt;&#10;    &lt;key&gt;NSLocalNetworkUsageDescription&lt;/key&gt;&#10;    &lt;string&gt;Mema.Re uses multicast to discover IP Addresses of Mema instances on the network.&lt;/string&gt;&#10;    &lt;!-- New Xcode .icon integration --&gt;&#10;    &lt;key&gt;CFBundleIconName&lt;/key&gt;&#10;    &lt;string&gt;MemaRe&lt;/string&gt;&#10;  &lt;/dict&gt;&#10;&lt;/plist&gt;"
+    <XCODE_MAC targetFolder="Builds/MacOSX" smallIcon="FTnVHP" bigIcon="FTnVHP"
+               iosDevelopmentTeamID="SB7Q3PP4FQ" hardenedRuntime="1" customPList="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#10;&#10;&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;&#10;&lt;plist&gt;&#10;  &lt;dict&gt;&#10;    &lt;key&gt;NSLocalNetworkUsageDescription&lt;/key&gt;&#10;    &lt;string&gt;Mema.Re uses multicast to discover IP Addresses of Mema instances on the network.&lt;/string&gt;&#10;    &lt;!-- New Xcode .icon integration --&gt;&#10;    &lt;key&gt;CFBundleIconName&lt;/key&gt;&#10;    &lt;string&gt;MemaRe&lt;/string&gt;&#10;  &lt;/dict&gt;&#10;&lt;/plist&gt;"
                applicationCategory="public.app-category.utilities" appSandbox="1"
                appSandboxOptions="com.apple.security.network.client,com.apple.security.network.server"
                networkingMulticast="1" customXcodeResourceFolders="../Resources/Images/MemaRe.icon">
@@ -186,7 +186,7 @@
         <MODULEPATH id="juce_gui_extra" path="../submodules/JUCE/modules"/>
       </MODULEPATHS>
     </LINUX_MAKE>
-    <XCODE_IPHONE targetFolder="Builds/iOS" smallIcon="fJPOo5" bigIcon="fJPOo5"
+    <XCODE_IPHONE targetFolder="Builds/iOS" smallIcon="FTnVHP" bigIcon="FTnVHP"
                   customLaunchStoryboard="../Resources/Deployment/iOS/Launchscreen-MemaRe.storyboard"
                   iosScreenOrientation="UIInterfaceOrientationLandscapeRight,UIInterfaceOrientationPortrait"
                   iPadScreenOrientation="UIInterfaceOrientationLandscapeLeft,UIInterfaceOrientationLandscapeRight,UIInterfaceOrientationPortrait,UIInterfaceOrientationPortraitUpsideDown"
