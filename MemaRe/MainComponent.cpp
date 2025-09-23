@@ -173,6 +173,8 @@ MainComponent::MainComponent()
         settingsMenu.addSubMenu("Control format", outputPanningTypeSubMenu);
         settingsMenu.addSubMenu("Control colour", panningColourSubMenu);
         settingsMenu.addSubMenu("Controls size", constrolsSizeSubMenu);
+        settingsMenu.addSeparator();
+        settingsMenu.addItem(MemaReSettingsOption::ExternalControl, "External control...", true);
         settingsMenu.showMenuAsync(juce::PopupMenu::Options(), [=](int selectedId) {
             handleSettingsMenuResult(selectedId);
             if (m_config)
@@ -318,6 +320,8 @@ void MainComponent::handleSettingsMenuResult(int selectedId)
         handleSettingsPanningColourMenuResult(selectedId);
     else if (MemaReSettingsOption::ControlsSize_First <= selectedId && MemaReSettingsOption::ControlsSize_Last >= selectedId)
         handleSettingsControlsSizeMenuResult(selectedId);
+    else if (MemaReSettingsOption::ExternalControl == selectedId)
+        showExternalControlSettings();
     else
         jassertfalse; // unhandled menu entry!?
 }
@@ -499,6 +503,40 @@ void MainComponent::handleSettingsControlsSizeMenuResult(int selectedId)
     }
 }
 
+void MainComponent::showExternalControlSettings()
+{
+    m_messageBox = std::make_unique<juce::AlertWindow>("External control setup", "Enter remote control parameters to externally connect to " + juce::JUCEApplication::getInstance()->getApplicationName() + " and control its parameters.", juce::MessageBoxIconType::NoIcon);
+    m_messageBox->addTextBlock("ADM-OSC connection parameters:");
+    if (m_remoteComponent)
+    {
+        auto admOscSettings = m_remoteComponent->getExternalAdmOscSettings();
+        m_messageBox->addTextEditor("ADM local port", juce::String(std::get<0>(admOscSettings)), "ADM-OSC port");
+        m_messageBox->addTextEditor("ADM remote IP", std::get<1>(admOscSettings).toString(), "Target IP");
+        m_messageBox->addTextEditor("ADM remote port", juce::String(std::get<2>(admOscSettings)), "Target port");
+    }
+    //m_messageBox->addTextBlock("OCP.1 connection parameters:");
+    //m_messageBox->addTextBlock("- T.B.D. -");
+    m_messageBox->addButton("Cancel", 0, juce::KeyPress(juce::KeyPress::escapeKey));
+    m_messageBox->addButton("Ok", 1, juce::KeyPress(juce::KeyPress::returnKey));
+    m_messageBox->enterModalState(true, juce::ModalCallbackFunction::create([=](int returnValue) {
+        if (returnValue == 1)
+        {
+            auto ADMOSCport = m_messageBox->getTextEditorContents("ADM local port").getIntValue();
+            auto ADMOSCremoteIP = juce::IPAddress(m_messageBox->getTextEditorContents("ADM remote IP"));
+            auto ADMOSCremotePort = m_messageBox->getTextEditorContents("ADM remote port").getIntValue();
+            if (m_remoteComponent)
+            {
+                m_remoteComponent->setExternalAdmOscSettings(ADMOSCport, ADMOSCremoteIP, ADMOSCremotePort);
+
+                if (m_config)
+                    m_config->triggerConfigurationDump();
+            }
+        }
+
+        m_messageBox.reset();
+    }));
+}
+
 void MainComponent::setPanningColour(const juce::Colour& panningColour)
 {
     m_panningColour = panningColour;
@@ -627,6 +665,24 @@ void MainComponent::performConfigurationDump()
         visuConfigXmlElement->addChildElement(controlsSizeXmlElmement.release());
 
         m_config->setConfigState(std::move(visuConfigXmlElement), MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::VISUCONFIG));
+
+        // external control config
+        auto extCtrlConfigXmlElement = std::make_unique<juce::XmlElement>(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::EXTCTRLCONFIG));
+
+        auto admOscHostXmlElmement = std::make_unique<juce::XmlElement>(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::ADMOSCHOST));
+        if (m_remoteComponent)
+            admOscHostXmlElmement->setAttribute(MemaReAppConfiguration::getAttributeName(MemaReAppConfiguration::AttributeID::PORT), std::get<0>(m_remoteComponent->getExternalAdmOscSettings()));
+        extCtrlConfigXmlElement->addChildElement(admOscHostXmlElmement.release());
+
+        auto admOscClientXmlElmement = std::make_unique<juce::XmlElement>(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::ADMOSCCLIENT));
+        if (m_remoteComponent)
+        {
+            admOscClientXmlElmement->setAttribute(MemaReAppConfiguration::getAttributeName(MemaReAppConfiguration::AttributeID::IP), std::get<1>(m_remoteComponent->getExternalAdmOscSettings()).toString());
+            admOscClientXmlElmement->setAttribute(MemaReAppConfiguration::getAttributeName(MemaReAppConfiguration::AttributeID::PORT), std::get<2>(m_remoteComponent->getExternalAdmOscSettings()));
+        }
+        extCtrlConfigXmlElement->addChildElement(admOscClientXmlElmement.release());
+
+        m_config->setConfigState(std::move(extCtrlConfigXmlElement), MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::EXTCTRLCONFIG));
     }
 }
 
@@ -682,6 +738,28 @@ void MainComponent::onConfigUpdated()
             auto controlsSizeSettingsOptionId = controlsSizeXmlElmement->getAllSubText().getIntValue();
             handleSettingsControlsSizeMenuResult(controlsSizeSettingsOptionId);
         }
+    }
+
+    auto externalControlConfigState = m_config->getConfigState(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::EXTCTRLCONFIG));
+    if (externalControlConfigState)
+    {
+        int ADMOSCport = 0;
+        juce::IPAddress ADMOSCremoteIP = juce::IPAddress::local();
+        int ADMOSCremotePort = 0;
+
+        auto admOscHostXmlElmement = externalControlConfigState->getChildByName(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::ADMOSCHOST));
+        if (admOscHostXmlElmement)
+            ADMOSCport = admOscHostXmlElmement->getIntAttribute(MemaReAppConfiguration::getAttributeName(MemaReAppConfiguration::AttributeID::PORT));
+
+        auto admOscClientXmlElmement = externalControlConfigState->getChildByName(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::ADMOSCCLIENT));
+        if (admOscClientXmlElmement)
+        {
+            ADMOSCremoteIP = juce::IPAddress(admOscClientXmlElmement->getStringAttribute(MemaReAppConfiguration::getAttributeName(MemaReAppConfiguration::AttributeID::IP)));
+            ADMOSCremotePort = admOscClientXmlElmement->getIntAttribute(MemaReAppConfiguration::getAttributeName(MemaReAppConfiguration::AttributeID::PORT));
+        }
+
+        if (m_remoteComponent)
+            m_remoteComponent->setExternalAdmOscSettings(ADMOSCport, ADMOSCremoteIP, ADMOSCremotePort);
     }
 }
 

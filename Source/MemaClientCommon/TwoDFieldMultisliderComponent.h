@@ -89,6 +89,9 @@ public:
 
     //==============================================================================
     void setInputPosition(std::uint16_t channel, const TwoDMultisliderValue& value, const float& panningSharpness, const ChannelLayer& layer, juce::NotificationType notification = juce::dontSendNotification);
+    void setInputPositionValue(std::uint16_t channel, const TwoDMultisliderValue& value, juce::NotificationType notification = juce::dontSendNotification);
+    void setInputPositionSharpness(std::uint16_t channel, const float& sharpness, juce::NotificationType notification = juce::dontSendNotification);
+    void setInputPositionLayer(std::uint16_t channel, const ChannelLayer& layer, juce::NotificationType notification = juce::dontSendNotification);
     void selectInput(std::uint16_t channel, bool selectOn, juce::NotificationType notification = juce::dontSendNotification);
 
     void triggerInputPositionsDump();

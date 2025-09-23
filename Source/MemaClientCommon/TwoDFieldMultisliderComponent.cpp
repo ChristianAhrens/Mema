@@ -586,10 +586,49 @@ void TwoDFieldMultisliderComponent::setInputPosition(std::uint16_t channel, cons
 
     repaint();
 
-    //DBG(juce::String(__FUNCTION__) << " new pos: " << int(channel) << " " << value.relXPos << "," << value.relYPos << "(" << layer << ")");
+    DBG(juce::String(__FUNCTION__) << " new pos: " << int(channel) << " " << value.relXPos << "," << value.relYPos << "(" << sharpness << "/" << layer << ")");
 
     if (juce::dontSendNotification != notification && onInputPositionChanged)
         onInputPositionChanged(channel, value, sharpness, layer);
+}
+
+void TwoDFieldMultisliderComponent::setInputPositionValue(std::uint16_t channel, const TwoDMultisliderValue& value, juce::NotificationType notification)
+{
+    jassert(m_inputPositions.size() == m_inputPositionStackingOrder.size());
+    m_inputPositions[channel].value = value;
+
+    repaint();
+
+    DBG(juce::String(__FUNCTION__) << " new pos: " << int(channel) << " " << value.relXPos << "," << value.relYPos << "(" << m_inputPositions[channel].sharpness << "/" << m_inputPositions[channel].layer << ")");
+
+    if (juce::dontSendNotification != notification && onInputPositionChanged)
+        onInputPositionChanged(channel, value, m_inputPositions[channel].sharpness, m_inputPositions[channel].layer);
+}
+
+void TwoDFieldMultisliderComponent::setInputPositionSharpness(std::uint16_t channel, const float& sharpness, juce::NotificationType notification)
+{
+    jassert(m_inputPositions.size() == m_inputPositionStackingOrder.size());
+    m_inputPositions[channel].sharpness = sharpness;
+
+    repaint();
+
+    DBG(juce::String(__FUNCTION__) << " new pos: " << int(channel) << " " << m_inputPositions[channel].value.relXPos << "," << m_inputPositions[channel].value.relYPos << "(" << sharpness << "/" << m_inputPositions[channel].layer << ")");
+
+    if (juce::dontSendNotification != notification && onInputPositionChanged)
+        onInputPositionChanged(channel, m_inputPositions[channel].value, sharpness, m_inputPositions[channel].layer);
+}
+
+void TwoDFieldMultisliderComponent::setInputPositionLayer(std::uint16_t channel, const ChannelLayer& layer, juce::NotificationType notification)
+{
+    jassert(m_inputPositions.size() == m_inputPositionStackingOrder.size());
+    m_inputPositions[channel].layer = layer;
+
+    repaint();
+
+    DBG(juce::String(__FUNCTION__) << " new pos: " << int(channel) << " " << m_inputPositions[channel].value.relXPos << "," << m_inputPositions[channel].value.relYPos << "(" << m_inputPositions[channel].sharpness << "/" << layer << ")");
+
+    if (juce::dontSendNotification != notification && onInputPositionChanged)
+        onInputPositionChanged(channel, m_inputPositions[channel].value, m_inputPositions[channel].sharpness, layer);
 }
 
 void TwoDFieldMultisliderComponent::triggerInputPositionsDump()
