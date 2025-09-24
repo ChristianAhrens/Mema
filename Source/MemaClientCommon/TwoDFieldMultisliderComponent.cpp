@@ -319,7 +319,7 @@ void TwoDFieldMultisliderComponent::paintSliderKnob(juce::Graphics& g, const juc
 {
     juce::Path valueTrack;
     auto minPoint = sliderArea.getCentre();
-    auto maxPoint = sliderArea.getCentre() - juce::Point<float>((sliderArea.getWidth() / 2) * relXPos, (sliderArea.getHeight() / 2) * relYPos);
+    auto maxPoint = sliderArea.getCentre() + juce::Point<float>((sliderArea.getWidth() / 2) * relXPos, (sliderArea.getHeight() / 2) * relYPos * -1.0f);
 
     if (isSliderOn)
     {
@@ -481,7 +481,7 @@ void TwoDFieldMultisliderComponent::mouseDown(const juce::MouseEvent& e)
         else if (ChannelLayer::Directionless == inputPosition.layer && !m_directionlessChannelsArea.isEmpty())
             area = m_directionlessChannelsArea;
 
-        auto maxPoint = area.getCentre() - juce::Point<float>((area.getWidth() / 2) * inputPosition.value.relXPos, (area.getHeight() / 2) * inputPosition.value.relYPos);
+        auto maxPoint = area.getCentre() - juce::Point<float>((area.getWidth() / 2) * -inputPosition.value.relXPos, (area.getHeight() / 2) * inputPosition.value.relYPos);
         auto sliderKnob = juce::Rectangle<float>(static_cast<float>(m_thumbWidth), static_cast<float>(m_thumbWidth)).withCentre(maxPoint);
         if (sliderKnob.contains(e.getMouseDownPosition().toFloat()) && false == hadHit)
         {
@@ -535,7 +535,7 @@ void TwoDFieldMultisliderComponent::mouseDrag(const MouseEvent& e)
                     auto positionInArea = area.getCentre() - area.getConstrainedPoint(mousePosition.toFloat());
                     auto relXPos = positionInArea.getX() / (0.5f * area.getWidth());
                     auto relYPos = positionInArea.getY() / (0.5f * area.getHeight());
-                    setInputPosition(inputNumber, { relXPos, relYPos }, inputPosition.sharpness, inputPosition.layer, juce::sendNotification);
+                    setInputPosition(inputNumber, { -relXPos, relYPos }, inputPosition.sharpness, inputPosition.layer, juce::sendNotification);
                 }
                 else
                 {
@@ -548,14 +548,14 @@ void TwoDFieldMultisliderComponent::mouseDrag(const MouseEvent& e)
                         auto positionInArea = m_positionedChannelsArea.getCentre() - m_positionedChannelsArea.getConstrainedPoint(mousePosition.toFloat());
                         auto relXPos = positionInArea.getX() / (0.5f * m_positionedChannelsArea.getWidth());
                         auto relYPos = positionInArea.getY() / (0.5f * m_positionedChannelsArea.getHeight());
-                        setInputPosition(inputNumber, { relXPos, relYPos }, inputPosition.sharpness, ChannelLayer::Positioned, juce::sendNotification);
+                        setInputPosition(inputNumber, { -relXPos, relYPos }, inputPosition.sharpness, ChannelLayer::Positioned, juce::sendNotification);
                     }
                     else if (positionedHeightChannelsEllipsePath.contains(mousePosition.toFloat()))
                     {
                         auto positionInArea = m_positionedHeightChannelsArea.getCentre() - m_positionedHeightChannelsArea.getConstrainedPoint(mousePosition.toFloat());
                         auto relXPos = positionInArea.getX() / (0.5f * m_positionedHeightChannelsArea.getWidth());
                         auto relYPos = positionInArea.getY() / (0.5f * m_positionedHeightChannelsArea.getHeight());
-                        setInputPosition(inputNumber, { relXPos, relYPos }, inputPosition.sharpness, ChannelLayer::PositionedHeight, juce::sendNotification);
+                        setInputPosition(inputNumber, { -relXPos, relYPos }, inputPosition.sharpness, ChannelLayer::PositionedHeight, juce::sendNotification);
                     }
                     // finally do the clipping to original circle, if the dragging happens somewhere outside everything
                     else
@@ -566,7 +566,7 @@ void TwoDFieldMultisliderComponent::mouseDrag(const MouseEvent& e)
                         auto relXPos = positionInArea.getX() / (0.5f * area.getWidth());
                         auto relYPos = positionInArea.getY() / (0.5f * area.getHeight());
                         inputPosition.value = { relXPos, relYPos };
-                        setInputPosition(inputNumber, { relXPos, relYPos }, inputPosition.sharpness, inputPosition.layer, juce::sendNotification);
+                        setInputPosition(inputNumber, { -relXPos, relYPos }, inputPosition.sharpness, inputPosition.layer, juce::sendNotification);
                     }
 
                 }
@@ -609,6 +609,9 @@ void TwoDFieldMultisliderComponent::setInputPositionSharpness(std::uint16_t chan
 {
     jassert(m_inputPositions.size() == m_inputPositionStackingOrder.size());
     m_inputPositions[channel].sharpness = sharpness;
+
+    if (m_sharpnessEdit && 0 != m_currentlySelectedInput)
+        m_sharpnessEdit->setText(juce::String(sharpness), juce::dontSendNotification);
 
     repaint();
 

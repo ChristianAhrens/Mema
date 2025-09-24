@@ -150,7 +150,7 @@ void ADMOSController::setParameter(int objNum, const ADMOSController::ADMOSCPara
     case ADMOSController::ADMOSCParameterType::Mute:
         DBG(juce::String(__FUNCTION__) << " type Mute: " << ADMOSController::ADMOSCParameterMute(param).getParameterVal01());
         break;
-    case ADMOSController::ADMOSCParameterType::None:
+    case ADMOSController::ADMOSCParameterType::Empty:
     default:
         DBG(juce::String(__FUNCTION__) + " type NONE unsupported.");
         jassertfalse;
@@ -190,7 +190,28 @@ ADMOSController::ADMOSCParameter ADMOSController::getParameter(int objNum, std::
 bool ADMOSController::sendParameterChange(int objNum, const ADMOSController::ADMOSCParameter& param)
 {
     if (m_oscSender)
+    {
+#ifdef DEBUG
+        auto msg = getParameterAsOSCMessage(objNum, param);
+        juce::String msgAsStr = msg.getAddressPattern().toString() + " ";
+        for (auto const& arg : msg)
+            switch (arg.getType())
+            {
+            case 'i':
+                msgAsStr += juce::String(arg.getInt32()) + " ";
+                break;
+            case 'f':
+                msgAsStr += juce::String(arg.getFloat32()) + " ";
+                break;
+            default:
+                break;
+            }
+        DBG(juce::String(__FUNCTION__) + " " + msgAsStr);
+        return m_oscSender->send(msg);
+#else
         return m_oscSender->send(getParameterAsOSCMessage(objNum, param));
+#endif
+    }
     else
         return false;
 }

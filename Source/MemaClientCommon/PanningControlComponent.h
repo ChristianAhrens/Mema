@@ -72,7 +72,7 @@ public:
 
 protected:
     //==============================================================================
-    void changeInputPosition(std::uint16_t channel, float xVal, float yVal, float sharpness, int layer);
+    void changeInputPosition(std::uint16_t channel, std::optional<float> xValOpt, std::optional<float> yValOpt, std::optional<float> sharpnessOpt, std::optional<int> layerOpt, juce::NotificationType notification = juce::dontSendNotification);
     void processOutputDistances(std::uint16_t channel, const std::map<juce::AudioChannelSet::ChannelType, float>& channelToOutputsDists);
     void selectInputChannel(std::uint16_t channel);
     void rebuildControls(bool force = false);
