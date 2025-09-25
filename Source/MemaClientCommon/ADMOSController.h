@@ -28,7 +28,7 @@ namespace Mema
 //==============================================================================
 /*
 */
-class ADMOSController : public juce::OSCReceiver::Listener<juce::OSCReceiver::MessageLoopCallback>
+class ADMOSController : public juce::OSCReceiver::Listener<juce::OSCReceiver::RealtimeCallback>, public juce::MessageListener
 {
 public:
     enum ADMOSCParameterChangeTarget
@@ -236,6 +236,70 @@ public:
         int getParameterVal01() { return int(parameter1); };
     };
 
+    class ADMOSCParameterChangedMessage : public juce::Message
+    {
+    public:
+        ADMOSCParameterChangedMessage(int objNum, std::uint16_t type, ADMOSCParameterChangeTarget target)
+        {
+            m_objNum = objNum;
+            m_type = type;
+            m_target = target;
+
+            std::lock_guard<std::mutex> l(m_typeMapMutex);
+            auto iter = std::find(m_typeMap[objNum].begin(), m_typeMap[objNum].end(), type);
+            if (iter == m_typeMap[objNum].end())
+                m_typeMap[objNum].push_back(type);
+        };
+        ~ADMOSCParameterChangedMessage()
+        {
+            std::lock_guard<std::mutex> l(m_typeMapMutex);
+            auto iter = std::find(m_typeMap[m_objNum].begin(), m_typeMap[m_objNum].end(), m_type);
+            jassert(iter != m_typeMap[m_objNum].end()); // must exist while this instance exists, otherwise something was messed up regarding creation/destruction!
+            if (iter != m_typeMap[m_objNum].end())
+                m_typeMap[m_objNum].erase(iter);
+        };
+
+        static bool createAndPostIfNotAlreadyPending(int objNum, std::uint16_t type, ADMOSCParameterChangeTarget target, ADMOSController* postTarget)
+        {
+            bool isAlreadyPending = false;
+            {
+                std::lock_guard<std::mutex> l(m_typeMapMutex);
+                auto iter = std::find(m_typeMap[objNum].begin(), m_typeMap[objNum].end(), type);
+                if (iter != m_typeMap[objNum].end())
+                    isAlreadyPending = true;
+            }
+
+            if (!isAlreadyPending)
+            {
+                postTarget->postMessage(std::make_unique<ADMOSCParameterChangedMessage>(objNum, type, target).release());
+                return true;
+            }
+            else
+                return false;
+        };
+
+        int getObjNum() const
+        {
+            return m_objNum;
+        };
+        std::uint16_t getType() const
+        {
+            return m_type;
+        };
+        ADMOSCParameterChangeTarget getTarget() const
+        {
+            return m_target;
+        };
+
+    private:
+        static std::mutex                                   m_typeMapMutex;
+        static std::map<int, std::vector<std::uint16_t>>    m_typeMap;
+
+        int                         m_objNum;
+        std::uint16_t               m_type;
+        ADMOSCParameterChangeTarget m_target;
+    };
+
 public:
     ADMOSController();
     ~ADMOSController();
@@ -250,6 +314,9 @@ public:
     //==============================================================================
     void oscMessageReceived (const juce::OSCMessage& message) override;
     void oscBundleReceived(const juce::OSCBundle& bundle) override;
+
+    //==============================================================================
+    void handleMessage(const Message& message) override;
 
     //==============================================================================
     std::function<void(int, std::uint16_t)> onParameterChanged;
@@ -279,6 +346,7 @@ private:
 
     //==============================================================================
     std::vector<int>    m_knownObjNums;
+    std::mutex  m_objCacheMutex;
     std::map<int, std::map<std::uint16_t, ADMOSCParameter>>  m_objCache;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ADMOSController)

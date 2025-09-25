@@ -23,6 +23,10 @@ namespace Mema
 {
 
 
+std::mutex  ADMOSController::ADMOSCParameterChangedMessage::m_typeMapMutex;
+std::map<int, std::vector<std::uint16_t>>   ADMOSController::ADMOSCParameterChangedMessage::m_typeMap;
+
+
 //==============================================================================
 ADMOSController::ADMOSController()
 {
@@ -165,12 +169,22 @@ void ADMOSController::setParameter(int objNum, const ADMOSController::ADMOSCPara
     }
     else
     {
-        m_objCache[objNum][param.type] = param;
+        {
+            std::lock_guard<std::mutex> l(m_objCacheMutex);
+            m_objCache[objNum][param.type] = param;
+        }
+        ADMOSCParameterChangedMessage::createAndPostIfNotAlreadyPending(objNum, param.type, pct, this);
+    }
+}
 
-        if (ADMOSCParameterChangeTarget::Internal == pct && onParameterChanged)
-            onParameterChanged(objNum, param.type);
-        else if (ADMOSCParameterChangeTarget::External == pct)
-            sendParameterChange(objNum, param);
+void ADMOSController::handleMessage(const Message& message)
+{
+    if (const ADMOSCParameterChangedMessage* apcm = dynamic_cast<const ADMOSCParameterChangedMessage*>(&message))
+    {
+        if (ADMOSCParameterChangeTarget::Internal == apcm->getTarget() && onParameterChanged)
+            onParameterChanged(apcm->getObjNum(), apcm->getType());
+        else if (ADMOSCParameterChangeTarget::External == apcm->getTarget())
+            sendParameterChange(apcm->getObjNum(), getParameter(apcm->getObjNum(), apcm->getType()));
     }
 }
 
@@ -183,7 +197,12 @@ ADMOSController::ADMOSCParameter ADMOSController::getParameter(int objNum, std::
     }
     else
     {
-        return m_objCache[objNum][type];
+        auto parameter = ADMOSCParameter();
+        {
+            std::lock_guard<std::mutex> l(m_objCacheMutex);
+            parameter = m_objCache[objNum][type];
+        }
+        return parameter;
     }
 }
 
