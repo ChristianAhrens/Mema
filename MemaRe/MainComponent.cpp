@@ -505,8 +505,13 @@ void MainComponent::handleSettingsControlsSizeMenuResult(int selectedId)
 
 void MainComponent::showExternalControlSettings()
 {
-    m_messageBox = std::make_unique<juce::AlertWindow>("External control setup", "Enter remote control parameters to externally connect to " + juce::JUCEApplication::getInstance()->getApplicationName() + " and control its parameters.", juce::MessageBoxIconType::NoIcon);
-    m_messageBox->addTextBlock("ADM-OSC connection parameters:");
+    m_messageBox = std::make_unique<juce::AlertWindow>(
+        "External control setup",
+        "Enter remote control parameters to externally connect to " + juce::JUCEApplication::getInstance()->getApplicationName() + " and control its parameters.\n" + 
+        "Info: This machine uses IP " + juce::IPAddress::getLocalAddress().toString(),
+        juce::MessageBoxIconType::NoIcon);
+
+    m_messageBox->addTextBlock("\nADM-OSC connection parameters:");
     if (m_remoteComponent)
     {
         auto admOscSettings = m_remoteComponent->getExternalAdmOscSettings();
@@ -514,8 +519,13 @@ void MainComponent::showExternalControlSettings()
         m_messageBox->addTextEditor("ADM remote IP", std::get<1>(admOscSettings).toString(), "Target IP");
         m_messageBox->addTextEditor("ADM remote port", juce::String(std::get<2>(admOscSettings)), "Target port");
     }
-    //m_messageBox->addTextBlock("OCP.1 connection parameters:");
-    //m_messageBox->addTextBlock("- T.B.D. -");
+
+    //m_messageBox->addTextBlock("\nOCP.1 connection parameters:");
+    //if (m_remoteComponent)
+    //{
+    //    m_messageBox->addTextEditor("OCP.1 local port", juce::String(50014), "OCP.1 port");
+    //}
+
     m_messageBox->addButton("Cancel", 0, juce::KeyPress(juce::KeyPress::escapeKey));
     m_messageBox->addButton("Ok", 1, juce::KeyPress(juce::KeyPress::returnKey));
     m_messageBox->enterModalState(true, juce::ModalCallbackFunction::create([=](int returnValue) {
