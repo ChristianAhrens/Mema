@@ -447,48 +447,127 @@ bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
 	auto inputMutesElm = stateXml->getChildByName(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::INPUTMUTES));
 	if (nullptr != inputMutesElm)
 	{
-		juce::StringArray imutestatestrs;
-		imutestatestrs.addTokens(inputMutesElm->getAllSubText(), ";", "");
-		for (auto const& imutestatestr : imutestatestrs)
+		juce::StringArray inMutestateStrList;
+		auto inputMutesElmTxt = inputMutesElm->getAllSubText();
+		inMutestateStrList.addTokens(inputMutesElmTxt, ";", "");
+		jassert(inMutestateStrList.size() == m_inputChannelCount);
+		if (inMutestateStrList.size() != m_inputChannelCount)
 		{
-			juce::StringArray imutestatestra;
-			imutestatestra.addTokens(imutestatestr, ",", "");
-			jassert(2 == imutestatestra.size());
-			if (2 == imutestatestra.size())
-				inputMuteStates[std::uint16_t(imutestatestra[0].getIntValue())] = (1 == std::uint16_t(imutestatestra[1].getIntValue()));
+			// if the config data is insane, initialize with defaults
+			DBG(juce::String(__FUNCTION__) + " config data for input mutes is insane -> resetting to default.");
+			for (auto in = std::uint16_t(1); in <= m_inputChannelCount; in++)
+				inputMuteStates[in] = false;
+		}
+		else
+		{
+			// otherwise use what is available from config
+			for (auto const& inMutestateStr : inMutestateStrList)
+			{
+				juce::StringArray inMutestateStrSplit;
+				inMutestateStrSplit.addTokens(inMutestateStr, ",", "");
+				jassert(2 == inMutestateStrSplit.size());
+				if (2 == inMutestateStrSplit.size())
+					inputMuteStates[std::uint16_t(inMutestateStrSplit[0].getIntValue())] = (1 == std::uint16_t(inMutestateStrSplit[1].getIntValue()));
+			}
 		}
 	}
 	auto outputMutesElm = stateXml->getChildByName(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::OUTPUTMUTES));
 	if (nullptr != outputMutesElm)
 	{
-		juce::StringArray omutestatestrs;
-		omutestatestrs.addTokens(outputMutesElm->getAllSubText(), ";", "");
-		for (auto const& omutestatestr : omutestatestrs)
+		juce::StringArray outMutestateStrList;
+		auto outputMutesElmTxt = outputMutesElm->getAllSubText();
+		outMutestateStrList.addTokens(outputMutesElmTxt, ";", "");
+		jassert(outMutestateStrList.size() == m_outputChannelCount);
+		if (outMutestateStrList.size() != m_outputChannelCount)
 		{
-			juce::StringArray omutestatestra;
-			omutestatestra.addTokens(omutestatestr, ",", "");
-			jassert(2 == omutestatestra.size());
-			if (2 == omutestatestra.size())
-				outputMuteStates[std::uint16_t(omutestatestra[0].getIntValue())] = (1 == std::uint16_t(omutestatestra[1].getIntValue()));
+			// if the config data is insane, initialize with defaults
+			DBG(juce::String(__FUNCTION__) + " config data for output mutes is insane -> resetting to default.");
+			for (auto out = std::uint16_t(1); out <= m_outputChannelCount; out++)
+				outputMuteStates[out] = false;
+		}
+		else
+		{
+			// otherwise use what is available from config
+			for (auto const& outMutestateStr : outMutestateStrList)
+			{
+				juce::StringArray outMutestateStrSplit;
+				outMutestateStrSplit.addTokens(outMutestateStr, ",", "");
+				jassert(2 == outMutestateStrSplit.size());
+				if (2 == outMutestateStrSplit.size())
+					outputMuteStates[std::uint16_t(outMutestateStrSplit[0].getIntValue())] = (1 == std::uint16_t(outMutestateStrSplit[1].getIntValue()));
+			}
 		}
 	}
 	auto crosspointGainsElm = stateXml->getChildByName(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::CROSSPOINTGAINS));
 	if (nullptr != crosspointGainsElm)
 	{
-		juce::StringArray cgainstatestrs;
-		cgainstatestrs.addTokens(crosspointGainsElm->getAllSubText(), ";", "");
-		for (auto const& cgainstatestr : cgainstatestrs)
+		juce::StringArray crossGainstateStrList;
+		auto crossGainsElmTxt = crosspointGainsElm->getAllSubText();
+		crossGainstateStrList.addTokens(crossGainsElmTxt, ";", "");
+		jassert(crossGainstateStrList.size() == (m_inputChannelCount * m_outputChannelCount));
+		if (crossGainstateStrList.size() != (m_inputChannelCount * m_outputChannelCount))
 		{
-			juce::StringArray cgainstatestra;
-			cgainstatestra.addTokens(cgainstatestr, ",", "");
-			jassert(4 == cgainstatestra.size());
-			if (4 == cgainstatestra.size())
+			// if the config data is insane, initialize with defaults
+			DBG(juce::String(__FUNCTION__) + " config data for crosspoints is insane -> resetting to default.");
+			for (auto in = std::uint16_t(1); in <= m_inputChannelCount; in++)
 			{
-				matrixCrosspointStates[std::uint16_t(cgainstatestra[0].getIntValue())][std::uint16_t(cgainstatestra[1].getIntValue())] = 1 == std::uint16_t(cgainstatestra[2].getIntValue());
-				matrixCrosspointValues[std::uint16_t(cgainstatestra[0].getIntValue())][std::uint16_t(cgainstatestra[1].getIntValue())] = cgainstatestra[3].getFloatValue();
+				for (auto out = std::uint16_t(1); out <= m_outputChannelCount; out++)
+				{
+					auto state = false;
+					auto value = 0.0f;
+					if (in == out)
+					{
+						state = true;
+						value = 1.0f;
+					}
+					matrixCrosspointStates[in][out] = state;
+					matrixCrosspointValues[in][out] = value;
+				}
+			}
+		}
+		else
+		{
+			// otherwise use what is available from config
+			for (auto const& crossGainstateStr : crossGainstateStrList)
+			{
+				juce::StringArray crossGainstateStrSplit;
+				crossGainstateStrSplit.addTokens(crossGainstateStr, ",", "");
+				jassert(4 == crossGainstateStrSplit.size());
+				if (4 == crossGainstateStrSplit.size())
+				{
+					matrixCrosspointStates[std::uint16_t(crossGainstateStrSplit[0].getIntValue())][std::uint16_t(crossGainstateStrSplit[1].getIntValue())] = 1 == std::uint16_t(crossGainstateStrSplit[2].getIntValue());
+					matrixCrosspointValues[std::uint16_t(crossGainstateStrSplit[0].getIntValue())][std::uint16_t(crossGainstateStrSplit[1].getIntValue())] = crossGainstateStrSplit[3].getFloatValue();
+				}
 			}
 		}
 	}
+#ifdef DEBUG
+	// sanity check symmetry of crosspoint states
+	auto crosspointStateOutCount = size_t(0);
+	if (0 != matrixCrosspointStates.size())
+	{
+		crosspointStateOutCount = matrixCrosspointStates.begin()->second.size();
+		for (auto const& cpStatKV : matrixCrosspointStates)
+		{
+			jassert(crosspointStateOutCount == cpStatKV.second.size());
+		}
+	}
+	else
+		jassertfalse; // empty crosspoint matrix ?!
+
+	// sanity check symmetry of crosspoint values
+	auto crosspointValOutCount = size_t(0);
+	if (0 != matrixCrosspointValues.size())
+	{
+		crosspointValOutCount = matrixCrosspointValues.begin()->second.size();
+		for (auto const& cpValKV : matrixCrosspointValues)
+		{
+			jassert(crosspointValOutCount == cpValKV.second.size());
+		}
+	}
+	else
+		jassertfalse; // empty crosspoint matrix ?!
+#endif
 	{
 		// copy the processing relevant variables from temp vars here to not block audio thread during all the xml handling above
 		const ScopedLock sl(m_audioDeviceIOCallbackLock);

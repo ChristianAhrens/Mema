@@ -201,6 +201,8 @@ void MemaReComponent::handleMessage(const Message& message)
     }
     else if (auto const iom = dynamic_cast<const Mema::ReinitIOCountMessage*>(&message))
     {
+        DBG(juce::String(__FUNCTION__) + " handling ReinitIOCountMessage...");
+
         auto inputCount = iom->getInputCount();
         jassert(inputCount > 0);
         auto outputCount = iom->getOutputCount();
@@ -217,6 +219,8 @@ void MemaReComponent::handleMessage(const Message& message)
     }
     else if (auto const cpm = dynamic_cast<const Mema::ControlParametersMessage*>(&message))
     {
+        DBG(juce::String(__FUNCTION__) + " handling ControlParametersMessage...");
+
         for (auto const& inputMuteState : cpm->getInputMuteStates())
             m_inputMuteStates[inputMuteState.first] = inputMuteState.second;
         if (!m_inputMuteStates.empty())
