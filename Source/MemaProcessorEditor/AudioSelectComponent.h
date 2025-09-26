@@ -26,10 +26,61 @@ namespace Mema
 //==============================================================================
 /*
 */
-class AudioSelectComponent    : public AudioDeviceSelectorComponent
+class AudioSelectComponent    : public juce::AudioDeviceSelectorComponent
 {
 public:
-    AudioSelectComponent(	AudioDeviceManager *deviceManager,
+	struct RelevantDeviceCharacteristics
+	{
+		RelevantDeviceCharacteristics()
+		{
+			devPtr = nullptr;
+			numInputChannels = 0;
+			numOutputChannels = 0;
+		};
+		RelevantDeviceCharacteristics(juce::AudioIODevice* d)
+		{
+			devPtr = d;
+			if (nullptr != d)
+			{
+				numInputChannels = d->getInputChannelNames().size();
+				numOutputChannels = d->getOutputChannelNames().size();
+			}
+			else
+			{
+				numInputChannels = 0;
+				numOutputChannels = 0;
+			}
+		};
+		RelevantDeviceCharacteristics(juce::AudioIODevice* d, int i, int o)
+		{
+			devPtr = d;
+			numInputChannels = i;
+			numOutputChannels = o;
+		};
+
+		bool operator==(const RelevantDeviceCharacteristics& other) const
+		{
+			return devPtr == other.devPtr
+				&& numInputChannels == other.numInputChannels
+				&& numOutputChannels == other.numOutputChannels;
+		};
+		bool operator!=(const RelevantDeviceCharacteristics& other) const
+		{
+			return !(*this == other);
+		};
+
+		juce::String toString()
+		{
+			return juce::String::toHexString(std::uint64_t(devPtr)) + juce::String(":") + juce::String(numInputChannels) + juce::String(":") + juce::String(numOutputChannels);
+		}
+
+		juce::AudioIODevice* devPtr;
+		int numInputChannels;
+		int numOutputChannels;
+	};
+
+public:
+    AudioSelectComponent(juce::AudioDeviceManager *deviceManager,
 							int minAudioInputChannels,
 							int maxAudioInputChannels,
 							int minAudioOutputChannels,
@@ -41,10 +92,19 @@ public:
     ~AudioSelectComponent();
 
 	//==========================================================================
-    void paint (Graphics&) override;
+    void paint (juce::Graphics&) override;
     void resized() override;
+	void visibilityChanged() override;
+
+	//==========================================================================
+	std::function<void()> onAudioDeviceChangedDuringAudioSelection;
+
+protected:
+	//==========================================================================
+	void processAudioSelectionChanges();
 
 private:
+	RelevantDeviceCharacteristics m_selectedAudioDeviceWhenSelectionStarted; // only to use to compare if user changed the device at some point!
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AudioSelectComponent)
 };

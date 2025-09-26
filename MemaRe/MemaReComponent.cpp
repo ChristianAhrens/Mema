@@ -84,6 +84,7 @@ MemaReComponent::MemaReComponent()
         if (onMessageReadyToSend)
             onMessageReadyToSend(std::make_unique<Mema::ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage());
         };
+    m_panningCtrlComponent->setExternalControlSettings(std::get<0>(m_externalAdmOscSettings), std::get<1>(m_externalAdmOscSettings), std::get<2>(m_externalAdmOscSettings));
     addChildComponent(m_panningCtrlComponent.get());
 
     setOutputFaderbankCtrlActive();
@@ -158,7 +159,7 @@ void MemaReComponent::setControlsSize(const Mema::MemaClientControlComponentBase
         m_panningCtrlComponent->setControlsSize(ctrlsSize);
 }
 
-const Mema::MemaClientControlComponentBase::ControlsSize& MemaReComponent::getControlsSize()
+const Mema::MemaClientControlComponentBase::ControlsSize MemaReComponent::getControlsSize()
 {
     if (m_faderbankCtrlComponent)
         return m_faderbankCtrlComponent->getControlsSize();
@@ -166,6 +167,20 @@ const Mema::MemaClientControlComponentBase::ControlsSize& MemaReComponent::getCo
         return m_panningCtrlComponent->getControlsSize();
     else
         return Mema::MemaClientControlComponentBase::ControlsSize::S;
+}
+
+void MemaReComponent::setExternalAdmOscSettings(const int ADMOSCport, const juce::IPAddress& ADMOSCremoteIP, const int ADMOSCremotePort)
+{
+    std::get<0>(m_externalAdmOscSettings) = ADMOSCport;
+    std::get<1>(m_externalAdmOscSettings) = ADMOSCremoteIP;
+    std::get<2>(m_externalAdmOscSettings) = ADMOSCremotePort;
+
+    m_panningCtrlComponent->setExternalControlSettings(ADMOSCport, ADMOSCremoteIP, ADMOSCremotePort);
+}
+
+std::tuple<int, juce::IPAddress, int> MemaReComponent::getExternalAdmOscSettings()
+{
+    return m_externalAdmOscSettings;
 }
 
 void MemaReComponent::paint(Graphics &g)
@@ -201,6 +216,8 @@ void MemaReComponent::handleMessage(const Message& message)
     }
     else if (auto const iom = dynamic_cast<const Mema::ReinitIOCountMessage*>(&message))
     {
+        DBG(juce::String(__FUNCTION__) + " handling ReinitIOCountMessage...");
+
         auto inputCount = iom->getInputCount();
         jassert(inputCount > 0);
         auto outputCount = iom->getOutputCount();
@@ -217,6 +234,8 @@ void MemaReComponent::handleMessage(const Message& message)
     }
     else if (auto const cpm = dynamic_cast<const Mema::ControlParametersMessage*>(&message))
     {
+        DBG(juce::String(__FUNCTION__) + " handling ControlParametersMessage...");
+
         for (auto const& inputMuteState : cpm->getInputMuteStates())
             m_inputMuteStates[inputMuteState.first] = inputMuteState.second;
         if (!m_inputMuteStates.empty())

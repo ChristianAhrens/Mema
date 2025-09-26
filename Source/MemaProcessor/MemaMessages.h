@@ -456,6 +456,30 @@ public:
     ControlParametersMessage(const std::map<std::uint16_t, bool>& inputMuteStates, const std::map<std::uint16_t, bool>& outputMuteStates, 
         const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& crosspointStates, const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues)
     {
+#ifdef DEBUG
+        // sanity check symmetry of crosspoint states
+        auto crosspointStateOutCount = size_t(0);
+        if (0 != crosspointStates.size())
+        {
+            crosspointStateOutCount = crosspointStates.begin()->second.size();
+            for (auto const& cpStatKV : crosspointStates)
+            {
+                jassert(crosspointStateOutCount == cpStatKV.second.size());
+            }
+        }
+
+        // sanity check symmetry of crosspoint values
+        auto crosspointValOutCount = size_t(0);
+        if (0 != crosspointValues.size())
+        {
+            crosspointValOutCount = crosspointValues.begin()->second.size();
+            for (auto const& cpValKV : crosspointValues)
+            {
+                jassert(crosspointValOutCount == cpValKV.second.size());
+            }
+        }
+#endif
+
         m_type = SerializableMessageType::ControlParameters;
         m_inputMuteStates = inputMuteStates;
         m_outputMuteStates = outputMuteStates;

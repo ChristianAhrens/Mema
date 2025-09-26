@@ -164,12 +164,12 @@ MemaUIComponent::MemaUIComponent()
 #endif
     addAndMakeVisible(m_toggleStandaloneWindowButton.get());
 
-    m_audioSettingsButton = std::make_unique<juce::DrawableButton>("Audio Device Setup", juce::DrawableButton::ButtonStyle::ImageFitted);
-    m_audioSettingsButton->setTooltip("Audio Device Setup");
-    m_audioSettingsButton->onClick = [this] {
-        if (onSetupMenuClicked) onSetupMenuClicked();
+    m_audioSetupButton = std::make_unique<juce::DrawableButton>("Audio Device Setup", juce::DrawableButton::ButtonStyle::ImageFitted);
+    m_audioSetupButton->setTooltip("Audio Device Setup");
+    m_audioSetupButton->onClick = [this] {
+        if (onAudioSetupMenuClicked) onAudioSetupMenuClicked();
     };
-    addAndMakeVisible(m_audioSettingsButton.get());
+    addAndMakeVisible(m_audioSetupButton.get());
 
     // default lookandfeel is follow local, therefor none selected
     m_settingsItems[MemaSettingsOption::LookAndFeel_Automatic] = std::make_pair("Automatic", 1);
@@ -194,6 +194,13 @@ MemaUIComponent::MemaUIComponent()
         juce::PopupMenu settingsMenu;
         settingsMenu.addSubMenu("LookAndFeel", lookAndFeelSubMenu);
         settingsMenu.addSubMenu("Metering colour", meteringColourSubMenu);
+        settingsMenu.addSeparator();
+        auto loadDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::folder_open24px_svg).get());
+        loadDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
+        settingsMenu.addItem(MemaSettingsOption::LoadConfig, "Load config...", true, false, std::move(loadDrawable));
+        auto saveDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::save24px_svg).get());
+        saveDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
+        settingsMenu.addItem(MemaSettingsOption::SaveConfig, "Save config...", true, false, std::move(saveDrawable));
         settingsMenu.showMenuAsync(juce::PopupMenu::Options(), [=](int selectedId) { handleSettingsMenuResult(selectedId); });
     };
     addAndMakeVisible(m_appSettingsButton.get());
@@ -328,8 +335,8 @@ void MemaUIComponent::resized()
     if (m_appSettingsButton)
         m_appSettingsButton->setBounds(setupElementArea.removeFromRight(setupElementArea.getHeight()));
     setupElementArea.removeFromRight(margin);
-    if (m_audioSettingsButton)
-        m_audioSettingsButton->setBounds(setupElementArea.removeFromRight(setupElementArea.getHeight()));
+    if (m_audioSetupButton)
+        m_audioSetupButton->setBounds(setupElementArea.removeFromRight(setupElementArea.getHeight()));
     setupElementArea.removeFromRight(margin);
     if (m_toggleStandaloneWindowButton)
         m_toggleStandaloneWindowButton->setBounds(setupElementArea.removeFromRight(setupElementArea.getHeight()));
@@ -386,9 +393,9 @@ void MemaUIComponent::lookAndFeelChanged()
     appSettingsButtonDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
     m_appSettingsButton->setImages(appSettingsButtonDrawable.get());
 
-    auto audioSettingsButtonDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::tune_24dp_svg).get());
-    audioSettingsButtonDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
-    m_audioSettingsButton->setImages(audioSettingsButtonDrawable.get());
+    auto audioSetupButtonDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::tune_24dp_svg).get());
+    audioSetupButtonDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
+    m_audioSetupButton->setImages(audioSetupButtonDrawable.get());
 
     auto aboutButtonDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::question_mark_24dp_svg).get());
     aboutButtonDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
@@ -448,11 +455,25 @@ bool MemaUIComponent::setStateXml(XmlElement* stateXml)
 void MemaUIComponent::handleSettingsMenuResult(int selectedId)
 {
     if (0 == selectedId)
+    {
         return; // nothing selected, dismiss
+    }
     else if (MemaSettingsOption::LookAndFeel_First <= selectedId && MemaSettingsOption::LookAndFeel_Last >= selectedId)
+    {
         handleSettingsLookAndFeelMenuResult(selectedId);
+    }
     else if (MemaSettingsOption::MeteringColour_First <= selectedId && MemaSettingsOption::MeteringColour_Last >= selectedId)
+    {
         handleSettingsMeteringColourMenuResult(selectedId);
+    }
+    else if (MemaSettingsOption::LoadConfig == selectedId)
+    {
+        if (onLoadConfig) onLoadConfig();
+    }
+    else if (MemaSettingsOption::SaveConfig == selectedId)
+    {
+        if (onSaveConfig) onSaveConfig();
+    }
     else
         jassertfalse; // unhandled menu entry!?
 

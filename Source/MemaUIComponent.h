@@ -49,7 +49,9 @@ public:
         MeteringColour_Red,
         MeteringColour_Blue,
         MeteringColour_Pink,
-        MeteringColour_Last = MeteringColour_Pink
+        MeteringColour_Last = MeteringColour_Pink,
+        LoadConfig,
+        SaveConfig
     };
 
 public:
@@ -82,11 +84,13 @@ public:
 
     //========================================================================*
     std::function<void(bool)>   onToggleStandaloneWindow;
-    std::function<void()>       onSetupMenuClicked;
+    std::function<void()>       onAudioSetupMenuClicked;
     std::function<void()>       onLookAndFeelChanged;
     std::function<void()>       onDeleted;
     std::function<void()>       onSettingsChanged;
     std::function<void(const JUCEAppBasics::CustomLookAndFeel::PaletteStyle&)>  onPaletteStyleChange;
+    std::function<void()>       onLoadConfig;
+    std::function<void()>       onSaveConfig;
 
 private:
     //========================================================================*
@@ -103,7 +107,7 @@ private:
     //========================================================================*
     std::unique_ptr<juce::DrawableButton>       m_toggleStandaloneWindowButton;
     std::unique_ptr<juce::DrawableButton>       m_appSettingsButton;
-    std::unique_ptr<juce::DrawableButton>       m_audioSettingsButton;
+    std::unique_ptr<juce::DrawableButton>       m_audioSetupButton;
     std::unique_ptr<juce::DrawableButton>       m_aboutButton;
     std::unique_ptr<juce::DrawableButton>       m_powerButton;
     std::unique_ptr<EmptySpace>                 m_emptySpace;

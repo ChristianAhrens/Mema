@@ -139,6 +139,7 @@ MainComponent::MainComponent()
     m_settingsItems[MemaReSettingsOption::OutputPanningType_7point1] = std::make_pair(juce::AudioChannelSet::create7point1().getDescription().toStdString(), 0);
     m_settingsItems[MemaReSettingsOption::OutputPanningType_7point1point4] = std::make_pair(juce::AudioChannelSet::create7point1point4().getDescription().toStdString(), 0);
     m_settingsItems[MemaReSettingsOption::OutputPanningType_9point1point6] = std::make_pair(juce::AudioChannelSet::create9point1point6().getDescription().toStdString(), 0);
+    m_settingsItems[MemaReSettingsOption::OutputPanningType_Quadrophonic] = std::make_pair(juce::AudioChannelSet::quadraphonic().getDescription().toStdString(), 0);
     // default panning colour is green
     m_settingsItems[MemaReSettingsOption::PanningColour_Green] = std::make_pair("Green", 1);
     m_settingsItems[MemaReSettingsOption::PanningColour_Red] = std::make_pair("Red", 0);
@@ -172,6 +173,8 @@ MainComponent::MainComponent()
         settingsMenu.addSubMenu("Control format", outputPanningTypeSubMenu);
         settingsMenu.addSubMenu("Control colour", panningColourSubMenu);
         settingsMenu.addSubMenu("Controls size", constrolsSizeSubMenu);
+        settingsMenu.addSeparator();
+        settingsMenu.addItem(MemaReSettingsOption::ExternalControl, "External control...", true);
         settingsMenu.showMenuAsync(juce::PopupMenu::Options(), [=](int selectedId) {
             handleSettingsMenuResult(selectedId);
             if (m_config)
@@ -184,7 +187,7 @@ MainComponent::MainComponent()
     addAndMakeVisible(m_settingsButton.get());
 
     m_disconnectButton = std::make_unique<juce::DrawableButton>("Disconnect", juce::DrawableButton::ButtonStyle::ImageFitted);
-    m_disconnectButton->setTooltip(juce::String("Disconnect ") + juce::JUCEApplication::getInstance()->getApplicationName() + " from " + m_selectedService.description);
+    m_disconnectButton->setTooltip(juce::String("Disconnect ") + juce::JUCEApplication::getInstance()->getApplicationName() + " from " + (m_selectedService.description.isNotEmpty() ? m_selectedService.description : "Nothing :)"));
     m_disconnectButton->onClick = [this] {
         if (m_networkConnection)
             m_networkConnection->disconnect();
@@ -210,7 +213,7 @@ MainComponent::MainComponent()
     Mema::runTests();
 #endif
 
-    setSize(400, 350);
+    setSize(800, 600);
 
 #if defined JUCE_IOS
     // iOS is updated via AppStore
@@ -317,6 +320,8 @@ void MainComponent::handleSettingsMenuResult(int selectedId)
         handleSettingsPanningColourMenuResult(selectedId);
     else if (MemaReSettingsOption::ControlsSize_First <= selectedId && MemaReSettingsOption::ControlsSize_Last >= selectedId)
         handleSettingsControlsSizeMenuResult(selectedId);
+    else if (MemaReSettingsOption::ExternalControl == selectedId)
+        showExternalControlSettings();
     else
         jassertfalse; // unhandled menu entry!?
 }
@@ -356,7 +361,7 @@ void MainComponent::handleSettingsLookAndFeelMenuResult(int selectedId)
 void MainComponent::handleSettingsOutputPanningTypeMenuResult(int selectedId)
 {
     // helper internal function to avoid code clones
-    std::function<void(int, int, int, int, int, int, int, int, int, int)> setSettingsItemsCheckState = [=](int a, int b, int c, int d, int e, int f, int g, int h, int i, int j) {
+    std::function<void(int, int, int, int, int, int, int, int, int, int, int)> setSettingsItemsCheckState = [=](int a, int b, int c, int d, int e, int f, int g, int h, int i, int j, int k) {
         m_settingsItems[MemaReSettingsOption::OutputPanningType_RawChannels].second = a;
         m_settingsItems[MemaReSettingsOption::OutputPanningType_LRS].second = b;
         m_settingsItems[MemaReSettingsOption::OutputPanningType_LCRS].second = c;
@@ -367,59 +372,65 @@ void MainComponent::handleSettingsOutputPanningTypeMenuResult(int selectedId)
         m_settingsItems[MemaReSettingsOption::OutputPanningType_7point1].second = h;
         m_settingsItems[MemaReSettingsOption::OutputPanningType_7point1point4].second = i;
         m_settingsItems[MemaReSettingsOption::OutputPanningType_9point1point6].second = j;
+        m_settingsItems[MemaReSettingsOption::OutputPanningType_Quadrophonic].second = k;
     };
 
     switch (selectedId)
     {
     case MemaReSettingsOption::OutputPanningType_RawChannels:
-        setSettingsItemsCheckState(1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputFaderbankCtrlActive();
         break;
     case MemaReSettingsOption::OutputPanningType_LRS:
-        setSettingsItemsCheckState(0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::createLRS());
         break;
     case MemaReSettingsOption::OutputPanningType_LCRS:
-        setSettingsItemsCheckState(0, 0, 1, 0, 0, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::createLCRS());
         break;
     case MemaReSettingsOption::OutputPanningType_5point0:
-        setSettingsItemsCheckState(0, 0, 0, 1, 0, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create5point0());
         break;
     case MemaReSettingsOption::OutputPanningType_5point1:
-        setSettingsItemsCheckState(0, 0, 0, 0, 1, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create5point1());
         break;
     case MemaReSettingsOption::OutputPanningType_5point1point2:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 1, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create5point1point2());
         break;
     case MemaReSettingsOption::OutputPanningType_7point0:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 1, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create7point0());
         break;
     case MemaReSettingsOption::OutputPanningType_7point1:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 1, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create7point1());
         break;
     case MemaReSettingsOption::OutputPanningType_7point1point4:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 1, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create7point1point4());
         break;
     case MemaReSettingsOption::OutputPanningType_9point1point6:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 1);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create9point1point6());
+        break;
+    case MemaReSettingsOption::OutputPanningType_Quadrophonic:
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1);
+        if (m_remoteComponent)
+            m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::quadraphonic());
         break;
     default:
         jassertfalse; // unknown id fed in unintentionally ?!
@@ -490,6 +501,50 @@ void MainComponent::handleSettingsControlsSizeMenuResult(int selectedId)
         jassertfalse; // unknown id fed in unintentionally ?!
         break;
     }
+}
+
+void MainComponent::showExternalControlSettings()
+{
+    m_messageBox = std::make_unique<juce::AlertWindow>(
+        "External control setup",
+        "Enter remote control parameters to externally connect to " + juce::JUCEApplication::getInstance()->getApplicationName() + " and control its parameters.\n" + 
+        "Info: This machine uses IP " + juce::IPAddress::getLocalAddress().toString(),
+        juce::MessageBoxIconType::NoIcon);
+
+    m_messageBox->addTextBlock("\nADM-OSC connection parameters:");
+    if (m_remoteComponent)
+    {
+        auto admOscSettings = m_remoteComponent->getExternalAdmOscSettings();
+        m_messageBox->addTextEditor("ADM local port", juce::String(std::get<0>(admOscSettings)), "ADM-OSC port");
+        m_messageBox->addTextEditor("ADM remote IP", std::get<1>(admOscSettings).toString(), "Target IP");
+        m_messageBox->addTextEditor("ADM remote port", juce::String(std::get<2>(admOscSettings)), "Target port");
+    }
+
+    //m_messageBox->addTextBlock("\nOCP.1 connection parameters:");
+    //if (m_remoteComponent)
+    //{
+    //    m_messageBox->addTextEditor("OCP.1 local port", juce::String(50014), "OCP.1 port");
+    //}
+
+    m_messageBox->addButton("Cancel", 0, juce::KeyPress(juce::KeyPress::escapeKey));
+    m_messageBox->addButton("Ok", 1, juce::KeyPress(juce::KeyPress::returnKey));
+    m_messageBox->enterModalState(true, juce::ModalCallbackFunction::create([=](int returnValue) {
+        if (returnValue == 1)
+        {
+            auto ADMOSCport = m_messageBox->getTextEditorContents("ADM local port").getIntValue();
+            auto ADMOSCremoteIP = juce::IPAddress(m_messageBox->getTextEditorContents("ADM remote IP"));
+            auto ADMOSCremotePort = m_messageBox->getTextEditorContents("ADM remote port").getIntValue();
+            if (m_remoteComponent)
+            {
+                m_remoteComponent->setExternalAdmOscSettings(ADMOSCport, ADMOSCremoteIP, ADMOSCremotePort);
+
+                if (m_config)
+                    m_config->triggerConfigurationDump();
+            }
+        }
+
+        m_messageBox.reset();
+    }));
 }
 
 void MainComponent::setPanningColour(const juce::Colour& panningColour)
@@ -620,6 +675,24 @@ void MainComponent::performConfigurationDump()
         visuConfigXmlElement->addChildElement(controlsSizeXmlElmement.release());
 
         m_config->setConfigState(std::move(visuConfigXmlElement), MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::VISUCONFIG));
+
+        // external control config
+        auto extCtrlConfigXmlElement = std::make_unique<juce::XmlElement>(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::EXTCTRLCONFIG));
+
+        auto admOscHostXmlElmement = std::make_unique<juce::XmlElement>(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::ADMOSCHOST));
+        if (m_remoteComponent)
+            admOscHostXmlElmement->setAttribute(MemaReAppConfiguration::getAttributeName(MemaReAppConfiguration::AttributeID::PORT), std::get<0>(m_remoteComponent->getExternalAdmOscSettings()));
+        extCtrlConfigXmlElement->addChildElement(admOscHostXmlElmement.release());
+
+        auto admOscClientXmlElmement = std::make_unique<juce::XmlElement>(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::ADMOSCCLIENT));
+        if (m_remoteComponent)
+        {
+            admOscClientXmlElmement->setAttribute(MemaReAppConfiguration::getAttributeName(MemaReAppConfiguration::AttributeID::IP), std::get<1>(m_remoteComponent->getExternalAdmOscSettings()).toString());
+            admOscClientXmlElmement->setAttribute(MemaReAppConfiguration::getAttributeName(MemaReAppConfiguration::AttributeID::PORT), std::get<2>(m_remoteComponent->getExternalAdmOscSettings()));
+        }
+        extCtrlConfigXmlElement->addChildElement(admOscClientXmlElmement.release());
+
+        m_config->setConfigState(std::move(extCtrlConfigXmlElement), MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::EXTCTRLCONFIG));
     }
 }
 
@@ -675,6 +748,28 @@ void MainComponent::onConfigUpdated()
             auto controlsSizeSettingsOptionId = controlsSizeXmlElmement->getAllSubText().getIntValue();
             handleSettingsControlsSizeMenuResult(controlsSizeSettingsOptionId);
         }
+    }
+
+    auto externalControlConfigState = m_config->getConfigState(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::EXTCTRLCONFIG));
+    if (externalControlConfigState)
+    {
+        int ADMOSCport = 0;
+        juce::IPAddress ADMOSCremoteIP = juce::IPAddress::local();
+        int ADMOSCremotePort = 0;
+
+        auto admOscHostXmlElmement = externalControlConfigState->getChildByName(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::ADMOSCHOST));
+        if (admOscHostXmlElmement)
+            ADMOSCport = admOscHostXmlElmement->getIntAttribute(MemaReAppConfiguration::getAttributeName(MemaReAppConfiguration::AttributeID::PORT));
+
+        auto admOscClientXmlElmement = externalControlConfigState->getChildByName(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::ADMOSCCLIENT));
+        if (admOscClientXmlElmement)
+        {
+            ADMOSCremoteIP = juce::IPAddress(admOscClientXmlElmement->getStringAttribute(MemaReAppConfiguration::getAttributeName(MemaReAppConfiguration::AttributeID::IP)));
+            ADMOSCremotePort = admOscClientXmlElmement->getIntAttribute(MemaReAppConfiguration::getAttributeName(MemaReAppConfiguration::AttributeID::PORT));
+        }
+
+        if (m_remoteComponent)
+            m_remoteComponent->setExternalAdmOscSettings(ADMOSCport, ADMOSCremoteIP, ADMOSCremotePort);
     }
 }
 

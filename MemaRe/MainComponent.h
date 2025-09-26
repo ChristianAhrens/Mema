@@ -61,7 +61,8 @@ public:
         OutputPanningType_7point1,
         OutputPanningType_7point1point4,
         OutputPanningType_9point1point6,
-        OutputPanningType_Last = OutputPanningType_9point1point6,
+        OutputPanningType_Quadrophonic,
+        OutputPanningType_Last = OutputPanningType_Quadrophonic,
         PanningColour_First,
         PanningColour_Green = PanningColour_First,
         PanningColour_Red,
@@ -73,6 +74,7 @@ public:
         ControlsSize_M,
         ControlsSize_L,
         ControlsSize_Last = ControlsSize_L,
+        ExternalControl,
     };
 
 public:
@@ -135,6 +137,7 @@ private:
     void handleSettingsOutputPanningTypeMenuResult(int selectedId);
     void handleSettingsPanningColourMenuResult(int selectedId);
     void handleSettingsControlsSizeMenuResult(int selectedId);
+    void showExternalControlSettings();
 
     void setPanningColour(const juce::Colour& meteringColour);
     void applyPanningColour();
@@ -162,6 +165,8 @@ private:
 
     std::unique_ptr<juce::DrawableButton>               m_aboutButton;
     std::unique_ptr<AboutComponent>                     m_aboutComponent;
+
+    std::unique_ptr<juce::AlertWindow>                  m_messageBox;
 
     Status                                              m_currentStatus = Status::Discovering;
 

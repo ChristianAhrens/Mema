@@ -1,7 +1,7 @@
 <center>
 <img src="Resources/Documentation/Showreel/Showreel.001.png" alt="Mema Headline Icons" width="100%">
-<img src="Resources/Documentation/Showreel/Showreel.002.png" alt="Mema.Mo Headline Icons" width="70%">
-<img src="Resources/Documentation/Showreel/Showreel.003.png" alt="Mema.Re Headline Icons" width="70%">
+<img src="Resources/Documentation/Showreel/Showreel.002.png" alt="Mema.Mo Headline Icons" width="100%">
+<img src="Resources/Documentation/Showreel/Showreel.003.png" alt="Mema.Re Headline Icons" width="100%">
 </center>
 
 See [LATEST RELEASE](https://github.com/ChristianAhrens/Mema/releases/latest) for available binary packages or join iOS TestFlight Betas:
@@ -27,6 +27,7 @@ See [LATEST RELEASE](https://github.com/ChristianAhrens/Mema/releases/latest) fo
   * [Mema UI](#MemaUI)
   * [Mema.Mo UI](#MemaMoUI)
   * [Mema.Re UI](#MemaReUI)
+  * [Mema.Re ADM-OSC external control](#MemaReADMOSC)
 * [How to build the tools](#howtobuild)
   * [Mema](#buildMema)
   * [Mema.Mo](#buildMemaMo)
@@ -108,6 +109,26 @@ Use what is provided here at your own risk!
 
 ![Showreel.012.png](Resources/Documentation/Showreel/Showreel.012.png "Mema.Re output panning")
 
+<a name="MemaReADMOSC" />
+
+### Mema.Re ADM-OSC external control
+
+ADM-OSC external control is affecting the 2D soundfield panning function in Mema.Re.
+
+_Currently only the cartesian coordinate control parameters are supported for panning control._
+
+![Showreel.013.png](Resources/Documentation/Showreel/Showreel.013.png "Mema.Re ADM-OSC support")
+
+| Supported ADM-OSC parameter | address         | type  | range          | Info |
+|:----------------------------|:----------------|:------|:---------------|:-----|
+| x coordinate                | /adm/obj/n/x    | f     | -1.0f ... 1.0f | Horizontal panning position. |
+| y coordinate                | /adm/obj/n/y    | f     | -1.0f ... 1.0f | Vertical panning position. |
+| z coordinate                | /adm/obj/n/z    | f     | -1.0f ... 1.0f | Panning layer definition. Relevant for panning formats with a height layer, e.g. 5.1.2, 7.1.4, 9.1.6. Values above 0.5 are associated with height elevated outputs, values below with regular positioned outputs. |
+| xy coordinate               | /adm/obj/n/xy   | f f   | -1.0f ... 1.0f | Combined horizontal and vertical panning position. |
+| xyz coordinate              | /adm/obj/n/xyz  | f f f | -1.0f ... 1.0f | Combined horizontal and vertical panning position and height layer association. |
+| width                       | /adm/obj/n/w    | f     | 0.0f ... 1.0f  | Associated with panning sharpness value. |
+| mute                        | /adm/obj/n/mute | i     | 0 ... 1        | Input mute. |
+
 
 <a name="howtobuild" />
 
@@ -179,9 +200,9 @@ ___This does only work when using X server as graphics backend. Using Wayland re
 
 ## Usecase: Studio rack monitoring
 
-![Showreel.013.png](Resources/Documentation/Showreel/Showreel.013.png "Homestudio setup")
+![Showreel.014.png](Resources/Documentation/Showreel/Showreel.014.png "Homestudio setup")
 
-![Showreel.014.png](Resources/Documentation/Showreel/Showreel.014.png "RaspberryPi rack DIY device")
+![Showreel.015.png](Resources/Documentation/Showreel/Showreel.015.png "RaspberryPi rack DIY device")
 
 ![Studio_rack_monitoring_usecase.png](Resources/Documentation/Studio_rack_monitoring_usecase.png "Homestudio setup signalflow schematic")
 
@@ -197,7 +218,7 @@ ___This does only work when using X server as graphics backend. Using Wayland re
 
 ## Usecase: Mobile recording monitoring
 
-![Showreel.015.png](Resources/Documentation/Showreel/Showreel.015.png "Mobile rig")
+![Showreel.016.png](Resources/Documentation/Showreel/Showreel.016.png "Mobile rig")
 
 * Mema on macOS
   * BlackHole 16ch used to route signal from LogicPro, Apple Music, etc. to Mema

@@ -42,7 +42,10 @@ public:
     void resetCtrl();
 
     void setControlsSize(const Mema::FaderbankControlComponent::ControlsSize& ctrlsSize);
-    const Mema::FaderbankControlComponent::ControlsSize& getControlsSize();
+    const Mema::FaderbankControlComponent::ControlsSize getControlsSize();
+
+    void setExternalAdmOscSettings(const int ADMOSCport, const juce::IPAddress& ADMOSCremoteIP, const int ADMOSCremotePort);
+    std::tuple<int, juce::IPAddress, int> getExternalAdmOscSettings();
 
     //==============================================================================
     void resized() override;
@@ -69,6 +72,8 @@ private:
     std::map<std::uint16_t, bool>                           m_outputMuteStates = {};
     std::map<std::uint16_t, std::map<std::uint16_t, bool>>  m_crosspointStates = {};
     std::map<std::uint16_t, std::map<std::uint16_t, float>> m_crosspointValues = {};
+
+    std::tuple<int, juce::IPAddress, int>   m_externalAdmOscSettings = { 4001, juce::IPAddress::local(), 4002 };
 
     float m_ioRatio = 0.5f;
 

@@ -70,6 +70,9 @@ public:
     void setUIConfigState(const std::unique_ptr<juce::XmlElement>& uiConfigState);
     const std::unique_ptr<juce::XmlElement>& getUIConfigState();
 
+    void triggerPromptLoadConfig();
+    void triggerPromptSaveConfig();
+
     JUCE_DECLARE_SINGLETON(Mema, false)
 
 private:
@@ -80,6 +83,8 @@ private:
     std::unique_ptr<AudioSelectComponent>   m_audioDeviceSelectComponent;
 
     std::unique_ptr<MemaAppConfiguration>   m_config;
+
+    std::unique_ptr<juce::FileChooser>      m_loadSavefileChooser;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Mema)
 };

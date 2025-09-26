@@ -32,7 +32,6 @@ JUCE_IMPLEMENT_SINGLETON(Mema)
 //==============================================================================
 Mema::Mema() :  juce::Timer()
 {
-    DBG(__FUNCTION__);
     // create the configuration object (is being initialized from disk automatically)
     m_config = std::make_unique<MemaAppConfiguration>(JUCEAppBasics::AppConfigurationBase::getDefaultConfigFilePath());
     m_config->addDumper(this);
@@ -54,6 +53,10 @@ Mema::Mema() :  juce::Timer()
                                                                           MemaProcessor::s_minOutputsCount,
                                                                           MemaProcessor::s_maxChannelCount,
                                                                           false, false, false, false);
+    m_audioDeviceSelectComponent->onAudioDeviceChangedDuringAudioSelection = [=]() {
+        if (m_MemaProcessor)
+            m_MemaProcessor->initializeCtrlValuesToUnity();
+    };
 
     // do the initial update for the whole application with config contents
     m_config->triggerWatcherUpdate();
@@ -79,7 +82,6 @@ Mema::Mema() :  juce::Timer()
 
 Mema::~Mema()
 {
-    DBG(__FUNCTION__);
     if (m_MemaProcessor)
         m_MemaProcessor->editorBeingDeleted(m_MemaProcessor->getActiveEditor());
 }
@@ -185,6 +187,138 @@ void Mema::setUIConfigState(const std::unique_ptr<juce::XmlElement>& uiConfigSta
 const std::unique_ptr<juce::XmlElement>& Mema::getUIConfigState()
 {
     return m_MemaUIConfigCache;
+}
+
+void Mema::triggerPromptLoadConfig()
+{
+    m_loadSavefileChooser = std::make_unique<juce::FileChooser>(
+        "Please select the " + juce::JUCEApplication::getInstance()->getApplicationName() + " configuration file you want to load...",
+        juce::File::getSpecialLocation(juce::File::userHomeDirectory),
+        "*.config");
+    
+    m_loadSavefileChooser->launchAsync(juce::FileBrowserComponent::openMode | juce::FileBrowserComponent::canSelectFiles,
+        [=](const juce::FileChooser& chooser) {
+            juce::File sourceFile(chooser.getResult());
+            
+            if (!sourceFile.existsAsFile() || !sourceFile.hasReadAccess())
+            {
+                juce::AlertWindow::showAsync(juce::MessageBoxOptions()
+                    .withIconType(juce::MessageBoxIconType::WarningIcon)
+                    .withTitle("Loading failed")
+                    .withMessage("The file " + sourceFile.getFileName() + " cannot be accessed for reading.")
+                    .withButton("Ok"), nullptr);
+                return false;
+            }
+
+            auto config = MemaAppConfiguration::getInstance();
+            if (!config)
+            {
+                juce::AlertWindow::showAsync(juce::MessageBoxOptions()
+                    .withIconType(juce::MessageBoxIconType::WarningIcon)
+                    .withTitle("Loading failed")
+                    .withMessage("There was an internal error with the configuration.")
+                    .withButton("Ok"), nullptr);
+                return false;
+            }
+
+            auto xmlConfig = juce::parseXML(sourceFile);
+            if (!xmlConfig)
+            {
+                juce::AlertWindow::showAsync(juce::MessageBoxOptions()
+                    .withIconType(juce::MessageBoxIconType::WarningIcon)
+                    .withTitle("Loading failed")
+                    .withMessage("The file " + sourceFile.getFileName() + " has invalid contents.")
+                    .withButton("Ok"), nullptr);
+                return false;
+            }
+
+            if (!MemaAppConfiguration::isValid(xmlConfig))
+            {
+                juce::AlertWindow::showAsync(juce::MessageBoxOptions()
+                    .withIconType(juce::MessageBoxIconType::WarningIcon)
+                    .withTitle("Loading failed")
+                    .withMessage("The file " + sourceFile.getFileName() + " has invalid contents.")
+                    .withButton("Ok"), nullptr);
+                return false;
+            }
+
+            config->SetFlushAndUpdateDisabled();
+            if (!config->resetConfigState(std::move(xmlConfig)))
+            {
+                juce::AlertWindow::showAsync(juce::MessageBoxOptions()
+                    .withIconType(juce::MessageBoxIconType::WarningIcon)
+                    .withTitle("Loading failed")
+                    .withMessage("There was an internal error with applying the configuration.")
+                    .withButton("Ok"), nullptr);
+                config->ResetFlushAndUpdateDisabled();
+                return false;
+            }
+            config->ResetFlushAndUpdateDisabled();
+
+            return true;
+        });
+}
+
+void Mema::triggerPromptSaveConfig()
+{
+    m_loadSavefileChooser = std::make_unique<juce::FileChooser>(
+        "Please select the " + juce::JUCEApplication::getInstance()->getApplicationName() + " configuration file target you want to save to...",
+        juce::File::getSpecialLocation(juce::File::userHomeDirectory).getChildFile(
+            juce::Time::getCurrentTime().toISO8601(true).substring(0, 10) + "_" +
+            juce::JUCEApplication::getInstance()->getApplicationName() + ".config"),
+        "*.config");
+
+    m_loadSavefileChooser->launchAsync(juce::FileBrowserComponent::saveMode | juce::FileBrowserComponent::canSelectFiles,
+        [=](const juce::FileChooser& chooser) {
+            juce::File targetFile(chooser.getResult());
+
+            // enforce the .config extension
+            if (targetFile.getFileExtension() != ".config")
+                targetFile = targetFile.withFileExtension(".config");
+
+            if (!targetFile.hasWriteAccess())
+            {
+                juce::AlertWindow::showAsync(juce::MessageBoxOptions()
+                    .withIconType(juce::MessageBoxIconType::WarningIcon)
+                    .withTitle("Saving failed")
+                    .withMessage("The file " + targetFile.getFileName() + " cannot be accessed for writing.")
+                    .withButton("Ok"), nullptr);
+                return false;
+            }
+
+            auto config = MemaAppConfiguration::getInstance();
+            if (!config)
+            {
+                juce::AlertWindow::showAsync(juce::MessageBoxOptions()
+                    .withIconType(juce::MessageBoxIconType::WarningIcon)
+                    .withTitle("Saving failed")
+                    .withMessage("There was an internal error with the configuration (0x0).")
+                    .withButton("Ok"), nullptr);
+                return false;
+            }
+
+            auto xmlConfig = config->getConfigState();
+            if (!xmlConfig)
+            {
+                juce::AlertWindow::showAsync(juce::MessageBoxOptions()
+                    .withIconType(juce::MessageBoxIconType::WarningIcon)
+                    .withTitle("Saving failed")
+                    .withMessage("There was an internal error with the configuration (0x1).")
+                    .withButton("Ok"), nullptr);
+                return false;
+            }
+            else if (!xmlConfig->writeTo(targetFile))
+            {
+                juce::AlertWindow::showAsync(juce::MessageBoxOptions()
+                    .withIconType(juce::MessageBoxIconType::WarningIcon)
+                    .withTitle("Saving failed")
+                    .withMessage("There was an error when writing the configuration to disk.")
+                    .withButton("Ok"), nullptr);
+                return false;
+            }
+            else
+                return true;
+        });
 }
 
 

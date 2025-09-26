@@ -20,6 +20,7 @@
 
 #include <CustomLookAndFeel.h>
 #include <ToggleStateSlider.h>
+#include <MemaClientCommon/ADMOSController.h>
 #include <MemaClientCommon/InputPositionMapper.h>
 #include <MemaClientCommon/TwoDFieldMultisliderComponent.h>
 
@@ -59,6 +60,11 @@ PanningControlComponent::PanningControlComponent()
             return m_multiSlider->getAngleForChannelTypeInCurrentConfiguration(channelType);
         else
             return 0.0f;
+    };
+
+    m_admOsController = std::make_unique<ADMOSController>();
+    m_admOsController->onParameterChanged = [=](int objNum, std::uint16_t objType) {
+        handleExternalControlParameter(objNum, objType, m_admOsController.get());
     };
 
     m_horizontalScrollContainerComponent = std::make_unique<juce::Component>();
@@ -153,6 +159,8 @@ void PanningControlComponent::setIOCount(const std::pair<int, int>& ioCount)
 
     if (m_multiSlider)
         m_multiSlider->setIOCount(ioCount);
+    if (m_admOsController)
+        m_admOsController->setNumObjects(ioCount.first);
 
     selectInputChannel(m_currentInputChannel);
 }
@@ -174,6 +182,113 @@ void PanningControlComponent::rebuildControls(bool force)
 {
     rebuildInputControls(force);
     resized();
+}
+
+void PanningControlComponent::setExternalControlSettings(int ADMOSCPort, const juce::IPAddress& ADMOSCControllerIP, int ADMOSCControllerPort)
+{
+    if (m_admOsController)
+        m_admOsController->startConnection(ADMOSCPort, ADMOSCControllerIP, ADMOSCControllerPort);
+}
+
+void PanningControlComponent::handleExternalControlParameter(int objNum, std::uint16_t objType, void* /*sender*/)
+{
+    auto admObjType = static_cast<ADMOSController::ADMOSCParameterType>(objType);
+    DBG(juce::String(__FUNCTION__) << " handle n" << objNum << " t" << admObjType);
+
+    jassert(m_admOsController);
+    if (!m_admOsController)
+        return;
+    jassert(m_multiSlider);
+    if (!m_multiSlider)
+        return;
+
+    switch (admObjType)
+    {
+    case ADMOSController::ADMOSCParameterType::X:
+        {
+            auto xParam = m_admOsController->getParameter(objNum, ADMOSController::ADMOSCParameterType::X);
+            auto xVal = ADMOSController::ADMOSCParameterX(xParam).getParameterVal();
+
+            auto xyzParam = m_admOsController->getParameter(objNum, ADMOSController::ADMOSCParameterType::XYZ);
+            auto xyzVals = ADMOSController::ADMOSCParameterXYZ(xyzParam).getParameterVals();
+            m_admOsController->setParameter(objNum, ADMOSController::ADMOSCParameterXY(xVal, std::get<1>(xyzVals))); // fill up with y from xyzParam
+            m_admOsController->setParameter(objNum, ADMOSController::ADMOSCParameterXYZ(xVal, std::get<1>(xyzVals), std::get<2>(xyzVals))); // fill up with y+z from xyzParam
+
+            changeInputPosition(std::uint16_t(objNum), xVal, std::nullopt, std::nullopt, std::nullopt, juce::NotificationType::sendNotification);
+        }
+        break;
+    case ADMOSController::ADMOSCParameterType::Y:
+        {
+            auto yParam = m_admOsController->getParameter(objNum, ADMOSController::ADMOSCParameterType::Y);
+            auto yVal = ADMOSController::ADMOSCParameterY(yParam).getParameterVal();
+
+            auto xyzParam = m_admOsController->getParameter(objNum, ADMOSController::ADMOSCParameterType::XYZ);
+            auto xyzVals = ADMOSController::ADMOSCParameterXYZ(xyzParam).getParameterVals();
+            m_admOsController->setParameter(objNum, ADMOSController::ADMOSCParameterXY(std::get<0>(xyzVals), yVal)); // fill up with y from xyzParam
+            m_admOsController->setParameter(objNum, ADMOSController::ADMOSCParameterXYZ(std::get<0>(xyzVals), yVal, std::get<2>(xyzVals))); // fill up with y+z from xyzParam
+
+            changeInputPosition(std::uint16_t(objNum), std::nullopt, yVal, std::nullopt, std::nullopt, juce::NotificationType::sendNotification);
+        }
+        break;
+    case ADMOSController::ADMOSCParameterType::Z:
+        {
+            auto zParam = m_admOsController->getParameter(objNum, ADMOSController::ADMOSCParameterType::Z);
+            auto zVal = ADMOSController::ADMOSCParameterZ(zParam).getParameterVal();
+
+            auto xyzParam = m_admOsController->getParameter(objNum, ADMOSController::ADMOSCParameterType::XYZ);
+            auto xyzVals = ADMOSController::ADMOSCParameterXYZ(xyzParam).getParameterVals();
+            m_admOsController->setParameter(objNum, ADMOSController::ADMOSCParameterXYZ(std::get<1>(xyzVals), std::get<1>(xyzVals), zVal)); // fill up with y+z from xyzParam
+
+            changeInputPosition(std::uint16_t(objNum), std::nullopt, std::nullopt, std::nullopt, (zVal > 0.5f ? TwoDFieldMultisliderComponent::ChannelLayer::PositionedHeight : TwoDFieldMultisliderComponent::ChannelLayer::Positioned), juce::NotificationType::sendNotification);
+        }
+        break;
+    case ADMOSController::ADMOSCParameterType::XY:
+        {
+            auto xyParam = m_admOsController->getParameter(objNum, ADMOSController::ADMOSCParameterType::XY);
+            auto xyVals = ADMOSController::ADMOSCParameterXY(xyParam).getParameterVals();
+
+            auto xyzParam = m_admOsController->getParameter(objNum, ADMOSController::ADMOSCParameterType::XYZ);
+            auto xyzVals = ADMOSController::ADMOSCParameterXYZ(xyzParam).getParameterVals();
+            m_admOsController->setParameter(objNum, ADMOSController::ADMOSCParameterX(std::get<0>(xyVals)));
+            m_admOsController->setParameter(objNum, ADMOSController::ADMOSCParameterY(std::get<1>(xyVals)));
+            m_admOsController->setParameter(objNum, ADMOSController::ADMOSCParameterXYZ(std::get<0>(xyVals), std::get<1>(xyVals), std::get<2>(xyzVals))); // fill up with z from xyzParam
+
+            changeInputPosition(std::uint16_t(objNum), std::get<0>(xyVals), std::get<1>(xyVals), std::nullopt, std::nullopt, juce::NotificationType::sendNotification);
+        }
+        break;
+    case ADMOSController::ADMOSCParameterType::XYZ:
+        {
+            auto xyzParam = m_admOsController->getParameter(objNum, ADMOSController::ADMOSCParameterType::XYZ);
+            auto xyzVals = ADMOSController::ADMOSCParameterXYZ(xyzParam).getParameterVals();
+
+            m_admOsController->setParameter(objNum, ADMOSController::ADMOSCParameterX(std::get<0>(xyzVals)));
+            m_admOsController->setParameter(objNum, ADMOSController::ADMOSCParameterY(std::get<1>(xyzVals)));
+            m_admOsController->setParameter(objNum, ADMOSController::ADMOSCParameterZ(std::get<2>(xyzVals)));
+            m_admOsController->setParameter(objNum, ADMOSController::ADMOSCParameterXY(std::get<0>(xyzVals), std::get<1>(xyzVals)));
+
+            changeInputPosition(std::uint16_t(objNum), std::get<0>(xyzVals), std::get<1>(xyzVals), std::nullopt, (std::get<2>(xyzVals) > 0.5f ? TwoDFieldMultisliderComponent::ChannelLayer::PositionedHeight : TwoDFieldMultisliderComponent::ChannelLayer::Positioned), juce::NotificationType::sendNotification);
+        }
+        break;
+    case ADMOSController::ADMOSCParameterType::Width:
+        {
+            auto wParam = m_admOsController->getParameter(objNum, ADMOSController::ADMOSCParameterType::Width);
+            auto widthVal = ADMOSController::ADMOSCParameterWidth(wParam).getParameterVal();
+
+            changeInputPosition(std::uint16_t(objNum), std::nullopt, std::nullopt, 1.0f - widthVal, std::nullopt, juce::NotificationType::sendNotification);
+        }
+        break;
+    case ADMOSController::ADMOSCParameterType::Mute:
+        {
+            auto mParam = m_admOsController->getParameter(objNum, ADMOSController::ADMOSCParameterType::Mute);
+            auto muteVal = ADMOSController::ADMOSCParameterMute(mParam).getParameterVal();
+
+            setInputMuteStates({ std::make_pair(static_cast<std::uint16_t>(objNum), muteVal) });
+        }
+        break;
+    case ADMOSController::ADMOSCParameterType::Empty:
+    default:
+        break;
+    }
 }
 
 void PanningControlComponent::rebuildInputControls(bool force)
@@ -209,7 +324,7 @@ void PanningControlComponent::rebuildInputControls(bool force)
                 }
                 else
                     jassertfalse;
-                };
+            };
             m_horizontalScrollContainerComponent->addAndMakeVisible(m_inputSelectButtons.at(i).get());
             m_inputControlsGrid->items.add(juce::GridItem(m_inputSelectButtons.at(i).get()));
         }
@@ -227,7 +342,9 @@ void PanningControlComponent::rebuildInputControls(bool force)
                 MemaClientControlComponentBase::setInputMuteStates(inputMuteStates);
                 if (onInputMutesChanged)
                     onInputMutesChanged(inputMuteStates);
-                };
+                if (m_admOsController)
+                    m_admOsController->setParameter(in, ADMOSController::ADMOSCParameterMute(inputMuteStates[in]), ADMOSController::ADMOSCParameterChangeTarget::External);
+            };
             m_horizontalScrollContainerComponent->addAndMakeVisible(m_inputMuteButtons.at(i).get());
             m_inputControlsGrid->items.add(juce::GridItem(m_inputMuteButtons.at(i).get()));
         }
@@ -283,15 +400,67 @@ void PanningControlComponent::selectInputChannel(std::uint16_t channel)
     }
 }
 
-void PanningControlComponent::changeInputPosition(std::uint16_t channel, float xVal, float yVal, float sharpness, int layer)
+void PanningControlComponent::changeInputPosition(std::uint16_t channel, std::optional<float> xValOpt, std::optional<float> yValOpt, std::optional<float> sharpnessOpt, std::optional<int> layerOpt, juce::NotificationType notification)
 {
-    //DBG(juce::String(__FUNCTION__) << " new pos: " << int(channel) << " " << xVal << "," << yVal << "(" << layer << ")");
+    float xVal = 0.0f;
+    if (xValOpt.has_value())
+        xVal = xValOpt.value();
+    else if (m_admOsController)
+        xVal = ADMOSController::ADMOSCParameterX(m_admOsController->getParameter(channel, ADMOSController::ADMOSCParameterType::X)).getParameterVal();
+
+    float yVal = 0.0f;
+    if (yValOpt.has_value())
+        yVal = yValOpt.value();
+    else if (m_admOsController)
+        yVal = ADMOSController::ADMOSCParameterY(m_admOsController->getParameter(channel, ADMOSController::ADMOSCParameterType::Y)).getParameterVal();
+
+    float sharpnessVal = 0.0f;
+    if (sharpnessOpt.has_value())
+        sharpnessVal = sharpnessOpt.value();
+    else if (m_admOsController)
+        sharpnessVal = 1.0f - ADMOSController::ADMOSCParameterWidth(m_admOsController->getParameter(channel, ADMOSController::ADMOSCParameterType::Width)).getParameterVal();
+
+    int layerVal = 0;
+    if (layerOpt.has_value())
+        layerVal = layerOpt.value();
+    else if (m_admOsController)
+    {
+        auto zVal = ADMOSController::ADMOSCParameterZ(m_admOsController->getParameter(channel, ADMOSController::ADMOSCParameterType::Z)).getParameterVal();
+        layerVal = zVal > 0.5f ? TwoDFieldMultisliderComponent::ChannelLayer::PositionedHeight : TwoDFieldMultisliderComponent::ChannelLayer::Positioned;
+    }
+
+    DBG(juce::String(__FUNCTION__) << " new pos: " << int(channel) << " " << xVal << "," << yVal << "(" << sharpnessVal << " / " << layerVal << ")");
 
     if (m_multiSlider && m_positionMapper)
     {
-        m_positionMapper->setOutputIncludePositions(m_multiSlider->getOutputsInLayer(TwoDFieldMultisliderComponent::ChannelLayer(layer)));
-        m_positionMapper->setOutputIgnorePositions(m_multiSlider->getDirectiveOutputsNotInLayer(TwoDFieldMultisliderComponent::ChannelLayer(layer)));
-        m_positionMapper->mapInputPosition(channel, { xVal, yVal }, sharpness);
+        m_positionMapper->setOutputIncludePositions(m_multiSlider->getOutputsInLayer(TwoDFieldMultisliderComponent::ChannelLayer(layerVal)));
+        m_positionMapper->setOutputIgnorePositions(m_multiSlider->getDirectiveOutputsNotInLayer(TwoDFieldMultisliderComponent::ChannelLayer(layerVal)));
+        m_positionMapper->mapInputPosition(channel, { -xVal, yVal }, sharpnessVal);
+
+        if (juce::NotificationType::dontSendNotification != notification)
+        {
+            if (xValOpt.has_value() || yValOpt.has_value())
+                m_multiSlider->setInputPositionValue(channel, TwoDFieldMultisliderComponent::TwoDMultisliderValue(xVal, yVal), juce::dontSendNotification);
+            if (layerOpt.has_value())
+                m_multiSlider->setInputPositionLayer(channel, TwoDFieldMultisliderComponent::ChannelLayer(layerVal), juce::dontSendNotification);
+            if (sharpnessOpt.has_value())
+                m_multiSlider->setInputPositionSharpness(channel, sharpnessVal, juce::dontSendNotification);
+        }
+    }
+
+    if (m_admOsController)
+    {
+        auto admTarget = juce::NotificationType::dontSendNotification == notification ? ADMOSController::ADMOSCParameterChangeTarget::External : ADMOSController::ADMOSCParameterChangeTarget::None;
+        if (xValOpt.has_value() || yValOpt.has_value())
+            m_admOsController->setParameter(channel, ADMOSController::ADMOSCParameterXY(xVal, yVal), admTarget);
+        if (xValOpt.has_value())
+            m_admOsController->setParameter(channel, ADMOSController::ADMOSCParameterX(xVal), ADMOSController::ADMOSCParameterChangeTarget::None);
+        if (yValOpt.has_value())
+            m_admOsController->setParameter(channel, ADMOSController::ADMOSCParameterY(yVal), ADMOSController::ADMOSCParameterChangeTarget::None);
+        if (xValOpt.has_value() || yValOpt.has_value() || layerOpt.has_value())
+            m_admOsController->setParameter(channel, ADMOSController::ADMOSCParameterXYZ(xVal, yVal, TwoDFieldMultisliderComponent::ChannelLayer::PositionedHeight == layerVal ? 1.0f : 0.0f), ADMOSController::ADMOSCParameterChangeTarget::None);
+        if (sharpnessOpt.has_value())
+            m_admOsController->setParameter(channel, ADMOSController::ADMOSCParameterWidth(1.0f - sharpnessVal), admTarget);
     }
 }
 

@@ -475,7 +475,7 @@ void FaderbankControlComponent::selectIOChannel(const ControlDirection& directio
     auto oldChannel = m_currentIOChannel.second;
     m_currentIOChannel = std::make_pair(direction, channel);
     if (oldDirection != direction)
-        rebuildControls();
+        rebuildControls(true);
     else if (oldChannel != channel)
         rebuildControls();
 

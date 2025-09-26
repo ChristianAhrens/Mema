@@ -26,6 +26,7 @@ namespace Mema
 
 //==============================================================================
 AbstractAudioVisualizer::AbstractAudioVisualizer()
+    : juce::Component()
 {
     m_changesPending = false;
 
@@ -38,7 +39,7 @@ AbstractAudioVisualizer::~AbstractAudioVisualizer()
 
 void AbstractAudioVisualizer::paint (Graphics& g)
 {
-    Component::paint(g);
+    juce::Component::paint(g);
 }
 
 void AbstractAudioVisualizer::resized()
@@ -46,9 +47,9 @@ void AbstractAudioVisualizer::resized()
 
 }
 
-void AbstractAudioVisualizer::mouseDown(const MouseEvent& event)
+void AbstractAudioVisualizer::mouseDown(const juce::MouseEvent& event)
 {
-    Component::mouseDown(event);
+    juce::Component::mouseDown(event);
 }
 
 void AbstractAudioVisualizer::setRefreshFrequency(int frequency)

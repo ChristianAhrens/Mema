@@ -198,6 +198,9 @@ public:
     void setTimedConfigurationDumpPending() { m_timedConfigurationDumpPending = true; };
     void resetTimedConfigurationDumpPending() { m_timedConfigurationDumpPending = false; };
 
+    //==============================================================================
+    void initializeCtrlValuesToUnity();
+
 protected:
     //==============================================================================
     void initializeCtrlValues(int inputCount, int outputCount);

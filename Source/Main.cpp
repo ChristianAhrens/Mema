@@ -131,6 +131,13 @@ public:
                     callout->exitModalState(0);
             juce::MessageManager::callAsync([=]() { showUiAsStandaloneWindow(); });
         });
+        optionsPopupMenu.addSeparator();
+        optionsPopupMenu.addItem("Load config...", true, false, [=]() {
+            Mema::Mema::getInstance()->triggerPromptLoadConfig();
+        });
+        optionsPopupMenu.addItem("Save config...", true, false, [=]() {
+            Mema::Mema::getInstance()->triggerPromptSaveConfig();
+        });
         m_macMainMenu->addMenu(0, "Options", optionsPopupMenu);
         
         juce::MenuBarModel::setMacMainMenu(m_macMainMenu.get());
@@ -189,7 +196,7 @@ public:
         memaUIComponent->onLookAndFeelChanged = [=]() {
             if (Mema::Mema::getInstanceWithoutCreating()) Mema::Mema::getInstance()->propagateLookAndFeelChanged();
         };
-        memaUIComponent->onSetupMenuClicked = [=]() {
+        memaUIComponent->onAudioSetupMenuClicked = [=]() {
             if (Mema::Mema::getInstanceWithoutCreating())
             {
                 juce::PopupMenu setupMenu;
@@ -217,6 +224,12 @@ public:
         memaUIComponent->onPaletteStyleChange = [=](const JUCEAppBasics::CustomLookAndFeel::PaletteStyle& paletteStyle) {
             m_lookAndFeel = std::make_unique<JUCEAppBasics::CustomLookAndFeel>(paletteStyle);
             juce::Desktop::getInstance().setDefaultLookAndFeel(m_lookAndFeel.get());
+        };
+        memaUIComponent->onLoadConfig = [=]() {
+            Mema::Mema::getInstance()->triggerPromptLoadConfig();
+        };
+        memaUIComponent->onSaveConfig = [=]() {
+            Mema::Mema::getInstance()->triggerPromptSaveConfig();
         };
 
         memaUIComponent->handleEditorSizeChangeRequest(m_lastRequestedEditorSize);
