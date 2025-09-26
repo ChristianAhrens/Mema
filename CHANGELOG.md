@@ -4,12 +4,21 @@ All notable changes to Mema will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.8.0] 2025-09-26
 ### Added
+- Added Mema.Re ADM-OSC external control support
+- Added Mema configuration save/load option
+- Added quadrophonic output channel layout support to Mema.Mo and Mema.Re
 
 ### Changed
+- Changed Mema, Mema.Mo, Mema.Re app icons to IconComposer created liquidGlass design
+- Changed Mema.Mo and Mema.Re default UI sizes (macOS, Windows)
+- Changed submodule JUCE to tag 8.0.10
+- Changed Mema behavior to reset patch to unity when selecting different audio IO device
 
 ### Fixed
+- Fixed potential Mema access violation when changing the audio device setup
+- Fixed Mema.Re UI layouting when in faderbank mode and changing IO control direction
 
 ## [0.7.0] 2025-08-16
 ### Added
