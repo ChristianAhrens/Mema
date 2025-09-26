@@ -532,6 +532,8 @@ public:
             blob.copyTo(&state, readPos, sizeof(state));
             readPos += sizeof(state);
 
+            jassert(0 != m_crosspointStates.count(in) && 0 != m_crosspointStates[in].count(out));
+
             m_crosspointStates[in][out] = state;
         }
 
@@ -548,6 +550,8 @@ public:
             readPos += sizeof(out);
             blob.copyTo(&value, readPos, sizeof(value));
             readPos += sizeof(value);
+
+            jassert(0 != m_crosspointValues.count(in) && 0 != m_crosspointValues[in].count(out));
 
             m_crosspointValues[in][out] = value;
         }
