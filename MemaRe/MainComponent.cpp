@@ -211,7 +211,7 @@ MainComponent::MainComponent()
     Mema::runTests();
 #endif
 
-    setSize(400, 350);
+    setSize(800, 600);
 
 #if defined JUCE_IOS
     // iOS is updated via AppStore
