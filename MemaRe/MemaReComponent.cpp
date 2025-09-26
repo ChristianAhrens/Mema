@@ -84,6 +84,7 @@ MemaReComponent::MemaReComponent()
         if (onMessageReadyToSend)
             onMessageReadyToSend(std::make_unique<Mema::ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues)->getSerializedMessage());
         };
+    m_panningCtrlComponent->setExternalControlSettings(std::get<0>(m_externalAdmOscSettings), std::get<1>(m_externalAdmOscSettings), std::get<2>(m_externalAdmOscSettings));
     addChildComponent(m_panningCtrlComponent.get());
 
     setOutputFaderbankCtrlActive();
@@ -166,6 +167,20 @@ const Mema::MemaClientControlComponentBase::ControlsSize MemaReComponent::getCon
         return m_panningCtrlComponent->getControlsSize();
     else
         return Mema::MemaClientControlComponentBase::ControlsSize::S;
+}
+
+void MemaReComponent::setExternalAdmOscSettings(const int ADMOSCport, const juce::IPAddress& ADMOSCremoteIP, const int ADMOSCremotePort)
+{
+    std::get<0>(m_externalAdmOscSettings) = ADMOSCport;
+    std::get<1>(m_externalAdmOscSettings) = ADMOSCremoteIP;
+    std::get<2>(m_externalAdmOscSettings) = ADMOSCremotePort;
+
+    m_panningCtrlComponent->setExternalControlSettings(ADMOSCport, ADMOSCremoteIP, ADMOSCremotePort);
+}
+
+std::tuple<int, juce::IPAddress, int> MemaReComponent::getExternalAdmOscSettings()
+{
+    return m_externalAdmOscSettings;
 }
 
 void MemaReComponent::paint(Graphics &g)

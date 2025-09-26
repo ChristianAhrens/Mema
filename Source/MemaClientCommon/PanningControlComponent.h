@@ -34,6 +34,7 @@ namespace Mema
 {
 
 
+class ADMOSController;
 class InputPositionMapper;
 class TwoDFieldMultisliderComponent;
 
@@ -65,9 +66,13 @@ public:
     void setChannelConfig(const juce::AudioChannelSet& channelConfiguration);
     const juce::AudioChannelSet& getChannelConfig();
 
+    void setExternalControlSettings(int ADMOSCPort, const juce::IPAddress& ADMOSCControllerIP, int ADMOSCControllerPort);
+
+    void handleExternalControlParameter(int objNum, std::uint16_t objType, void* sender = nullptr);
+
 protected:
     //==============================================================================
-    void changeInputPosition(std::uint16_t channel, float xVal, float yVal, float sharpness, int layer);
+    void changeInputPosition(std::uint16_t channel, std::optional<float> xValOpt, std::optional<float> yValOpt, std::optional<float> sharpnessOpt, std::optional<int> layerOpt, juce::NotificationType notification = juce::dontSendNotification);
     void processOutputDistances(std::uint16_t channel, const std::map<juce::AudioChannelSet::ChannelType, float>& channelToOutputsDists);
     void selectInputChannel(std::uint16_t channel);
     void rebuildControls(bool force = false);
@@ -81,6 +86,7 @@ private:
     std::unique_ptr<juce::Grid>                     m_inputControlsGrid;
     std::vector<std::unique_ptr<juce::TextButton>>  m_inputSelectButtons;
     std::vector<std::unique_ptr<juce::TextButton>>  m_inputMuteButtons;
+    std::unique_ptr<ADMOSController>                m_admOsController;
     std::unique_ptr<InputPositionMapper>            m_positionMapper;
     std::unique_ptr<TwoDFieldMultisliderComponent>  m_multiSlider;
 

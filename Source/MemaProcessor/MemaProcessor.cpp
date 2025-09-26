@@ -815,6 +815,14 @@ void MemaProcessor::setMatrixCrosspointEnabledValue(std::uint16_t inputNumber, s
 
 	{
 		const ScopedLock sl(m_audioDeviceIOCallbackLock);
+#ifdef DEBUG
+		// check crosspoint existance - if it is not existing, we should somehow verify afterwards that the matrix symmetry is still given...
+		jassert(0 != m_matrixCrosspointStates.count(inputNumber));
+		if (0 != m_matrixCrosspointStates.count(inputNumber))
+		{
+			jassert(0 != m_matrixCrosspointStates.at(inputNumber).count(outputNumber));
+		}
+#endif
 		m_matrixCrosspointStates[inputNumber][outputNumber] = enabled;
 	}
 
@@ -846,6 +854,14 @@ void MemaProcessor::setMatrixCrosspointFactorValue(std::uint16_t inputNumber, st
 
 	{
 		const ScopedLock sl(m_audioDeviceIOCallbackLock);
+#ifdef DEBUG
+		// check crosspoint existance - if it is not existing, we should somehow verify afterwards that the matrix symmetry is still given...
+		jassert(0 != m_matrixCrosspointValues.count(inputNumber));
+		if (0 != m_matrixCrosspointValues.count(inputNumber))
+		{
+			jassert(0 != m_matrixCrosspointValues.at(inputNumber).count(outputNumber));
+		}
+#endif
 		m_matrixCrosspointValues[inputNumber][outputNumber] = factor;
 	}
 

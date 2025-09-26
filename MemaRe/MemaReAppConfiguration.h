@@ -38,6 +38,9 @@ public:
         PANNINGCOLOUR,
         LOOKANDFEEL,
         CONTROLSSIZE,
+        EXTCTRLCONFIG,
+        ADMOSCHOST,
+        ADMOSCCLIENT,
     };
     static juce::String getTagName(TagID ID)
     {
@@ -57,6 +60,12 @@ public:
             return "LOOKANDFEEL";
         case CONTROLSSIZE:
             return "CONTROLSSIZE";
+        case EXTCTRLCONFIG:
+            return "EXTCTRLCONFIG";
+        case ADMOSCHOST:
+            return "ADMOSCHOST";
+        case ADMOSCCLIENT:
+            return "ADMOSCCLIENT";
         default:
             return "INVALID";
         }
@@ -65,6 +74,8 @@ public:
     enum AttributeID
     {
         ENABLED,
+        IP,
+        PORT,
     };
     static juce::String getAttributeName(AttributeID ID)
     {
@@ -72,6 +83,10 @@ public:
         {
         case ENABLED:
             return "ENABLED";
+        case IP:
+            return "IP";
+        case PORT:
+            return "PORT";
         default:
             return "-";
         }
