@@ -35,6 +35,7 @@ See [LATEST RELEASE](https://github.com/ChristianAhrens/Mema/releases/latest) fo
   * [Note on running on RaspberryPiOS Bullseye](#runonbullseye)
 * [Usecase: Studio sidecar monitoring](#rackmonitoringusecase)
 * [Usecase: Mobile recording monitoring](#mobilerecordingusecase)
+* [Usecase: ADM-OSC driven external panning control](#admoscusecase)
 * [App architecture](#architectureoverview)
 
 
@@ -226,6 +227,28 @@ ___This does only work when using X server as graphics backend. Using Wayland re
 * Mema.Mo on iPadOS in Stagemanager mode
   * 16 audio input channel metering visible
   * 2 audio output channel metering visible
+
+
+<a name="admoscusecase" />
+
+## Usecase: ADM-OSC driven external panning control
+
+[![Example SW setup with Grapes drving Mema.Re driving Mema](https://img.youtube.com/vi/5jSxzoz1hE0/0.jpg)](https://youtu.be/5jSxzoz1hE0)
+
+* Mema on macOS
+  * BlackHole 16ch used to route signal from macOS to Mema
+  * Output to multichannel interface, driving a 9.1.6 ATMOS immersive speaker setup
+* Mema.Mo on macOS
+  * Meterbridge mode
+  * 16 audio input channel metering visible
+  * 16 audio output channel metering visible
+* Mema.Re on macOS
+  * 9.1.6 panning layout active
+  * 16 input panning positions visible, 1-4 active in regular panning layer, 5-6 active in height panning layer
+* Grapes on macOS
+  * Set up to control panning positions in Mema.Re via ADM-OSC
+  * Clips 1-4 configured to control ADM-OSC objects 1-4 with Z=0 -> Mema.Re regular panning layer
+  * Clips 5-6 configured to control ADM-OSC objects 5-6 with Z=1 -> Mema.Re height panning layer
 
 
 <a name="architectureoverview" />
