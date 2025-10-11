@@ -18,6 +18,10 @@
               file="../submodules/JUCE-AppBasics/Source/CustomLookAndFeel.h"/>
         <FILE id="iFIFTc" name="iOS_utils.cpp" compile="1" resource="0" file="../submodules/JUCE-AppBasics/Source/iOS_utils.cpp"/>
         <FILE id="u9384n" name="iOS_utils.h" compile="0" resource="0" file="../submodules/JUCE-AppBasics/Source/iOS_utils.h"/>
+        <FILE id="xMG5QP" name="ServiceTopologyManager.cpp" compile="1" resource="0"
+              file="../submodules/JUCE-AppBasics/Source/ServiceTopologyManager.cpp"/>
+        <FILE id="MwzBUV" name="ServiceTopologyManager.h" compile="0" resource="0"
+              file="../submodules/JUCE-AppBasics/Source/ServiceTopologyManager.h"/>
         <FILE id="y1puHF" name="ToggleStateSlider.cpp" compile="1" resource="0"
               file="../submodules/JUCE-AppBasics/Source/ToggleStateSlider.cpp"/>
         <FILE id="bizpBa" name="ToggleStateSlider.h" compile="0" resource="0"

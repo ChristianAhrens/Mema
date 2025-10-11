@@ -22,6 +22,7 @@
 #include "MemaReComponent.h"
 #include "MemaClientCommon/MemaClientDiscoverComponent.h"
 #include "MemaClientCommon/MemaClientConnectingComponent.h"
+#include "MemaProcessor/MemaServiceData.h"
 
 #include <AboutComponent.h>
 #include <CustomLookAndFeel.h>
@@ -98,7 +99,8 @@ MainComponent::MainComponent()
     addAndMakeVisible(m_remoteComponent.get());
 
     m_discoverComponent = std::make_unique<MemaClientDiscoverComponent>();
-    m_discoverComponent->onServiceSelected = [=](const juce::NetworkServiceDiscovery::Service& selectedService) {
+    m_discoverComponent->setupServiceDiscovery(Mema::ServiceData::getServiceTypeUIDBase(), Mema::ServiceData::getRemoteServiceTypeUID());
+    m_discoverComponent->onServiceSelected = [=](const JUCEAppBasics::SessionMasterAwareService& selectedService) {
         m_selectedService = selectedService;
 
         connectToMema();

@@ -21,9 +21,24 @@
 namespace Mema
 {
 
-juce::String ServiceData::getServiceTypeUID()
+juce::String ServiceData::getServiceTypeUIDBase()
 {
-	return "Mema.MonitorData";
+	return "Mema.";
+}
+
+juce::String ServiceData::getMasterServiceTypeUID()
+{
+	return getServiceTypeUIDBase() + "MasterService";
+}
+
+juce::String ServiceData::getMonitorServiceTypeUID()
+{
+	return getServiceTypeUIDBase() + "MonitorService";
+}
+
+juce::String ServiceData::getRemoteServiceTypeUID()
+{
+	return getServiceTypeUIDBase() + "RemoteService";
 }
 
 juce::String ServiceData::getServiceDescription()

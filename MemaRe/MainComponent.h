@@ -24,6 +24,8 @@
 
 #include "MemaClientCommon/MemaClientControlComponentBase.h"
 
+#include <ServiceTopologyManager.h>
+
 
 class MemaReComponent;
 class MemaClientDiscoverComponent;
@@ -150,29 +152,29 @@ private:
     void connectToMema();
 
     //==============================================================================
-    juce::NetworkServiceDiscovery::Service              m_selectedService;
-    std::unique_ptr<InterprocessConnectionImpl>         m_networkConnection;
+    JUCEAppBasics::SessionMasterAwareService        m_selectedService;
+    std::unique_ptr<InterprocessConnectionImpl>     m_networkConnection;
 
-    std::unique_ptr<MemaReComponent>                    m_remoteComponent;
-    std::unique_ptr<MemaClientDiscoverComponent>        m_discoverComponent;
-    std::unique_ptr<MemaClientConnectingComponent>      m_connectingComponent;
+    std::unique_ptr<MemaReComponent>                m_remoteComponent;
+    std::unique_ptr<MemaClientDiscoverComponent>    m_discoverComponent;
+    std::unique_ptr<MemaClientConnectingComponent>  m_connectingComponent;
 
-    std::unique_ptr<juce::DrawableButton>               m_settingsButton;
-    std::map<int, std::pair<std::string, int>>          m_settingsItems;
-    int                                                 m_settingsHostLookAndFeelId = -1;
+    std::unique_ptr<juce::DrawableButton>           m_settingsButton;
+    std::map<int, std::pair<std::string, int>>      m_settingsItems;
+    int                                             m_settingsHostLookAndFeelId = -1;
 
-    std::unique_ptr<juce::DrawableButton>               m_disconnectButton;
+    std::unique_ptr<juce::DrawableButton>           m_disconnectButton;
 
-    std::unique_ptr<juce::DrawableButton>               m_aboutButton;
-    std::unique_ptr<AboutComponent>                     m_aboutComponent;
+    std::unique_ptr<juce::DrawableButton>           m_aboutButton;
+    std::unique_ptr<AboutComponent>                 m_aboutComponent;
 
-    std::unique_ptr<juce::AlertWindow>                  m_messageBox;
+    std::unique_ptr<juce::AlertWindow>              m_messageBox;
 
-    Status                                              m_currentStatus = Status::Discovering;
+    Status                                          m_currentStatus = Status::Discovering;
 
-    juce::Colour                                        m_panningColour = juce::Colours::forestgreen;
+    juce::Colour                                    m_panningColour = juce::Colours::forestgreen;
 
-    std::unique_ptr<MemaReAppConfiguration>             m_config;
+    std::unique_ptr<MemaReAppConfiguration>         m_config;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };
