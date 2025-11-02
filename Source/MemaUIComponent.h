@@ -66,7 +66,7 @@ public:
     void handleEditorSizeChangeRequest(const juce::Rectangle<int>& requestedSize);
 
     void updateCpuUsageBar(int loadPercent);
-    void updateNetworkUsage(std::map<int, std::pair<double, bool>> netLoads);
+    void updateNetworkUsage(const std::map<int, std::pair<double, bool>>& netLoads);
 
     //==============================================================================
     void darkModeSettingChanged() override;

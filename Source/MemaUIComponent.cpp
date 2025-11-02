@@ -299,7 +299,7 @@ void MemaUIComponent::updateCpuUsageBar(int loadPercent)
         m_sysLoadBar->setLoadPercent(loadPercent);
 }
 
-void MemaUIComponent::updateNetworkUsage(std::map<int, std::pair<double, bool>> netLoads)
+void MemaUIComponent::updateNetworkUsage(const std::map<int, std::pair<double, bool>>& netLoads)
 {
     if (m_netHealthBar)
     {
