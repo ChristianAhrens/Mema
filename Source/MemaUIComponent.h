@@ -23,6 +23,7 @@
 #include "MemaAppConfiguration.h"
 
 #include <CustomLookAndFeel.h>
+#include <ServiceTopologyManager.h>
 
 class LoadBar;
 class NetworkHealthBar;
@@ -67,6 +68,7 @@ public:
 
     void updateCpuUsageBar(int loadPercent);
     void updateNetworkUsage(const std::map<int, std::pair<double, bool>>& netLoads);
+    void updateSessionServiceTopology(const JUCEAppBasics::SessionServiceTopology& serviceDiscoveryTopologyString);
 
     //==============================================================================
     void darkModeSettingChanged() override;

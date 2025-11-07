@@ -24,7 +24,7 @@
 #include <AppConfigurationBase.h>
 
 //==============================================================================
-class LoadBar : public juce::Component
+class LoadBar : public juce::Component//, public juce::TooltipClient
 {
 public:
     LoadBar(juce::String label, bool showPercent = true, bool showMax = true) : juce::Component::Component() { m_label = label; m_showPercent = showPercent; m_showMax = showMax; }
@@ -114,6 +114,11 @@ public:
         g.drawText(labelText, bounds, juce::Justification::centred);
     };
 
+    void setSessionTopology(const JUCEAppBasics::SessionServiceTopology& sessionTopology)
+    {
+        m_sessionTopology = sessionTopology;
+    }
+
     //==============================================================================
     void setLoadPercent(int loadPercent, int id = 0)
     {
@@ -132,6 +137,7 @@ private:
     juce::String m_label;
     bool m_showPercent = false;
     bool m_showMax = false;
+    JUCEAppBasics::SessionServiceTopology m_sessionTopology;
 };
 
 //==============================================================================
@@ -309,6 +315,12 @@ void MemaUIComponent::updateNetworkUsage(const std::map<int, std::pair<double, b
             m_netHealthBar->setAlert(netLoad.second.second, netLoad.first);
         }
     }
+}
+
+void MemaUIComponent::updateSessionServiceTopology(const JUCEAppBasics::SessionServiceTopology& sessionServiceTopology)
+{
+    if (m_netHealthBar)
+        m_netHealthBar->setSessionTopology(sessionServiceTopology);
 }
 
 void MemaUIComponent::paint(Graphics &g)

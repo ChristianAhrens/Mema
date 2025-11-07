@@ -25,11 +25,8 @@
 #include "../MemaProcessorEditor/MemaProcessorEditor.h"
 #include "../MemaAppConfiguration.h"
 
+#include <ServiceTopologyManager.h>
 
-namespace JUCEAppBasics
-{
-    class ServiceTopologyManager;
-};
 
 namespace Mema
 {
@@ -136,6 +133,9 @@ public:
 
     //==============================================================================
     std::map<int, std::pair<double, bool>> getNetworkHealth();
+
+    //==============================================================================
+    JUCEAppBasics::SessionServiceTopology getDiscoveredServicesTopology();
 
     //==============================================================================
     const String getName() const override;

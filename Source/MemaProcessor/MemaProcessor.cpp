@@ -24,7 +24,6 @@
 #include "../MemaAppConfiguration.h"
 
 #include <CustomLookAndFeel.h>
-#include <ServiceTopologyManager.h>
 
 namespace Mema
 {
@@ -968,6 +967,14 @@ std::map<int, std::pair<double, bool>> MemaProcessor::getNetworkHealth()
 {
 	if (m_networkServer)
 		return m_networkServer->getListHealth();
+	else
+		return {};
+}
+
+JUCEAppBasics::SessionServiceTopology MemaProcessor::getDiscoveredServicesTopology()
+{
+	if (m_serviceTopologyManager)
+		return m_serviceTopologyManager->getDiscoveredServiceTopology();
 	else
 		return {};
 }

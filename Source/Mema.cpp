@@ -94,6 +94,8 @@ void Mema::timerCallback()
             onCpuUsageUpdate(int(m_MemaProcessor->getDeviceManager()->getCpuUsage() * 100.0));
         if (onNetworkUsageUpdate)
             onNetworkUsageUpdate(m_MemaProcessor->getNetworkHealth());
+        if (onServiceDiscoveryTopologyUpdate)
+            onServiceDiscoveryTopologyUpdate(m_MemaProcessor->getDiscoveredServicesTopology());
     }
 }
 
