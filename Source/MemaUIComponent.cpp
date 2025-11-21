@@ -24,7 +24,7 @@
 #include <AppConfigurationBase.h>
 
 //==============================================================================
-class LoadBar : public juce::Component//, public juce::TooltipClient
+class LoadBar : public juce::Component
 {
 public:
     LoadBar(juce::String label, bool showPercent = true, bool showMax = true) : juce::Component::Component() { m_label = label; m_showPercent = showPercent; m_showMax = showMax; }
@@ -113,7 +113,13 @@ public:
         g.setColour(getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
         g.drawText(labelText, bounds, juce::Justification::centred);
     };
+    void mouseUp(const MouseEvent& event) override
+    {
+        if (contains(event.position))
+            JUCEAppBasics::ServiceTopologyManager::showServiceTopologyMenu(m_sessionTopology);
+    };
 
+    //==============================================================================
     void setSessionTopology(const JUCEAppBasics::SessionServiceTopology& sessionTopology)
     {
         m_sessionTopology = sessionTopology;

@@ -27,7 +27,7 @@ public:
     MemaClientConnectingComponent();
     ~MemaClientConnectingComponent() override;
 
-    void setServiceDescription(const juce::String& serviceDescription);
+    void setMasterServiceDescription(const juce::String& serviceDescription);
 
     //==============================================================================
     void resized() override;

@@ -63,6 +63,7 @@ void MemaClientDiscoverComponent::resetServices()
 {
     if (m_discoveredServicesSelection)
         m_discoveredServicesSelection->setSelectedId(-1, juce::dontSendNotification);
+    setMasterServiceDescription("");
 }
 
 void MemaClientDiscoverComponent::setDiscoveredServices(const std::vector<JUCEAppBasics::SessionMasterAwareService>& services)
@@ -99,20 +100,30 @@ void MemaClientDiscoverComponent::setupServiceDiscovery(const juce::String& serv
         }
     }
 
-    m_availableServices = std::make_unique<JUCEAppBasics::ServiceTopologyManager::ServiceDiscovery>(
-        serviceTypeUIDBase,
-        Mema::ServiceData::getBroadcastPort());
+    m_serviceTopologyManager = std::make_unique<JUCEAppBasics::ServiceTopologyManager>(
+        serviceTypeUIDBase, serviceTypeUID,
+        Mema::ServiceData::getServiceDescription(),
+        "",
+        Mema::ServiceData::getBroadcastPort(),
+        Mema::ServiceData::getConnectionPort());
 
-    m_availableServices->onChange = [=]() {
-        setDiscoveredServices(m_availableServices->getServices());
+    m_serviceTopologyManager->onDiscoveredTopologyChanged = [=]() {
+        setDiscoveredServices(getAvailableServices());
     };
 }
 
 std::vector<JUCEAppBasics::SessionMasterAwareService> MemaClientDiscoverComponent::getAvailableServices()
 {
-    if (m_availableServices)
-        return m_availableServices->getServices();
-    else
-        return {};
+    std::vector<JUCEAppBasics::SessionMasterAwareService> services;
+    services.reserve(m_serviceTopologyManager->getDiscoveredServiceTopology().size());
+    for (auto const& serviceKV : m_serviceTopologyManager->getDiscoveredServiceTopology())
+        services.push_back(serviceKV.first);
+    return services;
+}
+
+void MemaClientDiscoverComponent::setMasterServiceDescription(const juce::String& masterServiceDescription)
+{
+    if (m_serviceTopologyManager)
+        m_serviceTopologyManager->setSessionMasterServiceDescription(masterServiceDescription);
 }
 

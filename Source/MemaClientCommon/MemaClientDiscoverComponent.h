@@ -38,6 +38,8 @@ public:
 
     std::vector<JUCEAppBasics::SessionMasterAwareService> getAvailableServices();
 
+    void setMasterServiceDescription(const juce::String& masterServiceDescription);
+
     //==============================================================================
     std::function<void(const JUCEAppBasics::SessionMasterAwareService&)> onServiceSelected;
 
@@ -46,11 +48,11 @@ private:
     void setDiscoveredServices(const std::vector<JUCEAppBasics::SessionMasterAwareService>& services);
     
     //==============================================================================
-    std::unique_ptr<juce::Label>                                                m_discoveredServicesLabel;
-    std::unique_ptr<juce::ComboBox>                                             m_discoveredServicesSelection;
-    std::vector<JUCEAppBasics::SessionMasterAwareService>                       m_discoveredServices;
+    std::unique_ptr<juce::Label>                            m_discoveredServicesLabel;
+    std::unique_ptr<juce::ComboBox>                         m_discoveredServicesSelection;
+    std::vector<JUCEAppBasics::SessionMasterAwareService>   m_discoveredServices;
 
-    std::unique_ptr<JUCEAppBasics::ServiceTopologyManager::ServiceDiscovery>    m_availableServices;
+    std::unique_ptr<JUCEAppBasics::ServiceTopologyManager>  m_serviceTopologyManager;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MemaClientDiscoverComponent)
 };
