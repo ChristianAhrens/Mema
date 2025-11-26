@@ -133,6 +133,7 @@ void Mema::clearUICallbacks()
     onEditorSizeChangeRequested = nullptr;
     onCpuUsageUpdate = nullptr;
     onNetworkUsageUpdate = nullptr;
+    onServiceDiscoveryTopologyUpdate = nullptr;
     
     if (auto editor = dynamic_cast<MemaProcessorEditor*>(m_MemaProcessor->getActiveEditor()))
         editor->onEditorSizeChangeRequested = nullptr;

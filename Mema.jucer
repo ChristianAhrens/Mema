@@ -20,6 +20,10 @@
               file="submodules/JUCE-AppBasics/Source/ServiceTopologyManager.cpp"/>
         <FILE id="Vvlccq" name="ServiceTopologyManager.h" compile="0" resource="0"
               file="submodules/JUCE-AppBasics/Source/ServiceTopologyManager.h"/>
+        <FILE id="Ar7bj6" name="ServiceTopologyTreeView.cpp" compile="1" resource="0"
+              file="submodules/JUCE-AppBasics/Source/ServiceTopologyTreeView.cpp"/>
+        <FILE id="liPyX1" name="ServiceTopologyTreeView.h" compile="0" resource="0"
+              file="submodules/JUCE-AppBasics/Source/ServiceTopologyTreeView.h"/>
         <FILE id="sSHneS" name="ToggleStateSlider.cpp" compile="1" resource="0"
               file="submodules/JUCE-AppBasics/Source/ToggleStateSlider.cpp"/>
         <FILE id="Jh9oHX" name="ToggleStateSlider.h" compile="0" resource="0"
