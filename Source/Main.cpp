@@ -255,6 +255,9 @@ public:
 
     void showUiAsCalloutBox(const juce::Point<int>& positionToPointTo)
     {
+        // in case the ui is currently shown as standalone window, clean that up first
+        disconnectAndDeleteMemaUIComponent();
+
         auto const display = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay();
         jassert(display);
         auto position = display->userArea.getConstrainedPoint(positionToPointTo);
