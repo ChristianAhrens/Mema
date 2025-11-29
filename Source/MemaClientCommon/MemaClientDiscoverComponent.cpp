@@ -20,23 +20,28 @@
 
 #include <MemaProcessor/MemaServiceData.h>
 
+#include <ServiceTopologyTreeView.h>
+
 
 MemaClientDiscoverComponent::MemaClientDiscoverComponent()
     : juce::Component()
 {
-    m_discoveredServicesLabel = std::make_unique<juce::Label>("ServicesLabel", "Available Mema sessions:");
-    addAndMakeVisible(m_discoveredServicesLabel.get());
+    m_discoveredTopologyLabel = std::make_unique<juce::Label>("TopologyLabel", "Available Mema sessions:");
+    addAndMakeVisible(m_discoveredTopologyLabel.get());
 
-    m_discoveredServicesSelection = std::make_unique<juce::ComboBox>("ServicesComboBox");
-    m_discoveredServicesSelection->onChange = [=]() {
-        auto idx = m_discoveredServicesSelection->getSelectedItemIndex();
-        
-        if (onServiceSelected && m_discoveredServices.size() > idx)
-            onServiceSelected(m_discoveredServices.at(idx));
+    m_discoveredTopologyTreeView = std::make_unique<JUCEAppBasics::ServiceTopologyTreeView>(true);
+    addAndMakeVisible(m_discoveredTopologyTreeView.get());
+
+    m_selectServiceButton = std::make_unique<juce::TextButton>("Join session", "Join the selected Mema session.");
+    m_selectServiceButton->onClick = [=]() {
+        if (onServiceSelected && m_discoveredTopologyTreeView)
+        {
+            auto item = dynamic_cast<JUCEAppBasics::MasterServiceTreeViewItem*>(m_discoveredTopologyTreeView->getSelectedItem(0));
+            if (nullptr != item)
+                onServiceSelected(item->getServiceInfo());
+        }
     };
-    m_discoveredServicesSelection->setTextWhenNoChoicesAvailable("Select an instance to connect");
-    m_discoveredServicesSelection->setTextWhenNoChoicesAvailable("None");
-    addAndMakeVisible(m_discoveredServicesSelection.get());
+    addAndMakeVisible(m_selectServiceButton.get());
 }
 
 MemaClientDiscoverComponent::~MemaClientDiscoverComponent()
@@ -50,35 +55,38 @@ void MemaClientDiscoverComponent::paint(Graphics &g)
 
 void MemaClientDiscoverComponent::resized()
 {
-    auto contentWidth = 250;
-    auto contentHeight = 80;
-    auto elementHeight = contentHeight / 2;
-    auto elementsBounds = juce::Rectangle<int>((getWidth() - contentWidth) / 2, (getHeight() - contentHeight) / 2, contentWidth, contentHeight);
+    auto labelHeight = 35;
+    auto buttonHeight = 35;
+    auto margin = 4;
+    auto maxDiscoveryElmsWidth = 450;
+    auto maxDiscoveryElmsHeight = 350;
 
-    m_discoveredServicesLabel->setBounds(elementsBounds.removeFromTop(elementHeight));
-    m_discoveredServicesSelection->setBounds(elementsBounds);
+    auto bounds = getLocalBounds().reduced(2*margin);
+    if (bounds.getWidth() > maxDiscoveryElmsWidth)
+    {
+        auto hmargin = int((bounds.getWidth() - maxDiscoveryElmsWidth) * 0.5f);
+        bounds.removeFromLeft(hmargin);
+        bounds.removeFromRight(hmargin);
+    }
+    if (bounds.getHeight() > maxDiscoveryElmsHeight)
+    {
+        auto vmargin = int((bounds.getHeight() - maxDiscoveryElmsHeight) * 0.5f);
+        bounds.removeFromTop(vmargin);
+        bounds.removeFromBottom(vmargin);
+    }
+
+    if (m_selectServiceButton)
+        m_selectServiceButton->setBounds(bounds.removeFromBottom(buttonHeight));
+    bounds.removeFromBottom(margin);
+    if (m_discoveredTopologyLabel)
+        m_discoveredTopologyLabel->setBounds(bounds.removeFromTop(labelHeight));
+    if (m_discoveredTopologyTreeView)
+        m_discoveredTopologyTreeView->setBounds(bounds);
 }
 
 void MemaClientDiscoverComponent::resetServices()
 {
-    if (m_discoveredServicesSelection)
-        m_discoveredServicesSelection->setSelectedId(-1, juce::dontSendNotification);
     setMasterServiceDescription("");
-}
-
-void MemaClientDiscoverComponent::setDiscoveredServices(const std::vector<JUCEAppBasics::SessionMasterAwareService>& services)
-{
-    m_discoveredServices = services;
-
-    if (m_discoveredServicesSelection)
-        m_discoveredServicesSelection->clear();
-
-    int i = 1;
-    for (auto const& service : services)
-    {
-        m_discoveredServicesSelection->addItem(service.description, i);
-        i++;
-    }
 }
 
 void MemaClientDiscoverComponent::setupServiceDiscovery(const juce::String& serviceTypeUIDBase, const juce::String& serviceTypeUID)
@@ -108,7 +116,8 @@ void MemaClientDiscoverComponent::setupServiceDiscovery(const juce::String& serv
         Mema::ServiceData::getConnectionPort());
 
     m_serviceTopologyManager->onDiscoveredTopologyChanged = [=]() {
-        setDiscoveredServices(getAvailableServices());
+        if (m_serviceTopologyManager)
+            setDiscoveredServiceTopology(m_serviceTopologyManager->getDiscoveredServiceTopology());
     };
 }
 
@@ -120,10 +129,15 @@ std::vector<JUCEAppBasics::SessionMasterAwareService> MemaClientDiscoverComponen
         services.push_back(serviceKV.first);
     return services;
 }
-
 void MemaClientDiscoverComponent::setMasterServiceDescription(const juce::String& masterServiceDescription)
 {
     if (m_serviceTopologyManager)
         m_serviceTopologyManager->setSessionMasterServiceDescription(masterServiceDescription);
+}
+
+void MemaClientDiscoverComponent::setDiscoveredServiceTopology(const JUCEAppBasics::SessionServiceTopology& topology)
+{
+    if (m_discoveredTopologyTreeView)
+        m_discoveredTopologyTreeView->setServiceTopology(topology);
 }
 
