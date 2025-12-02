@@ -204,7 +204,7 @@ void MemaMoComponent::setNumVisibleChannels(std::uint16_t count)
 
 void MemaMoComponent::paint(Graphics &g)
 {
-    g.fillAll(getLookAndFeel().findColour(juce::LookAndFeel_V4::ColourScheme::widgetBackground));
+    g.fillAll(getLookAndFeel().findColour(juce::Slider::backgroundColourId));
 }
 
 void MemaMoComponent::resized()
