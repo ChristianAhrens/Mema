@@ -20,6 +20,7 @@
 
 #include <MemaProcessor/MemaServiceData.h>
 
+#include <CustomLookAndFeel.h>
 #include <ServiceTopologyTreeView.h>
 
 
@@ -82,6 +83,13 @@ void MemaClientDiscoverComponent::resized()
         m_discoveredTopologyLabel->setBounds(bounds.removeFromTop(labelHeight));
     if (m_discoveredTopologyTreeView)
         m_discoveredTopologyTreeView->setBounds(bounds);
+}
+
+void MemaClientDiscoverComponent::lookAndFeelChanged()
+{
+    getLookAndFeel().setColour(
+        TreeView::ColourIds::selectedItemBackgroundColourId, 
+        getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::MeteringRmsColourId));
 }
 
 void MemaClientDiscoverComponent::resetServices()

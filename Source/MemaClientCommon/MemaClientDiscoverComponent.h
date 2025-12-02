@@ -36,6 +36,7 @@ public:
     //==============================================================================
     void paint(Graphics&) override;
     void resized() override;
+    void lookAndFeelChanged() override;
 
     void setupServiceDiscovery(const juce::String& serviceTypeUIDBase, const juce::String& serviceTypeUID);
     void resetServices();
