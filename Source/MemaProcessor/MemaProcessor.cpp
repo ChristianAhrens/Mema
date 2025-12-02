@@ -920,7 +920,7 @@ void MemaProcessor::setChannelCounts(std::uint16_t inputChannelCount, std::uint1
 bool MemaProcessor::setPlugin(const juce::PluginDescription& pluginDescription)
 {
 	juce::AudioPluginFormatManager formatManager;
-	formatManager.addDefaultFormats();
+	addDefaultFormatsToManager(formatManager);
 	auto registeredFormats = formatManager.getFormats();
 
 	auto success = false;

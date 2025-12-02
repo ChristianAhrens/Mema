@@ -192,7 +192,7 @@ class PluginListAndSelectComponent : public juce::Component
 public:
     PluginListAndSelectComponent()
     {
-        m_formatManager.addDefaultFormats();
+        addDefaultFormatsToManager(m_formatManager);
         juce::File deadMansPedalFile;
         m_pluginListComponent = std::make_unique<juce::PluginListComponent>(m_formatManager, m_pluginList, deadMansPedalFile, nullptr);
         m_pluginListComponent->getTableListBox().setMultipleSelectionEnabled(false);
