@@ -31,6 +31,7 @@ MemaClientDiscoverComponent::MemaClientDiscoverComponent()
     addAndMakeVisible(m_discoveredTopologyLabel.get());
 
     m_discoveredTopologyTreeView = std::make_unique<JUCEAppBasics::ServiceTopologyTreeView>(true);
+    m_discoveredTopologyTreeView->setDefaultOpenness(true);
     addAndMakeVisible(m_discoveredTopologyTreeView.get());
 
     m_selectServiceButton = std::make_unique<juce::TextButton>("Join session", "Join the selected Mema session.");
