@@ -144,6 +144,7 @@ MainComponent::MainComponent()
     m_settingsItems[MemaReSettingsOption::PanningColour_Green] = std::make_pair("Green", 1);
     m_settingsItems[MemaReSettingsOption::PanningColour_Red] = std::make_pair("Red", 0);
     m_settingsItems[MemaReSettingsOption::PanningColour_Blue] = std::make_pair("Blue", 0);
+    m_settingsItems[MemaReSettingsOption::PanningColour_Pink] = std::make_pair("Anni Pink", 0);
     // default controls size is S
     m_settingsItems[MemaReSettingsOption::ControlsSize_S] = std::make_pair("S", 1);
     m_settingsItems[MemaReSettingsOption::ControlsSize_M] = std::make_pair("M", 0);
