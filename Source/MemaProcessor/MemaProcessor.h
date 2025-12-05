@@ -25,6 +25,8 @@
 #include "../MemaProcessorEditor/MemaProcessorEditor.h"
 #include "../MemaAppConfiguration.h"
 
+#include <ServiceTopologyManager.h>
+
 
 namespace Mema
 {
@@ -36,9 +38,6 @@ class MemaInputCommander;
 class MemaOutputCommander;
 class MemaCrosspointCommander;
 class MemaNetworkClientCommanderWrapper;
-#if JUCE_WINDOWS
-struct ServiceAdvertiser;
-#endif
 
 
 //==============================================================================
@@ -134,6 +133,9 @@ public:
 
     //==============================================================================
     std::map<int, std::pair<double, bool>> getNetworkHealth();
+
+    //==============================================================================
+    JUCEAppBasics::SessionServiceTopology getDiscoveredServicesTopology();
 
     //==============================================================================
     const String getName() const override;
@@ -253,11 +255,7 @@ private:
     std::unique_ptr<ResizeableWindowWithTitleBarAndCloseCallback>   m_pluginEditorWindow;
 
     //==============================================================================
-#if JUCE_WINDOWS
-    std::unique_ptr<ServiceAdvertiser>  m_serviceAdvertiser;
-#else
-    std::unique_ptr<juce::NetworkServiceDiscovery::Advertiser>  m_serviceAdvertiser;
-#endif
+    std::unique_ptr<JUCEAppBasics::ServiceTopologyManager>  m_serviceTopologyManager;
     std::shared_ptr<InterprocessConnectionServerImpl> m_networkServer;
     std::unique_ptr<MemaNetworkClientCommanderWrapper> m_networkCommanderWrapper;
     std::map<int, std::vector<SerializableMessage::SerializableMessageType>> m_trafficTypesPerConnection;

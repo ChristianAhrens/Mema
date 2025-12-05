@@ -1,13 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="ja98xe" name="Mema.Re" projectType="guiapp" useAppConfig="0"
-              jucerFormatVersion="1" version="0.8.1" companyWebsite="github.com/ChristianAhrens/Mema"
+              jucerFormatVersion="1" version="0.9.0" companyWebsite="github.com/ChristianAhrens/Mema"
               bundleIdentifier="com.ChristianAhrens.MemaRe" headerPath="../../../submodules/JUCE-AppBasics/Source&#10;../../../Source"
               defines="JUCE_USE_LAME_AUDIO_FORMAT=1,&#10;JUCE_USE_MP3AUDIOFORMAT=1,&#10;JUCE_DISPLAY_SPLASH_SCREEN=0"
               companyName="ChristianAhrens" companyCopyright="Copyright (c) 2025 Christian Ahrens.">
   <MAINGROUP id="YIs3Nm" name="Mema.Re">
     <GROUP id="{60526C8C-38C9-8A62-4BE8-08FDFBF21423}" name="submodules">
       <GROUP id="{A748DC48-D24B-A4B1-772D-A48B7873F767}" name="JUCEAppBascics">
+        <FILE id="sCmZLF" name="ServiceTopologyTreeView.cpp" compile="1" resource="0"
+              file="../submodules/JUCE-AppBasics/Source/ServiceTopologyTreeView.cpp"/>
+        <FILE id="Fwn9RQ" name="ServiceTopologyTreeView.h" compile="0" resource="0"
+              file="../submodules/JUCE-AppBasics/Source/ServiceTopologyTreeView.h"/>
+        <FILE id="sbyvn5" name="ServiceTopologyManager.cpp" compile="1" resource="0"
+              file="../submodules/JUCE-AppBasics/Source/ServiceTopologyManager.cpp"/>
+        <FILE id="FSIDig" name="ServiceTopologyManager.h" compile="0" resource="0"
+              file="../submodules/JUCE-AppBasics/Source/ServiceTopologyManager.h"/>
         <FILE id="bPm9Uq" name="FixedFontTextEditor.cpp" compile="1" resource="0"
               file="../submodules/JUCE-AppBasics/Source/FixedFontTextEditor.cpp"/>
         <FILE id="G7oFg1" name="FixedFontTextEditor.h" compile="0" resource="0"

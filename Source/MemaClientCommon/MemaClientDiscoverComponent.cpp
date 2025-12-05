@@ -20,153 +20,30 @@
 
 #include <MemaProcessor/MemaServiceData.h>
 
-
-
- //==============================================================================
-PortReuseAvailableServiceList::PortReuseAvailableServiceList(const juce::String& serviceType, int broadcastPort)
-    : juce::Thread(SystemStats::getJUCEVersion() + ": Discovery_listen"), serviceTypeUID(serviceType)
-{
-#if JUCE_ANDROID
-    acquireMulticastLock();
-#endif
-
-    socket.setEnablePortReuse(true);
-    socket.bindToPort(broadcastPort);
-    startThread(juce::Thread::Priority::background);
-}
-
-PortReuseAvailableServiceList::~PortReuseAvailableServiceList()
-{
-    socket.shutdown();
-    stopThread(2000);
-
-#if JUCE_ANDROID
-    releaseMulticastLock();
-#endif
-}
-
-void PortReuseAvailableServiceList::run()
-{
-    while (!threadShouldExit())
-    {
-        if (socket.waitUntilReady(true, 200) == 1)
-        {
-            char buffer[1024];
-            auto bytesRead = socket.read(buffer, sizeof(buffer) - 1, false);
-
-            if (bytesRead > 10)
-                if (auto xml = parseXML(juce::String(juce::CharPointer_UTF8(buffer),
-                    juce::CharPointer_UTF8(buffer + bytesRead))))
-                    if (xml->hasTagName(serviceTypeUID))
-                        handleMessage(*xml);
-        }
-
-        removeTimedOutServices();
-    }
-}
-
-std::vector<juce::NetworkServiceDiscovery::Service> PortReuseAvailableServiceList::getServices() const
-{
-    const juce::ScopedLock sl(listLock);
-    auto listCopy = services;
-    return listCopy;
-}
-
-void PortReuseAvailableServiceList::handleAsyncUpdate()
-{
-    juce::NullCheckedInvocation::invoke(onChange);
-}
-
-void PortReuseAvailableServiceList::handleMessage(const XmlElement& xml)
-{
-    juce::NetworkServiceDiscovery::Service service;
-    service.instanceID = xml.getStringAttribute("id");
-
-    if (service.instanceID.trim().isNotEmpty())
-    {
-        service.description = xml.getStringAttribute("name");
-        service.address = juce::IPAddress(xml.getStringAttribute("address"));
-        service.port = xml.getIntAttribute("port");
-        service.lastSeen = juce::Time::getCurrentTime();
-
-        handleMessage(service);
-    }
-}
-
-static void sortServiceList(std::vector<juce::NetworkServiceDiscovery::Service>& services)
-{
-    auto compareServices = [](const juce::NetworkServiceDiscovery::Service& s1,
-        const juce::NetworkServiceDiscovery::Service& s2)
-        {
-            return s1.instanceID < s2.instanceID;
-        };
-
-    std::sort(services.begin(), services.end(), compareServices);
-}
-
-void PortReuseAvailableServiceList::handleMessage(const juce::NetworkServiceDiscovery::Service& service)
-{
-    const juce::ScopedLock sl(listLock);
-
-    for (auto& s : services)
-    {
-        if (s.instanceID == service.instanceID)
-        {
-            if (s.description != service.description
-                || s.address != service.address
-                || s.port != service.port)
-            {
-                s = service;
-                triggerAsyncUpdate();
-            }
-
-            s.lastSeen = service.lastSeen;
-            return;
-        }
-    }
-
-    services.push_back(service);
-    sortServiceList(services);
-    triggerAsyncUpdate();
-}
-
-void PortReuseAvailableServiceList::removeTimedOutServices()
-{
-    const double timeoutSeconds = 5.0;
-    auto oldestAllowedTime = juce::Time::getCurrentTime() - juce::RelativeTime::seconds(timeoutSeconds);
-
-    const juce::ScopedLock sl(listLock);
-
-    auto oldEnd = std::end(services);
-    auto newEnd = std::remove_if(std::begin(services), oldEnd,
-        [=](const juce::NetworkServiceDiscovery::Service& s) { return s.lastSeen < oldestAllowedTime; });
-
-    if (newEnd != oldEnd)
-    {
-        services.erase(newEnd, oldEnd);
-        triggerAsyncUpdate();
-    }
-}
+#include <CustomLookAndFeel.h>
+#include <ServiceTopologyTreeView.h>
 
 
 MemaClientDiscoverComponent::MemaClientDiscoverComponent()
     : juce::Component()
 {
-    m_discoveredServicesLabel = std::make_unique<juce::Label>("ServicesLabel", "Available Mema instances:");
-    addAndMakeVisible(m_discoveredServicesLabel.get());
+    m_discoveredTopologyLabel = std::make_unique<juce::Label>("TopologyLabel", "Available Mema sessions:");
+    addAndMakeVisible(m_discoveredTopologyLabel.get());
 
-    m_discoveredServicesSelection = std::make_unique<juce::ComboBox>("ServicesComboBox");
-    m_discoveredServicesSelection->onChange = [=]() {
-        auto idx = m_discoveredServicesSelection->getSelectedItemIndex();
-        
-        if (onServiceSelected && m_discoveredServices.size() > idx)
-            onServiceSelected(m_discoveredServices.at(idx));
+    m_discoveredTopologyTreeView = std::make_unique<JUCEAppBasics::ServiceTopologyTreeView>(true);
+    m_discoveredTopologyTreeView->setDefaultOpenness(true);
+    addAndMakeVisible(m_discoveredTopologyTreeView.get());
+
+    m_selectServiceButton = std::make_unique<juce::TextButton>("Join session", "Join the selected Mema session.");
+    m_selectServiceButton->onClick = [=]() {
+        if (onServiceSelected && m_discoveredTopologyTreeView)
+        {
+            auto item = dynamic_cast<JUCEAppBasics::MasterServiceTreeViewItem*>(m_discoveredTopologyTreeView->getSelectedItem(0));
+            if (nullptr != item)
+                onServiceSelected(item->getServiceInfo());
+        }
     };
-    m_discoveredServicesSelection->setTextWhenNoChoicesAvailable("Select an instance to connect");
-    m_discoveredServicesSelection->setTextWhenNoChoicesAvailable("None");
-    addAndMakeVisible(m_discoveredServicesSelection.get());
-
-    setupServiceDiscovery();
+    addAndMakeVisible(m_selectServiceButton.get());
 }
 
 MemaClientDiscoverComponent::~MemaClientDiscoverComponent()
@@ -180,37 +57,48 @@ void MemaClientDiscoverComponent::paint(Graphics &g)
 
 void MemaClientDiscoverComponent::resized()
 {
-    auto contentWidth = 250;
-    auto contentHeight = 80;
-    auto elementHeight = contentHeight / 2;
-    auto elementsBounds = juce::Rectangle<int>((getWidth() - contentWidth) / 2, (getHeight() - contentHeight) / 2, contentWidth, contentHeight);
+    auto labelHeight = 35;
+    auto buttonHeight = 35;
+    auto margin = 4;
+    auto maxDiscoveryElmsWidth = 450;
+    auto maxDiscoveryElmsHeight = 350;
 
-    m_discoveredServicesLabel->setBounds(elementsBounds.removeFromTop(elementHeight));
-    m_discoveredServicesSelection->setBounds(elementsBounds);
+    auto bounds = getLocalBounds().reduced(2*margin);
+    if (bounds.getWidth() > maxDiscoveryElmsWidth)
+    {
+        auto hmargin = int((bounds.getWidth() - maxDiscoveryElmsWidth) * 0.5f);
+        bounds.removeFromLeft(hmargin);
+        bounds.removeFromRight(hmargin);
+    }
+    if (bounds.getHeight() > maxDiscoveryElmsHeight)
+    {
+        auto vmargin = int((bounds.getHeight() - maxDiscoveryElmsHeight) * 0.5f);
+        bounds.removeFromTop(vmargin);
+        bounds.removeFromBottom(vmargin);
+    }
+
+    if (m_selectServiceButton)
+        m_selectServiceButton->setBounds(bounds.removeFromBottom(buttonHeight));
+    bounds.removeFromBottom(margin);
+    if (m_discoveredTopologyLabel)
+        m_discoveredTopologyLabel->setBounds(bounds.removeFromTop(labelHeight));
+    if (m_discoveredTopologyTreeView)
+        m_discoveredTopologyTreeView->setBounds(bounds);
+}
+
+void MemaClientDiscoverComponent::lookAndFeelChanged()
+{
+    getLookAndFeel().setColour(
+        TreeView::ColourIds::selectedItemBackgroundColourId, 
+        getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::MeteringRmsColourId));
 }
 
 void MemaClientDiscoverComponent::resetServices()
 {
-    if (m_discoveredServicesSelection)
-        m_discoveredServicesSelection->setSelectedId(-1, juce::dontSendNotification);
+    setMasterServiceDescription("");
 }
 
-void MemaClientDiscoverComponent::setDiscoveredServices(const std::vector<juce::NetworkServiceDiscovery::Service>& services)
-{
-    m_discoveredServices = services;
-
-    if (m_discoveredServicesSelection)
-        m_discoveredServicesSelection->clear();
-
-    int i = 1;
-    for (auto const& service : services)
-    {
-        m_discoveredServicesSelection->addItem(service.description, i);
-        i++;
-    }
-}
-
-void MemaClientDiscoverComponent::setupServiceDiscovery()
+void MemaClientDiscoverComponent::setupServiceDiscovery(const juce::String& serviceTypeUIDBase, const juce::String& serviceTypeUID)
 {
     // scope to autodestruct testSocket
     {
@@ -220,29 +108,45 @@ void MemaClientDiscoverComponent::setupServiceDiscovery()
         {
             auto conflictTitle = "Service discovery error";
             auto conflictInfo = "Unable to discover Mema instances\nas the discovery broadcast port cannot be used.";
-            juce::AlertWindow::showOkCancelBox(juce::MessageBoxIconType::WarningIcon, conflictTitle, conflictInfo, "Retry", "Quit", nullptr, juce::ModalCallbackFunction::create([this](int result) {
+            juce::AlertWindow::showOkCancelBox(juce::MessageBoxIconType::WarningIcon, conflictTitle, conflictInfo, "Retry", "Quit", nullptr, juce::ModalCallbackFunction::create([this, serviceTypeUIDBase, serviceTypeUID](int result) {
                 if (1 == result)
-                    setupServiceDiscovery();
+                    setupServiceDiscovery(serviceTypeUIDBase, serviceTypeUID);
                 else
                     juce::JUCEApplication::getInstance()->quit();
             }));
         }
     }
 
-    m_availableServices = std::make_unique<PortReuseAvailableServiceList>(
-        Mema::ServiceData::getServiceTypeUID(),
-        Mema::ServiceData::getBroadcastPort());
+    m_serviceTopologyManager = std::make_unique<JUCEAppBasics::ServiceTopologyManager>(
+        serviceTypeUIDBase, serviceTypeUID,
+        JUCEAppBasics::ServiceTopologyManager::getServiceDescription(),
+        "",
+        Mema::ServiceData::getBroadcastPort(),
+        Mema::ServiceData::getConnectionPort());
 
-    m_availableServices->onChange = [=]() {
-        setDiscoveredServices(m_availableServices->getServices());
+    m_serviceTopologyManager->onDiscoveredTopologyChanged = [=]() {
+        if (m_serviceTopologyManager)
+            setDiscoveredServiceTopology(m_serviceTopologyManager->getDiscoveredServiceTopology());
     };
 }
 
-std::vector<NetworkServiceDiscovery::Service> MemaClientDiscoverComponent::getAvailableServices()
+std::vector<JUCEAppBasics::SessionMasterAwareService> MemaClientDiscoverComponent::getAvailableServices()
 {
-    if (m_availableServices)
-        return m_availableServices->getServices();
-    else
-        return {};
+    std::vector<JUCEAppBasics::SessionMasterAwareService> services;
+    services.reserve(m_serviceTopologyManager->getDiscoveredServiceTopology().size());
+    for (auto const& serviceKV : m_serviceTopologyManager->getDiscoveredServiceTopology())
+        services.push_back(serviceKV.first);
+    return services;
+}
+void MemaClientDiscoverComponent::setMasterServiceDescription(const juce::String& masterServiceDescription)
+{
+    if (m_serviceTopologyManager)
+        m_serviceTopologyManager->setSessionMasterServiceDescription(masterServiceDescription);
+}
+
+void MemaClientDiscoverComponent::setDiscoveredServiceTopology(const JUCEAppBasics::SessionServiceTopology& topology)
+{
+    if (m_discoveredTopologyTreeView)
+        m_discoveredTopologyTreeView->setServiceTopology(topology);
 }
 

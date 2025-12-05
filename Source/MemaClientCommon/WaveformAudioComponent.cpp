@@ -130,6 +130,7 @@ void WaveformAudioComponent::resized()
     auto bounds = getLocalBounds();
     auto visuArea = bounds;
     auto legendArea = visuArea.removeFromRight(m_legendWidth);
+    ignoreUnused(legendArea);
 
     if (m_waveformsComponent)
         m_waveformsComponent->setBounds(visuArea);

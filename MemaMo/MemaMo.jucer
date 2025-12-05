@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="ja98xe" name="Mema.Mo" projectType="guiapp" useAppConfig="0"
-              jucerFormatVersion="1" version="0.8.1" companyWebsite="github.com/ChristianAhrens/Mema"
+              jucerFormatVersion="1" version="0.9.0" companyWebsite="github.com/ChristianAhrens/Mema"
               bundleIdentifier="com.ChristianAhrens.MemaMo" headerPath="../../../submodules/JUCE-AppBasics/Source&#10;../../../Source"
               defines="JUCE_USE_LAME_AUDIO_FORMAT=1,&#10;JUCE_USE_MP3AUDIOFORMAT=1,&#10;JUCE_DISPLAY_SPLASH_SCREEN=0"
               companyName="ChristianAhrens" companyCopyright="Copyright (c) 2024 Christian Ahrens.">
@@ -18,6 +18,14 @@
               file="../submodules/JUCE-AppBasics/Source/CustomLookAndFeel.h"/>
         <FILE id="iFIFTc" name="iOS_utils.cpp" compile="1" resource="0" file="../submodules/JUCE-AppBasics/Source/iOS_utils.cpp"/>
         <FILE id="u9384n" name="iOS_utils.h" compile="0" resource="0" file="../submodules/JUCE-AppBasics/Source/iOS_utils.h"/>
+        <FILE id="xMG5QP" name="ServiceTopologyManager.cpp" compile="1" resource="0"
+              file="../submodules/JUCE-AppBasics/Source/ServiceTopologyManager.cpp"/>
+        <FILE id="MwzBUV" name="ServiceTopologyManager.h" compile="0" resource="0"
+              file="../submodules/JUCE-AppBasics/Source/ServiceTopologyManager.h"/>
+        <FILE id="yLeyvb" name="ServiceTopologyTreeView.cpp" compile="1" resource="0"
+              file="../submodules/JUCE-AppBasics/Source/ServiceTopologyTreeView.cpp"/>
+        <FILE id="Utluz4" name="ServiceTopologyTreeView.h" compile="0" resource="0"
+              file="../submodules/JUCE-AppBasics/Source/ServiceTopologyTreeView.h"/>
         <FILE id="y1puHF" name="ToggleStateSlider.cpp" compile="1" resource="0"
               file="../submodules/JUCE-AppBasics/Source/ToggleStateSlider.cpp"/>
         <FILE id="bizpBa" name="ToggleStateSlider.h" compile="0" resource="0"
