@@ -41,13 +41,6 @@ juce::String ServiceData::getRemoteServiceTypeUID()
 	return getServiceTypeUIDBase() + "RemoteService";
 }
 
-juce::String ServiceData::getServiceDescription()
-{
-	return juce::JUCEApplication::getInstance()->getApplicationName() 
-+ "." + juce::JUCEApplication::getInstance()->getApplicationVersion() 
-+ "@" + juce::SystemStats::getComputerName();
-}
-
 int ServiceData::getBroadcastPort()
 {
 	return broadcastPort;

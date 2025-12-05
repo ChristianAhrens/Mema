@@ -119,7 +119,7 @@ void MemaClientDiscoverComponent::setupServiceDiscovery(const juce::String& serv
 
     m_serviceTopologyManager = std::make_unique<JUCEAppBasics::ServiceTopologyManager>(
         serviceTypeUIDBase, serviceTypeUID,
-        Mema::ServiceData::getServiceDescription(),
+        JUCEAppBasics::ServiceTopologyManager::getServiceDescription(),
         "",
         Mema::ServiceData::getBroadcastPort(),
         Mema::ServiceData::getConnectionPort());

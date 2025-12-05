@@ -158,8 +158,8 @@ MemaProcessor::MemaProcessor(XmlElement* stateXml) :
 	m_serviceTopologyManager = std::make_unique<JUCEAppBasics::ServiceTopologyManager>(
 		Mema::ServiceData::getServiceTypeUIDBase(),
 		Mema::ServiceData::getMasterServiceTypeUID(),
-		Mema::ServiceData::getServiceDescription(),
-		Mema::ServiceData::getServiceDescription(),
+        JUCEAppBasics::ServiceTopologyManager::getServiceDescription(),
+        JUCEAppBasics::ServiceTopologyManager::getServiceDescription(),
 		Mema::ServiceData::getBroadcastPort(),
 		Mema::ServiceData::getConnectionPort());
 
