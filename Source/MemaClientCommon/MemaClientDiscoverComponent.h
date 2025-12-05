@@ -53,10 +53,6 @@ private:
     void setDiscoveredServiceTopology(const JUCEAppBasics::SessionServiceTopology& topology);
     
     //==============================================================================
-    //std::unique_ptr<juce::Label>                            m_discoveredServicesLabel;
-    //std::unique_ptr<juce::ComboBox>                         m_discoveredServicesSelection;
-    //std::vector<JUCEAppBasics::SessionMasterAwareService>   m_discoveredServices;
-
     std::unique_ptr<juce::Label>                            m_discoveredTopologyLabel;
     std::unique_ptr<JUCEAppBasics::ServiceTopologyTreeView> m_discoveredTopologyTreeView;
     std::unique_ptr<juce::TextButton>                       m_selectServiceButton;

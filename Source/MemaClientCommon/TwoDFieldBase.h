@@ -40,7 +40,7 @@ public:
 
 public:
     TwoDFieldBase();
-    ~TwoDFieldBase();
+    virtual ~TwoDFieldBase();
 
     virtual bool setChannelConfiguration(const juce::AudioChannelSet& channelLayout);
     const juce::Array<juce::AudioChannelSet>& getSupportedChannelConfigurations();
