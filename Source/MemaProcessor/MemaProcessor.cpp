@@ -176,10 +176,15 @@ MemaProcessor::MemaProcessor(XmlElement* stateXml) :
 				m_trafficTypesPerConnection[connectionId].clear();
 				if (m_networkServer && m_networkServer->hasActiveConnections())
 				{
+					auto paletteStyle = JUCEAppBasics::CustomLookAndFeel::PaletteStyle::PS_Dark;
+					if (getActiveEditor())
+						if (auto claf = dynamic_cast<JUCEAppBasics::CustomLookAndFeel*>(&getActiveEditor()->getLookAndFeel()))
+							paletteStyle = claf->getPaletteStyle();
+
 					auto success = true;
 					success = success && m_networkServer->enqueueMessage(std::make_unique<AnalyzerParametersMessage>(int(getSampleRate()), getBlockSize())->getSerializedMessage());
 					success = success && m_networkServer->enqueueMessage(std::make_unique<ReinitIOCountMessage>(m_inputChannelCount, m_outputChannelCount)->getSerializedMessage());
-					success = success && m_networkServer->enqueueMessage(std::make_unique<EnvironmentParametersMessage>(juce::Desktop::getInstance().isDarkModeActive() ? JUCEAppBasics::CustomLookAndFeel::PS_Dark : JUCEAppBasics::CustomLookAndFeel::PS_Light)->getSerializedMessage());
+					success = success && m_networkServer->enqueueMessage(std::make_unique<EnvironmentParametersMessage>(paletteStyle)->getSerializedMessage());
 					success = success && m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(m_inputMuteStates, m_outputMuteStates, m_matrixCrosspointStates, m_matrixCrosspointValues)->getSerializedMessage());
 					if (!success)
 						m_networkServer->cleanupDeadConnections();
