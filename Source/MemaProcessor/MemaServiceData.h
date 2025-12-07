@@ -26,7 +26,10 @@ namespace Mema
 
 struct ServiceData
 {
-	static juce::String getServiceTypeUID();
+	static juce::String getServiceTypeUIDBase();
+	static juce::String getMasterServiceTypeUID();
+	static juce::String getMonitorServiceTypeUID();
+	static juce::String getRemoteServiceTypeUID();
 	static juce::String getServiceDescription();
 	static int getBroadcastPort();
 	static int getConnectionPort();

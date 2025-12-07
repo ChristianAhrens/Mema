@@ -113,6 +113,17 @@ public:
         g.setColour(getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
         g.drawText(labelText, bounds, juce::Justification::centred);
     };
+    void mouseUp(const MouseEvent& event) override
+    {
+        if (contains(event.position))
+            JUCEAppBasics::ServiceTopologyManager::showServiceTopologyMenu(m_sessionTopology);
+    };
+
+    //==============================================================================
+    void setSessionTopology(const JUCEAppBasics::SessionServiceTopology& sessionTopology)
+    {
+        m_sessionTopology = sessionTopology;
+    }
 
     //==============================================================================
     void setLoadPercent(int loadPercent, int id = 0)
@@ -132,6 +143,7 @@ private:
     juce::String m_label;
     bool m_showPercent = false;
     bool m_showMax = false;
+    JUCEAppBasics::SessionServiceTopology m_sessionTopology;
 };
 
 //==============================================================================
@@ -299,7 +311,7 @@ void MemaUIComponent::updateCpuUsageBar(int loadPercent)
         m_sysLoadBar->setLoadPercent(loadPercent);
 }
 
-void MemaUIComponent::updateNetworkUsage(std::map<int, std::pair<double, bool>> netLoads)
+void MemaUIComponent::updateNetworkUsage(const std::map<int, std::pair<double, bool>>& netLoads)
 {
     if (m_netHealthBar)
     {
@@ -309,6 +321,12 @@ void MemaUIComponent::updateNetworkUsage(std::map<int, std::pair<double, bool>> 
             m_netHealthBar->setAlert(netLoad.second.second, netLoad.first);
         }
     }
+}
+
+void MemaUIComponent::updateSessionServiceTopology(const JUCEAppBasics::SessionServiceTopology& sessionServiceTopology)
+{
+    if (m_netHealthBar)
+        m_netHealthBar->setSessionTopology(sessionServiceTopology);
 }
 
 void MemaUIComponent::paint(Graphics &g)

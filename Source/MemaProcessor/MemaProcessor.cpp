@@ -29,82 +29,6 @@ namespace Mema
 {
 
 
-#if JUCE_WINDOWS
-/** Copy of juce::NetworkServiceDiscovery::Advertiser, simply because the underlying juce::IPAddress::getInterfaceBroadcastAddress is not implemented on windows and therefor the advertisement functionality not available here. */
-struct ServiceAdvertiser : private juce::Thread
-{
-	ServiceAdvertiser(const String& serviceTypeUID,
-		const String& serviceDescription,
-		int broadcastPort,
-		int connectionPort,
-		RelativeTime minTimeBetweenBroadcasts = RelativeTime::seconds(1.5))
-		: Thread(juce::JUCEApplication::getInstance()->getApplicationName() + ": Discovery_broadcast"),
-		message(serviceTypeUID), broadcastPort(broadcastPort),
-		minInterval(minTimeBetweenBroadcasts)
-	{
-		DBG("!!! Using juce::NetworkServiceDiscovery::Advertiser clone 'ServiceAdvertiser' just because juce::IPAddress::getInterfaceBroadcastAddress implementation is missing on windows. Rework required as soon as this changes. !!!");
-
-		message.setAttribute("id", Uuid().toString());
-		message.setAttribute("name", serviceDescription);
-		message.setAttribute("address", String());
-		message.setAttribute("port", connectionPort);
-
-		startThread(Priority::background);
-	};
-	~ServiceAdvertiser() override {
-		stopThread(2000);
-		socket.shutdown();
-	};
-
-private:
-	XmlElement message;
-	const int broadcastPort;
-	const RelativeTime minInterval;
-	DatagramSocket socket{ true };
-
-	IPAddress getInterfaceBroadcastAddress(const IPAddress& address)
-	{
-		if (address.isIPv6)
-			// TODO
-			return {};
-
-		String broadcastAddress = address.toString().upToLastOccurrenceOf(".", true, false) + "255";
-		return IPAddress(broadcastAddress);
-	};
-	void run() override
-	{
-		if (!socket.bindToPort(0))
-		{
-			jassertfalse;
-			return;
-		}
-
-		while (!threadShouldExit())
-		{
-			sendBroadcast();
-			wait((int)minInterval.inMilliseconds());
-		}
-	};
-	void sendBroadcast()
-	{
-		static IPAddress local = IPAddress::local();
-
-		for (auto& address : IPAddress::getAllAddresses())
-		{
-			if (address == local)
-				continue;
-
-			message.setAttribute("address", address.toString());
-
-			auto broadcastAddress = getInterfaceBroadcastAddress(address);
-			auto data = message.toString(XmlElement::TextFormat().singleLine().withoutHeader());
-
-			socket.write(broadcastAddress.toString(), broadcastPort, data.toRawUTF8(), (int)data.getNumBytesAsUTF8());
-		}
-	};
-};
-#endif
-
 //==============================================================================
 class MemaNetworkClientCommanderWrapper : public MemaInputCommander, public MemaOutputCommander, public MemaCrosspointCommander
 {
@@ -231,19 +155,13 @@ MemaProcessor::MemaProcessor(XmlElement* stateXml) :
 	}
 
 	// init the announcement of this app instance as discoverable service
-#if JUCE_WINDOWS
-	m_serviceAdvertiser = std::make_unique<ServiceAdvertiser>(
-		Mema::ServiceData::getServiceTypeUID(),
-		Mema::ServiceData::getServiceDescription(),
+	m_serviceTopologyManager = std::make_unique<JUCEAppBasics::ServiceTopologyManager>(
+		Mema::ServiceData::getServiceTypeUIDBase(),
+		Mema::ServiceData::getMasterServiceTypeUID(),
+        JUCEAppBasics::ServiceTopologyManager::getServiceDescription(),
+        JUCEAppBasics::ServiceTopologyManager::getServiceDescription(),
 		Mema::ServiceData::getBroadcastPort(),
 		Mema::ServiceData::getConnectionPort());
-#else
-	m_serviceAdvertiser = std::make_unique<juce::NetworkServiceDiscovery::Advertiser>(
-		Mema::ServiceData::getServiceTypeUID(), 
-		Mema::ServiceData::getServiceDescription(),
-		Mema::ServiceData::getBroadcastPort(),
-		Mema::ServiceData::getConnectionPort());
-#endif
 
 	m_networkServer = std::make_shared<InterprocessConnectionServerImpl>();
 	m_networkServer->beginWaitingForSocket(Mema::ServiceData::getConnectionPort());
@@ -258,10 +176,15 @@ MemaProcessor::MemaProcessor(XmlElement* stateXml) :
 				m_trafficTypesPerConnection[connectionId].clear();
 				if (m_networkServer && m_networkServer->hasActiveConnections())
 				{
+					auto paletteStyle = JUCEAppBasics::CustomLookAndFeel::PaletteStyle::PS_Dark;
+					if (getActiveEditor())
+						if (auto claf = dynamic_cast<JUCEAppBasics::CustomLookAndFeel*>(&getActiveEditor()->getLookAndFeel()))
+							paletteStyle = claf->getPaletteStyle();
+
 					auto success = true;
 					success = success && m_networkServer->enqueueMessage(std::make_unique<AnalyzerParametersMessage>(int(getSampleRate()), getBlockSize())->getSerializedMessage());
 					success = success && m_networkServer->enqueueMessage(std::make_unique<ReinitIOCountMessage>(m_inputChannelCount, m_outputChannelCount)->getSerializedMessage());
-					success = success && m_networkServer->enqueueMessage(std::make_unique<EnvironmentParametersMessage>(juce::Desktop::getInstance().isDarkModeActive() ? JUCEAppBasics::CustomLookAndFeel::PS_Dark : JUCEAppBasics::CustomLookAndFeel::PS_Light)->getSerializedMessage());
+					success = success && m_networkServer->enqueueMessage(std::make_unique<EnvironmentParametersMessage>(paletteStyle)->getSerializedMessage());
 					success = success && m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(m_inputMuteStates, m_outputMuteStates, m_matrixCrosspointStates, m_matrixCrosspointValues)->getSerializedMessage());
 					if (!success)
 						m_networkServer->cleanupDeadConnections();
@@ -920,7 +843,7 @@ void MemaProcessor::setChannelCounts(std::uint16_t inputChannelCount, std::uint1
 bool MemaProcessor::setPlugin(const juce::PluginDescription& pluginDescription)
 {
 	juce::AudioPluginFormatManager formatManager;
-	formatManager.addDefaultFormats();
+	addDefaultFormatsToManager(formatManager);
 	auto registeredFormats = formatManager.getFormats();
 
 	auto success = false;
@@ -1049,6 +972,14 @@ std::map<int, std::pair<double, bool>> MemaProcessor::getNetworkHealth()
 {
 	if (m_networkServer)
 		return m_networkServer->getListHealth();
+	else
+		return {};
+}
+
+JUCEAppBasics::SessionServiceTopology MemaProcessor::getDiscoveredServicesTopology()
+{
+	if (m_serviceTopologyManager)
+		return m_serviceTopologyManager->getDiscoveredServiceTopology();
 	else
 		return {};
 }

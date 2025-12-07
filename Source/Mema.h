@@ -22,6 +22,8 @@
 
 #include "MemaAppConfiguration.h"
 
+#include <ServiceTopologyManager.h>
+
 
 namespace Mema
 {
@@ -55,7 +57,8 @@ public:
 
     //==========================================================================
     std::function<void(int)> onCpuUsageUpdate;
-    std::function<void(std::map<int, std::pair<double, bool>>)> onNetworkUsageUpdate;
+    std::function<void(const std::map<int, std::pair<double, bool>>&)> onNetworkUsageUpdate;
+    std::function<void(const JUCEAppBasics::SessionServiceTopology&)> onServiceDiscoveryTopologyUpdate;
     std::function<void(juce::Rectangle<int>)> onEditorSizeChangeRequested;
     
     void clearUICallbacks();

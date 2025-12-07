@@ -22,6 +22,7 @@
 #include "MemaReComponent.h"
 #include "MemaClientCommon/MemaClientDiscoverComponent.h"
 #include "MemaClientCommon/MemaClientConnectingComponent.h"
+#include "MemaProcessor/MemaServiceData.h"
 
 #include <AboutComponent.h>
 #include <CustomLookAndFeel.h>
@@ -98,7 +99,8 @@ MainComponent::MainComponent()
     addAndMakeVisible(m_remoteComponent.get());
 
     m_discoverComponent = std::make_unique<MemaClientDiscoverComponent>();
-    m_discoverComponent->onServiceSelected = [=](const juce::NetworkServiceDiscovery::Service& selectedService) {
+    m_discoverComponent->setupServiceDiscovery(Mema::ServiceData::getServiceTypeUIDBase(), Mema::ServiceData::getRemoteServiceTypeUID());
+    m_discoverComponent->onServiceSelected = [=](const JUCEAppBasics::SessionMasterAwareService& selectedService) {
         m_selectedService = selectedService;
 
         connectToMema();
@@ -144,6 +146,7 @@ MainComponent::MainComponent()
     m_settingsItems[MemaReSettingsOption::PanningColour_Green] = std::make_pair("Green", 1);
     m_settingsItems[MemaReSettingsOption::PanningColour_Red] = std::make_pair("Red", 0);
     m_settingsItems[MemaReSettingsOption::PanningColour_Blue] = std::make_pair("Blue", 0);
+    m_settingsItems[MemaReSettingsOption::PanningColour_Pink] = std::make_pair("Anni Pink", 0);
     // default controls size is S
     m_settingsItems[MemaReSettingsOption::ControlsSize_S] = std::make_pair("S", 1);
     m_settingsItems[MemaReSettingsOption::ControlsSize_M] = std::make_pair("M", 0);
@@ -594,7 +597,9 @@ const MainComponent::Status MainComponent::getStatus()
 void MainComponent::connectToMema()
 {
     if (m_connectingComponent)
-        m_connectingComponent->setServiceDescription(m_selectedService.description);
+        m_connectingComponent->setMasterServiceDescription(m_selectedService.description);
+    if (m_discoverComponent)
+        m_discoverComponent->setMasterServiceDescription(m_selectedService.description);
 
     setStatus(Status::Connecting);
 

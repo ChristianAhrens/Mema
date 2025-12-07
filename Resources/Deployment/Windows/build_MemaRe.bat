@@ -18,7 +18,7 @@ echo Building Projucer binary
 echo.
 
 echo Exporting Projucer project
-"%PROJUCERVSDIR%\x64\Release\App\Projucer.exe" --resave %WORKSPACE%\MemaRe\MemaRe.jucer
+"%PROJUCERVSDIR%\x64\Release\App\Projucer.exe" --resave %WORKSPACE%\MemaRe\MemaRe.jucer --fix-missing-dependencies
 echo.
 
 echo Build release

@@ -174,6 +174,10 @@ public:
             jassert(memaUIComponent);
             if (memaUIComponent) memaUIComponent->updateNetworkUsage(netLoads);
         };
+        Mema::Mema::getInstance()->onServiceDiscoveryTopologyUpdate = [=](const JUCEAppBasics::SessionServiceTopology& sessionServiceTopology) {
+            jassert(memaUIComponent);
+            if (memaUIComponent) memaUIComponent->updateSessionServiceTopology(sessionServiceTopology);
+        };
         memaUIComponent->setEditorComponent(Mema::Mema::getInstance()->getMemaProcessorEditor());
         memaUIComponent->setVisible(m_isMainComponentVisible);
         memaUIComponent->addToDesktop(juce::ComponentPeer::windowHasDropShadow);
@@ -245,6 +249,7 @@ public:
     {
         if (Mema::Mema::getInstanceWithoutCreating())
         {
+            Mema::Mema::getInstance()->onServiceDiscoveryTopologyUpdate = nullptr;
             Mema::Mema::getInstance()->onEditorSizeChangeRequested = nullptr;
             Mema::Mema::getInstance()->onCpuUsageUpdate = nullptr;
             Mema::Mema::getInstance()->onNetworkUsageUpdate = nullptr;
@@ -255,6 +260,9 @@ public:
 
     void showUiAsCalloutBox(const juce::Point<int>& positionToPointTo)
     {
+        // in case the ui is currently shown as standalone window, clean that up first
+        disconnectAndDeleteMemaUIComponent();
+
         auto const display = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay();
         jassert(display);
         auto position = display->userArea.getConstrainedPoint(positionToPointTo);

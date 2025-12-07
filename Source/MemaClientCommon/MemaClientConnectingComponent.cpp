@@ -29,7 +29,7 @@ MemaClientConnectingComponent::~MemaClientConnectingComponent()
 {
 }
 
-void MemaClientConnectingComponent::setServiceDescription(const juce::String& serviceDescription)
+void MemaClientConnectingComponent::setMasterServiceDescription(const juce::String& serviceDescription)
 {
     m_serviceDescription = serviceDescription;
     repaint();
