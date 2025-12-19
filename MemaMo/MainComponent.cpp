@@ -138,6 +138,7 @@ MainComponent::MainComponent()
     m_settingsItems[MemaMoSettingsOption::OutputVisuType_9point1point6] = std::make_pair(juce::AudioChannelSet::create9point1point6().getDescription().toStdString(), 0);
     m_settingsItems[MemaMoSettingsOption::OutputVisuType_Quadrophonic] = std::make_pair(juce::AudioChannelSet::quadraphonic().getDescription().toStdString(), 0);
     m_settingsItems[MemaMoSettingsOption::OutputVisuType_Waveform] = std::make_pair("Waveform", 0);
+    m_settingsItems[MemaMoSettingsOption::OutputVisuType_Spectrum] = std::make_pair("Spectrum", 0);
     // default metering colour is green
     m_settingsItems[MemaMoSettingsOption::MeteringColour_Green] = std::make_pair("Green", 1);
     m_settingsItems[MemaMoSettingsOption::MeteringColour_Red] = std::make_pair("Red", 0);
@@ -339,7 +340,7 @@ void MainComponent::handleSettingsLookAndFeelMenuResult(int selectedId)
 void MainComponent::handleSettingsOutputVisuTypeMenuResult(int selectedId)
 {
     // helper internal function to avoid code clones
-    std::function<void(int, int, int, int, int, int, int, int, int, int, int, int)> setSettingsItemsCheckState = [=](int a, int b, int c, int d, int e, int f, int g, int h, int i, int j, int k, int l) {
+    std::function<void(int, int, int, int, int, int, int, int, int, int, int, int, int)> setSettingsItemsCheckState = [=](int a, int b, int c, int d, int e, int f, int g, int h, int i, int j, int k, int l, int m) {
         m_settingsItems[MemaMoSettingsOption::OutputVisuType_Meterbridge].second = a;
         m_settingsItems[MemaMoSettingsOption::OutputVisuType_LRS].second = b;
         m_settingsItems[MemaMoSettingsOption::OutputVisuType_LCRS].second = c;
@@ -352,69 +353,75 @@ void MainComponent::handleSettingsOutputVisuTypeMenuResult(int selectedId)
         m_settingsItems[MemaMoSettingsOption::OutputVisuType_9point1point6].second = j;
         m_settingsItems[MemaMoSettingsOption::OutputVisuType_Quadrophonic].second = k;
         m_settingsItems[MemaMoSettingsOption::OutputVisuType_Waveform].second = l;
+        m_settingsItems[MemaMoSettingsOption::OutputVisuType_Spectrum].second = m;
     };
 
     switch (selectedId)
     {
     case MemaMoSettingsOption::OutputVisuType_Meterbridge:
-        setSettingsItemsCheckState(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputMeteringVisuActive();
         break;
     case MemaMoSettingsOption::OutputVisuType_LRS:
-        setSettingsItemsCheckState(0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::createLRS());
         break;
     case MemaMoSettingsOption::OutputVisuType_LCRS:
-        setSettingsItemsCheckState(0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::createLCRS());
         break;
     case MemaMoSettingsOption::OutputVisuType_5point0:
-        setSettingsItemsCheckState(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::create5point0());
         break;
     case MemaMoSettingsOption::OutputVisuType_5point1:
-        setSettingsItemsCheckState(0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::create5point1());
         break;
     case MemaMoSettingsOption::OutputVisuType_5point1point2:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::create5point1point2());
         break;
     case MemaMoSettingsOption::OutputVisuType_7point0:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::create7point0());
         break;
     case MemaMoSettingsOption::OutputVisuType_7point1:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::create7point1());
         break;
     case MemaMoSettingsOption::OutputVisuType_7point1point4:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::create7point1point4());
         break;
     case MemaMoSettingsOption::OutputVisuType_9point1point6:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::create9point1point6());
         break;
     case MemaMoSettingsOption::OutputVisuType_Quadrophonic:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::quadraphonic());
         break;
     case MemaMoSettingsOption::OutputVisuType_Waveform:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0);
         if (m_monitorComponent)
             m_monitorComponent->setWaveformVisuActive();
+        break;
+    case MemaMoSettingsOption::OutputVisuType_Spectrum:
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1);
+        if (m_monitorComponent)
+            m_monitorComponent->setSpectrumVisuActive();
         break;
     default:
         jassertfalse; // unknown id fed in unintentionally ?!
