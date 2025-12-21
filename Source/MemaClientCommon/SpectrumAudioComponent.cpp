@@ -62,27 +62,54 @@ void SpectrumAudioComponent::paint(Graphics& g)
     AbstractAudioVisualizer::paint(g);
 
     // (Our component is opaque, so we must completely fill the background with a solid colour)
-    g.fillAll(getLookAndFeel().findColour(ResizableWindow::backgroundColourId));
+    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
 
     // calculate what we need for our center circle
     auto width = getWidth();
     auto height = getHeight();
-    auto outerMargin = 20;
+    auto outerMargin = 6;
     auto visuAreaWidth = width - 2 * outerMargin;
-    auto visuAreaHeight = height - 2 * outerMargin;
+    auto visuAreaHeight = height - (2 + 3) * outerMargin;
     auto maxPlotFreq = 20000.0f;
     auto minPlotFreq = 10.0f;
 
     juce::Rectangle<int> visuArea(outerMargin, outerMargin, visuAreaWidth, visuAreaHeight);
 
     // fill our visualization area background
-    g.setColour(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId).darker());
+    g.setColour(getLookAndFeel().findColour(juce::Slider::backgroundColourId));
     g.fillRect(visuArea);
 
     auto visuAreaOrigX = float(outerMargin);
     auto visuAreaOrigY = float(outerMargin + visuAreaHeight);
 
+    // draw marker lines 10Hz, 100Hz, 1000Hz, 10000Hz
+    auto markerColour = getLookAndFeel().findColour(juce::DrawableButton::backgroundColourId);
+    auto legendColour = getLookAndFeel().findColour(juce::DrawableButton::textColourOnId);
+    auto markerLineValues = std::vector<float>{ 10.f, 20.f, 30.f, 40.f, 50.f, 60.f, 70.f, 80.f, 90.f, 100.f, 200.f, 300.f, 400.f, 500.f, 600.f, 700.f, 800.f, 900.f, 1000.f, 2000.f, 3000.f, 4000.f, 5000.f, 6000.f, 7000.f, 8000.f, 9000.f, 10000.f, 20000.f };
+    auto markerLegendValues = std::map<float, std::string>{ {10.f, "10"}, {100.f, "100"}, {1000.f, "1k"}, {10000.f, "10k"}, {20000.f, "20k"} };
+    auto legendValueWidth = 40.0f;
+    for (auto i = 0; i < markerLineValues.size(); ++i)
+    {
+        auto skewedProportionX = 1.0f / (log10(markerLineValues.back()) - 1.0f) * (log10(markerLineValues.at(i)) - 1.0f);
+        auto posX = visuAreaOrigX + (static_cast<float>(visuAreaWidth) * skewedProportionX);
+        g.setColour(markerColour);
+        g.drawLine(juce::Line<float>(posX, visuAreaOrigY, posX, visuAreaOrigY - visuAreaHeight));
+
+        if (markerLegendValues.count(markerLineValues.at(i)))
+        {
+            g.setColour(legendColour);
+            g.drawText(markerLegendValues.at(markerLineValues.at(i)), juce::Rectangle<float>(posX - 0.5f * legendValueWidth, visuAreaOrigY + 10, legendValueWidth, float(outerMargin)), juce::Justification::centred, true);
+        }
+    }
+
+    // draw dBFS
+    g.setFont(12.0f);
+    g.setColour(getLookAndFeel().findColour(juce::LookAndFeel_V4::ColourScheme::menuText));
+    g.drawText(juce::String(ProcessorDataAnalyzer::getGlobalMindB()) + " ... " + juce::String(ProcessorDataAnalyzer::getGlobalMaxdB()) + " dBFS", juce::Rectangle<float>(visuAreaOrigX + visuAreaWidth - 120.0f, float(outerMargin), 110.0f, float(outerMargin)), juce::Justification::centred, true);
+
     // draw rta curves
+    auto holdColour = getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::MeteringHoldColourId);
+    auto peakColour = getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::MeteringPeakColourId);
     for (auto const plotPoints : m_plotPoints)
     {
         if (!plotPoints.peaks.empty() && plotPoints.holds.size() == plotPoints.peaks.size())
@@ -104,7 +131,7 @@ void SpectrumAudioComponent::paint(Graphics& g)
 
                 path.lineTo(juce::Point<float>(newPointX, newPointY));
             }
-            g.setColour(Colours::grey);
+            g.setColour(holdColour);
             g.strokePath(path, juce::PathStrokeType(1));
 
             // peak curve
@@ -121,33 +148,10 @@ void SpectrumAudioComponent::paint(Graphics& g)
 
                 path.lineTo(juce::Point<float>(newPointX, newPointY));
             }
-            g.setColour(Colours::forestgreen);
+            g.setColour(peakColour);
             g.strokePath(path, juce::PathStrokeType(3));
         }
     }
-
-    // draw dBFS
-    g.setFont(12.0f);
-    g.setColour(Colours::grey);
-    g.drawText(juce::String(ProcessorDataAnalyzer::getGlobalMindB()) + " ... " + juce::String(ProcessorDataAnalyzer::getGlobalMaxdB()) + " dBFS", juce::Rectangle<float>(visuAreaOrigX + visuAreaWidth - 100.0f, float(outerMargin), 110.0f, float(outerMargin)), juce::Justification::centred, true);
-
-    g.setColour(Colours::white);
-    // draw marker lines 10Hz, 100Hz, 1000Hz, 10000Hz
-    auto markerLineValues = std::vector<float>{ 10.f, 20.f, 30.f, 40.f, 50.f, 60.f, 70.f, 80.f, 90.f, 100.f, 200.f, 300.f, 400.f, 500.f, 600.f, 700.f, 800.f, 900.f, 1000.f, 2000.f, 3000.f, 4000.f, 5000.f, 6000.f, 7000.f, 8000.f, 9000.f, 10000.f, 20000.f };
-    auto markerLegendValues = std::map<float, std::string>{ {10.f, "10"}, {100.f, "100"}, {1000.f, "1k"}, {10000.f, "10k"}, {20000.f, "20k"} };
-    auto legendValueWidth = 40.0f;
-    for (auto i = 0; i < markerLineValues.size(); ++i)
-    {
-        auto skewedProportionX = 1.0f / (log10(markerLineValues.back()) - 1.0f) * (log10(markerLineValues.at(i)) - 1.0f);
-        auto posX = visuAreaOrigX + (static_cast<float>(visuAreaWidth) * skewedProportionX);
-        g.drawLine(juce::Line<float>(posX, visuAreaOrigY, posX, visuAreaOrigY - visuAreaHeight));
-
-        if (markerLegendValues.count(markerLineValues.at(i)))
-            g.drawText(markerLegendValues.at(markerLineValues.at(i)), juce::Rectangle<float>(posX - 0.5f * legendValueWidth, visuAreaOrigY, legendValueWidth, float(outerMargin)), juce::Justification::centred, true);
-    }
-
-    // draw an outline around the visu area
-    g.drawRect(visuArea, 1);
 }
 
 void SpectrumAudioComponent::resized()
@@ -158,19 +162,13 @@ void SpectrumAudioComponent::resized()
     ignoreUnused(legendArea);
 
     if (m_chNumSelButton)
-        m_chNumSelButton->setBounds(bounds.removeFromBottom(22).removeFromLeft(22));
+        m_chNumSelButton->setBounds(bounds.removeFromTop(22).removeFromRight(22));
 
     AbstractAudioVisualizer::resized();
 }
 
 void SpectrumAudioComponent::lookAndFeelChanged()
 {
-    //if (m_waveformsComponent)
-    //    m_waveformsComponent->setColours(
-    //        getLookAndFeel().findColour(juce::Slider::backgroundColourId),
-    //        getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId),
-    //        getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::MeteringRmsColourId));
-    
     auto chNumSelButtonDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::waves24px_svg).get());
     chNumSelButtonDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
     m_chNumSelButton->setImages(chNumSelButtonDrawable.get());
