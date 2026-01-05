@@ -117,39 +117,30 @@ void SpectrumAudioComponent::paint(Graphics& g)
             auto minPlotIdx = jlimit(0, static_cast<int>(plotPoints.peaks.size() - 1), static_cast<int>((minPlotFreq - plotPoints.minFreq) / plotPoints.freqRes));
             auto maxPlotIdx = jlimit(0, static_cast<int>(plotPoints.peaks.size() - 1), static_cast<int>((maxPlotFreq - plotPoints.minFreq) / plotPoints.freqRes));
 
-            // hold curve
-            auto path = juce::Path{};
+            // hold and peak curve
+            auto holdPath = juce::Path{};
+            auto peakPath = juce::Path{};
             auto skewedProportionX = 1.0f / (log10(maxPlotFreq) - 1.0f) * (log10(float(minPlotIdx + 1) * plotPoints.freqRes) - 1.0f);
             auto newPointX = visuAreaOrigX + (static_cast<float>(visuAreaWidth) * skewedProportionX);
-            auto newPointY = visuAreaOrigY - plotPoints.holds.at(minPlotIdx) * visuAreaHeight;
-            path.startNewSubPath(juce::Point<float>(newPointX, newPointY));
+            auto newHoldPointY = visuAreaOrigY - plotPoints.holds.at(minPlotIdx) * visuAreaHeight;
+            holdPath.startNewSubPath(juce::Point<float>(newPointX, newHoldPointY));
+            auto newPeakPointY = visuAreaOrigY - plotPoints.peaks.at(minPlotIdx) * visuAreaHeight;
+            peakPath.startNewSubPath(juce::Point<float>(newPointX, newPeakPointY));
             for (int i = minPlotIdx + 1; i <= maxPlotIdx; ++i)
             {
                 skewedProportionX = 1.0f / (log10(maxPlotFreq) - 1.0f) * (log10((i + 1) * plotPoints.freqRes) - 1.0f);
                 newPointX = visuAreaOrigX + (static_cast<float>(visuAreaWidth) * skewedProportionX);
-                newPointY = visuAreaOrigY - plotPoints.holds.at(i) * visuAreaHeight;
 
-                path.lineTo(juce::Point<float>(newPointX, newPointY));
+                newHoldPointY = visuAreaOrigY - plotPoints.holds.at(i) * visuAreaHeight;
+                holdPath.lineTo(juce::Point<float>(newPointX, newHoldPointY));
+
+                newPeakPointY = visuAreaOrigY - plotPoints.peaks.at(i) * visuAreaHeight;
+                peakPath.lineTo(juce::Point<float>(newPointX, newPeakPointY));
             }
             g.setColour(holdColour);
-            g.strokePath(path, juce::PathStrokeType(1));
-
-            // peak curve
-            path = juce::Path{};
-            skewedProportionX = 1.0f / (log10(maxPlotFreq) - 1.0f) * (log10((minPlotIdx + 1) * plotPoints.freqRes) - 1.0f);
-            newPointX = visuAreaOrigX + (static_cast<float>(visuAreaWidth) * skewedProportionX);
-            newPointY = visuAreaOrigY - plotPoints.peaks.at(minPlotIdx) * visuAreaHeight;
-            path.startNewSubPath(juce::Point<float>(newPointX, newPointY));
-            for (int i = minPlotIdx + 1; i <= maxPlotIdx; ++i)
-            {
-                skewedProportionX = 1.0f / (log10(maxPlotFreq) - 1.0f) * (log10((i + 1) * plotPoints.freqRes) - 1.0f);
-                newPointX = visuAreaOrigX + (static_cast<float>(visuAreaWidth) * skewedProportionX);
-                newPointY = visuAreaOrigY - plotPoints.peaks.at(i) * visuAreaHeight;
-
-                path.lineTo(juce::Point<float>(newPointX, newPointY));
-            }
+            g.strokePath(holdPath, juce::PathStrokeType(1));
             g.setColour(peakColour);
-            g.strokePath(path, juce::PathStrokeType(3));
+            g.strokePath(peakPath, juce::PathStrokeType(3));
         }
     }
 }

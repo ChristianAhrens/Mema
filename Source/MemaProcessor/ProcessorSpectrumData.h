@@ -38,11 +38,12 @@ public:
                 bandsPeak[i] = 0.0f;
                 bandsHold[i] = 0.0f;
             }
+
             mindB = 0.0f;
             maxdB = 0.0f;
-            minFreq = 0.0f;
-            maxFreq = 0.0f;
-            freqRes = 0.0f;
+            minFreq = 10.0f;
+            maxFreq = 20000.0f;
+            freqRes = static_cast<float>((maxFreq - minFreq) / ProcessorSpectrumData::SpectrumBands::count);
         };
         
         float   bandsPeak[count];

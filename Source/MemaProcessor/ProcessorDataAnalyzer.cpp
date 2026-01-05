@@ -140,11 +140,6 @@ void ProcessorDataAnalyzer::analyzeData(const juce::AudioBuffer<float>& buffer)
 
 					spectrumBands.mindB = static_cast<float>(getGlobalMindB());
 					spectrumBands.maxdB = static_cast<float>(getGlobalMaxdB());
-
-					spectrumBands.minFreq = static_cast<float>(m_sampleRate / ProcessorSpectrumData::SpectrumBands::count);
-					spectrumBands.maxFreq = static_cast<float>(m_sampleRate / 2);
-					spectrumBands.freqRes = static_cast<float>((spectrumBands.maxFreq - spectrumBands.minFreq) / ProcessorSpectrumData::SpectrumBands::count);
-
 					auto spectrumStepWidth = static_cast<int>(0.5f * (fftSize / ProcessorSpectrumData::SpectrumBands::count));
 					auto spectrumPos = 0;
 					for (int j = 0; j < ProcessorSpectrumData::SpectrumBands::count && spectrumPos < fftSize; ++j)
