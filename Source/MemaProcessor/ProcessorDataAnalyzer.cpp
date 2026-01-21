@@ -83,10 +83,8 @@ void ProcessorDataAnalyzer::analyzeData(const juce::AudioBuffer<float>& buffer)
 
     int numChannels = buffer.getNumChannels();
 
-    // Ensure buffers are sized correctly
     if (numChannels != m_centiSecondBuffer.getNumChannels())
         m_centiSecondBuffer.setSize(numChannels, m_samplesPerCentiSecond, false, true, true);
-
     if (m_sampleRate != m_centiSecondBuffer.GetSampleRate())
         m_centiSecondBuffer.SetSampleRate(m_sampleRate);
 
@@ -124,7 +122,8 @@ void ProcessorDataAnalyzer::analyzeData(const juce::AudioBuffer<float>& buffer)
 #endif
 
 #ifdef USE_SPECTRUM_PROCESSING
-            // Generate spectrum data
+            // Generate spectrum data - all channels always process their audio data
+            // The FFT buffer accumulates samples for all channels
             processSpectrumForChannel(i, m_centiSecondBuffer.getReadPointer(i), m_samplesPerCentiSecond);
 #endif
         }
@@ -181,7 +180,18 @@ void ProcessorDataAnalyzer::processSpectrumForChannel(int channelIndex, const fl
         if (m_FFTdataPos[channelIndex] >= fftSize)
         {
             performFFTAndUpdateSpectrum(channelIndex);
-            m_FFTdataPos[channelIndex] = 0;  // Reset to 0, no overlap
+
+            // 25% overlap - good balance between smoothness and CPU usage
+            const int hopSize = (fftSize * 3) / 4;
+
+            // Shift the buffer efficiently
+            juce::FloatVectorOperations::copy(
+                m_FFTdata[channelIndex].data(),
+                m_FFTdata[channelIndex].data() + hopSize,
+                fftSize - hopSize
+            );
+
+            m_FFTdataPos[channelIndex] = fftSize - hopSize;
         }
     }
 }
@@ -203,7 +213,6 @@ void ProcessorDataAnalyzer::performFFTAndUpdateSpectrum(int channelIndex)
 
     const float nyquistFreq = m_sampleRate * 0.5f;
 
-    // For logarithmic spacing, define a meaningful range (e.g., 20 Hz to 20 kHz)
     const float minDisplayFreq = 20.0f;
     const float maxDisplayFreq = std::min(20000.0f, nyquistFreq);
 
@@ -214,26 +223,22 @@ void ProcessorDataAnalyzer::performFFTAndUpdateSpectrum(int channelIndex)
     const int usableFFTBins = fftSize / 2;
     const float binFrequency = m_sampleRate / static_cast<float>(fftSize);
 
-    // Scaling factor for FFT normalization
     const float fftScale = 1.0f / static_cast<float>(fftSize);
+    const float windowCompensation = 2.0f;
 
-    // Window compensation factor
-    const float windowCompensation = 2.0f; // For Hann window
+    // With overlap still use smoothing for visual nicety
+    const float smoothingFactor = 0.6f;
 
-    // Adjusted smoothing factors for attack and decay
-    const float attackTime = 0.2f;   // Fast attack (0.0 = instant, 1.0 = never)
-    const float decayTime = 0.9f;   // Slow decay (0.0 = instant, 1.0 = never)
+    // Pre-calculate log values for efficiency
+    const float invBandCount = 1.0f / ProcessorSpectrumData::SpectrumBands::count;
 
-    // Map bands logarithmically across frequency range
     for (int bandIndex = 0; bandIndex < ProcessorSpectrumData::SpectrumBands::count; ++bandIndex)
     {
-        // Calculate frequency range for this band (logarithmic)
-        float bandStartFreq = minDisplayFreq * std::pow(maxDisplayFreq / minDisplayFreq,
-            static_cast<float>(bandIndex) / ProcessorSpectrumData::SpectrumBands::count);
-        float bandEndFreq = minDisplayFreq * std::pow(maxDisplayFreq / minDisplayFreq,
-            static_cast<float>(bandIndex + 1) / ProcessorSpectrumData::SpectrumBands::count);
+        // Optimized logarithmic frequency calculation
+        float t = bandIndex * invBandCount;
+        float bandStartFreq = minDisplayFreq * std::pow(maxDisplayFreq / minDisplayFreq, t);
+        float bandEndFreq = minDisplayFreq * std::pow(maxDisplayFreq / minDisplayFreq, t + invBandCount);
 
-        // Convert frequencies to FFT bin indices
         int startBin = static_cast<int>(bandStartFreq / binFrequency);
         int endBin = static_cast<int>(bandEndFreq / binFrequency);
 
@@ -242,13 +247,12 @@ void ProcessorDataAnalyzer::performFFTAndUpdateSpectrum(int channelIndex)
 
         int numBins = endBin - startBin;
 
-        // Calculate RMS (Root Mean Square) for this band
+        // Calculate RMS
         float bandSumSquared = 0.0f;
         for (int bin = startBin; bin < endBin; ++bin)
         {
-            // Normalize and compensate for window attenuation
             float magnitude = fftData[bin] * fftScale * windowCompensation;
-            bandSumSquared += magnitude * magnitude; // Square for power
+            bandSumSquared += magnitude * magnitude;
         }
 
         // Calculate RMS value
@@ -262,19 +266,19 @@ void ProcessorDataAnalyzer::performFFTAndUpdateSpectrum(int channelIndex)
         leveldB = juce::jlimit(spectrumBands.mindB, spectrumBands.maxdB, leveldB);
         float normalizedLevel = juce::jmap(leveldB, spectrumBands.mindB, spectrumBands.maxdB, 0.0f, 1.0f);
 
-        // Apply temporal smoothing with attack/decay ballistics
+        // Light smoothing with overlap
         float previousLevel = spectrumBands.bandsPeak[bandIndex];
         float smoothedLevel;
 
         if (normalizedLevel > previousLevel)
         {
-            // Fast attack - signal rises quickly
-            smoothedLevel = attackTime * previousLevel + (1.0f - attackTime) * normalizedLevel;
+            // Fast attack
+            smoothedLevel = 0.1f * previousLevel + 0.9f * normalizedLevel;
         }
         else
         {
-            // Slow decay - signal falls slowly, reduces pulsing
-            smoothedLevel = decayTime * previousLevel + (1.0f - decayTime) * normalizedLevel;
+            // Moderate decay with overlap
+            smoothedLevel = smoothingFactor * previousLevel + (1.0f - smoothingFactor) * normalizedLevel;
         }
 
         spectrumBands.bandsPeak[bandIndex] = smoothedLevel;
@@ -282,8 +286,6 @@ void ProcessorDataAnalyzer::performFFTAndUpdateSpectrum(int channelIndex)
     }
 
     m_spectrum.SetSpectrum(channelIndex, spectrumBands);
-
-    // Clear FFT buffer for next analysis
     juce::FloatVectorOperations::clear(fftData, fftSize * 2);
 }
 
