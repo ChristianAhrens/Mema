@@ -57,7 +57,7 @@ SpectrumAudioComponent::~SpectrumAudioComponent()
 {
 }
 
-void SpectrumAudioComponent::paint(juce::Graphics& g)
+void SpectrumAudioComponent::paint(juce::Graphics & g)
 {
     AbstractAudioVisualizer::paint(g);
 
@@ -67,57 +67,86 @@ void SpectrumAudioComponent::paint(juce::Graphics& g)
     auto width = getWidth();
     auto height = getHeight();
     auto outerMargin = 6;
-    auto visuAreaWidth = width - 2 * outerMargin;
-    auto visuAreaHeight = height - (2 + 3) * outerMargin;
-    auto maxPlotFreq = 20000.0f;    // 20kHz max
-    auto minPlotFreq = 20.0f;       // 20Hz min
+    auto channelMargin = outerMargin; // margin between channel plots
+    auto channelLabelWidth = 20; // width for channel number area
+    auto numVisibleChannels = getNumVisibleChannels();
 
-    juce::Rectangle<int> visuArea(outerMargin, outerMargin, visuAreaWidth, visuAreaHeight);
+    if (numVisibleChannels == 0)
+        return;
 
-    // fill our visualization area background
-    g.setColour(getLookAndFeel().findColour(juce::Slider::backgroundColourId));
-    g.fillRect(visuArea);
+    auto totalWidth = width - 2 * outerMargin - channelLabelWidth;
+    auto totalHeight = height - 2 * outerMargin - outerMargin; // space for legend at bottom
 
-    auto visuAreaOrigX = float(outerMargin);
-    auto visuAreaOrigY = float(outerMargin + visuAreaHeight);
+    // Calculate height per channel plot including margins
+    auto totalChannelMargins = (numVisibleChannels - 1) * channelMargin;
+    auto availableHeightForPlots = totalHeight - totalChannelMargins;
+    auto channelPlotHeight = availableHeightForPlots / numVisibleChannels;
 
-    // draw marker lines 20Hz, 100Hz, 1kHz, 10kHz, 20kHz
-    auto markerColour = getLookAndFeel().findColour(juce::DrawableButton::backgroundColourId);
-    auto legendColour = getLookAndFeel().findColour(juce::DrawableButton::textColourOnId);
-    auto markerLineValues = std::vector<float>{ 20.f, 30.f, 40.f, 50.f, 60.f, 70.f, 80.f, 90.f, 100.f, 200.f, 300.f, 400.f, 500.f, 600.f, 700.f, 800.f, 900.f, 1000.f, 2000.f, 3000.f, 4000.f, 5000.f, 6000.f, 7000.f, 8000.f, 9000.f, 10000.f, 20000.f };
-    auto markerLegendValues = std::map<float, std::string>{ {20.f, "20"}, {100.f, "100"}, {1000.f, "1k"}, {10000.f, "10k"}, {20000.f, "20k"} };
-    auto legendValueWidth = 40.0f;
+    auto maxPlotFreq = 20000.0f;
+    auto minPlotFreq = 20.0f;
 
-    // Calculate the log scale offset for 20Hz as the minimum
+    // Calculate the log scale for frequency mapping
     auto logScaleMin = log10(minPlotFreq);
     auto logScaleMax = log10(maxPlotFreq);
     auto logScaleRange = logScaleMax - logScaleMin;
 
-    for (auto i = 0; i < markerLineValues.size(); ++i)
-    {
-        auto skewedProportionX = (log10(markerLineValues.at(i)) - logScaleMin) / logScaleRange;
-        auto posX = visuAreaOrigX + (static_cast<float>(visuAreaWidth) * skewedProportionX);
-        g.setColour(markerColour);
-        g.drawLine(juce::Line<float>(posX, visuAreaOrigY, posX, visuAreaOrigY - visuAreaHeight));
-
-        if (markerLegendValues.count(markerLineValues.at(i)))
-        {
-            g.setColour(legendColour);
-            g.drawText(markerLegendValues.at(markerLineValues.at(i)), juce::Rectangle<float>(posX - 0.5f * legendValueWidth, visuAreaOrigY + 10, legendValueWidth, float(outerMargin)), juce::Justification::centred, true);
-        }
-    }
-
-    // draw dBFS
-    g.setFont(12.0f);
-    g.setColour(getLookAndFeel().findColour(juce::LookAndFeel_V4::ColourScheme::menuText));
-    g.drawText(juce::String(ProcessorDataAnalyzer::getGlobalMindB()) + " ... " + juce::String(ProcessorDataAnalyzer::getGlobalMaxdB()) + " dBFS", juce::Rectangle<float>(visuAreaOrigX + visuAreaWidth - 120.0f, float(outerMargin), 110.0f, float(outerMargin)), juce::Justification::centred, true);
-
-    // draw rta curves
     auto holdColour = getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::MeteringHoldColourId);
     auto peakColour = getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::MeteringPeakColourId);
+    auto markerColour = getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId);
+    auto legendColour = getLookAndFeel().findColour(juce::DrawableButton::textColourOnId);
 
-    for (auto const plotPoints : m_plotPoints)
+    // Draw each channel in its own plot area
+    for (int channelIdx = 0; channelIdx < numVisibleChannels; ++channelIdx)
     {
+        if (channelIdx >= m_plotPoints.size())
+            break;
+
+        auto const& plotPoints = m_plotPoints[channelIdx];
+
+        // Calculate this channel's plot area
+        auto visuAreaY = outerMargin + channelIdx * (channelPlotHeight + channelMargin);
+        juce::Rectangle<int> visuArea(outerMargin, visuAreaY, totalWidth, channelPlotHeight);
+
+        auto visuAreaOrigX = float(outerMargin);
+        auto visuAreaOrigY = float(visuAreaY + channelPlotHeight);
+        auto visuAreaWidth = totalWidth;
+        auto visuAreaHeight = channelPlotHeight;
+
+        // Fill this channel's visualization area background
+        g.setColour(getLookAndFeel().findColour(juce::Slider::backgroundColourId));
+        g.fillRect(visuArea);
+
+        // Draw channel number area on the right
+        juce::Rectangle<int> channelLabelArea(outerMargin + totalWidth, visuAreaY, channelLabelWidth, channelPlotHeight);
+        g.setColour(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
+        g.fillRect(channelLabelArea);
+
+        // Draw channel number
+        g.setFont(12.0f);
+        g.setColour(legendColour);
+        g.drawText(juce::String(channelIdx + 1),
+            channelLabelArea.toFloat(),
+            juce::Justification::centred, true);
+
+        // Draw marker lines
+        auto markerLineValues = std::vector<float>{ 20.f, 30.f, 40.f, 50.f, 60.f, 70.f, 80.f, 90.f, 100.f, 200.f, 300.f, 400.f, 500.f, 600.f, 700.f, 800.f, 900.f, 1000.f, 2000.f, 3000.f, 4000.f, 5000.f, 6000.f, 7000.f, 8000.f, 9000.f, 10000.f, 20000.f };
+
+        for (auto i = 0; i < markerLineValues.size(); ++i)
+        {
+            auto skewedProportionX = (log10(markerLineValues.at(i)) - logScaleMin) / logScaleRange;
+            auto posX = visuAreaOrigX + (static_cast<float>(visuAreaWidth) * skewedProportionX);
+            g.setColour(markerColour);
+            g.drawLine(juce::Line<float>(posX, visuAreaOrigY, posX, visuAreaOrigY - visuAreaHeight));
+        }
+
+        // Draw dBFS label
+        g.setFont(12.0f);
+        g.setColour(getLookAndFeel().findColour(juce::LookAndFeel_V4::ColourScheme::menuText));
+        g.drawText(juce::String(ProcessorDataAnalyzer::getGlobalMindB()) + " ... " + juce::String(ProcessorDataAnalyzer::getGlobalMaxdB()) + " dBFS",
+            juce::Rectangle<float>(visuAreaOrigX + visuAreaWidth - 120.0f, float(visuAreaY), 110.0f, float(outerMargin)),
+            juce::Justification::centred, true);
+
+        // Draw spectrum curve for this channel
         if (!plotPoints.peaks.empty() && plotPoints.holds.size() == plotPoints.peaks.size())
         {
             // Helper lambda to calculate frequency for a given band index (logarithmic mapping)
@@ -196,6 +225,22 @@ void SpectrumAudioComponent::paint(juce::Graphics& g)
                 g.strokePath(peakPath, juce::PathStrokeType(3));
             }
         }
+    }
+
+    // Draw frequency legend at the bottom
+    auto markerLegendValues = std::map<float, std::string>{ {20.f, "20"}, {100.f, "100"}, {1000.f, "1k"}, {10000.f, "10k"}, {20000.f, "20k"} };
+    auto legendValueWidth = 40.0f;
+    auto legendY = height - outerMargin - outerMargin;
+
+    for (auto const& [freq, label] : markerLegendValues)
+    {
+        auto skewedProportionX = (log10(freq) - logScaleMin) / logScaleRange;
+        auto posX = float(outerMargin) + (static_cast<float>(totalWidth) * skewedProportionX);
+
+        g.setColour(legendColour);
+        g.drawText(label,
+            juce::Rectangle<float>(posX - 0.5f * legendValueWidth, legendY, legendValueWidth, float(outerMargin)),
+            juce::Justification::centred, true);
     }
 }
 
