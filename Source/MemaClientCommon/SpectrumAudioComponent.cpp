@@ -57,21 +57,20 @@ SpectrumAudioComponent::~SpectrumAudioComponent()
 {
 }
 
-void SpectrumAudioComponent::paint(Graphics& g)
+void SpectrumAudioComponent::paint(juce::Graphics& g)
 {
     AbstractAudioVisualizer::paint(g);
 
-    // (Our component is opaque, so we must completely fill the background with a solid colour)
     g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
 
-    // calculate what we need for our center circle
+    // calculate what we need for our visualization area
     auto width = getWidth();
     auto height = getHeight();
     auto outerMargin = 6;
     auto visuAreaWidth = width - 2 * outerMargin;
     auto visuAreaHeight = height - (2 + 3) * outerMargin;
-    auto maxPlotFreq = 20000.0f;
-    auto minPlotFreq = 10.0f;
+    auto maxPlotFreq = 20000.0f;    // 20kHz max
+    auto minPlotFreq = 20.0f;       // 20Hz min
 
     juce::Rectangle<int> visuArea(outerMargin, outerMargin, visuAreaWidth, visuAreaHeight);
 
@@ -82,15 +81,21 @@ void SpectrumAudioComponent::paint(Graphics& g)
     auto visuAreaOrigX = float(outerMargin);
     auto visuAreaOrigY = float(outerMargin + visuAreaHeight);
 
-    // draw marker lines 10Hz, 100Hz, 1000Hz, 10000Hz
+    // draw marker lines 20Hz, 100Hz, 1kHz, 10kHz, 20kHz
     auto markerColour = getLookAndFeel().findColour(juce::DrawableButton::backgroundColourId);
     auto legendColour = getLookAndFeel().findColour(juce::DrawableButton::textColourOnId);
-    auto markerLineValues = std::vector<float>{ 10.f, 20.f, 30.f, 40.f, 50.f, 60.f, 70.f, 80.f, 90.f, 100.f, 200.f, 300.f, 400.f, 500.f, 600.f, 700.f, 800.f, 900.f, 1000.f, 2000.f, 3000.f, 4000.f, 5000.f, 6000.f, 7000.f, 8000.f, 9000.f, 10000.f, 20000.f };
-    auto markerLegendValues = std::map<float, std::string>{ {10.f, "10"}, {100.f, "100"}, {1000.f, "1k"}, {10000.f, "10k"}, {20000.f, "20k"} };
+    auto markerLineValues = std::vector<float>{ 20.f, 30.f, 40.f, 50.f, 60.f, 70.f, 80.f, 90.f, 100.f, 200.f, 300.f, 400.f, 500.f, 600.f, 700.f, 800.f, 900.f, 1000.f, 2000.f, 3000.f, 4000.f, 5000.f, 6000.f, 7000.f, 8000.f, 9000.f, 10000.f, 20000.f };
+    auto markerLegendValues = std::map<float, std::string>{ {20.f, "20"}, {100.f, "100"}, {1000.f, "1k"}, {10000.f, "10k"}, {20000.f, "20k"} };
     auto legendValueWidth = 40.0f;
+
+    // Calculate the log scale offset for 20Hz as the minimum
+    auto logScaleMin = log10(minPlotFreq);
+    auto logScaleMax = log10(maxPlotFreq);
+    auto logScaleRange = logScaleMax - logScaleMin;
+
     for (auto i = 0; i < markerLineValues.size(); ++i)
     {
-        auto skewedProportionX = 1.0f / (log10(markerLineValues.back()) - 1.0f) * (log10(markerLineValues.at(i)) - 1.0f);
+        auto skewedProportionX = (log10(markerLineValues.at(i)) - logScaleMin) / logScaleRange;
         auto posX = visuAreaOrigX + (static_cast<float>(visuAreaWidth) * skewedProportionX);
         g.setColour(markerColour);
         g.drawLine(juce::Line<float>(posX, visuAreaOrigY, posX, visuAreaOrigY - visuAreaHeight));
@@ -110,37 +115,86 @@ void SpectrumAudioComponent::paint(Graphics& g)
     // draw rta curves
     auto holdColour = getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::MeteringHoldColourId);
     auto peakColour = getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::MeteringPeakColourId);
+
     for (auto const plotPoints : m_plotPoints)
     {
         if (!plotPoints.peaks.empty() && plotPoints.holds.size() == plotPoints.peaks.size())
         {
-            auto minPlotIdx = jlimit(0, static_cast<int>(plotPoints.peaks.size() - 1), static_cast<int>((minPlotFreq - plotPoints.minFreq) / plotPoints.freqRes));
-            auto maxPlotIdx = jlimit(0, static_cast<int>(plotPoints.peaks.size() - 1), static_cast<int>((maxPlotFreq - plotPoints.minFreq) / plotPoints.freqRes));
+            // Helper lambda to calculate frequency for a given band index (logarithmic mapping)
+            auto getBandFrequency = [&plotPoints](int bandIndex) -> float
+                {
+                    if (plotPoints.minFreq <= 0.0f || plotPoints.maxFreq <= plotPoints.minFreq)
+                        return 0.0f;
 
-            // hold and peak curve
-            auto holdPath = juce::Path{};
-            auto peakPath = juce::Path{};
-            auto skewedProportionX = 1.0f / (log10(maxPlotFreq) - 1.0f) * (log10(float(minPlotIdx + 1) * plotPoints.freqRes) - 1.0f);
-            auto newPointX = visuAreaOrigX + (static_cast<float>(visuAreaWidth) * skewedProportionX);
-            auto newHoldPointY = visuAreaOrigY - plotPoints.holds.at(minPlotIdx) * visuAreaHeight;
-            holdPath.startNewSubPath(juce::Point<float>(newPointX, newHoldPointY));
-            auto newPeakPointY = visuAreaOrigY - plotPoints.peaks.at(minPlotIdx) * visuAreaHeight;
-            peakPath.startNewSubPath(juce::Point<float>(newPointX, newPeakPointY));
-            for (int i = minPlotIdx + 1; i <= maxPlotIdx; ++i)
+                    float ratio = plotPoints.maxFreq / plotPoints.minFreq;
+                    float t = static_cast<float>(bandIndex) / (plotPoints.peaks.size() - 1);
+                    return plotPoints.minFreq * std::pow(ratio, t);
+                };
+
+            // Helper lambda to convert frequency to screen X position (logarithmic scale)
+            auto frequencyToScreenX = [&](float frequency) -> float
+                {
+                    if (frequency <= 0.0f)
+                        return visuAreaOrigX;
+
+                    float skewedProportionX = (log10(frequency) - logScaleMin) / logScaleRange;
+                    return visuAreaOrigX + (static_cast<float>(visuAreaWidth) * skewedProportionX);
+                };
+
+            // Find the band indices that correspond to our plot frequency range
+            int minPlotIdx = -1;
+            int maxPlotIdx = -1;
+
+            for (int i = 0; i < plotPoints.peaks.size(); ++i)
             {
-                skewedProportionX = 1.0f / (log10(maxPlotFreq) - 1.0f) * (log10((i + 1) * plotPoints.freqRes) - 1.0f);
-                newPointX = visuAreaOrigX + (static_cast<float>(visuAreaWidth) * skewedProportionX);
+                float bandFreq = getBandFrequency(i);
 
-                newHoldPointY = visuAreaOrigY - plotPoints.holds.at(i) * visuAreaHeight;
-                holdPath.lineTo(juce::Point<float>(newPointX, newHoldPointY));
+                if (minPlotIdx == -1 && bandFreq >= minPlotFreq)
+                    minPlotIdx = i;
 
-                newPeakPointY = visuAreaOrigY - plotPoints.peaks.at(i) * visuAreaHeight;
-                peakPath.lineTo(juce::Point<float>(newPointX, newPeakPointY));
+                if (bandFreq <= maxPlotFreq)
+                    maxPlotIdx = i;
             }
-            g.setColour(holdColour);
-            g.strokePath(holdPath, juce::PathStrokeType(1));
-            g.setColour(peakColour);
-            g.strokePath(peakPath, juce::PathStrokeType(3));
+
+            // Ensure valid indices
+            if (minPlotIdx == -1)
+                minPlotIdx = 0;
+            if (maxPlotIdx == -1 || maxPlotIdx >= plotPoints.peaks.size())
+                maxPlotIdx = static_cast<int>(plotPoints.peaks.size() - 1);
+
+            if (minPlotIdx <= maxPlotIdx)
+            {
+                // Build hold and peak paths
+                auto holdPath = juce::Path{};
+                auto peakPath = juce::Path{};
+
+                // Start paths at first band
+                float startFreq = getBandFrequency(minPlotIdx);
+                float startX = frequencyToScreenX(startFreq);
+                float startHoldY = visuAreaOrigY - plotPoints.holds.at(minPlotIdx) * visuAreaHeight;
+                float startPeakY = visuAreaOrigY - plotPoints.peaks.at(minPlotIdx) * visuAreaHeight;
+
+                holdPath.startNewSubPath(juce::Point<float>(startX, startHoldY));
+                peakPath.startNewSubPath(juce::Point<float>(startX, startPeakY));
+
+                // Add remaining bands
+                for (int i = minPlotIdx + 1; i <= maxPlotIdx; ++i)
+                {
+                    float bandFreq = getBandFrequency(i);
+                    float pointX = frequencyToScreenX(bandFreq);
+
+                    float holdY = visuAreaOrigY - plotPoints.holds.at(i) * visuAreaHeight;
+                    holdPath.lineTo(juce::Point<float>(pointX, holdY));
+
+                    float peakY = visuAreaOrigY - plotPoints.peaks.at(i) * visuAreaHeight;
+                    peakPath.lineTo(juce::Point<float>(pointX, peakY));
+                }
+
+                g.setColour(holdColour);
+                g.strokePath(holdPath, juce::PathStrokeType(1));
+                g.setColour(peakColour);
+                g.strokePath(peakPath, juce::PathStrokeType(3));
+            }
         }
     }
 }

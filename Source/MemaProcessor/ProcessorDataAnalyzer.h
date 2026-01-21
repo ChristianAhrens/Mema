@@ -25,6 +25,10 @@
 #include "ProcessorSpectrumData.h"
 
 
+#define USE_LEVEL_PROCESSING
+#define USE_BUFFER_PROCESSING
+#define USE_SPECTRUM_PROCESSING
+
 namespace Mema
 {
 
@@ -65,6 +69,8 @@ public:
 
     //==============================================================================
     void analyzeData(const juce::AudioBuffer<float>& buffer);
+    void processSpectrumForChannel(int channelIndex, const float* channelData, int numSamples);
+    void performFFTAndUpdateSpectrum(int channelIndex);
 
     //==============================================================================
     void timerCallback() override;
@@ -116,8 +122,8 @@ private:
     };
     dsp::FFT                                    m_fwdFFT;
     dsp::WindowingFunction<float>               m_windowF;
-    float                                       m_FFTdata[2 * fftSize];
-    int                                         m_FFTdataPos;
+    std::vector<std::vector<float>>             m_FFTdata; // [channel][fftSize * 2]
+    std::vector<int>                            m_FFTdataPos; // [channel]
 
     int                                         m_holdTimeMs;
 

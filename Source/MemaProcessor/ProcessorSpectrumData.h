@@ -41,7 +41,7 @@ public:
 
             mindB = 0.0f;
             maxdB = 0.0f;
-            minFreq = 10.0f;
+            minFreq = 20.0f;
             maxFreq = 20000.0f;
             freqRes = static_cast<float>((maxFreq - minFreq) / ProcessorSpectrumData::SpectrumBands::count);
         };

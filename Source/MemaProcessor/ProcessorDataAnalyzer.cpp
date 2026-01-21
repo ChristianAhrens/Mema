@@ -31,9 +31,6 @@ ProcessorDataAnalyzer::ProcessorDataAnalyzer() :
 	m_fwdFFT(fftOrder),
 	m_windowF(fftSize, dsp::WindowingFunction<float>::hann)
 {
-	m_FFTdataPos = 0;
-	zeromem(m_FFTdata, sizeof(m_FFTdata));
-
 	setHoldTime(500);
 }
 
@@ -81,126 +78,175 @@ void ProcessorDataAnalyzer::removeListener(Listener* listener)
 
 void ProcessorDataAnalyzer::analyzeData(const juce::AudioBuffer<float>& buffer)
 {
-	if (!IsInitialized())
-		return;
+    if (!IsInitialized())
+        return;
 
-	int numChannels = buffer.getNumChannels();
+    int numChannels = buffer.getNumChannels();
 
-	if (numChannels != m_centiSecondBuffer.getNumChannels())
-		m_centiSecondBuffer.setSize(numChannels, m_samplesPerCentiSecond, false, true, true);
-	if (m_sampleRate != m_centiSecondBuffer.GetSampleRate())
-		m_centiSecondBuffer.SetSampleRate(m_sampleRate);
+    // Ensure buffers are sized correctly
+    if (numChannels != m_centiSecondBuffer.getNumChannels())
+        m_centiSecondBuffer.setSize(numChannels, m_samplesPerCentiSecond, false, true, true);
 
-	int availableSamples = buffer.getNumSamples();
+    if (m_sampleRate != m_centiSecondBuffer.GetSampleRate())
+        m_centiSecondBuffer.SetSampleRate(m_sampleRate);
 
-	int readPos = 0;
-	int writePos = m_samplesPerCentiSecond - m_missingSamplesForCentiSecond;
-	while (availableSamples >= m_missingSamplesForCentiSecond)
-	{
-		for (int i = 0; i < numChannels; ++i)
-		{
+    // Ensure per-channel FFT buffers are sized correctly
+#ifdef USE_SPECTRUM_PROCESSING
+    if (m_FFTdata.size() != numChannels)
+    {
+        m_FFTdata.resize(numChannels);
+        m_FFTdataPos.resize(numChannels, 0);
+        for (auto& channelFFTdata : m_FFTdata)
+            channelFFTdata.resize(fftSize * 2, 0.0f);
+    }
+#endif
+
+    int availableSamples = buffer.getNumSamples();
+    int readPos = 0;
+
+    while (availableSamples >= m_missingSamplesForCentiSecond)
+    {
+        int writePos = m_samplesPerCentiSecond - m_missingSamplesForCentiSecond;
+
+        for (int i = 0; i < numChannels; ++i)
+        {
 #ifdef USE_BUFFER_PROCESSING
-			// generate signal buffer data
-			m_centiSecondBuffer.copyFrom(i, writePos, buffer.getReadPointer(i) + readPos, m_missingSamplesForCentiSecond);
+            // Generate signal buffer data
+            m_centiSecondBuffer.copyFrom(i, writePos, buffer.getReadPointer(i) + readPos, m_missingSamplesForCentiSecond);
 #endif
 
 #ifdef USE_LEVEL_PROCESSING
-			// generate level data
-			auto peak = m_centiSecondBuffer.getMagnitude(i, 0, m_samplesPerCentiSecond);
-			auto rms = m_centiSecondBuffer.getRMSLevel(i, 0, m_samplesPerCentiSecond);
-			auto hold = std::max(peak, m_level.GetLevel(i + 1).hold);
-			m_level.SetLevel(i + 1, ProcessorLevelData::LevelVal(peak, rms, hold, static_cast<float>(getGlobalMindB())));
+            // Generate level data
+            auto peak = m_centiSecondBuffer.getMagnitude(i, 0, m_samplesPerCentiSecond);
+            auto rms = m_centiSecondBuffer.getRMSLevel(i, 0, m_samplesPerCentiSecond);
+            auto hold = std::max(peak, m_level.GetLevel(i + 1).hold);
+            m_level.SetLevel(i + 1, ProcessorLevelData::LevelVal(peak, rms, hold, static_cast<float>(getGlobalMindB())));
 #endif
 
 #ifdef USE_SPECTRUM_PROCESSING
-			// generate spectrum data
-			{
-				int unprocessedSamples = 0;
-				if (m_FFTdataPos < fftSize)
-				{
-					int missingSamples = fftSize - m_FFTdataPos;
-					if (missingSamples < m_samplesPerCentiSecond)
-					{
-						memcpy(m_FFTdata, m_centiSecondBuffer.getReadPointer(i), missingSamples);
-						m_FFTdataPos += missingSamples;
-						unprocessedSamples = m_samplesPerCentiSecond - missingSamples;
-					}
-					else
-					{
-						memcpy(m_FFTdata, m_centiSecondBuffer.getReadPointer(i), m_samplesPerCentiSecond);
-						m_FFTdataPos += m_samplesPerCentiSecond;
-					}
-				}
-
-				if (m_FFTdataPos >= fftSize)
-				{
-					m_windowF.multiplyWithWindowingTable(m_FFTdata, fftSize);
-					m_fwdFFT.performFrequencyOnlyForwardTransform(m_FFTdata);
-					ProcessorSpectrumData::SpectrumBands spectrumBands = m_spectrum.GetSpectrum(i);
-
-					spectrumBands.mindB = static_cast<float>(getGlobalMindB());
-					spectrumBands.maxdB = static_cast<float>(getGlobalMaxdB());
-					auto spectrumStepWidth = static_cast<int>(0.5f * (fftSize / ProcessorSpectrumData::SpectrumBands::count));
-					auto spectrumPos = 0;
-					for (int j = 0; j < ProcessorSpectrumData::SpectrumBands::count && spectrumPos < fftSize; ++j)
-					{
-						float spectrumVal = 0;
-
-						for (int k = 0; k < spectrumStepWidth; ++k, ++spectrumPos)
-							spectrumVal += m_FFTdata[spectrumPos];
-						spectrumVal = spectrumVal / spectrumStepWidth;
-
-						auto leveldB = jlimit(spectrumBands.mindB, spectrumBands.maxdB, Decibels::gainToDecibels(spectrumVal));
-						auto level = jmap(leveldB, spectrumBands.mindB, spectrumBands.maxdB, 0.0f, 1.0f);
-
-						spectrumBands.bandsPeak[j] = level;
-						spectrumBands.bandsHold[j] = std::max(level, spectrumBands.bandsHold[j]);
-					}
-
-					m_spectrum.SetSpectrum(i, spectrumBands);
-
-					zeromem(m_FFTdata, sizeof(m_FFTdata));
-					m_FFTdataPos = 0;
-				}
-
-				if (unprocessedSamples != 0)
-				{
-					memcpy(m_FFTdata, m_centiSecondBuffer.getReadPointer(i, m_samplesPerCentiSecond - unprocessedSamples), unprocessedSamples);
-					m_FFTdataPos += unprocessedSamples;
-				}
-			}
+            // Generate spectrum data
+            processSpectrumForChannel(i, m_centiSecondBuffer.getReadPointer(i), m_samplesPerCentiSecond);
 #endif
-		}
+        }
 
 #ifdef USE_LEVEL_PROCESSING
-		BroadcastData(&m_level);
+        BroadcastData(&m_level);
 #endif
 #ifdef USE_BUFFER_PROCESSING
-		BroadcastData(&m_centiSecondBuffer);
+        BroadcastData(&m_centiSecondBuffer);
 #endif
 #ifdef USE_SPECTRUM_PROCESSING
-		BroadcastData(&m_spectrum);
+        BroadcastData(&m_spectrum);
 #endif
 
-		readPos += m_missingSamplesForCentiSecond;
-		availableSamples -= m_missingSamplesForCentiSecond;
+        readPos += m_missingSamplesForCentiSecond;
+        availableSamples -= m_missingSamplesForCentiSecond;
+        m_missingSamplesForCentiSecond = m_samplesPerCentiSecond;
+    }
 
-		m_missingSamplesForCentiSecond = m_samplesPerCentiSecond;
+    // Handle remaining samples
+    if (availableSamples > 0)
+    {
+        int writePos = m_samplesPerCentiSecond - m_missingSamplesForCentiSecond;
+        for (int i = 0; i < numChannels; ++i)
+        {
+            m_centiSecondBuffer.copyFrom(i, writePos, buffer.getReadPointer(i) + readPos, availableSamples);
+        }
+        m_missingSamplesForCentiSecond -= availableSamples;
+    }
+}
 
-		writePos = m_samplesPerCentiSecond - m_missingSamplesForCentiSecond;
+void ProcessorDataAnalyzer::processSpectrumForChannel(int channelIndex, const float* channelData, int numSamples)
+{
+    int samplesProcessed = 0;
 
-		if (availableSamples <= 0)
-			break;
-	}
+    // Fill FFT buffer until we have enough samples
+    while (samplesProcessed < numSamples)
+    {
+        int samplesNeeded = fftSize - m_FFTdataPos[channelIndex];
+        int samplesAvailable = numSamples - samplesProcessed;
+        int samplesToCopy = std::min(samplesNeeded, samplesAvailable);
 
-	if (availableSamples > 0)
-	{
-		for (int i = 0; i < numChannels; ++i)
-		{
-			m_centiSecondBuffer.copyFrom(i, writePos, buffer.getReadPointer(i) + readPos, availableSamples);
-		}
-		m_missingSamplesForCentiSecond -= availableSamples;
-	}
+        // Copy samples into FFT buffer using JUCE's optimized copy
+        juce::FloatVectorOperations::copy(
+            m_FFTdata[channelIndex].data() + m_FFTdataPos[channelIndex],
+            channelData + samplesProcessed,
+            samplesToCopy
+        );
+
+        m_FFTdataPos[channelIndex] += samplesToCopy;
+        samplesProcessed += samplesToCopy;
+
+        // When we have enough samples, perform FFT
+        if (m_FFTdataPos[channelIndex] >= fftSize)
+        {
+            performFFTAndUpdateSpectrum(channelIndex);
+            m_FFTdataPos[channelIndex] = 0;
+        }
+    }
+}
+
+void ProcessorDataAnalyzer::performFFTAndUpdateSpectrum(int channelIndex)
+{
+    float* fftData = m_FFTdata[channelIndex].data();
+
+    m_windowF.multiplyWithWindowingTable(fftData, fftSize);
+    m_fwdFFT.performFrequencyOnlyForwardTransform(fftData);
+
+    ProcessorSpectrumData::SpectrumBands spectrumBands = m_spectrum.GetSpectrum(channelIndex);
+    spectrumBands.mindB = static_cast<float>(getGlobalMindB());
+    spectrumBands.maxdB = static_cast<float>(getGlobalMaxdB());
+
+    const float nyquistFreq = m_sampleRate * 0.5f;
+    const float binFrequency = m_sampleRate / static_cast<float>(fftSize);
+
+    // For logarithmic spacing, define a meaningful range (e.g., 20 Hz to 20 kHz)
+    const float minDisplayFreq = 20.0f;
+    const float maxDisplayFreq = std::min(20000.0f, nyquistFreq);
+
+    spectrumBands.minFreq = minDisplayFreq;
+    spectrumBands.maxFreq = maxDisplayFreq;
+    // Note: freqRes is not constant for logarithmic spacing, but we can store an average
+    spectrumBands.freqRes = (maxDisplayFreq - minDisplayFreq) / ProcessorSpectrumData::SpectrumBands::count;
+
+    const int usableFFTBins = fftSize / 2;
+
+    // Map bands logarithmically across frequency range
+    for (int bandIndex = 0; bandIndex < ProcessorSpectrumData::SpectrumBands::count; ++bandIndex)
+    {
+        // Calculate frequency range for this band (logarithmic)
+        float bandStartFreq = minDisplayFreq * std::pow(maxDisplayFreq / minDisplayFreq,
+            static_cast<float>(bandIndex) / ProcessorSpectrumData::SpectrumBands::count);
+        float bandEndFreq = minDisplayFreq * std::pow(maxDisplayFreq / minDisplayFreq,
+            static_cast<float>(bandIndex + 1) / ProcessorSpectrumData::SpectrumBands::count);
+
+        // Convert frequencies to FFT bin indices
+        int startBin = static_cast<int>(bandStartFreq / binFrequency);
+        int endBin = static_cast<int>(bandEndFreq / binFrequency);
+
+        startBin = juce::jlimit(0, usableFFTBins - 1, startBin);
+        endBin = juce::jlimit(startBin + 1, usableFFTBins, endBin);
+
+        int numBins = endBin - startBin;
+
+        // Average the bins for this band
+        float bandSum = 0.0f;
+        for (int bin = startBin; bin < endBin; ++bin)
+            bandSum += fftData[bin];
+
+        float averageValue = bandSum / numBins;
+
+        // Convert to dB and normalize
+        float leveldB = juce::Decibels::gainToDecibels(averageValue);
+        leveldB = juce::jlimit(spectrumBands.mindB, spectrumBands.maxdB, leveldB);
+        float normalizedLevel = juce::jmap(leveldB, spectrumBands.mindB, spectrumBands.maxdB, 0.0f, 1.0f);
+
+        spectrumBands.bandsPeak[bandIndex] = normalizedLevel;
+        spectrumBands.bandsHold[bandIndex] = std::max(normalizedLevel, spectrumBands.bandsHold[bandIndex]);
+    }
+
+    m_spectrum.SetSpectrum(channelIndex, spectrumBands);
+    juce::FloatVectorOperations::clear(fftData, fftSize * 2);
 }
 
 void ProcessorDataAnalyzer::BroadcastData(AbstractProcessorData* data)
