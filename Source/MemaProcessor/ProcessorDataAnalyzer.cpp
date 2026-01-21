@@ -181,20 +181,7 @@ void ProcessorDataAnalyzer::processSpectrumForChannel(int channelIndex, const fl
         if (m_FFTdataPos[channelIndex] >= fftSize)
         {
             performFFTAndUpdateSpectrum(channelIndex);
-
-            // Use 75% overlap (hop size = 25% of FFT size)
-            // This gives you ~47 updates/sec instead of ~12 updates/sec
-            const int hopSize = fftSize / 4;  // 75% overlap
-
-            // Shift the buffer: move last (fftSize - hopSize) samples to the beginning
-            juce::FloatVectorOperations::copy(
-                m_FFTdata[channelIndex].data(),
-                m_FFTdata[channelIndex].data() + hopSize,
-                fftSize - hopSize
-            );
-
-            // Set position to continue filling from where we left data
-            m_FFTdataPos[channelIndex] = fftSize - hopSize;
+            m_FFTdataPos[channelIndex] = 0;  // Reset to 0, no overlap
         }
     }
 }
@@ -233,8 +220,9 @@ void ProcessorDataAnalyzer::performFFTAndUpdateSpectrum(int channelIndex)
     // Window compensation factor
     const float windowCompensation = 2.0f; // For Hann window
 
-    // Temporal smoothing factor (0.0 = no smoothing, 0.9 = heavy smoothing)
-    const float smoothingFactor = 0.7f; // Adjust between 0.5-0.85 for taste
+    // Adjusted smoothing factors for attack and decay
+    const float attackTime = 0.2f;   // Fast attack (0.0 = instant, 1.0 = never)
+    const float decayTime = 0.9f;   // Slow decay (0.0 = instant, 1.0 = never)
 
     // Map bands logarithmically across frequency range
     for (int bandIndex = 0; bandIndex < ProcessorSpectrumData::SpectrumBands::count; ++bandIndex)
@@ -274,21 +262,19 @@ void ProcessorDataAnalyzer::performFFTAndUpdateSpectrum(int channelIndex)
         leveldB = juce::jlimit(spectrumBands.mindB, spectrumBands.maxdB, leveldB);
         float normalizedLevel = juce::jmap(leveldB, spectrumBands.mindB, spectrumBands.maxdB, 0.0f, 1.0f);
 
-        // Apply temporal smoothing (blend with previous value)
-        // IMPORTANT: Get the previous value BEFORE we set the new one
+        // Apply temporal smoothing with attack/decay ballistics
         float previousLevel = spectrumBands.bandsPeak[bandIndex];
-
-        // Apply different smoothing for rising vs falling signals (ballistics)
         float smoothedLevel;
+
         if (normalizedLevel > previousLevel)
         {
-            // Fast attack - new signal rises quickly
-            smoothedLevel = 0.3f * previousLevel + 0.7f * normalizedLevel;
+            // Fast attack - signal rises quickly
+            smoothedLevel = attackTime * previousLevel + (1.0f - attackTime) * normalizedLevel;
         }
         else
         {
-            // Slow decay - signal falls slowly
-            smoothedLevel = smoothingFactor * previousLevel + (1.0f - smoothingFactor) * normalizedLevel;
+            // Slow decay - signal falls slowly, reduces pulsing
+            smoothedLevel = decayTime * previousLevel + (1.0f - decayTime) * normalizedLevel;
         }
 
         spectrumBands.bandsPeak[bandIndex] = smoothedLevel;

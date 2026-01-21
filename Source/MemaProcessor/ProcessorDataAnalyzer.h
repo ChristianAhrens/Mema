@@ -25,10 +25,6 @@
 #include "ProcessorSpectrumData.h"
 
 
-#define USE_LEVEL_PROCESSING
-#define USE_BUFFER_PROCESSING
-#define USE_SPECTRUM_PROCESSING
-
 namespace Mema
 {
 
