@@ -31,7 +31,7 @@ ProcessorDataAnalyzer::ProcessorDataAnalyzer() :
 	m_fwdFFT(fftOrder),
 	m_windowF(fftSize, dsp::WindowingFunction<float>::hann)
 {
-	setHoldTime(500);
+	setHoldTime(1000);
 }
 
 ProcessorDataAnalyzer::~ProcessorDataAnalyzer()
