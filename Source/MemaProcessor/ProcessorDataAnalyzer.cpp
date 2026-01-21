@@ -181,7 +181,20 @@ void ProcessorDataAnalyzer::processSpectrumForChannel(int channelIndex, const fl
         if (m_FFTdataPos[channelIndex] >= fftSize)
         {
             performFFTAndUpdateSpectrum(channelIndex);
-            m_FFTdataPos[channelIndex] = 0;
+
+            // Use 75% overlap (hop size = 25% of FFT size)
+            // This gives you ~47 updates/sec instead of ~12 updates/sec
+            const int hopSize = fftSize / 4;  // 75% overlap
+
+            // Shift the buffer: move last (fftSize - hopSize) samples to the beginning
+            juce::FloatVectorOperations::copy(
+                m_FFTdata[channelIndex].data(),
+                m_FFTdata[channelIndex].data() + hopSize,
+                fftSize - hopSize
+            );
+
+            // Set position to continue filling from where we left data
+            m_FFTdataPos[channelIndex] = fftSize - hopSize;
         }
     }
 }
@@ -190,15 +203,18 @@ void ProcessorDataAnalyzer::performFFTAndUpdateSpectrum(int channelIndex)
 {
     float* fftData = m_FFTdata[channelIndex].data();
 
+    // Apply windowing function
     m_windowF.multiplyWithWindowingTable(fftData, fftSize);
+
+    // Perform FFT
     m_fwdFFT.performFrequencyOnlyForwardTransform(fftData);
 
+    // Get spectrum bands for this channel
     ProcessorSpectrumData::SpectrumBands spectrumBands = m_spectrum.GetSpectrum(channelIndex);
     spectrumBands.mindB = static_cast<float>(getGlobalMindB());
     spectrumBands.maxdB = static_cast<float>(getGlobalMaxdB());
 
     const float nyquistFreq = m_sampleRate * 0.5f;
-    const float binFrequency = m_sampleRate / static_cast<float>(fftSize);
 
     // For logarithmic spacing, define a meaningful range (e.g., 20 Hz to 20 kHz)
     const float minDisplayFreq = 20.0f;
@@ -206,10 +222,19 @@ void ProcessorDataAnalyzer::performFFTAndUpdateSpectrum(int channelIndex)
 
     spectrumBands.minFreq = minDisplayFreq;
     spectrumBands.maxFreq = maxDisplayFreq;
-    // Note: freqRes is not constant for logarithmic spacing, but we can store an average
     spectrumBands.freqRes = (maxDisplayFreq - minDisplayFreq) / ProcessorSpectrumData::SpectrumBands::count;
 
     const int usableFFTBins = fftSize / 2;
+    const float binFrequency = m_sampleRate / static_cast<float>(fftSize);
+
+    // Scaling factor for FFT normalization
+    const float fftScale = 1.0f / static_cast<float>(fftSize);
+
+    // Window compensation factor
+    const float windowCompensation = 2.0f; // For Hann window
+
+    // Temporal smoothing factor (0.0 = no smoothing, 0.9 = heavy smoothing)
+    const float smoothingFactor = 0.7f; // Adjust between 0.5-0.85 for taste
 
     // Map bands logarithmically across frequency range
     for (int bandIndex = 0; bandIndex < ProcessorSpectrumData::SpectrumBands::count; ++bandIndex)
@@ -229,23 +254,50 @@ void ProcessorDataAnalyzer::performFFTAndUpdateSpectrum(int channelIndex)
 
         int numBins = endBin - startBin;
 
-        // Average the bins for this band
-        float bandSum = 0.0f;
+        // Calculate RMS (Root Mean Square) for this band
+        float bandSumSquared = 0.0f;
         for (int bin = startBin; bin < endBin; ++bin)
-            bandSum += fftData[bin];
+        {
+            // Normalize and compensate for window attenuation
+            float magnitude = fftData[bin] * fftScale * windowCompensation;
+            bandSumSquared += magnitude * magnitude; // Square for power
+        }
 
-        float averageValue = bandSum / numBins;
+        // Calculate RMS value
+        float rmsValue = std::sqrt(bandSumSquared / numBins);
 
-        // Convert to dB and normalize
-        float leveldB = juce::Decibels::gainToDecibels(averageValue);
+        // Convert to dB with proper floor to avoid log(0)
+        const float minMagnitude = 0.00001f; // approximately -100 dB
+        rmsValue = std::max(rmsValue, minMagnitude);
+
+        float leveldB = juce::Decibels::gainToDecibels(rmsValue);
         leveldB = juce::jlimit(spectrumBands.mindB, spectrumBands.maxdB, leveldB);
         float normalizedLevel = juce::jmap(leveldB, spectrumBands.mindB, spectrumBands.maxdB, 0.0f, 1.0f);
 
-        spectrumBands.bandsPeak[bandIndex] = normalizedLevel;
-        spectrumBands.bandsHold[bandIndex] = std::max(normalizedLevel, spectrumBands.bandsHold[bandIndex]);
+        // Apply temporal smoothing (blend with previous value)
+        // IMPORTANT: Get the previous value BEFORE we set the new one
+        float previousLevel = spectrumBands.bandsPeak[bandIndex];
+
+        // Apply different smoothing for rising vs falling signals (ballistics)
+        float smoothedLevel;
+        if (normalizedLevel > previousLevel)
+        {
+            // Fast attack - new signal rises quickly
+            smoothedLevel = 0.3f * previousLevel + 0.7f * normalizedLevel;
+        }
+        else
+        {
+            // Slow decay - signal falls slowly
+            smoothedLevel = smoothingFactor * previousLevel + (1.0f - smoothingFactor) * normalizedLevel;
+        }
+
+        spectrumBands.bandsPeak[bandIndex] = smoothedLevel;
+        spectrumBands.bandsHold[bandIndex] = std::max(smoothedLevel, spectrumBands.bandsHold[bandIndex]);
     }
 
     m_spectrum.SetSpectrum(channelIndex, spectrumBands);
+
+    // Clear FFT buffer for next analysis
     juce::FloatVectorOperations::clear(fftData, fftSize * 2);
 }
 
