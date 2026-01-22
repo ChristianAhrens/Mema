@@ -239,7 +239,7 @@ void SpectrumAudioComponent::paint(juce::Graphics & g)
 
         g.setColour(legendColour);
         g.drawText(label,
-            juce::Rectangle<float>(posX - 0.5f * legendValueWidth, legendY, legendValueWidth, float(outerMargin)),
+            juce::Rectangle<float>(posX - 0.5f * legendValueWidth, float(legendY), legendValueWidth, float(outerMargin)),
             juce::Justification::centred, true);
     }
 }

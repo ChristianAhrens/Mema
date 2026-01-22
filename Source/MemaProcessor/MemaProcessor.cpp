@@ -142,7 +142,9 @@ MemaProcessor::MemaProcessor(XmlElement* stateXml) :
 	}
 
 	m_inputDataAnalyzer = std::make_unique<ProcessorDataAnalyzer>();
+	m_inputDataAnalyzer->setUseProcessingTypes(true, false, false);
 	m_outputDataAnalyzer = std::make_unique<ProcessorDataAnalyzer>();
+	m_outputDataAnalyzer->setUseProcessingTypes(true, false, false);
 
 	m_deviceManager = std::make_unique<AudioDeviceManager>();
 	m_deviceManager->addAudioCallback(this);

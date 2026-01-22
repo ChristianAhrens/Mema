@@ -21,10 +21,6 @@
 namespace Mema
 {
 
-#define USE_LEVEL_PROCESSING
-#define USE_BUFFER_PROCESSING
-#define USE_SPECTRUM_PROCESSING
-
 
 //==============================================================================
 ProcessorDataAnalyzer::ProcessorDataAnalyzer() :
@@ -37,6 +33,28 @@ ProcessorDataAnalyzer::ProcessorDataAnalyzer() :
 ProcessorDataAnalyzer::~ProcessorDataAnalyzer()
 {
 
+}
+
+void ProcessorDataAnalyzer::setUseProcessingTypes(bool useLevelProcessing, bool useBufferProcessing, bool useSepctrumProcessing)
+{
+    m_useLevelProcessing = useLevelProcessing;
+    m_useBufferProcessing = useBufferProcessing;
+    m_useSpectrumProcessing = useSepctrumProcessing;
+}
+
+bool ProcessorDataAnalyzer::isLevelProcessingUsed()
+{
+    return m_useLevelProcessing;
+}
+
+bool ProcessorDataAnalyzer::isBufferProcessingUsed()
+{
+    return m_useBufferProcessing;
+}
+
+bool ProcessorDataAnalyzer::isSepctrumProcessingUsed()
+{
+    return m_useSpectrumProcessing;
 }
 
 void ProcessorDataAnalyzer::initializeParameters(double sampleRate, int bufferSize)
@@ -89,15 +107,13 @@ void ProcessorDataAnalyzer::analyzeData(const juce::AudioBuffer<float>& buffer)
         m_centiSecondBuffer.SetSampleRate(m_sampleRate);
 
     // Ensure per-channel FFT buffers are sized correctly
-#ifdef USE_SPECTRUM_PROCESSING
-    if (m_FFTdata.size() != numChannels)
+    if (isSepctrumProcessingUsed() && m_FFTdata.size() != numChannels)
     {
         m_FFTdata.resize(numChannels);
         m_FFTdataPos.resize(numChannels, 0);
         for (auto& channelFFTdata : m_FFTdata)
             channelFFTdata.resize(fftSize * 2, 0.0f);
     }
-#endif
 
     int availableSamples = buffer.getNumSamples();
     int readPos = 0;
@@ -108,35 +124,38 @@ void ProcessorDataAnalyzer::analyzeData(const juce::AudioBuffer<float>& buffer)
 
         for (int i = 0; i < numChannels; ++i)
         {
-#ifdef USE_BUFFER_PROCESSING
-            // Generate signal buffer data
-            m_centiSecondBuffer.copyFrom(i, writePos, buffer.getReadPointer(i) + readPos, m_missingSamplesForCentiSecond);
-#endif
+            if (isBufferProcessingUsed())
+            {
+                // Generate signal buffer data
+                m_centiSecondBuffer.copyFrom(i, writePos, buffer.getReadPointer(i) + readPos, m_missingSamplesForCentiSecond);
+            }
 
-#ifdef USE_LEVEL_PROCESSING
-            // Generate level data
-            auto peak = m_centiSecondBuffer.getMagnitude(i, 0, m_samplesPerCentiSecond);
-            auto rms = m_centiSecondBuffer.getRMSLevel(i, 0, m_samplesPerCentiSecond);
-            auto hold = std::max(peak, m_level.GetLevel(i + 1).hold);
-            m_level.SetLevel(i + 1, ProcessorLevelData::LevelVal(peak, rms, hold, static_cast<float>(getGlobalMindB())));
-#endif
+            if (isLevelProcessingUsed())
+            {
+                // Generate level data
+                auto peak = m_centiSecondBuffer.getMagnitude(i, 0, m_samplesPerCentiSecond);
+                auto rms = m_centiSecondBuffer.getRMSLevel(i, 0, m_samplesPerCentiSecond);
+                auto hold = std::max(peak, m_level.GetLevel(i + 1).hold);
+                m_level.SetLevel(i + 1, ProcessorLevelData::LevelVal(peak, rms, hold, static_cast<float>(getGlobalMindB())));
+            }
 
-#ifdef USE_SPECTRUM_PROCESSING
-            // Generate spectrum data - all channels always process their audio data
-            // The FFT buffer accumulates samples for all channels
-            processSpectrumForChannel(i, m_centiSecondBuffer.getReadPointer(i), m_samplesPerCentiSecond);
-#endif
+            if (isSepctrumProcessingUsed())
+            {
+                // Generate spectrum data - all channels always process their audio data
+                // The FFT buffer accumulates samples for all channels
+                processSpectrumForChannel(i, m_centiSecondBuffer.getReadPointer(i), m_samplesPerCentiSecond);
+            }
         }
 
-#ifdef USE_LEVEL_PROCESSING
-        BroadcastData(&m_level);
-#endif
-#ifdef USE_BUFFER_PROCESSING
-        BroadcastData(&m_centiSecondBuffer);
-#endif
-#ifdef USE_SPECTRUM_PROCESSING
-        BroadcastData(&m_spectrum);
-#endif
+        if (isLevelProcessingUsed())
+            BroadcastData(&m_level);
+
+        if (isBufferProcessingUsed())
+            BroadcastData(&m_centiSecondBuffer);
+
+        if (isSepctrumProcessingUsed())
+            BroadcastData(&m_spectrum);
+
 
         readPos += m_missingSamplesForCentiSecond;
         availableSamples -= m_missingSamplesForCentiSecond;

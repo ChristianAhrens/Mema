@@ -46,6 +46,12 @@ MemaMoComponent::~MemaMoComponent()
 
 void MemaMoComponent::setOutputMeteringVisuActive()
 {
+    // output metering requires no spectrum processing
+    if (m_inputDataAnalyzer)
+        m_inputDataAnalyzer->setUseProcessingTypes(true, true, false);
+    if (m_outputDataAnalyzer)
+        m_outputDataAnalyzer->setUseProcessingTypes(true, true, false);
+
     auto resizeRequired = false;
     // if ioMeter should be visualized, make sure the components existis
     if (!m_inputMeteringComponent)
@@ -104,6 +110,12 @@ void MemaMoComponent::setOutputMeteringVisuActive()
 
 void MemaMoComponent::setOutputFieldVisuActive(const juce::AudioChannelSet& channelConfiguration)
 {
+    // output field visu requires no spectrum processing
+    if (m_inputDataAnalyzer)
+        m_inputDataAnalyzer->setUseProcessingTypes(true, true, false);
+    if (m_outputDataAnalyzer)
+        m_outputDataAnalyzer->setUseProcessingTypes(true, true, false);
+
     auto resizeRequired = false;
     // if outputfields (incl. iMeter) should be visualized, make sure the components existis
     if (!m_inputMeteringComponent)
@@ -163,6 +175,12 @@ void MemaMoComponent::setOutputFieldVisuActive(const juce::AudioChannelSet& chan
 
 void MemaMoComponent::setWaveformVisuActive()
 {
+    // waveform visu requires no spectrum processing
+    if (m_inputDataAnalyzer)
+        m_inputDataAnalyzer->setUseProcessingTypes(true, true, false);
+    if (m_outputDataAnalyzer)
+        m_outputDataAnalyzer->setUseProcessingTypes(true, true, false);
+
     auto resizeRequired = false;
     // if waveform should be visualized, make sure the component existis
     if (!m_waveformComponent)
@@ -221,6 +239,12 @@ void MemaMoComponent::setWaveformVisuActive()
 
 void MemaMoComponent::setSpectrumVisuActive()
 {
+    // spectrum visu requires spectrum processing
+    if (m_inputDataAnalyzer)
+        m_inputDataAnalyzer->setUseProcessingTypes(true, true, true);
+    if (m_outputDataAnalyzer)
+        m_outputDataAnalyzer->setUseProcessingTypes(true, true, true);
+
     auto resizeRequired = false;
     // if spectrum should be visualized, make sure the component existis
     if (!m_spectrumComponent)
