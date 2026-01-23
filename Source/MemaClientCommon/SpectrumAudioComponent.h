@@ -1,0 +1,77 @@
+/* Copyright (c) 2025, Christian Ahrens
+ *
+ * This file is part of Mema <https://github.com/ChristianAhrens/Mema>
+ *
+ * This tool is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License version 3.0 as published
+ * by the Free Software Foundation.
+ *
+ * This tool is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this tool; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ */
+
+#pragma once
+
+#include <JuceHeader.h>
+
+#include "../MemaProcessorEditor/AbstractAudioVisualizer.h"
+
+namespace Mema
+{
+
+class CustomPaintingAudioVisualiserComponent;
+
+//==============================================================================
+/*
+*/
+class SpectrumAudioComponent    :   public AbstractAudioVisualizer
+{
+public:
+    //==============================================================================
+    struct PlotPoints
+    {
+        std::vector<float> peaks;
+        std::vector<float> holds;
+        float minFreq;
+        float maxFreq;
+        float freqRes;
+    };
+
+public:
+    //==============================================================================
+    SpectrumAudioComponent();
+    ~SpectrumAudioComponent();
+
+    //==============================================================================
+    void setNumVisibleChannels(int numChannels);
+    int getNumVisibleChannels();
+    
+    //==============================================================================
+    void paint (juce::Graphics&) override;
+    void resized() override;
+    void lookAndFeelChanged() override;
+    
+    //==============================================================================
+    void processingDataChanged(AbstractProcessorData *data) override;
+
+private:
+    //==============================================================================
+    std::unique_ptr<juce::DrawableButton>   m_chNumSelButton;
+    std::vector<PlotPoints>                 m_plotPoints;
+
+    //==============================================================================
+    int m_numAvailableChannels = 0;
+    int m_numVisibleChannels = 1;
+    int m_legendWidth = 20;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SpectrumAudioComponent)
+};
+
+
+}

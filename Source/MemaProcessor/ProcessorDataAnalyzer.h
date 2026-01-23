@@ -43,8 +43,15 @@ public:
     };
 
 public:
+    //==============================================================================
     ProcessorDataAnalyzer();
     ~ProcessorDataAnalyzer();
+
+    //==============================================================================
+    void setUseProcessingTypes(bool useLevelProcessing, bool useBufferProcessing, bool useSepctrumProcessing);
+    bool isLevelProcessingUsed();
+    bool isBufferProcessingUsed();
+    bool isSepctrumProcessingUsed();
 
     //==============================================================================
     void initializeParameters(double sampleRate, int bufferSize);
@@ -87,9 +94,15 @@ public:
     }
 
 private:
+    //==============================================================================
     void BroadcastData(AbstractProcessorData* data);
     void FlushHold();
 
+    //==============================================================================
+    void processSpectrumForChannel(int channelIndex, const float* channelData, int numSamples);
+    void performFFTAndUpdateSpectrum(int channelIndex);
+
+    //==============================================================================
     ProcessorAudioSignalData    m_centiSecondBuffer;
     ProcessorLevelData          m_level;
     ProcessorSpectrumData       m_spectrum;
@@ -116,10 +129,15 @@ private:
     };
     dsp::FFT                                    m_fwdFFT;
     dsp::WindowingFunction<float>               m_windowF;
-    float                                       m_FFTdata[2 * fftSize];
-    int                                         m_FFTdataPos;
+    std::vector<std::vector<float>>             m_FFTdata; // [channel][fftSize * 2]
+    std::vector<int>                            m_FFTdataPos; // [channel]
 
     int                                         m_holdTimeMs;
+
+    //==============================================================================
+    bool m_useLevelProcessing = false;
+    bool m_useBufferProcessing = false;
+    bool m_useSpectrumProcessing = false;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ProcessorDataAnalyzer)
 };

@@ -21,6 +21,7 @@
 #include "MemaProcessorEditor/MeterbridgeComponent.h"
 #include "MemaClientCommon/TwoDFieldOutputComponent.h"
 #include "MemaClientCommon/WaveformAudioComponent.h"
+#include "MemaClientCommon/SpectrumAudioComponent.h"
 #include "MemaProcessor/MemaMessages.h"
 #include "MemaProcessor/MemaProcessor.h"
 #include "MemaProcessor/ProcessorDataAnalyzer.h"
@@ -45,6 +46,12 @@ MemaMoComponent::~MemaMoComponent()
 
 void MemaMoComponent::setOutputMeteringVisuActive()
 {
+    // output metering requires no spectrum processing
+    if (m_inputDataAnalyzer)
+        m_inputDataAnalyzer->setUseProcessingTypes(true, true, false);
+    if (m_outputDataAnalyzer)
+        m_outputDataAnalyzer->setUseProcessingTypes(true, true, false);
+
     auto resizeRequired = false;
     // if ioMeter should be visualized, make sure the components existis
     if (!m_inputMeteringComponent)
@@ -87,12 +94,28 @@ void MemaMoComponent::setOutputMeteringVisuActive()
         resizeRequired = true;
     }
 
+    if (m_spectrumComponent)
+    {
+        if (m_outputDataAnalyzer)
+            m_outputDataAnalyzer->removeListener(m_spectrumComponent.get());
+
+        removeChildComponent(m_spectrumComponent.get());
+        m_spectrumComponent.reset();
+        resizeRequired = true;
+    }
+
     if (resizeRequired && !getLocalBounds().isEmpty())
         resized();
 }
 
 void MemaMoComponent::setOutputFieldVisuActive(const juce::AudioChannelSet& channelConfiguration)
 {
+    // output field visu requires no spectrum processing
+    if (m_inputDataAnalyzer)
+        m_inputDataAnalyzer->setUseProcessingTypes(true, true, false);
+    if (m_outputDataAnalyzer)
+        m_outputDataAnalyzer->setUseProcessingTypes(true, true, false);
+
     auto resizeRequired = false;
     // if outputfields (incl. iMeter) should be visualized, make sure the components existis
     if (!m_inputMeteringComponent)
@@ -136,12 +159,28 @@ void MemaMoComponent::setOutputFieldVisuActive(const juce::AudioChannelSet& chan
         resizeRequired = true;
     }
 
+    if (m_spectrumComponent)
+    {
+        if (m_outputDataAnalyzer)
+            m_outputDataAnalyzer->removeListener(m_spectrumComponent.get());
+
+        removeChildComponent(m_spectrumComponent.get());
+        m_spectrumComponent.reset();
+        resizeRequired = true;
+    }
+
     if (resizeRequired && !getLocalBounds().isEmpty())
         resized();
 }
 
 void MemaMoComponent::setWaveformVisuActive()
 {
+    // waveform visu requires no spectrum processing
+    if (m_inputDataAnalyzer)
+        m_inputDataAnalyzer->setUseProcessingTypes(true, true, false);
+    if (m_outputDataAnalyzer)
+        m_outputDataAnalyzer->setUseProcessingTypes(true, true, false);
+
     auto resizeRequired = false;
     // if waveform should be visualized, make sure the component existis
     if (!m_waveformComponent)
@@ -183,7 +222,81 @@ void MemaMoComponent::setWaveformVisuActive()
         m_outputFieldComponent.reset();
         resizeRequired = true;
     }
+
+    if (m_spectrumComponent)
+    {
+        if (m_outputDataAnalyzer)
+            m_outputDataAnalyzer->removeListener(m_spectrumComponent.get());
+
+        removeChildComponent(m_spectrumComponent.get());
+        m_spectrumComponent.reset();
+        resizeRequired = true;
+    }
     
+    if (resizeRequired && !getLocalBounds().isEmpty())
+        resized();
+}
+
+void MemaMoComponent::setSpectrumVisuActive()
+{
+    // spectrum visu requires spectrum processing
+    if (m_inputDataAnalyzer)
+        m_inputDataAnalyzer->setUseProcessingTypes(true, true, true);
+    if (m_outputDataAnalyzer)
+        m_outputDataAnalyzer->setUseProcessingTypes(true, true, true);
+
+    auto resizeRequired = false;
+    // if spectrum should be visualized, make sure the component existis
+    if (!m_spectrumComponent)
+    {
+        m_spectrumComponent = std::make_unique<Mema::SpectrumAudioComponent>();
+        addAndMakeVisible(m_spectrumComponent.get());
+        if (m_outputDataAnalyzer)
+            m_outputDataAnalyzer->addListener(m_spectrumComponent.get());
+        resizeRequired = true;
+    }
+
+    // none of the other components ioMeter/outpField are required - cleanup
+    if (m_inputMeteringComponent)
+    {
+        if (m_inputDataAnalyzer)
+            m_inputDataAnalyzer->removeListener(m_inputMeteringComponent.get());
+
+        removeChildComponent(m_inputMeteringComponent.get());
+        m_inputMeteringComponent.reset();
+        resizeRequired = true;
+    }
+
+    if (m_outputMeteringComponent)
+    {
+        if (m_outputDataAnalyzer)
+            m_outputDataAnalyzer->removeListener(m_outputMeteringComponent.get());
+
+        removeChildComponent(m_outputMeteringComponent.get());
+        m_outputMeteringComponent.reset();
+        resizeRequired = true;
+    }
+
+    if (m_outputFieldComponent)
+    {
+        if (m_outputDataAnalyzer)
+            m_outputDataAnalyzer->removeListener(m_outputFieldComponent.get());
+
+        removeChildComponent(m_outputFieldComponent.get());
+        m_outputFieldComponent.reset();
+        resizeRequired = true;
+    }
+
+    if (m_waveformComponent)
+    {
+        if (m_outputDataAnalyzer)
+            m_outputDataAnalyzer->removeListener(m_waveformComponent.get());
+
+        removeChildComponent(m_waveformComponent.get());
+        m_waveformComponent.reset();
+        resizeRequired = true;
+    }
+
     if (resizeRequired && !getLocalBounds().isEmpty())
         resized();
 }
@@ -279,6 +392,12 @@ void MemaMoComponent::resized()
         auto margin = 8;
         auto bounds = getLocalBounds().reduced(margin, margin);
         m_waveformComponent->setBounds(bounds);
+    }
+    else if (m_spectrumComponent)
+    {
+        auto margin = 8;
+        auto bounds = getLocalBounds().reduced(margin, margin);
+        m_spectrumComponent->setBounds(bounds);
     }
 }
 
