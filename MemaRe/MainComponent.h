@@ -77,6 +77,7 @@ public:
         ControlsSize_L,
         ControlsSize_Last = ControlsSize_L,
         ExternalControl,
+        FullscreenWindowMode,
     };
 
 public:
@@ -92,12 +93,20 @@ public:
 
     void timerCallback() override;
 
+    bool keyPressed(const juce::KeyPress& key) override;
+
     //==============================================================================
     void performConfigurationDump() override;
     void onConfigUpdated() override;
 
     //==============================================================================
+    bool isFullscreenEnabled();
+
+    //==============================================================================
     std::function<void(int, bool)> onPaletteStyleChange;
+
+    //==============================================================================
+    std::function<void(bool)> onSetFullscreenWindow;
 
 private:
     //==============================================================================
@@ -139,12 +148,15 @@ private:
     void handleSettingsOutputPanningTypeMenuResult(int selectedId);
     void handleSettingsPanningColourMenuResult(int selectedId);
     void handleSettingsControlsSizeMenuResult(int selectedId);
+    void handleSettingsFullscreenModeToggleResult();
     void showExternalControlSettings();
 
     void setPanningColour(const juce::Colour& meteringColour);
     void applyPanningColour();
 
     void setControlsSize(const Mema::MemaClientControlComponentBase::ControlsSize& controlsSize);
+
+    void toggleFullscreenMode();
 
     void setStatus(const Status& s);
     const Status getStatus();

@@ -70,7 +70,8 @@ public:
         MeteringColour_Red,
         MeteringColour_Blue,
         MeteringColour_Pink,
-        MeteringColour_Last = MeteringColour_Pink
+        MeteringColour_Last = MeteringColour_Pink,
+        FullscreenWindowMode,
     };
 
 public:
@@ -86,12 +87,20 @@ public:
 
     void timerCallback() override;
 
+    bool keyPressed(const juce::KeyPress& key) override;
+
     //==============================================================================
     void performConfigurationDump() override;
     void onConfigUpdated() override;
+    
+    //==============================================================================
+     bool isFullscreenEnabled();
 
     //==============================================================================
     std::function<void(int, bool)> onPaletteStyleChange;
+
+    //==============================================================================
+    std::function<void(bool)> onSetFullscreenWindow;
 
 private:
     //==============================================================================
@@ -132,9 +141,12 @@ private:
     void handleSettingsLookAndFeelMenuResult(int selectedId);
     void handleSettingsOutputVisuTypeMenuResult(int selectedId);
     void handleSettingsMeteringColourMenuResult(int selectedId);
+    void handleSettingsFullscreenModeToggleResult();
 
     void setMeteringColour(const juce::Colour& meteringColour);
     void applyMeteringColour();
+
+    void toggleFullscreenMode();
 
     std::optional<int>  getNumVisibleChannels();
 

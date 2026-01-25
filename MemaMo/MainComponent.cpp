@@ -121,6 +121,13 @@ MainComponent::MainComponent()
     m_aboutButton->setColour(juce::DrawableButton::ColourIds::backgroundOnColourId, juce::Colours::transparentBlack);
     addAndMakeVisible(m_aboutButton.get());
 
+    // Ctrl+F11 on Windows/Linux, Cmd+Ctrl+F on macOS
+#if JUCE_WINDOWS
+    auto fullscreenShortCutHint = std::string(" (Ctrl+F11)");
+#elif JUCE_MAC
+    auto fullscreenShortCutHint = std::string(" (Cmd+Ctrl+F)");
+#endif
+
     // default lookandfeel is follow local, therefor none selected
     m_settingsItems[MemaMoSettingsOption::LookAndFeel_FollowHost] = std::make_pair("Follow Mema", 0);
     m_settingsItems[MemaMoSettingsOption::LookAndFeel_Dark] = std::make_pair("Dark", 1);
@@ -144,6 +151,11 @@ MainComponent::MainComponent()
     m_settingsItems[MemaMoSettingsOption::MeteringColour_Red] = std::make_pair("Red", 0);
     m_settingsItems[MemaMoSettingsOption::MeteringColour_Blue] = std::make_pair("Blue", 0);
     m_settingsItems[MemaMoSettingsOption::MeteringColour_Pink] = std::make_pair("Anni Pink", 0);
+#if JUCE_WINDOWS || JUCE_MAC
+    // fullscreen toggling
+    m_settingsItems[MemaMoSettingsOption::FullscreenWindowMode] = std::make_pair("Toggle fullscreen mode" + fullscreenShortCutHint, 0);
+#endif
+    // Further components
     m_settingsButton = std::make_unique<juce::DrawableButton>("Settings", juce::DrawableButton::ButtonStyle::ImageFitted);
     m_settingsButton->setTooltip(juce::String("Settings for") + juce::JUCEApplication::getInstance()->getApplicationName());
     m_settingsButton->onClick = [this] {
@@ -163,6 +175,10 @@ MainComponent::MainComponent()
         settingsMenu.addSubMenu("LookAndFeel", lookAndFeelSubMenu);
         settingsMenu.addSubMenu("Output monitoring", outputVisuTypeSubMenu);
         settingsMenu.addSubMenu("Metering colour", meteringColourSubMenu);
+#if JUCE_WINDOWS || JUCE_MAC
+        settingsMenu.addSeparator();
+        settingsMenu.addItem(MemaMoSettingsOption::FullscreenWindowMode, m_settingsItems[MemaMoSettingsOption::FullscreenWindowMode].first, true, false);
+#endif
         settingsMenu.showMenuAsync(juce::PopupMenu::Options(), [=](int selectedId) {
             handleSettingsMenuResult(selectedId);
             if (m_config)
@@ -220,6 +236,8 @@ MainComponent::MainComponent()
     // add this main component to watchers
     m_config->addWatcher(this); // without initial update - that we have to do externally after lambdas were assigned
 
+    // we want keyboard focus for fullscreen toggle shortcut
+    setWantsKeyboardFocus(true);
 }
 
 MainComponent::~MainComponent()
@@ -301,6 +319,8 @@ void MainComponent::handleSettingsMenuResult(int selectedId)
         handleSettingsOutputVisuTypeMenuResult(selectedId);
     else if (MemaMoSettingsOption::MeteringColour_First <= selectedId && MemaMoSettingsOption::MeteringColour_Last >= selectedId)
         handleSettingsMeteringColourMenuResult(selectedId);
+    else if (MemaMoSettingsOption::FullscreenWindowMode == selectedId)
+        handleSettingsFullscreenModeToggleResult();
     else
         jassertfalse; // unhandled menu entry!?
 }
@@ -464,6 +484,18 @@ void MainComponent::handleSettingsMeteringColourMenuResult(int selectedId)
     }
 }
 
+void MainComponent::handleSettingsFullscreenModeToggleResult()
+{
+    toggleFullscreenMode();
+}
+
+void MainComponent::toggleFullscreenMode()
+{
+    auto enabled = isFullscreenEnabled();
+    if (onSetFullscreenWindow)
+        onSetFullscreenWindow(!enabled);
+}
+
 void MainComponent::setMeteringColour(const juce::Colour& meteringColour)
 {
     m_meteringColour = meteringColour;
@@ -547,6 +579,18 @@ void MainComponent::timerCallback()
     }
     else
         stopTimer();
+}
+
+bool MainComponent::keyPressed(const juce::KeyPress& key)
+{
+    // Ctrl+F11 on Windows/Linux, Cmd+Ctrl+F on macOS
+    if (key == juce::KeyPress(juce::KeyPress::F11Key, juce::ModifierKeys::ctrlModifier, 0) ||
+        key == juce::KeyPress('f', juce::ModifierKeys::commandModifier | juce::ModifierKeys::ctrlModifier, 0))
+    {
+        toggleFullscreenMode();
+        return true;
+    }
+    return false;
 }
 
 void MainComponent::performConfigurationDump()
@@ -644,5 +688,19 @@ void MainComponent::onConfigUpdated()
             handleSettingsMeteringColourMenuResult(meteringColourSettingsOptionId);
         }
     }
+}
+
+bool MainComponent::isFullscreenEnabled()
+{
+#if JUCE_WINDOWS
+    return juce::Desktop::getInstance().getKioskModeComponent() != nullptr;
+#elif JUCE_MAC
+    if (auto* topLevel = getTopLevelComponent())
+        if (auto* peer = topLevel->getPeer())
+            return peer->isFullScreen();
+
+    jassertfalse;
+    return false;
+#endif
 }
 

@@ -126,6 +126,13 @@ MainComponent::MainComponent()
     m_aboutButton->setColour(juce::DrawableButton::ColourIds::backgroundOnColourId, juce::Colours::transparentBlack);
     addAndMakeVisible(m_aboutButton.get());
 
+    // Ctrl+F11 on Windows/Linux, Cmd+Ctrl+F on macOS
+#if JUCE_WINDOWS
+    auto fullscreenShortCutHint = std::string(" (Ctrl+F11)");
+#elif JUCE_MAC
+    auto fullscreenShortCutHint = std::string(" (Cmd+Ctrl+F)");
+#endif
+
     // default lookandfeel is follow local, therefor none selected
     m_settingsItems[MemaReSettingsOption::LookAndFeel_FollowHost] = std::make_pair("Follow Mema", 0);
     m_settingsItems[MemaReSettingsOption::LookAndFeel_Dark] = std::make_pair("Dark", 1);
@@ -151,6 +158,10 @@ MainComponent::MainComponent()
     m_settingsItems[MemaReSettingsOption::ControlsSize_S] = std::make_pair("S", 1);
     m_settingsItems[MemaReSettingsOption::ControlsSize_M] = std::make_pair("M", 0);
     m_settingsItems[MemaReSettingsOption::ControlsSize_L] = std::make_pair("L", 0);
+#if JUCE_WINDOWS || JUCE_MAC
+    // fullscreen toggling
+    m_settingsItems[MemaReSettingsOption::FullscreenWindowMode] = std::make_pair("Toggle fullscreen mode" + fullscreenShortCutHint, 0);
+#endif
     // Further components
     m_settingsButton = std::make_unique<juce::DrawableButton>("Settings", juce::DrawableButton::ButtonStyle::ImageFitted);
     m_settingsButton->setTooltip(juce::String("Settings for") + juce::JUCEApplication::getInstance()->getApplicationName());
@@ -178,6 +189,10 @@ MainComponent::MainComponent()
         settingsMenu.addSubMenu("Controls size", constrolsSizeSubMenu);
         settingsMenu.addSeparator();
         settingsMenu.addItem(MemaReSettingsOption::ExternalControl, "External control...", true);
+#if JUCE_WINDOWS || JUCE_MAC
+        settingsMenu.addSeparator();
+        settingsMenu.addItem(MemaReSettingsOption::FullscreenWindowMode, m_settingsItems[MemaReSettingsOption::FullscreenWindowMode].first, true, false);
+#endif
         settingsMenu.showMenuAsync(juce::PopupMenu::Options(), [=](int selectedId) {
             handleSettingsMenuResult(selectedId);
             if (m_config)
@@ -238,6 +253,8 @@ MainComponent::MainComponent()
     // add this main component to watchers
     m_config->addWatcher(this); // without initial update - that we have to do externally after lambdas were assigned
 
+    // we want keyboard focus for fullscreen toggle shortcut
+    setWantsKeyboardFocus(true);
 }
 
 MainComponent::~MainComponent()
@@ -325,6 +342,8 @@ void MainComponent::handleSettingsMenuResult(int selectedId)
         handleSettingsControlsSizeMenuResult(selectedId);
     else if (MemaReSettingsOption::ExternalControl == selectedId)
         showExternalControlSettings();
+    else if (MemaReSettingsOption::FullscreenWindowMode == selectedId)
+        handleSettingsFullscreenModeToggleResult();
     else
         jassertfalse; // unhandled menu entry!?
 }
@@ -506,6 +525,18 @@ void MainComponent::handleSettingsControlsSizeMenuResult(int selectedId)
     }
 }
 
+void MainComponent::handleSettingsFullscreenModeToggleResult()
+{
+    toggleFullscreenMode();
+}
+
+void MainComponent::toggleFullscreenMode()
+{
+    auto enabled = isFullscreenEnabled();
+    if (onSetFullscreenWindow)
+        onSetFullscreenWindow(!enabled);
+}
+
 void MainComponent::showExternalControlSettings()
 {
     m_messageBox = std::make_unique<juce::AlertWindow>(
@@ -629,6 +660,18 @@ void MainComponent::timerCallback()
     }
     else
         stopTimer();
+}
+
+bool MainComponent::keyPressed(const juce::KeyPress& key)
+{
+    // Ctrl+F11 on Windows/Linux, Cmd+Ctrl+F on macOS
+    if (key == juce::KeyPress(juce::KeyPress::F11Key, juce::ModifierKeys::ctrlModifier, 0) ||
+        key == juce::KeyPress('f', juce::ModifierKeys::commandModifier | juce::ModifierKeys::ctrlModifier, 0))
+    {
+        toggleFullscreenMode();
+        return true;
+    }
+    return false;
 }
 
 void MainComponent::performConfigurationDump()
@@ -776,5 +819,19 @@ void MainComponent::onConfigUpdated()
         if (m_remoteComponent)
             m_remoteComponent->setExternalAdmOscSettings(ADMOSCport, ADMOSCremoteIP, ADMOSCremotePort);
     }
+}
+
+bool MainComponent::isFullscreenEnabled()
+{
+#if JUCE_WINDOWS
+    return juce::Desktop::getInstance().getKioskModeComponent() != nullptr;
+#elif JUCE_MAC
+    if (auto* topLevel = getTopLevelComponent())
+        if (auto* peer = topLevel->getPeer())
+            return peer->isFullScreen();
+
+    jassertfalse;
+    return false;
+#endif
 }
 

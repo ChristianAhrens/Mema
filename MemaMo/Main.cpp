@@ -88,13 +88,14 @@ public:
                 m_followLocalStyle = followLocalStyle;
                 applyPaletteStyle(static_cast<JUCEAppBasics::CustomLookAndFeel::PaletteStyle>(paletteStyle));
             };
+            mainComponent->onSetFullscreenWindow = [=](bool fullscreenWindow) { setFullscreenWindow(fullscreenWindow); };
             setContentOwned(mainComponent.release(), true);
 
 #if JUCE_IOS || JUCE_ANDROID
             setFullScreen(true);
             juce::Desktop::getInstance().setScreenSaverEnabled(false);
 #elif JUCE_LINUX
-            juce::Desktop::getInstance().setKioskModeComponent(getTopLevelComponent());
+            juce::Desktop::getInstance().setKioskModeComponent(getTopLevelComponent(), false);
 #else
             setResizable(true, true);
             centreWithSize(getWidth(), getHeight());
@@ -140,6 +141,26 @@ public:
         {
             m_lookAndFeel = std::make_unique<JUCEAppBasics::CustomLookAndFeel>(paletteStyle);
             juce::Desktop::getInstance().setDefaultLookAndFeel(m_lookAndFeel.get());
+        }
+
+        void setFullscreenWindow(bool fullscreenWindow)
+        {
+#if JUCE_WINDOWS
+            if (fullscreenWindow)
+                juce::Desktop::getInstance().setKioskModeComponent(getTopLevelComponent(), false);
+            else
+                juce::Desktop::getInstance().setKioskModeComponent(nullptr, false);
+#elif JUCE_MAC
+            if (auto* topLevel = getTopLevelComponent())
+            {
+                if (auto* peer = topLevel->getPeer())
+                {
+                    peer->setFullScreen(fullscreenWindow);
+                    return;
+                }
+            }
+            jassertfalse;
+#endif
         }
 
     private:
