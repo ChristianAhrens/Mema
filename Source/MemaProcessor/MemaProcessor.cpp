@@ -262,6 +262,14 @@ std::unique_ptr<juce::XmlElement> MemaProcessor::createStateXml()
 		m_pluginInstance->getStateInformation(destData);
 		plgConfElm->addTextElement(juce::Base64::toBase64(destData.getData(), destData.getSize()));
 	}
+	for (auto const plgParam : getPluginParameterInfos())
+	{
+		auto plgParamElm = std::make_unique<juce::XmlElement>(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::PLUGINPARAM));
+		plgParamElm->setAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::IDX), plgParam.index);
+		plgParamElm->setAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::CONTROLLABLE), isPluginParameterRemoteControllable(plgParam.index));
+		plgParamElm->addTextElement(plgParam.toString());
+		plgConfElm->addChildElement(plgParamElm.release());
+	}
 	stateXml->addChildElement(plgConfElm.release());
 
 	std::map<std::uint16_t, bool> inputMuteStates;
@@ -361,6 +369,42 @@ bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
 				juce::MemoryOutputStream destDataStream;
 				juce::Base64::convertFromBase64(destDataStream, pluginDescriptionXml->getAllSubText());
 				m_pluginInstance->setStateInformation(destDataStream.getData(), int(destDataStream.getDataSize()));
+			}
+		}
+
+		for (auto* plgParamElm : plgConfElm->getChildWithTagNameIterator(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::PLUGINPARAM)))
+		{
+			if (nullptr != plgParamElm)
+			{
+				auto index = plgParamElm->getIntAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::IDX));
+				auto paramString = plgParamElm->getAllSubText();
+				auto paramInfo = PluginParameterInfo::fromString(paramString);
+				jassert(paramInfo.index == index);
+				// update the pluginparameterinfo
+				auto iter = std::find_if(getPluginParameterInfos().begin(), getPluginParameterInfos().end(), [=](const auto& info) { return info.index == index; });
+				if (iter != getPluginParameterInfos().end())
+					iter->initializeFromString(paramString);
+				// set the parameter
+				auto* param = getPluginParameter(index);
+				if (param)
+				{
+					jassert(paramInfo.name == param->getName(100));
+					jassert(paramInfo.label == param->getLabel());
+					jassert(paramInfo.defaultValue == param->getDefaultValue());
+					jassert(paramInfo.isAutomatable == param->isAutomatable());
+					jassert(paramInfo.isRemoteControllable == false);
+					jassert(paramInfo.category == param->getCategory());
+					if (auto* rangedParam = dynamic_cast<const juce::RangedAudioParameter*>(param))
+					{
+						auto range = rangedParam->getNormalisableRange();
+						jassert(paramInfo.minValue == range.start);
+						jassert(paramInfo.maxValue == range.end);
+						jassert(paramInfo.stepSize == range.interval);
+						jassert(paramInfo.isDiscrete == range.interval > 0.0f);
+					}
+
+					param->setValue(paramInfo.currentValue);
+				}
 			}
 		}
 	}
@@ -842,8 +886,115 @@ void MemaProcessor::setChannelCounts(std::uint16_t inputChannelCount, std::uint1
         postMessage(new ReinitIOCountMessage(m_inputChannelCount, m_outputChannelCount));
 }
 
+class MemaProcessor::PluginParameterListener : public juce::AudioProcessorParameter::Listener
+{
+public:
+	PluginParameterListener(MemaProcessor& owner, int paramIndex)
+		: m_owner(owner), m_parameterIndex(paramIndex) {
+	}
+
+	void parameterValueChanged(int, float newValue) override
+	{
+		if (m_owner.onPluginParameterChanged)
+			m_owner.onPluginParameterChanged(m_parameterIndex, newValue);
+	}
+
+	void parameterGestureChanged(int, bool) override {}
+
+private:
+	MemaProcessor& m_owner;
+	int m_parameterIndex;
+};
+
 bool MemaProcessor::setPlugin(const juce::PluginDescription& pluginDescription)
 {
+	//==============================================================================
+	// Lambda for detaching listeners (assumes lock already held)
+	auto detachPluginParameterListeners = [this]() {
+		if (!m_pluginInstance)
+			return;
+
+		auto& parameters = m_pluginInstance->getParameters();
+
+		for (int i = 0; i < m_pluginParameterListeners.size() && i < parameters.size(); ++i)
+		{
+			parameters[i]->removeListener(m_pluginParameterListeners[i].get());
+		}
+
+		m_pluginParameterListeners.clear();
+	};
+
+	// Lambda for extracting parameters (assumes lock already held)
+	auto extractPluginParameters = [this]() {
+		if (!m_pluginInstance)
+			return;
+
+		m_pluginParameterInfos.clear();
+
+		auto& parameters = m_pluginInstance->getParameters();
+
+		for (int i = 0; i < parameters.size(); ++i)
+		{
+			auto* param = parameters[i];
+
+			PluginParameterInfo info;
+			info.index = i;
+			info.name = param->getName(100);
+			info.label = param->getLabel();
+			info.defaultValue = param->getDefaultValue();
+			info.currentValue = param->getValue();
+			info.isAutomatable = param->isAutomatable();
+			info.isRemoteControllable = false;
+			info.category = param->getCategory();
+
+			if (auto* paramWithID = dynamic_cast<juce::AudioProcessorParameterWithID*>(param))
+			{
+				info.id = paramWithID->paramID;
+			}
+			else
+			{
+				info.id = "param_" + juce::String(i);
+			}
+
+			if (auto* rangedParam = dynamic_cast<juce::RangedAudioParameter*>(param))
+			{
+				auto range = rangedParam->getNormalisableRange();
+				info.minValue = range.start;
+				info.maxValue = range.end;
+				info.stepSize = range.interval;
+				info.isDiscrete = range.interval > 0.0f;
+			}
+			else
+			{
+				info.minValue = 0.0f;
+				info.maxValue = 1.0f;
+				info.stepSize = 0.0f;
+				info.isDiscrete = false;
+			}
+
+			m_pluginParameterInfos.push_back(info);
+		}
+
+		postMessage(std::make_unique<PluginParameterInfosChangedMessage>().release());
+	};
+
+	// Lambda for attaching listeners (assumes lock already held)
+	auto attachPluginParameterListeners = [this]() {
+		if (!m_pluginInstance)
+			return;
+
+		m_pluginParameterListeners.clear();
+		auto& parameters = m_pluginInstance->getParameters();
+
+		for (int i = 0; i < parameters.size(); ++i)
+		{
+			auto listener = std::make_unique<PluginParameterListener>(*this, i);
+			parameters[i]->addListener(listener.get());
+			m_pluginParameterListeners.push_back(std::move(listener));
+		}
+	};
+
+	//==============================================================================
 	juce::AudioPluginFormatManager formatManager;
 	addDefaultFormatsToManager(formatManager);
 	auto registeredFormats = formatManager.getFormats();
@@ -860,12 +1011,24 @@ bool MemaProcessor::setPlugin(const juce::PluginDescription& pluginDescription)
 			// threadsafe locking in scope to access plugin
 			{
 				const ScopedLock sl(m_pluginProcessingLock);
+
+				// Clean up old parameter listeners
+				detachPluginParameterListeners();
+				m_pluginParameterInfos.clear();
+
 				m_pluginInstance = format->createInstanceFromDescription(pluginDescription, getSampleRate(), getBlockSize(), errorMessage);
 				if (m_pluginInstance)
-                {
-                    m_pluginInstance->setPlayConfigDetails(m_inputChannelCount, m_inputChannelCount, getSampleRate(), getBlockSize());
-                    m_pluginInstance->prepareToPlay(getSampleRate(), getBlockSize());
-                }
+				{
+					m_pluginInstance->setPlayConfigDetails(m_inputChannelCount, m_inputChannelCount, getSampleRate(), getBlockSize());
+
+					// Extract parameters here
+					extractPluginParameters();
+
+					// Attach listeners to track parameter changes
+					attachPluginParameterListeners();
+
+					m_pluginInstance->prepareToPlay(getSampleRate(), getBlockSize());
+				}
 			}
 			success = errorMessage.isEmpty();
 			break;
@@ -960,6 +1123,72 @@ void MemaProcessor::closePluginEditor(bool deleteEditorWindow)
 		std::unique_ptr<juce::AudioProcessorEditor>(m_pluginInstance->getActiveEditor()).reset();
 	if (deleteEditorWindow)
 		m_pluginEditorWindow.reset();
+}
+
+void MemaProcessor::setPluginParameterRemoteControllable(int parameterIndex, bool remoteControllable)
+{
+	if (parameterIndex >= 0 && parameterIndex < m_pluginParameterInfos.size())
+	{
+		m_pluginParameterInfos[parameterIndex].isRemoteControllable = remoteControllable;
+		triggerConfigurationUpdate(false);
+	}
+}
+
+bool MemaProcessor::isPluginParameterRemoteControllable(int parameterIndex)
+{
+	if (parameterIndex >= 0 && parameterIndex < m_pluginParameterInfos.size())
+		return m_pluginParameterInfos[parameterIndex].isRemoteControllable;
+	else
+		return false;
+}
+
+void MemaProcessor::setPluginParameterValue(int parameterIndex, float normalizedValue)
+{
+	const ScopedLock sl(m_pluginProcessingLock);
+
+	if (!m_pluginInstance)
+		return;
+
+	auto& parameters = m_pluginInstance->getParameters();
+
+	if (parameterIndex >= 0 && parameterIndex < parameters.size())
+	{
+		parameters[parameterIndex]->setValueNotifyingHost(normalizedValue);
+
+		// Update cached value
+		if (parameterIndex < m_pluginParameterInfos.size())
+			m_pluginParameterInfos[parameterIndex].currentValue = normalizedValue;
+	}
+}
+
+float MemaProcessor::getPluginParameterValue(int parameterIndex) const
+{
+	const ScopedLock sl(m_pluginProcessingLock);
+
+	if (!m_pluginInstance)
+		return 0.0f;
+
+	auto& parameters = m_pluginInstance->getParameters();
+
+	if (parameterIndex >= 0 && parameterIndex < parameters.size())
+		return parameters[parameterIndex]->getValue();
+
+	return 0.0f;
+}
+
+juce::AudioProcessorParameter* MemaProcessor::getPluginParameter(int parameterIndex) const
+{
+	const ScopedLock sl(m_pluginProcessingLock);
+
+	if (!m_pluginInstance)
+		return nullptr;
+
+	auto& parameters = m_pluginInstance->getParameters();
+
+	if (parameterIndex >= 0 && parameterIndex < parameters.size())
+		return parameters[parameterIndex];
+
+	return nullptr;
 }
 
 AudioDeviceManager* MemaProcessor::getDeviceManager()
@@ -1192,6 +1421,14 @@ void MemaProcessor::handleMessage(const Message& message)
 			setTrafficTypesForConnectionId(dtsm->getTrafficTypes(), dtsm->getId());
 
 		tId = dtsm->getType();
+	}
+	// exception - totally different message type, to decouple callback from processing asynchronously
+	else if (auto const ppicm = dynamic_cast<const PluginParameterInfosChangedMessage*>(&message))
+	{
+		if (onPluginParameterInfosChanged)
+			onPluginParameterInfosChanged();
+		
+		return;
 	}
 
 	std::vector<int> sendIds;

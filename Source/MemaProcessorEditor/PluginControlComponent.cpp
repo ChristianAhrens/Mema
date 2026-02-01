@@ -66,12 +66,22 @@ PluginControlComponent::PluginControlComponent()
 	m_spacing3 = std::make_unique<Spacing>();
 	addAndMakeVisible(m_spacing3.get());
 
+	m_parameterConfigButton = std::make_unique<juce::DrawableButton>("Configure plug-in parameters", juce::DrawableButton::ButtonStyle::ImageOnButtonBackground);
+	m_parameterConfigButton->setTooltip("Configure plug-in parameters");
+	m_parameterConfigButton->onClick = [this] {
+		showParameterConfig();
+	};
+	addAndMakeVisible(m_parameterConfigButton.get());
+
+	m_spacing4 = std::make_unique<Spacing>();
+	addAndMakeVisible(m_spacing4.get());
+
 	m_clearButton = std::make_unique<juce::DrawableButton>("Clear current plug-in", juce::DrawableButton::ButtonStyle::ImageOnButtonBackground);
 	m_clearButton->setTooltip("Clear current plug-in");
 	m_clearButton->onClick = [this] {
 		if (onClearPlugin)
 			onClearPlugin();
-	};
+		};
 	addAndMakeVisible(m_clearButton.get());
 
 	m_pluginSelectionComponent = std::make_unique<PluginListAndSelectComponent>();
@@ -127,6 +137,99 @@ void PluginControlComponent::setSelectedPlugin(const juce::PluginDescription& pl
 	}
 }
 
+void PluginControlComponent::setParameterInfos(const std::vector<Mema::PluginParameterInfo>& infos)
+{
+	if (infos.size() != m_parametersEnabledMap.size())
+		m_parametersEnabledMap.clear();
+
+	auto key = 0;
+	for (auto const& info : infos)
+	{
+		if (0 < m_parametersEnabledMap.count(key) || std::as_const(m_parametersEnabledMap[key].first) != info)
+			m_parametersEnabledMap[key] = std::make_pair(info, true);
+		key++;
+	}
+}
+
+const std::map<int, std::pair<Mema::PluginParameterInfo, bool>>& PluginControlComponent::getParameterInfos()
+{
+	return m_parametersEnabledMap;
+}
+
+void PluginControlComponent::showParameterConfig()
+{
+	m_messageBox = std::make_unique<juce::AlertWindow>(
+		"Plug-in parameter setup",
+		"Select which of the available plug-in parameters should be made remote-controllable.",
+		juce::MessageBoxIconType::NoIcon);
+
+	// Create the container component
+	m_messageBoxParameterTogglesContainer = std::make_unique<juce::Component>();
+
+	// Create the toggle buttons and add them to the container
+	for (auto const& parameterKV : m_parametersEnabledMap)
+	{
+		m_messageBoxParameterToggleComponents[parameterKV.first] =
+			std::make_unique<juce::ToggleButton>(parameterKV.second.first.name);
+		m_messageBoxParameterTogglesContainer->addAndMakeVisible(m_messageBoxParameterToggleComponents[parameterKV.first].get());
+	}
+
+	// Calculate the required height based on number of parameters
+	int toggleHeight = 24;
+	auto totalHeight = int(m_parametersEnabledMap.size()) * toggleHeight;
+	m_messageBoxParameterTogglesContainer->setSize(300, totalHeight);
+
+	// Create and configure the FlexBox layout
+	m_messageBoxParameterTogglesFlexBox.items.clear();
+	m_messageBoxParameterTogglesFlexBox.flexDirection = juce::FlexBox::Direction::column;
+	m_messageBoxParameterTogglesFlexBox.justifyContent = juce::FlexBox::JustifyContent::flexStart;
+
+	// Add toggle buttons as FlexItems
+	for (auto const& parameterKV : m_parametersEnabledMap)
+	{
+		m_messageBoxParameterTogglesFlexBox.items.add(
+			juce::FlexItem(*m_messageBoxParameterToggleComponents[parameterKV.first])
+			.withHeight(float(toggleHeight))
+			.withFlex(0));
+	}
+
+	// Perform the layout
+	m_messageBoxParameterTogglesFlexBox.performLayout(m_messageBoxParameterTogglesContainer->getLocalBounds());
+
+	// Add the container to the alert window
+	m_messageBox->addCustomComponent(m_messageBoxParameterTogglesContainer.get());
+
+	m_messageBox->addButton("Cancel", 0, juce::KeyPress(juce::KeyPress::escapeKey));
+	m_messageBox->addButton("Ok", 1, juce::KeyPress(juce::KeyPress::returnKey));
+
+	m_messageBox->enterModalState(true, juce::ModalCallbackFunction::create([=](int returnValue) {
+		if (returnValue == 1)
+		{
+			auto changeDetected = false;
+			for (auto& parameterKV : m_parametersEnabledMap)
+			{
+				auto currentState = m_messageBoxParameterToggleComponents[parameterKV.first]->getToggleState();
+				auto& formerState = parameterKV.second.second;
+				if (currentState != formerState)
+				{
+					changeDetected = true;
+					formerState = currentState;
+				}
+			}
+
+			if (changeDetected)
+			{
+				if (onPluginParametersStatusChanged)
+					onPluginParametersStatusChanged();
+			}
+		}
+
+		m_messageBoxParameterToggleComponents.clear();
+		m_messageBoxParameterTogglesContainer.reset();
+		m_messageBox.reset();
+		}));
+}
+
 void PluginControlComponent::resized()
 {
     auto bounds = getLocalBounds();
@@ -144,6 +247,10 @@ void PluginControlComponent::resized()
 		m_clearButton->setBounds(bounds.removeFromRight(bounds.getHeight()));
 	if (m_spacing3)
 		m_spacing3->setBounds(bounds.removeFromRight(margin));
+	if (m_parameterConfigButton)
+		m_parameterConfigButton->setBounds(bounds.removeFromRight(bounds.getHeight()));
+	if (m_spacing4)
+		m_spacing4->setBounds(bounds.removeFromRight(margin));
 	if (m_triggerSelectButton)
 		m_triggerSelectButton->setBounds(bounds.removeFromRight(bounds.getHeight()));
 	if (m_showEditorButton)
@@ -165,6 +272,10 @@ void PluginControlComponent::lookAndFeelChanged()
 	auto triggerSelectDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::stat_minus_1_24dp_svg).get());
 	triggerSelectDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
 	m_triggerSelectButton->setImages(triggerSelectDrawable.get());
+
+	auto parameterConfigButtonDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::settings_24dp_svg).get());
+	parameterConfigButtonDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
+	m_parameterConfigButton->setImages(parameterConfigButtonDrawable.get());
 
 	auto clearButtonDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::replay_24dp_svg).get());
 	clearButtonDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));

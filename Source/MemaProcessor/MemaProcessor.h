@@ -22,6 +22,7 @@
 
 #include "MemaMessages.h"
 #include "ProcessorDataAnalyzer.h"
+#include "MemaPluginParameterInfo.h"
 #include "../MemaProcessorEditor/MemaProcessorEditor.h"
 #include "../MemaAppConfiguration.h"
 
@@ -67,6 +68,14 @@ public:
 
     //==============================================================================
     std::function<void()> onClosed;
+};
+
+//==============================================================================
+class PluginParameterInfosChangedMessage : public juce::Message
+{
+public:
+    PluginParameterInfosChangedMessage() = default;
+    virtual ~PluginParameterInfosChangedMessage() = default;
 };
 
 //==============================================================================
@@ -127,6 +136,15 @@ public:
     void openPluginEditor();
     void closePluginEditor(bool deleteEditorWindow = true);
     std::function<void(const juce::PluginDescription&)> onPluginSet;
+    // Parameter management
+    std::vector<PluginParameterInfo>& getPluginParameterInfos() { return m_pluginParameterInfos; };
+    void setPluginParameterRemoteControllable(int pluginParameterIndex, bool remoteControllable);
+    bool isPluginParameterRemoteControllable(int parameterIndex);
+    void setPluginParameterValue(int pluginParameterIndex, float normalizedValue);
+    float getPluginParameterValue(int pluginParameterIndex) const;
+    juce::AudioProcessorParameter* getPluginParameter(int parameterIndex) const;
+    std::function<void(int pluginParameterIndex, float newValue)> onPluginParameterChanged;
+    std::function<void()> onPluginParameterInfosChanged;
 
     //==============================================================================
     AudioDeviceManager* getDeviceManager();
@@ -248,11 +266,15 @@ private:
     std::unique_ptr<MemaProcessorEditor>  m_processorEditor;
 
     //==============================================================================
+    class PluginParameterListener; // Forward declare the listener class
+    //==============================================================================
     juce::CriticalSection                                           m_pluginProcessingLock;
     std::unique_ptr<juce::AudioPluginInstance>                      m_pluginInstance;
     bool                                                            m_pluginEnabled = false;
     bool                                                            m_pluginPost = false;
     std::unique_ptr<ResizeableWindowWithTitleBarAndCloseCallback>   m_pluginEditorWindow;
+    std::vector<PluginParameterInfo>                                m_pluginParameterInfos;
+    std::vector<std::unique_ptr<PluginParameterListener>>           m_pluginParameterListeners;
 
     //==============================================================================
     std::unique_ptr<JUCEAppBasics::ServiceTopologyManager>  m_serviceTopologyManager;

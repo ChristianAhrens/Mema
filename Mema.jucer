@@ -88,6 +88,8 @@
               file="Source/MemaProcessor/MemaServiceData.cpp"/>
         <FILE id="D9OX3t" name="MemaServiceData.h" compile="0" resource="0"
               file="Source/MemaProcessor/MemaServiceData.h"/>
+        <FILE id="RgdbK5" name="MemaPluginParameterInfo.h" compile="0" resource="0"
+              file="Source/MemaProcessor/MemaPluginParameterInfo.h"/>
         <FILE id="l5miue" name="ProcessorAudioSignalData.cpp" compile="1" resource="0"
               file="Source/MemaProcessor/ProcessorAudioSignalData.cpp"/>
         <FILE id="fUSJee" name="ProcessorAudioSignalData.h" compile="0" resource="0"
