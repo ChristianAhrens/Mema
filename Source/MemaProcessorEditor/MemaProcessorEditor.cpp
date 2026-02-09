@@ -92,7 +92,7 @@ MemaProcessorEditor::MemaProcessorEditor(AudioProcessor& processor)
         if (memaProc)
         {
             for (auto& info : paramInfos)
-                memaProc->setPluginParameterRemoteControllable(info.second.first.index, info.second.second);
+                memaProc->setPluginParameterRemoteControllable(info.second.index, info.second.isRemoteControllable);
         }
     };
     addAndMakeVisible(m_pluginControl.get());

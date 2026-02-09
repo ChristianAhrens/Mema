@@ -272,7 +272,7 @@ public:
     void setPluginPrePost(bool post = false);
     void setSelectedPlugin(const juce::PluginDescription& pluginDescription);
     void setParameterInfos(const std::vector<PluginParameterInfo>& infos);
-    const std::map<int, std::pair<Mema::PluginParameterInfo, bool>>& getParameterInfos();
+    const std::map<int, Mema::PluginParameterInfo>& getParameterInfos();
     void showParameterConfig();
 
     //==============================================================================
@@ -304,7 +304,7 @@ private:
     std::unique_ptr<PluginListAndSelectComponent>   m_pluginSelectionComponent;
     juce::PluginDescription                         m_selectedPluginDescription;
     
-    std::map<int, std::pair<Mema::PluginParameterInfo, bool>>   m_parametersEnabledMap;
+    std::map<int, Mema::PluginParameterInfo>        m_parameterInfos;
 
     std::map<int, std::unique_ptr<juce::ToggleButton>>  m_messageBoxParameterToggleComponents;
     std::unique_ptr<juce::Component>                    m_messageBoxParameterTogglesContainer;

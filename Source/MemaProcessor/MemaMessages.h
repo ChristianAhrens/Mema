@@ -28,7 +28,7 @@ namespace Mema
 
 //==============================================================================
 /*
- *
+ * Forward declarations of SerializableMessage-derived specializations
  */
 class EnvironmentParametersMessage;
 class AnalyzerParametersMessage;
@@ -169,7 +169,8 @@ protected:
 
 //==============================================================================
 /*
- *
+ * A message type encapsulating Mema environment parameters
+ * #1 Light/Dark lookandfeel
  */
 class EnvironmentParametersMessage : public SerializableMessage
 {
@@ -203,7 +204,9 @@ private:
 
 //==============================================================================
 /*
- *
+ * A message type encapsulating Analyser parameters
+ * #1 Samplerate
+ * #2 Max samples per block
  */
 class AnalyzerParametersMessage : public SerializableMessage
 {
@@ -241,7 +244,9 @@ private:
 
 //==============================================================================
 /*
- *
+ * A message type encapsulating IOcount infos to trigger a client reinit
+ * #1 new input count
+ * #2 new output count
  */
 class ReinitIOCountMessage : public SerializableMessage
 {
@@ -279,7 +284,9 @@ private:
 
 //==============================================================================
 /*
- * 
+ * A message type encapsulating audio buffer data
+ * #1 buffer meta info: in or out
+ * #2 actual buffer data
  */
 class AudioBufferMessage : public SerializableMessage
 {
@@ -321,7 +328,7 @@ protected:
 
 //==============================================================================
 /*
- *
+ * A message type specializing the AudioBufferMessage to a specific input buffer message
  */
 class AudioInputBufferMessage : public AudioBufferMessage
 {
@@ -361,7 +368,7 @@ public:
 
 //==============================================================================
 /*
- *
+ * A message type specializing the AudioBufferMessage to a specific output buffer message
  */
 class AudioOutputBufferMessage : public AudioBufferMessage
 {
@@ -399,7 +406,8 @@ public:
 
 //==============================================================================
 /*
- *
+ * A message type encapsulating a client request for subscription to specific message types
+ * #1 types of traffic desired
  */
 class DataTrafficTypeSelectionMessage : public SerializableMessage
 {
@@ -447,7 +455,11 @@ private:
 
 //==============================================================================
 /*
- *
+ * A message type encapsulating control data from a client
+ * #1 input mutes
+ * #2 output mutes
+ * #3 crosspoint states
+ * #4 crosspoint values
  */
 class ControlParametersMessage : public SerializableMessage
 {

@@ -139,21 +139,21 @@ void PluginControlComponent::setSelectedPlugin(const juce::PluginDescription& pl
 
 void PluginControlComponent::setParameterInfos(const std::vector<Mema::PluginParameterInfo>& infos)
 {
-	if (infos.size() != m_parametersEnabledMap.size())
-		m_parametersEnabledMap.clear();
+	if (infos.size() != m_parameterInfos.size())
+		m_parameterInfos.clear();
 
 	auto key = 0;
 	for (auto const& info : infos)
 	{
-		if (0 < m_parametersEnabledMap.count(key) || std::as_const(m_parametersEnabledMap[key].first) != info)
-			m_parametersEnabledMap[key] = std::make_pair(info, true);
+		if (0 < m_parameterInfos.count(key) || std::as_const(m_parameterInfos[key]) != info)
+			m_parameterInfos[key] = info;
 		key++;
 	}
 }
 
-const std::map<int, std::pair<Mema::PluginParameterInfo, bool>>& PluginControlComponent::getParameterInfos()
+const std::map<int, Mema::PluginParameterInfo>& PluginControlComponent::getParameterInfos()
 {
-	return m_parametersEnabledMap;
+	return m_parameterInfos;
 }
 
 void PluginControlComponent::showParameterConfig()
@@ -167,16 +167,17 @@ void PluginControlComponent::showParameterConfig()
 	m_messageBoxParameterTogglesContainer = std::make_unique<juce::Component>();
 
 	// Create the toggle buttons and add them to the container
-	for (auto const& parameterKV : m_parametersEnabledMap)
+	for (auto const& parameterKV : m_parameterInfos)
 	{
 		m_messageBoxParameterToggleComponents[parameterKV.first] =
-			std::make_unique<juce::ToggleButton>(parameterKV.second.first.name);
+			std::make_unique<juce::ToggleButton>(parameterKV.second.name);
+		m_messageBoxParameterToggleComponents[parameterKV.first]->setToggleState(parameterKV.second.isRemoteControllable, juce::dontSendNotification);
 		m_messageBoxParameterTogglesContainer->addAndMakeVisible(m_messageBoxParameterToggleComponents[parameterKV.first].get());
 	}
 
 	// Calculate the required height based on number of parameters
 	int toggleHeight = 24;
-	auto totalHeight = int(m_parametersEnabledMap.size()) * toggleHeight;
+	auto totalHeight = int(m_parameterInfos.size()) * toggleHeight;
 	m_messageBoxParameterTogglesContainer->setSize(300, totalHeight);
 
 	// Create and configure the FlexBox layout
@@ -185,7 +186,7 @@ void PluginControlComponent::showParameterConfig()
 	m_messageBoxParameterTogglesFlexBox.justifyContent = juce::FlexBox::JustifyContent::flexStart;
 
 	// Add toggle buttons as FlexItems
-	for (auto const& parameterKV : m_parametersEnabledMap)
+	for (auto const& parameterKV : m_parameterInfos)
 	{
 		m_messageBoxParameterTogglesFlexBox.items.add(
 			juce::FlexItem(*m_messageBoxParameterToggleComponents[parameterKV.first])
@@ -206,14 +207,14 @@ void PluginControlComponent::showParameterConfig()
 		if (returnValue == 1)
 		{
 			auto changeDetected = false;
-			for (auto& parameterKV : m_parametersEnabledMap)
+			for (auto& parameterKV : m_parameterInfos)
 			{
 				auto currentState = m_messageBoxParameterToggleComponents[parameterKV.first]->getToggleState();
-				auto& formerState = parameterKV.second.second;
-				if (currentState != formerState)
+				auto& formerState = parameterKV.second;
+				if (currentState != formerState.isRemoteControllable)
 				{
 					changeDetected = true;
-					formerState = currentState;
+					formerState.isRemoteControllable = currentState;
 				}
 			}
 

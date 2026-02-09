@@ -379,6 +379,7 @@ bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
 				auto index = plgParamElm->getIntAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::IDX));
 				auto paramString = plgParamElm->getAllSubText();
 				auto paramInfo = PluginParameterInfo::fromString(paramString);
+				paramInfo.isRemoteControllable = (plgParamElm->getIntAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::CONTROLLABLE)) == 1);
 				jassert(paramInfo.index == index);
 				// update the pluginparameterinfo
 				auto iter = std::find_if(getPluginParameterInfos().begin(), getPluginParameterInfos().end(), [=](const auto& info) { return info.index == index; });
@@ -392,7 +393,6 @@ bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
 					jassert(paramInfo.label == param->getLabel());
 					jassert(paramInfo.defaultValue == param->getDefaultValue());
 					jassert(paramInfo.isAutomatable == param->isAutomatable());
-					jassert(paramInfo.isRemoteControllable == false);
 					jassert(paramInfo.category == param->getCategory());
 					if (auto* rangedParam = dynamic_cast<const juce::RangedAudioParameter*>(param))
 					{
@@ -403,6 +403,7 @@ bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
 						jassert(paramInfo.isDiscrete == range.interval > 0.0f);
 					}
 
+					setPluginParameterRemoteControllable(paramInfo.index, paramInfo.isRemoteControllable);
 					param->setValue(paramInfo.currentValue);
 				}
 			}
