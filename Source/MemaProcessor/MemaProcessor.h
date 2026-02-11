@@ -38,6 +38,7 @@ class MemaChannelCommander;
 class MemaInputCommander;
 class MemaOutputCommander;
 class MemaCrosspointCommander;
+class MemaPluginCommander;
 class MemaNetworkClientCommanderWrapper;
 
 
@@ -108,6 +109,10 @@ public:
     void initializeCrosspointCommander(MemaCrosspointCommander* commander);
     void removeCrosspointCommander(MemaCrosspointCommander* comander);
 
+    void addPluginCommander(MemaPluginCommander* commander);
+    void initializePluginCommander(MemaPluginCommander* commander);
+    void removePluginCommander(MemaPluginCommander* commander);
+
     void updateCommanders();
 
     //==============================================================================
@@ -119,6 +124,9 @@ public:
 
     float getMatrixCrosspointFactorValue(std::uint16_t inputNumber, std::uint16_t outputNumber);
     void setMatrixCrosspointFactorValue(std::uint16_t inputNumber, std::uint16_t outputNumber, float factor, MemaChannelCommander* sender = nullptr, int userId = -1);
+
+    float getPluginParameterValue(std::uint16_t pluginParameterIndex) const;
+    void setPluginParameterValue(std::uint16_t pluginParameterIndex, std::string id, float normalizedValue, MemaPluginCommander* sender = nullptr, int userId = -1);
 
     bool getOutputMuteState(std::uint16_t channelNumber);
     void setOutputMuteState(std::uint16_t channelNumber, bool muted, MemaChannelCommander* sender = nullptr, int userId = -1);
@@ -137,11 +145,9 @@ public:
     void closePluginEditor(bool deleteEditorWindow = true);
     std::function<void(const juce::PluginDescription&)> onPluginSet;
     // Parameter management
-    std::vector<PluginParameterInfo>& getPluginParameterInfos() { return m_pluginParameterInfos; };
+    std::vector<PluginParameterInfo>& getPluginParameterInfos();
     void setPluginParameterRemoteControllable(int pluginParameterIndex, bool remoteControllable);
     bool isPluginParameterRemoteControllable(int parameterIndex);
-    void setPluginParameterValue(int pluginParameterIndex, float normalizedValue);
-    float getPluginParameterValue(int pluginParameterIndex) const;
     juce::AudioProcessorParameter* getPluginParameter(int parameterIndex) const;
     std::function<void(int pluginParameterIndex, float newValue)> onPluginParameterChanged;
     std::function<void()> onPluginParameterInfosChanged;
@@ -249,6 +255,7 @@ private:
     std::vector<MemaInputCommander*>    m_inputCommanders;
     std::vector<MemaOutputCommander*>   m_outputCommanders;
     std::vector<MemaCrosspointCommander*>   m_crosspointCommanders;
+    std::vector<MemaPluginCommander*>   m_pluginCommanders;
 
     //==============================================================================
     std::map<std::uint16_t, bool> m_inputMuteStates;

@@ -20,6 +20,8 @@
 
 #include <JuceHeader.h>
 
+#include "MemaPluginParameterInfo.h"
+
 
 namespace Mema
 {
@@ -60,10 +62,10 @@ protected:
     void inputLevelPoll(std::uint16_t channel, MemaInputCommander* sender);
 
 private:
-    std::function<void(MemaInputCommander* sender, std::uint16_t, float)> m_inputLevelChangeCallback{ nullptr };
-    std::function<void(MemaInputCommander* sender, std::uint16_t)>        m_inputLevelPollCallback{ nullptr };
-    std::function<void(MemaInputCommander* sender, std::uint16_t, bool)>  m_inputMuteChangeCallback{ nullptr };
-    std::function<void(MemaInputCommander* sender, std::uint16_t)>        m_inputMutePollCallback{ nullptr };
+    std::function<void(MemaInputCommander* sender, std::uint16_t, float)> onInputLevelChangeCallback{ nullptr };
+    std::function<void(MemaInputCommander* sender, std::uint16_t)>        onInputLevelPollCallback{ nullptr };
+    std::function<void(MemaInputCommander* sender, std::uint16_t, bool)>  onInputMuteChangeCallback{ nullptr };
+    std::function<void(MemaInputCommander* sender, std::uint16_t)>        onInputMutePollCallback{ nullptr };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MemaInputCommander)
 };
@@ -91,10 +93,10 @@ protected:
     void outputLevelPoll(std::uint16_t channel, MemaOutputCommander* sender);
 
 private:
-    std::function<void(MemaOutputCommander* sender, std::uint16_t, float)>    m_outputLevelChangeCallback{ nullptr };
-    std::function<void(MemaOutputCommander* sender, std::uint16_t)>           m_outputLevelPollCallback{ nullptr };
-    std::function<void(MemaOutputCommander* sender, std::uint16_t, bool)>     m_outputMuteChangeCallback{ nullptr };
-    std::function<void(MemaOutputCommander* sender, std::uint16_t)>           m_outputMutePollCallback{ nullptr };
+    std::function<void(MemaOutputCommander* sender, std::uint16_t, float)>    onOutputLevelChangeCallback{ nullptr };
+    std::function<void(MemaOutputCommander* sender, std::uint16_t)>           onOutputLevelPollCallback{ nullptr };
+    std::function<void(MemaOutputCommander* sender, std::uint16_t, bool)>     onOutputMuteChangeCallback{ nullptr };
+    std::function<void(MemaOutputCommander* sender, std::uint16_t)>           onOutputMutePollCallback{ nullptr };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MemaOutputCommander)
 };
@@ -125,13 +127,44 @@ protected:
 private:
     void setChannelCount(std::uint16_t channelCount) override { ignoreUnused(channelCount); jassertfalse; };
 
-    std::function<void(MemaCrosspointCommander* sender, std::uint16_t, std::uint16_t, bool)> m_crosspointEnabledChangeCallback{ nullptr };
-    std::function<void(MemaCrosspointCommander* sender, std::uint16_t, std::uint16_t)>       m_crosspointEnabledPollCallback{ nullptr };
+    std::function<void(MemaCrosspointCommander* sender, std::uint16_t, std::uint16_t, bool)> onCrosspointEnabledChangeCallback{ nullptr };
+    std::function<void(MemaCrosspointCommander* sender, std::uint16_t, std::uint16_t)>       onCrosspointEnabledPollCallback{ nullptr };
 
-    std::function<void(MemaCrosspointCommander* sender, std::uint16_t, std::uint16_t, float)>   m_crosspointFactorChangeCallback{ nullptr };
-    std::function<void(MemaCrosspointCommander* sender, std::uint16_t, std::uint16_t)>          m_crosspointFactorPollCallback{ nullptr };
+    std::function<void(MemaCrosspointCommander* sender, std::uint16_t, std::uint16_t, float)>   onCrosspointFactorChangeCallback{ nullptr };
+    std::function<void(MemaCrosspointCommander* sender, std::uint16_t, std::uint16_t)>          onCrosspointFactorPollCallback{ nullptr };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MemaCrosspointCommander)
+};
+
+class MemaPluginCommander
+{
+public:
+    MemaPluginCommander();
+    virtual ~MemaPluginCommander();
+
+    void setPluginParameterInfosChangeCallback(const std::function<void(MemaPluginCommander* sender, const std::vector<PluginParameterInfo>&)>& callback);
+    void setPluginParameterInfosPollCallback(const std::function<void(MemaPluginCommander* sender)>& callback);
+    virtual void setPluginParameterInfos(const std::vector<PluginParameterInfo>&, int userId = -1) = 0;
+
+    void setPluginParameterValueChangeCallback(const std::function<void(MemaPluginCommander* sender, std::uint16_t, std::string, float)>& callback);
+    void setPluginParameterValuePollCallback(const std::function<void(MemaPluginCommander* sender, std::uint16_t, std::string)>& callback);
+    virtual void setPluginParameterValue(std::uint16_t index, std::string id, float currentValue, int userId = -1) = 0;
+
+protected:
+    void pluginParameterInfosChange(const std::vector<PluginParameterInfo>&, MemaPluginCommander* sender);
+    void pluginParameterInfosPoll(MemaPluginCommander* sender);
+
+    void pluginParameterValueChange(std::uint16_t index, std::string id, float currentValue, MemaPluginCommander* sender);
+    void pluginParameterValuePoll(std::uint16_t index, std::string id, MemaPluginCommander* sender);
+
+private:
+    std::function<void(MemaPluginCommander* sender, const std::vector<PluginParameterInfo>&)>   onPluginParameterInfosChangeCallback{ nullptr };
+    std::function<void(MemaPluginCommander* sender)>                                            onPluginParameterInfosPollCallback{ nullptr };
+
+    std::function<void(MemaPluginCommander* sender, std::uint16_t, std::string, float)> onPluginParameterValueChangeCallback{ nullptr };
+    std::function<void(MemaPluginCommander* sender, std::uint16_t, std::string)>        onPluginParameterValuePollCallback{ nullptr };
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MemaPluginCommander)
 };
 
 

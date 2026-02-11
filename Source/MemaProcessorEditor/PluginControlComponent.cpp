@@ -158,77 +158,92 @@ const std::map<int, Mema::PluginParameterInfo>& PluginControlComponent::getParam
 
 void PluginControlComponent::showParameterConfig()
 {
-	m_messageBox = std::make_unique<juce::AlertWindow>(
-		"Plug-in parameter setup",
-		"Select which of the available plug-in parameters should be made remote-controllable.",
-		juce::MessageBoxIconType::NoIcon);
-
-	// Create the container component
-	m_messageBoxParameterTogglesContainer = std::make_unique<juce::Component>();
-
-	// Create the toggle buttons and add them to the container
-	for (auto const& parameterKV : m_parameterInfos)
+	if (m_selectedPluginDescription.name.isEmpty())
 	{
-		m_messageBoxParameterToggleComponents[parameterKV.first] =
-			std::make_unique<juce::ToggleButton>(parameterKV.second.name);
-		m_messageBoxParameterToggleComponents[parameterKV.first]->setToggleState(parameterKV.second.isRemoteControllable, juce::dontSendNotification);
-		m_messageBoxParameterTogglesContainer->addAndMakeVisible(m_messageBoxParameterToggleComponents[parameterKV.first].get());
+		m_messageBox = std::make_unique<juce::AlertWindow>(
+			"Plug-in parameter setup not available",
+			"No plug-in selected.",
+			juce::MessageBoxIconType::WarningIcon);
+		m_messageBox->addButton("Ok", 1, juce::KeyPress(juce::KeyPress::returnKey));
+		m_messageBox->enterModalState(true, juce::ModalCallbackFunction::create([=](int returnValue) {
+			ignoreUnused(returnValue);
+			m_messageBox.reset();
+		}));
 	}
-
-	// Calculate the required height based on number of parameters
-	int toggleHeight = 24;
-	auto totalHeight = int(m_parameterInfos.size()) * toggleHeight;
-	m_messageBoxParameterTogglesContainer->setSize(300, totalHeight);
-
-	// Create and configure the FlexBox layout
-	m_messageBoxParameterTogglesFlexBox.items.clear();
-	m_messageBoxParameterTogglesFlexBox.flexDirection = juce::FlexBox::Direction::column;
-	m_messageBoxParameterTogglesFlexBox.justifyContent = juce::FlexBox::JustifyContent::flexStart;
-
-	// Add toggle buttons as FlexItems
-	for (auto const& parameterKV : m_parameterInfos)
+	else
 	{
-		m_messageBoxParameterTogglesFlexBox.items.add(
-			juce::FlexItem(*m_messageBoxParameterToggleComponents[parameterKV.first])
-			.withHeight(float(toggleHeight))
-			.withFlex(0));
-	}
+		m_messageBox = std::make_unique<juce::AlertWindow>(
+			"Plug-in parameter setup",
+			"Select which of the available plug-in parameters should be made remote-controllable.",
+			juce::MessageBoxIconType::NoIcon);
 
-	// Perform the layout
-	m_messageBoxParameterTogglesFlexBox.performLayout(m_messageBoxParameterTogglesContainer->getLocalBounds());
+		// Create the container component
+		m_messageBoxParameterTogglesContainer = std::make_unique<juce::Component>();
 
-	// Add the container to the alert window
-	m_messageBox->addCustomComponent(m_messageBoxParameterTogglesContainer.get());
-
-	m_messageBox->addButton("Cancel", 0, juce::KeyPress(juce::KeyPress::escapeKey));
-	m_messageBox->addButton("Ok", 1, juce::KeyPress(juce::KeyPress::returnKey));
-
-	m_messageBox->enterModalState(true, juce::ModalCallbackFunction::create([=](int returnValue) {
-		if (returnValue == 1)
+		// Create the toggle buttons and add them to the container
+		for (auto const& parameterKV : m_parameterInfos)
 		{
-			auto changeDetected = false;
-			for (auto& parameterKV : m_parameterInfos)
+			m_messageBoxParameterToggleComponents[parameterKV.first] =
+				std::make_unique<juce::ToggleButton>(parameterKV.second.name);
+			m_messageBoxParameterToggleComponents[parameterKV.first]->setToggleState(parameterKV.second.isRemoteControllable, juce::dontSendNotification);
+			m_messageBoxParameterTogglesContainer->addAndMakeVisible(m_messageBoxParameterToggleComponents[parameterKV.first].get());
+		}
+
+		// Calculate the required height based on number of parameters
+		int toggleHeight = 24;
+		auto totalHeight = int(m_parameterInfos.size()) * toggleHeight;
+		m_messageBoxParameterTogglesContainer->setSize(300, totalHeight);
+
+		// Create and configure the FlexBox layout
+		m_messageBoxParameterTogglesFlexBox.items.clear();
+		m_messageBoxParameterTogglesFlexBox.flexDirection = juce::FlexBox::Direction::column;
+		m_messageBoxParameterTogglesFlexBox.justifyContent = juce::FlexBox::JustifyContent::flexStart;
+
+		// Add toggle buttons as FlexItems
+		for (auto const& parameterKV : m_parameterInfos)
+		{
+			m_messageBoxParameterTogglesFlexBox.items.add(
+				juce::FlexItem(*m_messageBoxParameterToggleComponents[parameterKV.first])
+				.withHeight(float(toggleHeight))
+				.withFlex(0));
+		}
+
+		// Perform the layout
+		m_messageBoxParameterTogglesFlexBox.performLayout(m_messageBoxParameterTogglesContainer->getLocalBounds());
+
+		// Add the container to the alert window
+		m_messageBox->addCustomComponent(m_messageBoxParameterTogglesContainer.get());
+
+		m_messageBox->addButton("Cancel", 0, juce::KeyPress(juce::KeyPress::escapeKey));
+		m_messageBox->addButton("Ok", 1, juce::KeyPress(juce::KeyPress::returnKey));
+
+		m_messageBox->enterModalState(true, juce::ModalCallbackFunction::create([=](int returnValue) {
+			if (returnValue == 1)
 			{
-				auto currentState = m_messageBoxParameterToggleComponents[parameterKV.first]->getToggleState();
-				auto& formerState = parameterKV.second;
-				if (currentState != formerState.isRemoteControllable)
+				auto changeDetected = false;
+				for (auto& parameterKV : m_parameterInfos)
 				{
-					changeDetected = true;
-					formerState.isRemoteControllable = currentState;
+					auto currentState = m_messageBoxParameterToggleComponents[parameterKV.first]->getToggleState();
+					auto& formerState = parameterKV.second;
+					if (currentState != formerState.isRemoteControllable)
+					{
+						changeDetected = true;
+						formerState.isRemoteControllable = currentState;
+					}
+				}
+
+				if (changeDetected)
+				{
+					if (onPluginParametersStatusChanged)
+						onPluginParametersStatusChanged();
 				}
 			}
 
-			if (changeDetected)
-			{
-				if (onPluginParametersStatusChanged)
-					onPluginParametersStatusChanged();
-			}
-		}
-
-		m_messageBoxParameterToggleComponents.clear();
-		m_messageBoxParameterTogglesContainer.reset();
-		m_messageBox.reset();
-		}));
+			m_messageBoxParameterToggleComponents.clear();
+			m_messageBoxParameterTogglesContainer.reset();
+			m_messageBox.reset();
+			}));
+	}
 }
 
 void PluginControlComponent::resized()

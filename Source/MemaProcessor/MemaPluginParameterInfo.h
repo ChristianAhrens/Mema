@@ -137,6 +137,59 @@ struct PluginParameterInfo
         jassert(success);
         return parameterInfo;
     };
+    bool initializeFromAudioProcessorParameter(juce::AudioProcessorParameter& processorParameter)
+    {
+        index = processorParameter.getParameterIndex();
+        name = processorParameter.getName(100);
+        label = processorParameter.getLabel();
+        defaultValue = processorParameter.getDefaultValue();
+        currentValue = processorParameter.getValue();
+        isAutomatable = processorParameter.isAutomatable();
+        isRemoteControllable = false;
+        category = processorParameter.getCategory();
+
+        if (auto* paramWithID = dynamic_cast<juce::AudioProcessorParameterWithID*>(&processorParameter))
+        {
+            id = paramWithID->paramID;
+        }
+        else
+        {
+            id = "param_" + juce::String(index);
+        }
+
+        if (auto* rangedParam = dynamic_cast<juce::RangedAudioParameter*>(&processorParameter))
+        {
+            auto range = rangedParam->getNormalisableRange();
+            minValue = range.start;
+            maxValue = range.end;
+            stepSize = range.interval;
+            isDiscrete = range.interval > 0.0f;
+        }
+        else
+        {
+            minValue = 0.0f;
+            maxValue = 1.0f;
+            stepSize = 0.0f;
+            isDiscrete = false;
+        }
+
+        return true;
+    }
+    static PluginParameterInfo fromAudioProcessorParameter(juce::AudioProcessorParameter& processorParameter)
+    {
+        PluginParameterInfo parameterInfo;
+        auto success = parameterInfo.initializeFromAudioProcessorParameter(processorParameter);
+        jassert(success);
+        return parameterInfo;
+    };
+
+    static std::vector<PluginParameterInfo> parametersToInfos(juce::Array<juce::AudioProcessorParameter*> processorParameters)
+    {
+        std::vector<PluginParameterInfo> infos(processorParameters.size());
+        for (auto param : processorParameters)
+            infos.push_back(fromAudioProcessorParameter(*param));
+        return infos;
+    };
 };
 
 } // namespace Mema
