@@ -200,7 +200,7 @@ MemaPluginCommander::~MemaPluginCommander()
 
 }
 
-void MemaPluginCommander::setPluginParameterInfosChangeCallback(const std::function<void(MemaPluginCommander* sender, const std::vector<PluginParameterInfo>&)>& callback)
+void MemaPluginCommander::setPluginParameterInfosChangeCallback(const std::function<void(MemaPluginCommander* sender, const std::vector<PluginParameterInfo>&, const std::string&)>& callback)
 {
 	onPluginParameterInfosChangeCallback = callback;
 }
@@ -210,10 +210,10 @@ void MemaPluginCommander::setPluginParameterInfosPollCallback(const std::functio
 	onPluginParameterInfosPollCallback = callback;
 }
 
-void MemaPluginCommander::pluginParameterInfosChange(const std::vector<PluginParameterInfo>& infos, MemaPluginCommander* sender)
+void MemaPluginCommander::pluginParameterInfosChange(const std::vector<PluginParameterInfo>& infos, const std::string& name, MemaPluginCommander* sender)
 {
 	if (onPluginParameterInfosChangeCallback)
-		onPluginParameterInfosChangeCallback(sender, infos);
+		onPluginParameterInfosChangeCallback(sender, infos, name);
 }
 
 void MemaPluginCommander::pluginParameterInfosPoll(MemaPluginCommander* sender)

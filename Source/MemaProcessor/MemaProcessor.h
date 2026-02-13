@@ -84,6 +84,7 @@ class MemaProcessor : public juce::AudioProcessor,
     public juce::AudioIODeviceCallback,
     public juce::MessageListener,
     public juce::ChangeListener,
+    public juce::AudioProcessorParameter::Listener,
     public MemaAppConfiguration::XmlConfigurableElement
 {
 public:
@@ -201,6 +202,10 @@ public:
     void handleMessage(const Message& message) override;
 
     //==============================================================================
+    void parameterValueChanged(int parameterIndex, float newValue) override;
+    void parameterGestureChanged(int parameterIndex, bool gestureIsStarting) override;
+
+    //==============================================================================
     std::unique_ptr<XmlElement> createStateXml() override;
     bool setStateXml(XmlElement* stateXml) override;
 
@@ -273,15 +278,12 @@ private:
     std::unique_ptr<MemaProcessorEditor>  m_processorEditor;
 
     //==============================================================================
-    class PluginParameterListener; // Forward declare the listener class
-    //==============================================================================
     juce::CriticalSection                                           m_pluginProcessingLock;
     std::unique_ptr<juce::AudioPluginInstance>                      m_pluginInstance;
     bool                                                            m_pluginEnabled = false;
     bool                                                            m_pluginPost = false;
     std::unique_ptr<ResizeableWindowWithTitleBarAndCloseCallback>   m_pluginEditorWindow;
     std::vector<PluginParameterInfo>                                m_pluginParameterInfos;
-    std::vector<std::unique_ptr<PluginParameterListener>>           m_pluginParameterListeners;
 
     //==============================================================================
     std::unique_ptr<JUCEAppBasics::ServiceTopologyManager>  m_serviceTopologyManager;

@@ -142,24 +142,24 @@ public:
     MemaPluginCommander();
     virtual ~MemaPluginCommander();
 
-    void setPluginParameterInfosChangeCallback(const std::function<void(MemaPluginCommander* sender, const std::vector<PluginParameterInfo>&)>& callback);
+    void setPluginParameterInfosChangeCallback(const std::function<void(MemaPluginCommander* sender, const std::vector<PluginParameterInfo>&, const std::string& name)>& callback);
     void setPluginParameterInfosPollCallback(const std::function<void(MemaPluginCommander* sender)>& callback);
-    virtual void setPluginParameterInfos(const std::vector<PluginParameterInfo>&, int userId = -1) = 0;
+    virtual void setPluginParameterInfos(const std::vector<PluginParameterInfo>&, const std::string& name, int userId = -1) = 0;
 
     void setPluginParameterValueChangeCallback(const std::function<void(MemaPluginCommander* sender, std::uint16_t, std::string, float)>& callback);
     void setPluginParameterValuePollCallback(const std::function<void(MemaPluginCommander* sender, std::uint16_t, std::string)>& callback);
     virtual void setPluginParameterValue(std::uint16_t index, std::string id, float currentValue, int userId = -1) = 0;
 
 protected:
-    void pluginParameterInfosChange(const std::vector<PluginParameterInfo>&, MemaPluginCommander* sender);
+    void pluginParameterInfosChange(const std::vector<PluginParameterInfo>&, const std::string&, MemaPluginCommander* sender);
     void pluginParameterInfosPoll(MemaPluginCommander* sender);
 
     void pluginParameterValueChange(std::uint16_t index, std::string id, float currentValue, MemaPluginCommander* sender);
     void pluginParameterValuePoll(std::uint16_t index, std::string id, MemaPluginCommander* sender);
 
 private:
-    std::function<void(MemaPluginCommander* sender, const std::vector<PluginParameterInfo>&)>   onPluginParameterInfosChangeCallback{ nullptr };
-    std::function<void(MemaPluginCommander* sender)>                                            onPluginParameterInfosPollCallback{ nullptr };
+    std::function<void(MemaPluginCommander* sender, const std::vector<PluginParameterInfo>&, const std::string&)>   onPluginParameterInfosChangeCallback{ nullptr };
+    std::function<void(MemaPluginCommander* sender)>                                                                onPluginParameterInfosPollCallback{ nullptr };
 
     std::function<void(MemaPluginCommander* sender, std::uint16_t, std::string, float)> onPluginParameterValueChangeCallback{ nullptr };
     std::function<void(MemaPluginCommander* sender, std::uint16_t, std::string)>        onPluginParameterValuePollCallback{ nullptr };

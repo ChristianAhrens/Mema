@@ -52,25 +52,26 @@ public:
         LookAndFeel_Dark,
         LookAndFeel_Light,
         LookAndFeel_Last = LookAndFeel_Light,
-        OutputPanningType_First,
-        OutputPanningType_RawChannels = OutputPanningType_First,
-        OutputPanningType_LRS,
-        OutputPanningType_LCRS,
-        OutputPanningType_5point0,
-        OutputPanningType_5point1,
-        OutputPanningType_5point1point2,
-        OutputPanningType_7point0,
-        OutputPanningType_7point1,
-        OutputPanningType_7point1point4,
-        OutputPanningType_9point1point6,
-        OutputPanningType_Quadrophonic,
-        OutputPanningType_Last = OutputPanningType_Quadrophonic,
-        PanningColour_First,
-        PanningColour_Green = PanningColour_First,
-        PanningColour_Red,
-        PanningColour_Blue,
-        PanningColour_Pink,
-        PanningColour_Last = PanningColour_Pink,
+        ControlFormat_First,
+        ControlFormat_RawChannels = ControlFormat_First,
+        ControlFormat_PanningType_LRS,
+        ControlFormat_PanningType_LCRS,
+        ControlFormat_PanningType_5point0,
+        ControlFormat_PanningType_5point1,
+        ControlFormat_PanningType_5point1point2,
+        ControlFormat_PanningType_7point0,
+        ControlFormat_PanningType_7point1,
+        ControlFormat_PanningType_7point1point4,
+        ControlFormat_PanningType_9point1point6,
+        ControlFormat_PanningType_Quadrophonic,
+        ControlFormat_PluginParameterControl,
+        ControlFormat_Last = ControlFormat_PluginParameterControl,
+        ControlColour_First,
+        ControlColour_Green = ControlColour_First,
+        ControlColour_Red,
+        ControlColour_Blue,
+        ControlColour_Pink,
+        ControlColour_Last = ControlColour_Pink,
         ControlsSize_First,
         ControlsSize_S = ControlsSize_First,
         ControlsSize_M,
@@ -145,14 +146,14 @@ private:
     //==============================================================================
     void handleSettingsMenuResult(int selectedId);
     void handleSettingsLookAndFeelMenuResult(int selectedId);
-    void handleSettingsOutputPanningTypeMenuResult(int selectedId);
-    void handleSettingsPanningColourMenuResult(int selectedId);
+    void handleSettingsControlFormatMenuResult(int selectedId);
+    void handleSettingsControlColourMenuResult(int selectedId);
     void handleSettingsControlsSizeMenuResult(int selectedId);
     void handleSettingsFullscreenModeToggleResult();
     void showExternalControlSettings();
 
-    void setPanningColour(const juce::Colour& meteringColour);
-    void applyPanningColour();
+    void setControlColour(const juce::Colour& meteringColour);
+    void applyControlColour();
 
     void setControlsSize(const Mema::MemaClientControlComponentBase::ControlsSize& controlsSize);
 
@@ -184,7 +185,7 @@ private:
 
     Status                                          m_currentStatus = Status::Discovering;
 
-    juce::Colour                                    m_panningColour = juce::Colours::forestgreen;
+    juce::Colour                                    m_controlColour = juce::Colours::forestgreen;
 
     std::unique_ptr<MemaReAppConfiguration>         m_config;
 

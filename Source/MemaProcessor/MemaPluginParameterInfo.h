@@ -31,7 +31,7 @@ struct PluginParameterInfo
     float currentValue = 0.0f;
     juce::String label = "";
     bool isAutomatable = false;
-    bool isRemoteControllable = false;  // User-controllable remote access
+    bool isRemoteControllable = true;  // User-controllable remote access
     juce::AudioProcessorParameter::Category category = juce::AudioProcessorParameter::Category::genericParameter;
     // Range information
     float minValue = 0.0f;

@@ -22,6 +22,9 @@
 
 #include "MemaClientCommon/FaderbankControlComponent.h"
 #include "MemaClientCommon/PanningControlComponent.h"
+#include "MemaClientCommon/PluginControlComponent.h"
+
+#include <MemaProcessor/MemaPluginParameterInfo.h>
 
 class MemaReComponent :   public juce::Component, juce::MessageListener
 {
@@ -37,8 +40,9 @@ public:
     MemaReComponent();
     ~MemaReComponent() override;
 
-    void setOutputFaderbankCtrlActive();
+    void setFaderbankCtrlActive();
     void setOutputPanningCtrlActive(const juce::AudioChannelSet& channelConfiguration);
+    void setPluginCtrlActive();
     void resetCtrl();
 
     void setControlsSize(const Mema::FaderbankControlComponent::ControlsSize& ctrlsSize);
@@ -62,6 +66,7 @@ private:
     //==============================================================================
     std::unique_ptr<Mema::FaderbankControlComponent>    m_faderbankCtrlComponent;
     std::unique_ptr<Mema::PanningControlComponent>      m_panningCtrlComponent;
+    std::unique_ptr<Mema::PluginControlComponent>       m_pluginCtrlComponent;
 
     //==============================================================================
     RunningStatus m_runningStatus = RunningStatus::Inactive;

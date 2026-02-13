@@ -536,8 +536,10 @@ public:
         for (int i = 0; i < inputMuteStatesCount; i++)
         {
             std::pair<std::uint16_t, bool> inputMuteState;
-            blob.copyTo(&inputMuteState, readPos, sizeof(inputMuteState));
-            readPos += sizeof(inputMuteState);
+            blob.copyTo(&inputMuteState.first, readPos, sizeof(inputMuteState.first));
+            readPos += sizeof(inputMuteState.first);
+            blob.copyTo(&inputMuteState.second, readPos, sizeof(inputMuteState.second));
+            readPos += sizeof(inputMuteState.second);
 
             m_inputMuteStates[inputMuteState.first] = inputMuteState.second;
         }
@@ -548,8 +550,10 @@ public:
         for (int i = 0; i < outputMuteStatesCount; i++)
         {
             std::pair<std::uint16_t, bool> outputMuteState;
-            blob.copyTo(&outputMuteState, readPos, sizeof(outputMuteState));
-            readPos += sizeof(outputMuteState);
+            blob.copyTo(&outputMuteState.first, readPos, sizeof(outputMuteState.first));
+            readPos += sizeof(outputMuteState.first);
+            blob.copyTo(&outputMuteState.second, readPos, sizeof(outputMuteState.second));
+            readPos += sizeof(outputMuteState.second);
 
             m_outputMuteStates[outputMuteState.first] = outputMuteState.second;
         }
@@ -603,12 +607,18 @@ protected:
         auto inputMuteStatesCount = std::uint16_t(m_inputMuteStates.size());
         blob.append(&inputMuteStatesCount, sizeof(inputMuteStatesCount));
         for (auto& inputMuteStateKV : m_inputMuteStates)
-            blob.append(&inputMuteStateKV, sizeof(inputMuteStateKV));
+        {
+            blob.append(&inputMuteStateKV.first, sizeof(inputMuteStateKV.first));
+            blob.append(&inputMuteStateKV.second, sizeof(inputMuteStateKV.second));
+        }
 
         auto outputMuteStatesCount = std::uint16_t(m_outputMuteStates.size());
         blob.append(&outputMuteStatesCount, sizeof(outputMuteStatesCount));
         for (auto& outputMuteStateKV : m_outputMuteStates)
-            blob.append(&outputMuteStateKV, sizeof(outputMuteStateKV));
+        {
+            blob.append(&outputMuteStateKV.first, sizeof(outputMuteStateKV.first));
+            blob.append(&outputMuteStateKV.second, sizeof(outputMuteStateKV.second));
+        }
 
         auto crosspointStatesCount = std::uint16_t(0);
         if (0 < m_crosspointStates.size())
@@ -670,10 +680,11 @@ class PluginParameterInfosMessage : public SerializableMessage
 {
 public:
     PluginParameterInfosMessage() = default;
-    PluginParameterInfosMessage(const std::vector<PluginParameterInfo>& parameterInfos)
+    PluginParameterInfosMessage(const std::string& pluginName, const std::vector<PluginParameterInfo>& parameterInfos)
     {
         m_type = SerializableMessageType::PluginParameterInfos;
         m_parameterInfos = parameterInfos;
+        m_pluginName = pluginName;
     }
 
     PluginParameterInfosMessage(const juce::MemoryBlock& blob)
@@ -683,6 +694,13 @@ public:
         m_type = SerializableMessageType::PluginParameterInfos;
 
         auto readPos = int(sizeof(SerializableMessageType));
+
+        // Read plugin string length and string
+        std::uint16_t pluginNameLength;
+        blob.copyTo(&pluginNameLength, readPos, sizeof(std::uint16_t));
+        readPos += sizeof(std::uint16_t);
+        m_pluginName = juce::String(juce::CharPointer_UTF8(static_cast<const char*>(blob.begin()) + readPos), pluginNameLength);
+        readPos += pluginNameLength;
 
         std::uint16_t paramCount;
         blob.copyTo(&paramCount, readPos, sizeof(std::uint16_t));
@@ -755,12 +773,19 @@ public:
 
     ~PluginParameterInfosMessage() = default;
 
+    const juce::String& getPluginName() const { return m_pluginName; }
     const std::vector<PluginParameterInfo>& getParameterInfos() const { return m_parameterInfos; }
 
 protected:
     juce::MemoryBlock createSerializedContent(size_t& contentSize) const override
     {
         juce::MemoryBlock blob;
+
+        // Write name string (length + UTF8 bytes)
+        auto pluginNameUtf8 = m_pluginName.toUTF8();
+        std::uint16_t pluginNameLength = std::uint16_t(strlen(pluginNameUtf8));
+        blob.append(&pluginNameLength, sizeof(std::uint16_t));
+        blob.append(pluginNameUtf8, pluginNameLength);
 
         auto paramCount = std::uint16_t(m_parameterInfos.size());
         blob.append(&paramCount, sizeof(std::uint16_t));
@@ -813,7 +838,8 @@ protected:
     }
 
 private:
-    std::vector<PluginParameterInfo> m_parameterInfos;
+    std::vector<PluginParameterInfo>    m_parameterInfos;
+    juce::String                        m_pluginName;
 };
 
 //==============================================================================
