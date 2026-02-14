@@ -89,6 +89,7 @@ MemaReComponent::MemaReComponent()
 
     m_pluginCtrlComponent = std::make_unique<Mema::PluginControlComponent>();
     m_pluginCtrlComponent->onPluginParameterValueChanged = [=](std::uint16_t parameterIndex, std::string parameterId, float value) {
+        DBG(juce::String(__FUNCTION__) + " sending to net (" + juce::String(parameterIndex) + "; " + juce::String(parameterId) + "; " + juce::String(value) + ") ...");
         if (onMessageReadyToSend)
             onMessageReadyToSend(std::make_unique<Mema::PluginParameterValueMessage>(parameterIndex, parameterId, value)->getSerializedMessage());
         };
@@ -350,7 +351,7 @@ void MemaReComponent::handleMessage(const Message& message)
     }
     else if (auto const ppvm = dynamic_cast<const Mema::PluginParameterValueMessage*>(&message))
     {
-        DBG(juce::String(__FUNCTION__) + " handling PluginParameterValueMessage...");
+        DBG(juce::String(__FUNCTION__) + " handling PluginParameterValueMessage (" + juce::String(ppvm->getParameterIndex()) + "; " + ppvm->getParameterId() + "; " + juce::String(ppvm->getCurrentValue()) + ") ...");
 
         if (m_pluginCtrlComponent && m_pluginCtrlComponent->isVisible())
             m_pluginCtrlComponent->setParameterValue(ppvm->getParameterIndex(), ppvm->getParameterId().toStdString(), ppvm->getCurrentValue());

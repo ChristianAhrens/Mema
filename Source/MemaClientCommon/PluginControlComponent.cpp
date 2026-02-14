@@ -120,17 +120,20 @@ void PluginControlComponent::rebuildControls()
         if (!parameterInfo.isRemoteControllable)
             continue;
 
-        if (m_parameterNameLabels.count(parameterInfo.index) != 0)
-            m_parameterNameLabels.at(parameterInfo.index)->setText(parameterInfo.name, juce::dontSendNotification);
-        else
+        if (parameterInfo.type != ParameterControlType::Toggle)
         {
-            m_parameterNameLabels[parameterInfo.index] = std::make_unique<juce::Label>(parameterInfo.id);
-            m_parameterNameLabels[parameterInfo.index]->setJustificationType(juce::Justification::centredBottom);
-            m_parameterNameLabels[parameterInfo.index]->setText(parameterInfo.name, juce::dontSendNotification);
-            addAndMakeVisible(m_parameterNameLabels[parameterInfo.index].get());
+            if (m_parameterNameLabels.count(parameterInfo.index) != 0)
+                m_parameterNameLabels.at(parameterInfo.index)->setText(parameterInfo.name, juce::dontSendNotification);
+            else
+            {
+                m_parameterNameLabels[parameterInfo.index] = std::make_unique<juce::Label>(parameterInfo.id);
+                m_parameterNameLabels[parameterInfo.index]->setJustificationType(juce::Justification::centredBottom);
+                m_parameterNameLabels[parameterInfo.index]->setText(parameterInfo.name, juce::dontSendNotification);
+                addAndMakeVisible(m_parameterNameLabels[parameterInfo.index].get());
+            }
         }
 
-        if (parameterInfo.stepSize == 1.0) // todo: stepsize as indication for combobox is crap
+        if (parameterInfo.type == ParameterControlType::Discrete)
         {
             if (m_parameterValueComboBoxes.count(parameterInfo.index) != 0)
                 m_parameterValueComboBoxes.at(parameterInfo.index)->setSelectedId(int(parameterInfo.currentValue));
@@ -150,7 +153,7 @@ void PluginControlComponent::rebuildControls()
                 addAndMakeVisible(m_parameterValueComboBoxes[parameterInfo.index].get());
             }
         }
-        else
+        else if (parameterInfo.type == ParameterControlType::Continuous)
         {
             if (m_parameterValueSliders.count(parameterInfo.index) != 0)
                 m_parameterValueSliders.at(parameterInfo.index)->setValue(int(parameterInfo.currentValue));
@@ -172,6 +175,24 @@ void PluginControlComponent::rebuildControls()
                 addAndMakeVisible(m_parameterValueSliders[parameterInfo.index].get());
             }
         }
+        else if (parameterInfo.type == ParameterControlType::Toggle)
+        {
+            if (m_parameterValueButtons.count(parameterInfo.index) != 0)
+                m_parameterValueButtons.at(parameterInfo.index)->setToggleState(parameterInfo.currentValue > 0.5f, juce::dontSendNotification);
+            else
+            {
+                m_parameterValueButtons[parameterInfo.index] = std::make_unique<juce::TextButton>(parameterInfo.name, "Toggle to enable or disable parameter.");
+                m_parameterValueButtons[parameterInfo.index]->onStateChange = [=]() {
+                    auto pIdx = parameterInfo.index;
+                    auto value = float(m_parameterValueButtons[pIdx]->getToggleState() ? 1.0f : 0.0f);
+                    m_pluginParameterInfos[pIdx].currentValue = value;
+
+                    if (onPluginParameterValueChanged)
+                        onPluginParameterValueChanged(pIdx, m_pluginParameterInfos[pIdx].id.toStdString(), m_pluginParameterInfos[pIdx].currentValue);
+                    };
+                addAndMakeVisible(m_parameterValueButtons[parameterInfo.index].get());
+            }
+        }
     }
 
     lookAndFeelChanged(); // trigger colour updates for all controls
@@ -184,7 +205,7 @@ void PluginControlComponent::rebuildLayout()
         return;
 
     // Get the number of items to display
-    auto itemCount = int(m_parameterValueComboBoxes.size() + m_parameterValueSliders.size());
+    auto itemCount = int(m_parameterValueComboBoxes.size() + m_parameterValueSliders.size() + m_parameterValueButtons.size());
     if (itemCount == 0)
         return;
 
@@ -258,6 +279,25 @@ void PluginControlComponent::rebuildLayout()
     // Track current position in grid
     int currentItem = 0;
 
+    // Add buttons
+    for (auto const& buttonKV : m_parameterValueButtons)
+    {
+        auto* button = buttonKV.second.get();
+
+        // Calculate grid position
+        int row = (currentItem / itemsPerRow) * 2;
+        int col = currentItem % itemsPerRow;
+
+
+        // Add control (row + 1, col)
+        m_parameterControlsGrid->items.add(juce::GridItem(*button)
+            .withArea(row + 2, col + 1)
+            .withMargin(juce::GridItem::Margin(controlMargin))
+            .withHeight(30));
+
+        currentItem++;
+    }
+
     // Add combo boxes
     for (auto const& comboKV : m_parameterValueComboBoxes)
     {
@@ -313,7 +353,7 @@ void PluginControlComponent::rebuildLayout()
 
         // Add slider (row + 1, col) - centered and square
         // Use the smaller of columnWidth or controlHeight to ensure square shape
-        int sliderSize = juce::jmin(columnWidth, controlHeight) - (controlMargin * 2);
+        auto sliderSize = float(juce::jmin(columnWidth, controlHeight) - (controlMargin * 2));
 
         m_parameterControlsGrid->items.add(juce::GridItem(*slider)
             .withArea(row + 2, col + 1)

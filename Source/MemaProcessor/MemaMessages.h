@@ -767,6 +767,10 @@ public:
             blob.copyTo(&info.isDiscrete, readPos, sizeof(bool));
             readPos += sizeof(bool);
 
+            // Read type
+            blob.copyTo(&info.type, readPos, sizeof(ParameterControlType));
+            readPos += sizeof(ParameterControlType);
+
             m_parameterInfos.push_back(info);
         }
     }
@@ -831,6 +835,9 @@ protected:
             blob.append(&info.maxValue, sizeof(float));
             blob.append(&info.stepSize, sizeof(float));
             blob.append(&info.isDiscrete, sizeof(bool));
+
+            // Write type
+            blob.append(&info.type, sizeof(ParameterControlType));
         }
 
         contentSize = blob.getSize();

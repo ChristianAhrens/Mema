@@ -74,6 +74,7 @@ private:
 
     std::unique_ptr<juce::Label>                                                m_pluginNameLabel;
     std::map<std::uint16_t, std::unique_ptr<juce::Label>>                       m_parameterNameLabels;
+    std::map<std::uint16_t, std::unique_ptr<juce::TextButton>>                  m_parameterValueButtons;
     std::map<std::uint16_t, std::unique_ptr<JUCEAppBasics::ToggleStateSlider>>  m_parameterValueSliders;
     std::map<std::uint16_t, std::unique_ptr<juce::ComboBox>>                    m_parameterValueComboBoxes;
 
