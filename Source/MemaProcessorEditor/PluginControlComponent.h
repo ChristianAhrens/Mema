@@ -22,6 +22,8 @@
 
 #include "../MemaProcessor/MemaPluginParameterInfo.h"
 
+#include <FixedFontTextEditor.h>
+
 
 namespace Mema
 {
@@ -306,10 +308,12 @@ private:
     
     std::map<int, Mema::PluginParameterInfo>        m_parameterInfos;
 
-    std::map<int, std::unique_ptr<juce::ToggleButton>>  m_messageBoxParameterToggleComponents;
-    std::unique_ptr<juce::Component>                    m_messageBoxParameterTogglesContainer;
-    juce::FlexBox                      m_messageBoxParameterTogglesFlexBox;
-    std::unique_ptr<juce::AlertWindow>                  m_messageBox;
+    std::map<int, std::unique_ptr<juce::ToggleButton>>                  m_messageBoxParameterToggles;
+    std::map<int, std::unique_ptr<juce::ComboBox>>                      m_messageBoxParameterCtrlTypess;
+    std::map<int, std::unique_ptr<JUCEAppBasics::FixedFontTextEditor>>  m_messageBoxParameterCtrlStepsEdit;
+    std::unique_ptr<juce::Component>                                    m_messageBoxParameterTogglesContainer;
+    juce::FlexBox                                                       m_messageBoxParameterTogglesFlexBox;
+    std::unique_ptr<juce::AlertWindow>                                  m_messageBox;
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginControlComponent)

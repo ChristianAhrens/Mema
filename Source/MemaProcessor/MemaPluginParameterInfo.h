@@ -46,6 +46,8 @@ struct PluginParameterInfo
     float stepSize = 0.0f;
     bool isDiscrete = false;
     ParameterControlType type = ParameterControlType::Continuous;
+    int stepCount = 0;
+    std::vector<std::string> stepNames;
 
     // Equality operator
     bool operator==(const PluginParameterInfo& other) const
@@ -63,7 +65,8 @@ struct PluginParameterInfo
             maxValue == other.maxValue &&
             stepSize == other.stepSize &&
             isDiscrete == other.isDiscrete &&
-            type == other.type;
+            type == other.type &&
+            stepCount == other.stepCount;
     }
 
     // Inequality operator
@@ -112,14 +115,21 @@ struct PluginParameterInfo
             + juce::String(minValue) + ";"
             + juce::String(maxValue) + ";"
             + juce::String(stepSize) + ";"
-            + juce::String(isDiscrete ? 1 : 0) +";"
-            + juce::String(int(type));
+            + juce::String(isDiscrete ? 1 : 0) + ";"
+            + juce::String(int(type)) + ";"
+            + juce::String(stepCount) + ";"
+            + [&]() {
+                juce::StringArray sa;
+                for (const auto& s : stepNames)
+                    sa.add(s);
+                return sa.joinIntoString(",");
+            }();
     }
     bool initializeFromString(const juce::String& parameterString)
     {
         juce::StringArray parameterStringArray;
         auto paramCnt = parameterStringArray.addTokens(parameterString, ";", "");
-        if (14 == paramCnt)
+        if (16 == paramCnt)
         {
             index = parameterStringArray[0].getIntValue();
             id = parameterStringArray[1];
@@ -135,6 +145,13 @@ struct PluginParameterInfo
             stepSize = parameterStringArray[11].getFloatValue();
             isDiscrete = parameterStringArray[12].getIntValue() == 1 ? true : false;
             type = static_cast<ParameterControlType>(parameterStringArray[13].getIntValue());
+            stepCount = parameterStringArray[14].getIntValue();
+
+            juce::StringArray stepNamesArray;
+            stepNamesArray.addTokens(parameterStringArray[15], ",", "");
+            for (auto const& stepName : stepNamesArray)
+                stepNames.push_back(stepName.toStdString());
+            jassert(stepCount == stepNames.size());
 
             return true;
         }
@@ -184,8 +201,6 @@ struct PluginParameterInfo
             isDiscrete = false;
         }
 
-        type = determineControlType(*this, &processorParameter);
-
         return true;
     }
     static PluginParameterInfo fromAudioProcessorParameter(juce::AudioProcessorParameter& processorParameter)
@@ -203,47 +218,6 @@ struct PluginParameterInfo
             infos.push_back(fromAudioProcessorParameter(*param));
         return infos;
     };
-
-    static ParameterControlType determineControlType(const PluginParameterInfo& info, juce::AudioProcessorParameter* param)
-    {
-        // Check if it's a boolean/two-state parameter
-        if (auto* boolParam = dynamic_cast<juce::AudioParameterBool*>(param))
-        {
-            return ParameterControlType::Toggle;
-        }
-
-        // Check if it's a choice parameter (explicit discrete options)
-        if (auto* choiceParam = dynamic_cast<juce::AudioParameterChoice*>(param))
-        {
-            return ParameterControlType::Discrete;
-        }
-
-        // For ranged parameters, use the info struct
-        if (info.isDiscrete && info.stepSize > 0.0f)
-        {
-            // Calculate number of discrete steps
-            int numSteps = static_cast<int>((info.maxValue - info.minValue) / info.stepSize) + 1;
-
-            // If there are only 2 steps, it's effectively a toggle
-            if (numSteps == 2)
-            {
-                return ParameterControlType::Toggle;
-            }
-
-            // If there are a reasonable number of discrete options (typically <= 20-30), use dropdown
-            // Above that, a slider is more practical even for discrete values
-            if (numSteps <= 20)
-            {
-                return ParameterControlType::Discrete;
-            }
-
-            // Many discrete steps - slider is better
-            return ParameterControlType::Continuous;
-        }
-
-        // Continuous floating point parameter
-        return ParameterControlType::Continuous;
-    }
 };
 
 } // namespace Mema

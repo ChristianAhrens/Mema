@@ -147,7 +147,7 @@ public:
     std::function<void(const juce::PluginDescription&)> onPluginSet;
     // Parameter management
     std::vector<PluginParameterInfo>& getPluginParameterInfos();
-    void setPluginParameterRemoteControllable(int pluginParameterIndex, bool remoteControllable);
+    void setPluginParameterRemoteControlInfos(int pluginParameterIndex, bool remoteControllable, ParameterControlType type, int steps);
     bool isPluginParameterRemoteControllable(int parameterIndex);
     juce::AudioProcessorParameter* getPluginParameter(int parameterIndex) const;
     std::function<void(int pluginParameterIndex, float newValue)> onPluginParameterChanged;

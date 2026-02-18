@@ -771,6 +771,24 @@ public:
             blob.copyTo(&info.type, readPos, sizeof(ParameterControlType));
             readPos += sizeof(ParameterControlType);
 
+            // Read stepCount
+            std::int32_t stepCount;
+            blob.copyTo(&stepCount, readPos, sizeof(std::int32_t));
+            info.stepCount = stepCount;
+            readPos += sizeof(std::int32_t);
+
+            // Read stepNames (count already known from stepCount)
+            for (int s = 0; s < stepCount; s++)
+            {
+                std::uint16_t stepNameLength;
+                blob.copyTo(&stepNameLength, readPos, sizeof(std::uint16_t));
+                readPos += sizeof(std::uint16_t);
+                auto stepName = juce::String(juce::CharPointer_UTF8(
+                    static_cast<const char*>(blob.begin()) + readPos), stepNameLength);
+                readPos += stepNameLength;
+                info.stepNames.push_back(stepName.toStdString());
+            }
+
             m_parameterInfos.push_back(info);
         }
     }
@@ -838,6 +856,20 @@ protected:
 
             // Write type
             blob.append(&info.type, sizeof(ParameterControlType));
+
+            // Write stepCount
+            std::int32_t stepCount = info.stepCount;
+            blob.append(&stepCount, sizeof(std::int32_t));
+
+            // Write stepNames
+            for (const auto& stepName : info.stepNames)
+            {
+                juce::String juceStepName(stepName);
+                auto stepNameUtf8 = juceStepName.toUTF8();
+                std::uint16_t stepNameLength = std::uint16_t(strlen(stepNameUtf8));
+                blob.append(&stepNameLength, sizeof(std::uint16_t));
+                blob.append(stepNameUtf8, stepNameLength);
+            }
         }
 
         contentSize = blob.getSize();

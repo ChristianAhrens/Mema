@@ -426,7 +426,7 @@ bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
 						jassert(paramInfo.isDiscrete == range.interval > 0.0f);
 					}
 
-					setPluginParameterRemoteControllable(paramInfo.index, paramInfo.isRemoteControllable);
+					setPluginParameterRemoteControlInfos(paramInfo.index, paramInfo.isRemoteControllable, paramInfo.type, paramInfo.stepCount);
 					param->setValue(paramInfo.currentValue);
 				}
 			}
@@ -1057,6 +1057,7 @@ void MemaProcessor::clearPlugin()
 	{
 		const ScopedLock sl(m_pluginProcessingLock);
 		m_pluginInstance.reset();
+		m_pluginParameterInfos.clear();
 	}
 
 	if (onPluginSet)
@@ -1094,11 +1095,29 @@ std::vector<PluginParameterInfo>& MemaProcessor::getPluginParameterInfos()
 	return m_pluginParameterInfos;
 }
 
-void MemaProcessor::setPluginParameterRemoteControllable(int parameterIndex, bool remoteControllable)
+void MemaProcessor::setPluginParameterRemoteControlInfos(int parameterIndex, bool remoteControllable, ParameterControlType type, int steps)
 {
 	if (parameterIndex >= 0 && parameterIndex < m_pluginParameterInfos.size())
 	{
 		m_pluginParameterInfos[parameterIndex].isRemoteControllable = remoteControllable;
+		m_pluginParameterInfos[parameterIndex].type = type;
+		m_pluginParameterInfos[parameterIndex].stepCount = steps;
+
+		jassert(m_pluginInstance);
+		if (m_pluginInstance)
+		{
+			m_pluginParameterInfos[parameterIndex].stepNames.clear();
+			auto param = m_pluginInstance->getParameters()[parameterIndex];
+			if (param && steps > 1)
+			{
+				auto stepSize = 1.0f / (steps - 1);
+				for (int i = 0; i < steps; i++)
+				{
+					m_pluginParameterInfos[parameterIndex].stepNames.push_back(param->getText(i * stepSize, 100).toStdString());
+				}
+			}
+		}
+
 		triggerConfigurationUpdate(false);
 	}
 }

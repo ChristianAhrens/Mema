@@ -61,13 +61,16 @@ void PluginControlComponent::lookAndFeelChanged()
         comboKV.second->setColour(juce::ComboBox::ColourIds::focusedOutlineColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
     for (auto const& sliderKV : m_parameterValueSliders)
         sliderKV.second->setColour(juce::Slider::ColourIds::trackColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
+    for (auto const& buttonKV : m_parameterValueButtons)
+        buttonKV.second->setColour(juce::TextButton::ColourIds::buttonOnColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
 }
 
 void PluginControlComponent::resetCtrl()
 {
     setIOCount({ 0,0 }); // irrelevant
 
-    // what else to do to reset?
+    m_pluginName.clear();
+    m_pluginParameterInfos.clear();
 }
 
 const std::string& PluginControlComponent::getPluginName()
@@ -107,9 +110,11 @@ void PluginControlComponent::setParameterValue(std::uint16_t index, std::string 
         m_pluginParameterInfos.at(index).id = id;
 
         if (m_parameterValueComboBoxes.count(index) != 0)
-            m_parameterValueComboBoxes.at(index)->setSelectedId(int(value), juce::dontSendNotification);
+            m_parameterValueComboBoxes.at(index)->setSelectedId(int(value * (m_pluginParameterInfos.at(index).stepCount - 1) + 1), juce::dontSendNotification);
         else if (m_parameterValueSliders.count(index) != 0)
             m_parameterValueSliders.at(index)->setValue(float(value), juce::dontSendNotification);
+        else if (m_parameterValueButtons.count(index) != 0)
+            m_parameterValueButtons.at(index)->setToggleState(value > 0.5f, juce::dontSendNotification);
     }
 }
 
@@ -136,19 +141,25 @@ void PluginControlComponent::rebuildControls()
         if (parameterInfo.type == ParameterControlType::Discrete)
         {
             if (m_parameterValueComboBoxes.count(parameterInfo.index) != 0)
-                m_parameterValueComboBoxes.at(parameterInfo.index)->setSelectedId(int(parameterInfo.currentValue));
+                m_parameterValueComboBoxes.at(parameterInfo.index)->setSelectedId(int(parameterInfo.currentValue * (parameterInfo.stepCount - 1) + 1), juce::dontSendNotification);
             else
             {
                 m_parameterValueComboBoxes[parameterInfo.index] = std::make_unique<juce::ComboBox>(parameterInfo.id);
-                for (int i = std::roundf(parameterInfo.minValue); i <= std::roundf(parameterInfo.maxValue); i++)
-                    m_parameterValueComboBoxes[parameterInfo.index]->addItem(juce::String(i), i);
+                jassert(parameterInfo.stepCount == parameterInfo.stepNames.size());
+                int i = 1;
+                for (auto const& stepName : parameterInfo.stepNames)
+                    m_parameterValueComboBoxes[parameterInfo.index]->addItem(stepName, i++);
+                m_parameterValueComboBoxes[parameterInfo.index]->setSelectedId(int(parameterInfo.currentValue * (parameterInfo.stepCount - 1) + 1), juce::dontSendNotification);
                 m_parameterValueComboBoxes[parameterInfo.index]->onChange = [=]() {
                     auto pIdx = parameterInfo.index;
-                    auto sId = m_parameterValueComboBoxes[pIdx]->getSelectedId();
-                    m_pluginParameterInfos[pIdx].currentValue = float(sId);
+                    if (m_parameterValueComboBoxes.count(pIdx) > 0 && m_pluginParameterInfos.size() > pIdx)
+                    {
+                        auto sId = m_parameterValueComboBoxes[pIdx]->getSelectedId();
+                        m_pluginParameterInfos[pIdx].currentValue = float((1.0f / (parameterInfo.stepCount - 1)) * (sId - 1));
 
-                    if (onPluginParameterValueChanged)
-                        onPluginParameterValueChanged(pIdx, m_pluginParameterInfos[pIdx].id.toStdString(), m_pluginParameterInfos[pIdx].currentValue);
+                        if (onPluginParameterValueChanged)
+                            onPluginParameterValueChanged(pIdx, m_pluginParameterInfos[pIdx].id.toStdString(), m_pluginParameterInfos[pIdx].currentValue);
+                    }
                 };
                 addAndMakeVisible(m_parameterValueComboBoxes[parameterInfo.index].get());
             }
@@ -166,12 +177,15 @@ void PluginControlComponent::rebuildControls()
                 m_parameterValueSliders[parameterInfo.index]->setValue(parameterInfo.currentValue);
                 m_parameterValueSliders[parameterInfo.index]->onValueChange = [=]() {
                     auto pIdx = parameterInfo.index;
-                    auto value = float(m_parameterValueSliders[pIdx]->getValue());
-                    m_pluginParameterInfos[pIdx].currentValue = value;
+                    if (m_parameterValueSliders.count(pIdx) > 0 && m_pluginParameterInfos.size() > pIdx)
+                    {
+                        auto value = float(m_parameterValueSliders[pIdx]->getValue());
+                        m_pluginParameterInfos[pIdx].currentValue = value;
 
-                    if (onPluginParameterValueChanged)
-                        onPluginParameterValueChanged(pIdx, m_pluginParameterInfos[pIdx].id.toStdString(), m_pluginParameterInfos[pIdx].currentValue);
-                    };
+                        if (onPluginParameterValueChanged)
+                            onPluginParameterValueChanged(pIdx, m_pluginParameterInfos[pIdx].id.toStdString(), m_pluginParameterInfos[pIdx].currentValue);
+                    }
+                };
                 addAndMakeVisible(m_parameterValueSliders[parameterInfo.index].get());
             }
         }
@@ -182,14 +196,19 @@ void PluginControlComponent::rebuildControls()
             else
             {
                 m_parameterValueButtons[parameterInfo.index] = std::make_unique<juce::TextButton>(parameterInfo.name, "Toggle to enable or disable parameter.");
+                m_parameterValueButtons[parameterInfo.index]->setClickingTogglesState(true);
+                m_parameterValueButtons[parameterInfo.index]->setToggleState(parameterInfo.currentValue > 0.5f, juce::dontSendNotification);
                 m_parameterValueButtons[parameterInfo.index]->onStateChange = [=]() {
                     auto pIdx = parameterInfo.index;
-                    auto value = float(m_parameterValueButtons[pIdx]->getToggleState() ? 1.0f : 0.0f);
-                    m_pluginParameterInfos[pIdx].currentValue = value;
+                    if (m_parameterValueButtons.count(pIdx) > 0 && m_pluginParameterInfos.size() > pIdx)
+                    {
+                        auto value = float(m_parameterValueButtons[pIdx]->getToggleState() ? 1.0f : 0.0f);
+                        m_pluginParameterInfos[pIdx].currentValue = value;
 
-                    if (onPluginParameterValueChanged)
-                        onPluginParameterValueChanged(pIdx, m_pluginParameterInfos[pIdx].id.toStdString(), m_pluginParameterInfos[pIdx].currentValue);
-                    };
+                        if (onPluginParameterValueChanged)
+                            onPluginParameterValueChanged(pIdx, m_pluginParameterInfos[pIdx].id.toStdString(), m_pluginParameterInfos[pIdx].currentValue);
+                    }
+                };
                 addAndMakeVisible(m_parameterValueButtons[parameterInfo.index].get());
             }
         }
