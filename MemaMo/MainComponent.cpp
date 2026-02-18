@@ -151,6 +151,7 @@ MainComponent::MainComponent()
     m_settingsItems[MemaMoSettingsOption::MeteringColour_Red] = std::make_pair("Red", 0);
     m_settingsItems[MemaMoSettingsOption::MeteringColour_Blue] = std::make_pair("Blue", 0);
     m_settingsItems[MemaMoSettingsOption::MeteringColour_Pink] = std::make_pair("Anni Pink", 0);
+    m_settingsItems[MemaMoSettingsOption::MeteringColour_Laser] = std::make_pair("Laser", 0);
 #if JUCE_WINDOWS || JUCE_MAC
     // fullscreen toggling
     m_settingsItems[MemaMoSettingsOption::FullscreenWindowMode] = std::make_pair("Toggle fullscreen mode" + fullscreenShortCutHint, 0);
@@ -454,30 +455,35 @@ void MainComponent::handleSettingsOutputVisuTypeMenuResult(int selectedId)
 void MainComponent::handleSettingsMeteringColourMenuResult(int selectedId)
 {
     // helper internal function to avoid code clones
-    std::function<void(int, int, int, int)> setSettingsItemsCheckState = [=](int green, int red, int blue, int pink) {
+    std::function<void(int, int, int, int, int)> setSettingsItemsCheckState = [=](int green, int red, int blue, int pink, int laser) {
         m_settingsItems[MemaMoSettingsOption::MeteringColour_Green].second = green;
         m_settingsItems[MemaMoSettingsOption::MeteringColour_Red].second = red;
         m_settingsItems[MemaMoSettingsOption::MeteringColour_Blue].second = blue;
         m_settingsItems[MemaMoSettingsOption::MeteringColour_Pink].second = pink;
-    };
+        m_settingsItems[MemaMoSettingsOption::MeteringColour_Laser].second = laser;
+        };
 
     switch (selectedId)
     {
     case MemaMoSettingsOption::MeteringColour_Green:
-        setSettingsItemsCheckState(1, 0, 0, 0);
+        setSettingsItemsCheckState(1, 0, 0, 0, 0);
         setMeteringColour(juce::Colours::forestgreen);
         break;
     case MemaMoSettingsOption::MeteringColour_Red:
-        setSettingsItemsCheckState(0, 1, 0, 0);
+        setSettingsItemsCheckState(0, 1, 0, 0, 0);
         setMeteringColour(juce::Colours::orangered);
         break;
     case MemaMoSettingsOption::MeteringColour_Blue:
-        setSettingsItemsCheckState(0, 0, 1, 0);
+        setSettingsItemsCheckState(0, 0, 1, 0, 0);
         setMeteringColour(juce::Colours::dodgerblue);
         break;
     case MemaMoSettingsOption::MeteringColour_Pink:
-        setSettingsItemsCheckState(0, 0, 0, 1);
+        setSettingsItemsCheckState(0, 0, 0, 1, 0);
         setMeteringColour(juce::Colours::deeppink);
+        break;
+    case MemaMoSettingsOption::MeteringColour_Laser:
+        setSettingsItemsCheckState(0, 0, 0, 0, 1);
+        setMeteringColour(juce::Colour(0xd1, 0xff, 0x4f));
         break;
     default:
         break;

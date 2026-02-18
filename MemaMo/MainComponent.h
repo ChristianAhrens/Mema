@@ -70,7 +70,8 @@ public:
         MeteringColour_Red,
         MeteringColour_Blue,
         MeteringColour_Pink,
-        MeteringColour_Last = MeteringColour_Pink,
+        MeteringColour_Laser,
+        MeteringColour_Last = MeteringColour_Laser,
         FullscreenWindowMode,
     };
 

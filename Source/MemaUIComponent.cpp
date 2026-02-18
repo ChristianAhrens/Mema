@@ -192,6 +192,7 @@ MemaUIComponent::MemaUIComponent()
     m_settingsItems[MemaSettingsOption::MeteringColour_Red] = std::make_pair("Red", 0);
     m_settingsItems[MemaSettingsOption::MeteringColour_Blue] = std::make_pair("Blue", 0);
     m_settingsItems[MemaSettingsOption::MeteringColour_Pink] = std::make_pair("Anni Pink", 0);
+    m_settingsItems[MemaSettingsOption::MeteringColour_Laser] = std::make_pair("Laser", 0);
     m_appSettingsButton = std::make_unique<juce::DrawableButton>("Application settings", juce::DrawableButton::ButtonStyle::ImageFitted);
     m_appSettingsButton->setTooltip("Application settings");
     m_appSettingsButton->onClick = [this] {
@@ -466,6 +467,7 @@ bool MemaUIComponent::setStateXml(XmlElement* stateXml)
     m_settingsItems[MemaSettingsOption::MeteringColour_Red] = std::make_pair("Red", juce::Colours::orangered == meteringColour);
     m_settingsItems[MemaSettingsOption::MeteringColour_Blue] = std::make_pair("Blue", juce::Colours::dodgerblue == meteringColour);
     m_settingsItems[MemaSettingsOption::MeteringColour_Pink] = std::make_pair("Anni Pink", juce::Colours::deeppink == meteringColour);
+    m_settingsItems[MemaSettingsOption::MeteringColour_Laser] = std::make_pair("Laser", juce::Colour(0xd1, 0xff, 0x4f) == meteringColour);
 
     return true;
 }
@@ -534,30 +536,35 @@ void MemaUIComponent::handleSettingsLookAndFeelMenuResult(int selectedId)
 void MemaUIComponent::handleSettingsMeteringColourMenuResult(int selectedId)
 {
     // helper internal function to avoid code clones
-    std::function<void(int, int, int, int)> setSettingsItemsCheckState = [=](int green, int red, int blue, int pink) {
+    std::function<void(int, int, int, int, int)> setSettingsItemsCheckState = [=](int green, int red, int blue, int pink, int laser) {
         m_settingsItems[MemaSettingsOption::MeteringColour_Green].second = green;
         m_settingsItems[MemaSettingsOption::MeteringColour_Red].second = red;
         m_settingsItems[MemaSettingsOption::MeteringColour_Blue].second = blue;
         m_settingsItems[MemaSettingsOption::MeteringColour_Pink].second = pink;
+        m_settingsItems[MemaSettingsOption::MeteringColour_Laser].second = laser;
         };
 
     switch (selectedId)
     {
     case MemaSettingsOption::MeteringColour_Green:
-        setSettingsItemsCheckState(1, 0, 0, 0);
+        setSettingsItemsCheckState(1, 0, 0, 0, 0);
         setMeteringColour(juce::Colours::forestgreen);
         break;
     case MemaSettingsOption::MeteringColour_Red:
-        setSettingsItemsCheckState(0, 1, 0, 0);
+        setSettingsItemsCheckState(0, 1, 0, 0, 0);
         setMeteringColour(juce::Colours::orangered);
         break;
     case MemaSettingsOption::MeteringColour_Blue:
-        setSettingsItemsCheckState(0, 0, 1, 0);
+        setSettingsItemsCheckState(0, 0, 1, 0, 0);
         setMeteringColour(juce::Colours::dodgerblue);
         break;
     case MemaSettingsOption::MeteringColour_Pink:
-        setSettingsItemsCheckState(0, 0, 0, 1);
+        setSettingsItemsCheckState(0, 0, 0, 1, 0);
         setMeteringColour(juce::Colours::deeppink);
+        break;
+    case MemaSettingsOption::MeteringColour_Laser:
+        setSettingsItemsCheckState(0, 0, 0, 0, 1);
+        setMeteringColour(juce::Colour(0xd1, 0xff, 0x4f));
         break;
     default:
         break;

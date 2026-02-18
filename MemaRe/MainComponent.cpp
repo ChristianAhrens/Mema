@@ -157,6 +157,7 @@ MainComponent::MainComponent()
     m_settingsItems[MemaReSettingsOption::ControlColour_Red] = std::make_pair("Red", 0);
     m_settingsItems[MemaReSettingsOption::ControlColour_Blue] = std::make_pair("Blue", 0);
     m_settingsItems[MemaReSettingsOption::ControlColour_Pink] = std::make_pair("Anni Pink", 0);
+    m_settingsItems[MemaReSettingsOption::ControlColour_Laser] = std::make_pair("Laser", 0);
     // default controls size is S
     m_settingsItems[MemaReSettingsOption::ControlsSize_S] = std::make_pair("S", 1);
     m_settingsItems[MemaReSettingsOption::ControlsSize_M] = std::make_pair("M", 0);
@@ -474,30 +475,35 @@ void MainComponent::handleSettingsControlFormatMenuResult(int selectedId)
 void MainComponent::handleSettingsControlColourMenuResult(int selectedId)
 {
     // helper internal function to avoid code clones
-    std::function<void(int, int, int, int)> setSettingsItemsCheckState = [=](int green, int red, int blue, int pink) {
+    std::function<void(int, int, int, int, int)> setSettingsItemsCheckState = [=](int green, int red, int blue, int pink, int laser) {
         m_settingsItems[MemaReSettingsOption::ControlColour_Green].second = green;
         m_settingsItems[MemaReSettingsOption::ControlColour_Red].second = red;
         m_settingsItems[MemaReSettingsOption::ControlColour_Blue].second = blue;
         m_settingsItems[MemaReSettingsOption::ControlColour_Pink].second = pink;
+        m_settingsItems[MemaReSettingsOption::ControlColour_Laser].second = laser;
     };
 
     switch (selectedId)
     {
     case MemaReSettingsOption::ControlColour_Green:
-        setSettingsItemsCheckState(1, 0, 0, 0);
+        setSettingsItemsCheckState(1, 0, 0, 0, 0);
         setControlColour(juce::Colours::forestgreen);
         break;
     case MemaReSettingsOption::ControlColour_Red:
-        setSettingsItemsCheckState(0, 1, 0, 0);
+        setSettingsItemsCheckState(0, 1, 0, 0, 0);
         setControlColour(juce::Colours::orangered);
         break;
     case MemaReSettingsOption::ControlColour_Blue:
-        setSettingsItemsCheckState(0, 0, 1, 0);
+        setSettingsItemsCheckState(0, 0, 1, 0, 0);
         setControlColour(juce::Colours::dodgerblue);
         break;
     case MemaReSettingsOption::ControlColour_Pink:
-        setSettingsItemsCheckState(0, 0, 0, 1);
+        setSettingsItemsCheckState(0, 0, 0, 1, 0);
         setControlColour(juce::Colours::deeppink);
+        break;
+    case MemaReSettingsOption::ControlColour_Laser:
+        setSettingsItemsCheckState(0, 0, 0, 0, 1);
+        setControlColour(juce::Colour(0xd1, 0xff, 0x4f));
         break;
     default:
         jassertfalse; // unknown id fed in unintentionally ?!
