@@ -39,7 +39,8 @@ public:
         PLUGINCONFIG,
         INPUTMUTES,
         OUTPUTMUTES,
-        CROSSPOINTGAINS
+        CROSSPOINTGAINS,
+        PLUGINPARAM,
     };
     static juce::String getTagName(TagID ID)
     {
@@ -59,6 +60,8 @@ public:
             return "OUTPUTMUTES";
         case CROSSPOINTGAINS:
             return "CROSSPOINTGAINS";
+        case PLUGINPARAM:
+            return "PLUGINPARAM";
         default:
             return "INVALID";
         }
@@ -69,7 +72,9 @@ public:
         ENABLED,
         POST,
         PALETTESTYLE,
-        METERINGCOLOR
+        METERINGCOLOR,
+        IDX,
+        CONTROLLABLE,
     };
     static juce::String getAttributeName(AttributeID ID)
     {
@@ -83,6 +88,10 @@ public:
             return "PALETTESTYLE";
         case METERINGCOLOR:
             return "METERINGCOLOR";
+        case IDX:
+            return "IDX";
+        case CONTROLLABLE:
+            return "CONTROLLABLE";
         default:
             return "-";
         }

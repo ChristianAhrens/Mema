@@ -59,6 +59,12 @@
             file="../Resources/MemaReDefault.config"/>
     </GROUP>
     <GROUP id="{B4C42B10-6A29-1C3A-435D-5CB7A9DE671E}" name="Source">
+      <FILE id="g57Snn" name="PluginControlComponent.cpp" compile="1" resource="0"
+            file="../Source/MemaClientCommon/PluginControlComponent.cpp"/>
+      <FILE id="cn6CmJ" name="PluginControlComponent.h" compile="0" resource="0"
+            file="../Source/MemaClientCommon/PluginControlComponent.h"/>
+      <FILE id="G6rycr" name="MemaPluginParameterInfo.h" compile="0" resource="0"
+            file="../Source/MemaProcessor/MemaPluginParameterInfo.h"/>
       <FILE id="NdbmXW" name="ADMOSController.cpp" compile="1" resource="0"
             file="../Source/MemaClientCommon/ADMOSController.cpp"/>
       <FILE id="PfHII7" name="ADMOSController.h" compile="0" resource="0"

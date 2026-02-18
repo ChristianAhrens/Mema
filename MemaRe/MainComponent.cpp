@@ -53,7 +53,9 @@ MainComponent::MainComponent()
         std::vector<Mema::SerializableMessage::SerializableMessageType> desiredTrafficTypes = {
             Mema::SerializableMessage::EnvironmentParameters, 
             Mema::SerializableMessage::ReinitIOCount, 
-            Mema::SerializableMessage::ControlParameters };
+            Mema::SerializableMessage::ControlParameters,
+            Mema::SerializableMessage::PluginParameterInfos,
+            Mema::SerializableMessage::PluginParameterValue };
         m_networkConnection->sendMessage(std::make_unique<Mema::DataTrafficTypeSelectionMessage>(desiredTrafficTypes)->getSerializedMessage());
 
         setStatus(Status::Monitoring);
@@ -138,22 +140,23 @@ MainComponent::MainComponent()
     m_settingsItems[MemaReSettingsOption::LookAndFeel_Dark] = std::make_pair("Dark", 1);
     m_settingsItems[MemaReSettingsOption::LookAndFeel_Light] = std::make_pair("Light", 0);
     // default output visu is normal meterbridge
-    m_settingsItems[MemaReSettingsOption::OutputPanningType_RawChannels] = std::make_pair("Faderbank", 1);
-    m_settingsItems[MemaReSettingsOption::OutputPanningType_LRS] = std::make_pair(juce::AudioChannelSet::createLRS().getDescription().toStdString(), 0);
-    m_settingsItems[MemaReSettingsOption::OutputPanningType_LCRS] = std::make_pair(juce::AudioChannelSet::createLCRS().getDescription().toStdString(), 0);
-    m_settingsItems[MemaReSettingsOption::OutputPanningType_5point0] = std::make_pair(juce::AudioChannelSet::create5point0().getDescription().toStdString(), 0);
-    m_settingsItems[MemaReSettingsOption::OutputPanningType_5point1] = std::make_pair(juce::AudioChannelSet::create5point1().getDescription().toStdString(), 0);
-    m_settingsItems[MemaReSettingsOption::OutputPanningType_5point1point2] = std::make_pair(juce::AudioChannelSet::create5point1point2().getDescription().toStdString(), 0);
-    m_settingsItems[MemaReSettingsOption::OutputPanningType_7point0] = std::make_pair(juce::AudioChannelSet::create7point0().getDescription().toStdString(), 0);
-    m_settingsItems[MemaReSettingsOption::OutputPanningType_7point1] = std::make_pair(juce::AudioChannelSet::create7point1().getDescription().toStdString(), 0);
-    m_settingsItems[MemaReSettingsOption::OutputPanningType_7point1point4] = std::make_pair(juce::AudioChannelSet::create7point1point4().getDescription().toStdString(), 0);
-    m_settingsItems[MemaReSettingsOption::OutputPanningType_9point1point6] = std::make_pair(juce::AudioChannelSet::create9point1point6().getDescription().toStdString(), 0);
-    m_settingsItems[MemaReSettingsOption::OutputPanningType_Quadrophonic] = std::make_pair(juce::AudioChannelSet::quadraphonic().getDescription().toStdString(), 0);
+    m_settingsItems[MemaReSettingsOption::ControlFormat_RawChannels] = std::make_pair("Faderbank", 1);
+    m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_LRS] = std::make_pair(juce::AudioChannelSet::createLRS().getDescription().toStdString(), 0);
+    m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_LCRS] = std::make_pair(juce::AudioChannelSet::createLCRS().getDescription().toStdString(), 0);
+    m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_5point0] = std::make_pair(juce::AudioChannelSet::create5point0().getDescription().toStdString(), 0);
+    m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_5point1] = std::make_pair(juce::AudioChannelSet::create5point1().getDescription().toStdString(), 0);
+    m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_5point1point2] = std::make_pair(juce::AudioChannelSet::create5point1point2().getDescription().toStdString(), 0);
+    m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_7point0] = std::make_pair(juce::AudioChannelSet::create7point0().getDescription().toStdString(), 0);
+    m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_7point1] = std::make_pair(juce::AudioChannelSet::create7point1().getDescription().toStdString(), 0);
+    m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_7point1point4] = std::make_pair(juce::AudioChannelSet::create7point1point4().getDescription().toStdString(), 0);
+    m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_9point1point6] = std::make_pair(juce::AudioChannelSet::create9point1point6().getDescription().toStdString(), 0);
+    m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_Quadrophonic] = std::make_pair(juce::AudioChannelSet::quadraphonic().getDescription().toStdString(), 0);
+    m_settingsItems[MemaReSettingsOption::ControlFormat_PluginParameterControl] = std::make_pair("Plug-in parameter control", 1);
     // default panning colour is green
-    m_settingsItems[MemaReSettingsOption::PanningColour_Green] = std::make_pair("Green", 1);
-    m_settingsItems[MemaReSettingsOption::PanningColour_Red] = std::make_pair("Red", 0);
-    m_settingsItems[MemaReSettingsOption::PanningColour_Blue] = std::make_pair("Blue", 0);
-    m_settingsItems[MemaReSettingsOption::PanningColour_Pink] = std::make_pair("Anni Pink", 0);
+    m_settingsItems[MemaReSettingsOption::ControlColour_Green] = std::make_pair("Green", 1);
+    m_settingsItems[MemaReSettingsOption::ControlColour_Red] = std::make_pair("Red", 0);
+    m_settingsItems[MemaReSettingsOption::ControlColour_Blue] = std::make_pair("Blue", 0);
+    m_settingsItems[MemaReSettingsOption::ControlColour_Pink] = std::make_pair("Anni Pink", 0);
     // default controls size is S
     m_settingsItems[MemaReSettingsOption::ControlsSize_S] = std::make_pair("S", 1);
     m_settingsItems[MemaReSettingsOption::ControlsSize_M] = std::make_pair("M", 0);
@@ -170,13 +173,13 @@ MainComponent::MainComponent()
         for (int i = MemaReSettingsOption::LookAndFeel_First; i <= MemaReSettingsOption::LookAndFeel_Last; i++)
             lookAndFeelSubMenu.addItem(i, m_settingsItems[i].first, true, m_settingsItems[i].second == 1);
 
-        juce::PopupMenu outputPanningTypeSubMenu;
-        for (int i = MemaReSettingsOption::OutputPanningType_First; i <= MemaReSettingsOption::OutputPanningType_Last; i++)
-            outputPanningTypeSubMenu.addItem(i, m_settingsItems[i].first, true, m_settingsItems[i].second == 1);
+        juce::PopupMenu controlFormatSubMenu;
+        for (int i = MemaReSettingsOption::ControlFormat_First; i <= MemaReSettingsOption::ControlFormat_Last; i++)
+            controlFormatSubMenu.addItem(i, m_settingsItems[i].first, true, m_settingsItems[i].second == 1);
 
-        juce::PopupMenu panningColourSubMenu;
-        for (int i = MemaReSettingsOption::PanningColour_First; i <= MemaReSettingsOption::PanningColour_Last; i++)
-            panningColourSubMenu.addItem(i, m_settingsItems[i].first, true, m_settingsItems[i].second == 1);
+        juce::PopupMenu controlColourSubMenu;
+        for (int i = MemaReSettingsOption::ControlColour_First; i <= MemaReSettingsOption::ControlColour_Last; i++)
+            controlColourSubMenu.addItem(i, m_settingsItems[i].first, true, m_settingsItems[i].second == 1);
 
         juce::PopupMenu constrolsSizeSubMenu;
         for (int i = MemaReSettingsOption::ControlsSize_First; i <= MemaReSettingsOption::ControlsSize_Last; i++)
@@ -184,8 +187,8 @@ MainComponent::MainComponent()
 
         juce::PopupMenu settingsMenu;
         settingsMenu.addSubMenu("LookAndFeel", lookAndFeelSubMenu);
-        settingsMenu.addSubMenu("Control format", outputPanningTypeSubMenu);
-        settingsMenu.addSubMenu("Control colour", panningColourSubMenu);
+        settingsMenu.addSubMenu("Control format", controlFormatSubMenu);
+        settingsMenu.addSubMenu("Control colour", controlColourSubMenu);
         settingsMenu.addSubMenu("Controls size", constrolsSizeSubMenu);
         settingsMenu.addSeparator();
         settingsMenu.addItem(MemaReSettingsOption::ExternalControl, "External control...", true);
@@ -319,7 +322,7 @@ void MainComponent::lookAndFeelChanged()
     disconnectDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
     m_disconnectButton->setImages(disconnectDrawable.get());
 
-    applyPanningColour();
+    applyControlColour();
 }
 
 void MainComponent::applySettingsOption(const MemaReSettingsOption& option)
@@ -334,10 +337,10 @@ void MainComponent::handleSettingsMenuResult(int selectedId)
         return; // nothing selected, dismiss
     else if (MemaReSettingsOption::LookAndFeel_First <= selectedId && MemaReSettingsOption::LookAndFeel_Last >= selectedId)
         handleSettingsLookAndFeelMenuResult(selectedId);
-    else if (MemaReSettingsOption::OutputPanningType_First <= selectedId && MemaReSettingsOption::OutputPanningType_Last >= selectedId)
-        handleSettingsOutputPanningTypeMenuResult(selectedId);
-    else if (MemaReSettingsOption::PanningColour_First <= selectedId && MemaReSettingsOption::PanningColour_Last >= selectedId)
-        handleSettingsPanningColourMenuResult(selectedId);
+    else if (MemaReSettingsOption::ControlFormat_First <= selectedId && MemaReSettingsOption::ControlFormat_Last >= selectedId)
+        handleSettingsControlFormatMenuResult(selectedId);
+    else if (MemaReSettingsOption::ControlColour_First <= selectedId && MemaReSettingsOption::ControlColour_Last >= selectedId)
+        handleSettingsControlColourMenuResult(selectedId);
     else if (MemaReSettingsOption::ControlsSize_First <= selectedId && MemaReSettingsOption::ControlsSize_Last >= selectedId)
         handleSettingsControlsSizeMenuResult(selectedId);
     else if (MemaReSettingsOption::ExternalControl == selectedId)
@@ -380,79 +383,85 @@ void MainComponent::handleSettingsLookAndFeelMenuResult(int selectedId)
     }
 }
 
-void MainComponent::handleSettingsOutputPanningTypeMenuResult(int selectedId)
+void MainComponent::handleSettingsControlFormatMenuResult(int selectedId)
 {
     // helper internal function to avoid code clones
-    std::function<void(int, int, int, int, int, int, int, int, int, int, int)> setSettingsItemsCheckState = [=](int a, int b, int c, int d, int e, int f, int g, int h, int i, int j, int k) {
-        m_settingsItems[MemaReSettingsOption::OutputPanningType_RawChannels].second = a;
-        m_settingsItems[MemaReSettingsOption::OutputPanningType_LRS].second = b;
-        m_settingsItems[MemaReSettingsOption::OutputPanningType_LCRS].second = c;
-        m_settingsItems[MemaReSettingsOption::OutputPanningType_5point0].second = d;
-        m_settingsItems[MemaReSettingsOption::OutputPanningType_5point1].second = e;
-        m_settingsItems[MemaReSettingsOption::OutputPanningType_5point1point2].second = f;
-        m_settingsItems[MemaReSettingsOption::OutputPanningType_7point0].second = g;
-        m_settingsItems[MemaReSettingsOption::OutputPanningType_7point1].second = h;
-        m_settingsItems[MemaReSettingsOption::OutputPanningType_7point1point4].second = i;
-        m_settingsItems[MemaReSettingsOption::OutputPanningType_9point1point6].second = j;
-        m_settingsItems[MemaReSettingsOption::OutputPanningType_Quadrophonic].second = k;
+    std::function<void(int, int, int, int, int, int, int, int, int, int, int, int)> setSettingsItemsCheckState = [=](int a, int b, int c, int d, int e, int f, int g, int h, int i, int j, int k, int l) {
+        m_settingsItems[MemaReSettingsOption::ControlFormat_RawChannels].second = a;
+        m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_LRS].second = b;
+        m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_LCRS].second = c;
+        m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_5point0].second = d;
+        m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_5point1].second = e;
+        m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_5point1point2].second = f;
+        m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_7point0].second = g;
+        m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_7point1].second = h;
+        m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_7point1point4].second = i;
+        m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_9point1point6].second = j;
+        m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_Quadrophonic].second = k;
+        m_settingsItems[MemaReSettingsOption::ControlFormat_PluginParameterControl].second = l;
     };
 
     switch (selectedId)
     {
-    case MemaReSettingsOption::OutputPanningType_RawChannels:
-        setSettingsItemsCheckState(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    case MemaReSettingsOption::ControlFormat_RawChannels:
+        setSettingsItemsCheckState(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         if (m_remoteComponent)
-            m_remoteComponent->setOutputFaderbankCtrlActive();
+            m_remoteComponent->setFaderbankCtrlActive();
         break;
-    case MemaReSettingsOption::OutputPanningType_LRS:
-        setSettingsItemsCheckState(0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+    case MemaReSettingsOption::ControlFormat_PanningType_LRS:
+        setSettingsItemsCheckState(0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::createLRS());
         break;
-    case MemaReSettingsOption::OutputPanningType_LCRS:
-        setSettingsItemsCheckState(0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+    case MemaReSettingsOption::ControlFormat_PanningType_LCRS:
+        setSettingsItemsCheckState(0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::createLCRS());
         break;
-    case MemaReSettingsOption::OutputPanningType_5point0:
-        setSettingsItemsCheckState(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0);
+    case MemaReSettingsOption::ControlFormat_PanningType_5point0:
+        setSettingsItemsCheckState(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create5point0());
         break;
-    case MemaReSettingsOption::OutputPanningType_5point1:
-        setSettingsItemsCheckState(0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0);
+    case MemaReSettingsOption::ControlFormat_PanningType_5point1:
+        setSettingsItemsCheckState(0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create5point1());
         break;
-    case MemaReSettingsOption::OutputPanningType_5point1point2:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0);
+    case MemaReSettingsOption::ControlFormat_PanningType_5point1point2:
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create5point1point2());
         break;
-    case MemaReSettingsOption::OutputPanningType_7point0:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0);
+    case MemaReSettingsOption::ControlFormat_PanningType_7point0:
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create7point0());
         break;
-    case MemaReSettingsOption::OutputPanningType_7point1:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0);
+    case MemaReSettingsOption::ControlFormat_PanningType_7point1:
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create7point1());
         break;
-    case MemaReSettingsOption::OutputPanningType_7point1point4:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0);
+    case MemaReSettingsOption::ControlFormat_PanningType_7point1point4:
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create7point1point4());
         break;
-    case MemaReSettingsOption::OutputPanningType_9point1point6:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0);
+    case MemaReSettingsOption::ControlFormat_PanningType_9point1point6:
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::create9point1point6());
         break;
-    case MemaReSettingsOption::OutputPanningType_Quadrophonic:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1);
+    case MemaReSettingsOption::ControlFormat_PanningType_Quadrophonic:
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0);
         if (m_remoteComponent)
             m_remoteComponent->setOutputPanningCtrlActive(juce::AudioChannelSet::quadraphonic());
+        break;
+    case MemaReSettingsOption::ControlFormat_PluginParameterControl:
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1);
+        if (m_remoteComponent)
+            m_remoteComponent->setPluginCtrlActive();
         break;
     default:
         jassertfalse; // unknown id fed in unintentionally ?!
@@ -462,33 +471,33 @@ void MainComponent::handleSettingsOutputPanningTypeMenuResult(int selectedId)
     resized();
 }
 
-void MainComponent::handleSettingsPanningColourMenuResult(int selectedId)
+void MainComponent::handleSettingsControlColourMenuResult(int selectedId)
 {
     // helper internal function to avoid code clones
     std::function<void(int, int, int, int)> setSettingsItemsCheckState = [=](int green, int red, int blue, int pink) {
-        m_settingsItems[MemaReSettingsOption::PanningColour_Green].second = green;
-        m_settingsItems[MemaReSettingsOption::PanningColour_Red].second = red;
-        m_settingsItems[MemaReSettingsOption::PanningColour_Blue].second = blue;
-        m_settingsItems[MemaReSettingsOption::PanningColour_Pink].second = pink;
+        m_settingsItems[MemaReSettingsOption::ControlColour_Green].second = green;
+        m_settingsItems[MemaReSettingsOption::ControlColour_Red].second = red;
+        m_settingsItems[MemaReSettingsOption::ControlColour_Blue].second = blue;
+        m_settingsItems[MemaReSettingsOption::ControlColour_Pink].second = pink;
     };
 
     switch (selectedId)
     {
-    case MemaReSettingsOption::PanningColour_Green:
+    case MemaReSettingsOption::ControlColour_Green:
         setSettingsItemsCheckState(1, 0, 0, 0);
-        setPanningColour(juce::Colours::forestgreen);
+        setControlColour(juce::Colours::forestgreen);
         break;
-    case MemaReSettingsOption::PanningColour_Red:
+    case MemaReSettingsOption::ControlColour_Red:
         setSettingsItemsCheckState(0, 1, 0, 0);
-        setPanningColour(juce::Colours::orangered);
+        setControlColour(juce::Colours::orangered);
         break;
-    case MemaReSettingsOption::PanningColour_Blue:
+    case MemaReSettingsOption::ControlColour_Blue:
         setSettingsItemsCheckState(0, 0, 1, 0);
-        setPanningColour(juce::Colours::dodgerblue);
+        setControlColour(juce::Colours::dodgerblue);
         break;
-    case MemaReSettingsOption::PanningColour_Pink:
+    case MemaReSettingsOption::ControlColour_Pink:
         setSettingsItemsCheckState(0, 0, 0, 1);
-        setPanningColour(juce::Colours::deeppink);
+        setControlColour(juce::Colours::deeppink);
         break;
     default:
         jassertfalse; // unknown id fed in unintentionally ?!
@@ -581,14 +590,14 @@ void MainComponent::showExternalControlSettings()
     }));
 }
 
-void MainComponent::setPanningColour(const juce::Colour& panningColour)
+void MainComponent::setControlColour(const juce::Colour& controlColour)
 {
-    m_panningColour = panningColour;
+    m_controlColour = controlColour;
 
-    applyPanningColour();
+    applyControlColour();
 }
 
-void MainComponent::applyPanningColour()
+void MainComponent::applyControlColour()
 {
     auto customLookAndFeel = dynamic_cast<JUCEAppBasics::CustomLookAndFeel*>(&getLookAndFeel());
     if (customLookAndFeel)
@@ -596,13 +605,13 @@ void MainComponent::applyPanningColour()
         switch (customLookAndFeel->getPaletteStyle())
         {
         case JUCEAppBasics::CustomLookAndFeel::PS_Light:
-            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId, m_panningColour.brighter());
-            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId, m_panningColour);
+            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId, m_controlColour.brighter());
+            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId, m_controlColour);
             break;
         case JUCEAppBasics::CustomLookAndFeel::PS_Dark:
         default:
-            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId, m_panningColour.darker());
-            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId, m_panningColour);
+            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId, m_controlColour.darker());
+            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId, m_controlColour);
             break;
         }
     }
@@ -698,16 +707,16 @@ void MainComponent::performConfigurationDump()
         }
         visuConfigXmlElement->addChildElement(lookAndFeelXmlElmement.release());
 
-        auto outputPanningTypeXmlElmement = std::make_unique<juce::XmlElement>(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::OUTPUTPANNINGTYPE));
-        for (int i = MemaReSettingsOption::OutputPanningType_First; i <= MemaReSettingsOption::OutputPanningType_Last; i++)
+        auto controlFormatXmlElmement = std::make_unique<juce::XmlElement>(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::CONTROLFORMAT));
+        for (int i = MemaReSettingsOption::ControlFormat_First; i <= MemaReSettingsOption::ControlFormat_Last; i++)
         {
             if (m_settingsItems[i].second == 1)
-                outputPanningTypeXmlElmement->addTextElement(juce::String(i));
+                controlFormatXmlElmement->addTextElement(juce::String(i));
         }
-        visuConfigXmlElement->addChildElement(outputPanningTypeXmlElmement.release());
+        visuConfigXmlElement->addChildElement(controlFormatXmlElmement.release());
         
-        auto panningColourXmlElmement = std::make_unique<juce::XmlElement>(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::PANNINGCOLOUR));
-        for (int i = MemaReSettingsOption::PanningColour_First; i <= MemaReSettingsOption::PanningColour_Last; i++)
+        auto panningColourXmlElmement = std::make_unique<juce::XmlElement>(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::CONTROLCOLOUR));
+        for (int i = MemaReSettingsOption::ControlColour_First; i <= MemaReSettingsOption::ControlColour_Last; i++)
         {
             if (m_settingsItems[i].second == 1)
                 panningColourXmlElmement->addTextElement(juce::String(i));
@@ -776,18 +785,18 @@ void MainComponent::onConfigUpdated()
             handleSettingsLookAndFeelMenuResult(lookAndFeelSettingsOptionId);
         }
 
-        auto outputPanningTypeXmlElement = visuConfigState->getChildByName(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::OUTPUTPANNINGTYPE));
-        if (outputPanningTypeXmlElement)
+        auto controlFormatXmlElement = visuConfigState->getChildByName(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::CONTROLFORMAT));
+        if (controlFormatXmlElement)
         {
-            auto outputPanningTypeSettingsOptionId = outputPanningTypeXmlElement->getAllSubText().getIntValue();
-            handleSettingsOutputPanningTypeMenuResult(outputPanningTypeSettingsOptionId);
+            auto controlFormatSettingsOptionId = controlFormatXmlElement->getAllSubText().getIntValue();
+            handleSettingsControlFormatMenuResult(controlFormatSettingsOptionId);
         }
 
-        auto panningColourXmlElement = visuConfigState->getChildByName(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::PANNINGCOLOUR));
-        if (panningColourXmlElement)
+        auto controlColourXmlElement = visuConfigState->getChildByName(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::CONTROLCOLOUR));
+        if (controlColourXmlElement)
         {
-            auto panningColourSettingsOptionId = panningColourXmlElement->getAllSubText().getIntValue();
-            handleSettingsPanningColourMenuResult(panningColourSettingsOptionId);
+            auto controlColourSettingsOptionId = controlColourXmlElement->getAllSubText().getIntValue();
+            handleSettingsControlColourMenuResult(controlColourSettingsOptionId);
         }
 
         auto controlsSizeXmlElmement = visuConfigState->getChildByName(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::CONTROLSSIZE));

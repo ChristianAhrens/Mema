@@ -16,6 +16,10 @@
               file="submodules/JUCE-AppBasics/Source/CustomLookAndFeel.cpp"/>
         <FILE id="H6sI3L" name="CustomLookAndFeel.h" compile="0" resource="0"
               file="submodules/JUCE-AppBasics/Source/CustomLookAndFeel.h"/>
+        <FILE id="MD5FUL" name="FixedFontTextEditor.cpp" compile="1" resource="0"
+              file="submodules/JUCE-AppBasics/Source/FixedFontTextEditor.cpp"/>
+        <FILE id="EjovFX" name="FixedFontTextEditor.h" compile="0" resource="0"
+              file="submodules/JUCE-AppBasics/Source/FixedFontTextEditor.h"/>
         <FILE id="ryZPa0" name="ServiceTopologyManager.cpp" compile="1" resource="0"
               file="submodules/JUCE-AppBasics/Source/ServiceTopologyManager.cpp"/>
         <FILE id="Vvlccq" name="ServiceTopologyManager.h" compile="0" resource="0"
@@ -88,6 +92,8 @@
               file="Source/MemaProcessor/MemaServiceData.cpp"/>
         <FILE id="D9OX3t" name="MemaServiceData.h" compile="0" resource="0"
               file="Source/MemaProcessor/MemaServiceData.h"/>
+        <FILE id="RgdbK5" name="MemaPluginParameterInfo.h" compile="0" resource="0"
+              file="Source/MemaProcessor/MemaPluginParameterInfo.h"/>
         <FILE id="l5miue" name="ProcessorAudioSignalData.cpp" compile="1" resource="0"
               file="Source/MemaProcessor/ProcessorAudioSignalData.cpp"/>
         <FILE id="fUSJee" name="ProcessorAudioSignalData.h" compile="0" resource="0"

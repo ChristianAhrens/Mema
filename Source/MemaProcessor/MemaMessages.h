@@ -22,13 +22,15 @@
 
 #include <CustomLookAndFeel.h>
 
+#include "MemaPluginParameterInfo.h"
+
 namespace Mema
 {
 
 
 //==============================================================================
 /*
- *
+ * Forward declarations of SerializableMessage-derived specializations
  */
 class EnvironmentParametersMessage;
 class AnalyzerParametersMessage;
@@ -37,7 +39,13 @@ class AudioInputBufferMessage;
 class AudioOutputBufferMessage;
 class DataTrafficTypeSelectionMessage;
 class ControlParametersMessage;
+class PluginParameterInfosMessage;
+class PluginParameterValueMessage;
 
+//==============================================================================
+/*
+ * Baseclass for all messages that can be used in Memas inter-instance message concept
+ */
 class SerializableMessage : public juce::Message
 {
 public:
@@ -50,7 +58,9 @@ public:
         AudioInputBuffer,
         AudioOutputBuffer,
         DataTrafficTypeSelection,
-        ControlParameters
+        ControlParameters,
+        PluginParameterInfos,
+        PluginParameterValue
     };
 
 public:
@@ -96,6 +106,10 @@ public:
             return reinterpret_cast<SerializableMessage*>(std::make_unique<DataTrafficTypeSelectionMessage>(blob).release());
         case ControlParameters:
             return reinterpret_cast<SerializableMessage*>(std::make_unique<ControlParametersMessage>(blob).release());
+        case PluginParameterInfos:
+            return reinterpret_cast<SerializableMessage*>(std::make_unique<PluginParameterInfosMessage>(blob).release());
+        case PluginParameterValue:
+            return reinterpret_cast<SerializableMessage*>(std::make_unique<PluginParameterValueMessage>(blob).release());
         case None:
         default:
             return nullptr;
@@ -137,6 +151,16 @@ public:
                     auto cpm = std::unique_ptr<ControlParametersMessage>(reinterpret_cast<ControlParametersMessage*>(message));
                 }
                 break;
+            case PluginParameterInfos:
+                {
+                    auto ppim = std::unique_ptr<PluginParameterInfosMessage>(reinterpret_cast<PluginParameterInfosMessage*>(message));
+                }
+                break; 
+            case PluginParameterValue:
+                {
+                    auto ppvm = std::unique_ptr<PluginParameterValueMessage>(reinterpret_cast<PluginParameterValueMessage*>(message));
+                }
+                break;
             case None:
             default:
                 break;
@@ -169,7 +193,8 @@ protected:
 
 //==============================================================================
 /*
- *
+ * A message type encapsulating Mema environment parameters
+ * #1 Light/Dark lookandfeel
  */
 class EnvironmentParametersMessage : public SerializableMessage
 {
@@ -203,7 +228,9 @@ private:
 
 //==============================================================================
 /*
- *
+ * A message type encapsulating Analyser parameters
+ * #1 Samplerate
+ * #2 Max samples per block
  */
 class AnalyzerParametersMessage : public SerializableMessage
 {
@@ -241,7 +268,9 @@ private:
 
 //==============================================================================
 /*
- *
+ * A message type encapsulating IOcount infos to trigger a client reinit
+ * #1 new input count
+ * #2 new output count
  */
 class ReinitIOCountMessage : public SerializableMessage
 {
@@ -279,7 +308,9 @@ private:
 
 //==============================================================================
 /*
- * 
+ * A message type encapsulating audio buffer data
+ * #1 buffer meta info: in or out
+ * #2 actual buffer data
  */
 class AudioBufferMessage : public SerializableMessage
 {
@@ -321,7 +352,7 @@ protected:
 
 //==============================================================================
 /*
- *
+ * A message type specializing the AudioBufferMessage to a specific input buffer message
  */
 class AudioInputBufferMessage : public AudioBufferMessage
 {
@@ -361,7 +392,7 @@ public:
 
 //==============================================================================
 /*
- *
+ * A message type specializing the AudioBufferMessage to a specific output buffer message
  */
 class AudioOutputBufferMessage : public AudioBufferMessage
 {
@@ -399,7 +430,8 @@ public:
 
 //==============================================================================
 /*
- *
+ * A message type encapsulating a client request for subscription to specific message types
+ * #1 types of traffic desired
  */
 class DataTrafficTypeSelectionMessage : public SerializableMessage
 {
@@ -447,7 +479,11 @@ private:
 
 //==============================================================================
 /*
- *
+ * A message type encapsulating control data from a client
+ * #1 input mutes
+ * #2 output mutes
+ * #3 crosspoint states
+ * #4 crosspoint values
  */
 class ControlParametersMessage : public SerializableMessage
 {
@@ -500,8 +536,10 @@ public:
         for (int i = 0; i < inputMuteStatesCount; i++)
         {
             std::pair<std::uint16_t, bool> inputMuteState;
-            blob.copyTo(&inputMuteState, readPos, sizeof(inputMuteState));
-            readPos += sizeof(inputMuteState);
+            blob.copyTo(&inputMuteState.first, readPos, sizeof(inputMuteState.first));
+            readPos += sizeof(inputMuteState.first);
+            blob.copyTo(&inputMuteState.second, readPos, sizeof(inputMuteState.second));
+            readPos += sizeof(inputMuteState.second);
 
             m_inputMuteStates[inputMuteState.first] = inputMuteState.second;
         }
@@ -512,8 +550,10 @@ public:
         for (int i = 0; i < outputMuteStatesCount; i++)
         {
             std::pair<std::uint16_t, bool> outputMuteState;
-            blob.copyTo(&outputMuteState, readPos, sizeof(outputMuteState));
-            readPos += sizeof(outputMuteState);
+            blob.copyTo(&outputMuteState.first, readPos, sizeof(outputMuteState.first));
+            readPos += sizeof(outputMuteState.first);
+            blob.copyTo(&outputMuteState.second, readPos, sizeof(outputMuteState.second));
+            readPos += sizeof(outputMuteState.second);
 
             m_outputMuteStates[outputMuteState.first] = outputMuteState.second;
         }
@@ -567,12 +607,18 @@ protected:
         auto inputMuteStatesCount = std::uint16_t(m_inputMuteStates.size());
         blob.append(&inputMuteStatesCount, sizeof(inputMuteStatesCount));
         for (auto& inputMuteStateKV : m_inputMuteStates)
-            blob.append(&inputMuteStateKV, sizeof(inputMuteStateKV));
+        {
+            blob.append(&inputMuteStateKV.first, sizeof(inputMuteStateKV.first));
+            blob.append(&inputMuteStateKV.second, sizeof(inputMuteStateKV.second));
+        }
 
         auto outputMuteStatesCount = std::uint16_t(m_outputMuteStates.size());
         blob.append(&outputMuteStatesCount, sizeof(outputMuteStatesCount));
         for (auto& outputMuteStateKV : m_outputMuteStates)
-            blob.append(&outputMuteStateKV, sizeof(outputMuteStateKV));
+        {
+            blob.append(&outputMuteStateKV.first, sizeof(outputMuteStateKV.first));
+            blob.append(&outputMuteStateKV.second, sizeof(outputMuteStateKV.second));
+        }
 
         auto crosspointStatesCount = std::uint16_t(0);
         if (0 < m_crosspointStates.size())
@@ -624,6 +670,291 @@ private:
     std::map<std::uint16_t, std::map<std::uint16_t, bool>>  m_crosspointStates;
     std::map<std::uint16_t, std::map<std::uint16_t, float>> m_crosspointValues;
 };
+
+//==============================================================================
+/*
+ * A message type encapsulating plugin parameter information
+ * Contains all metadata and current state of plugin parameters
+ */
+class PluginParameterInfosMessage : public SerializableMessage
+{
+public:
+    PluginParameterInfosMessage() = default;
+    PluginParameterInfosMessage(const std::string& pluginName, const std::vector<PluginParameterInfo>& parameterInfos)
+    {
+        m_type = SerializableMessageType::PluginParameterInfos;
+        m_parameterInfos = parameterInfos;
+        m_pluginName = pluginName;
+    }
+
+    PluginParameterInfosMessage(const juce::MemoryBlock& blob)
+    {
+        jassert(SerializableMessageType::PluginParameterInfos == static_cast<SerializableMessageType>(blob[0]));
+
+        m_type = SerializableMessageType::PluginParameterInfos;
+
+        auto readPos = int(sizeof(SerializableMessageType));
+
+        // Read plugin string length and string
+        std::uint16_t pluginNameLength;
+        blob.copyTo(&pluginNameLength, readPos, sizeof(std::uint16_t));
+        readPos += sizeof(std::uint16_t);
+        m_pluginName = juce::String(juce::CharPointer_UTF8(static_cast<const char*>(blob.begin()) + readPos), pluginNameLength);
+        readPos += pluginNameLength;
+
+        std::uint16_t paramCount;
+        blob.copyTo(&paramCount, readPos, sizeof(std::uint16_t));
+        readPos += sizeof(std::uint16_t);
+
+        m_parameterInfos.reserve(paramCount);
+
+        for (int i = 0; i < paramCount; i++)
+        {
+            PluginParameterInfo info;
+
+            // Read index
+            std::int32_t index;
+            blob.copyTo(&index, readPos, sizeof(std::int32_t));
+            info.index = index;
+            readPos += sizeof(std::int32_t);
+
+            // Read id string length and string
+            std::uint16_t idLength;
+            blob.copyTo(&idLength, readPos, sizeof(std::uint16_t));
+            readPos += sizeof(std::uint16_t);
+            info.id = juce::String(juce::CharPointer_UTF8(static_cast<const char*>(blob.begin()) + readPos), idLength);
+            readPos += idLength;
+
+            // Read name string length and string
+            std::uint16_t nameLength;
+            blob.copyTo(&nameLength, readPos, sizeof(std::uint16_t));
+            readPos += sizeof(std::uint16_t);
+            info.name = juce::String(juce::CharPointer_UTF8(static_cast<const char*>(blob.begin()) + readPos), nameLength);
+            readPos += nameLength;
+
+            // Read float values
+            blob.copyTo(&info.defaultValue, readPos, sizeof(float));
+            readPos += sizeof(float);
+            blob.copyTo(&info.currentValue, readPos, sizeof(float));
+            readPos += sizeof(float);
+
+            // Read label string length and string
+            std::uint16_t labelLength;
+            blob.copyTo(&labelLength, readPos, sizeof(std::uint16_t));
+            readPos += sizeof(std::uint16_t);
+            info.label = juce::String(juce::CharPointer_UTF8(static_cast<const char*>(blob.begin()) + readPos), labelLength);
+            readPos += labelLength;
+
+            // Read bool values
+            blob.copyTo(&info.isAutomatable, readPos, sizeof(bool));
+            readPos += sizeof(bool);
+            blob.copyTo(&info.isRemoteControllable, readPos, sizeof(bool));
+            readPos += sizeof(bool);
+
+            // Read category as int
+            std::int32_t categoryInt;
+            blob.copyTo(&categoryInt, readPos, sizeof(std::int32_t));
+            info.category = static_cast<juce::AudioProcessorParameter::Category>(categoryInt);
+            readPos += sizeof(std::int32_t);
+
+            // Read range values
+            blob.copyTo(&info.minValue, readPos, sizeof(float));
+            readPos += sizeof(float);
+            blob.copyTo(&info.maxValue, readPos, sizeof(float));
+            readPos += sizeof(float);
+            blob.copyTo(&info.stepSize, readPos, sizeof(float));
+            readPos += sizeof(float);
+            blob.copyTo(&info.isDiscrete, readPos, sizeof(bool));
+            readPos += sizeof(bool);
+
+            // Read type
+            blob.copyTo(&info.type, readPos, sizeof(ParameterControlType));
+            readPos += sizeof(ParameterControlType);
+
+            // Read stepCount
+            std::int32_t stepCount;
+            blob.copyTo(&stepCount, readPos, sizeof(std::int32_t));
+            info.stepCount = stepCount;
+            readPos += sizeof(std::int32_t);
+
+            // Read stepNames (count already known from stepCount)
+            for (int s = 0; s < stepCount; s++)
+            {
+                std::uint16_t stepNameLength;
+                blob.copyTo(&stepNameLength, readPos, sizeof(std::uint16_t));
+                readPos += sizeof(std::uint16_t);
+                auto stepName = juce::String(juce::CharPointer_UTF8(
+                    static_cast<const char*>(blob.begin()) + readPos), stepNameLength);
+                readPos += stepNameLength;
+                info.stepNames.push_back(stepName.toStdString());
+            }
+
+            m_parameterInfos.push_back(info);
+        }
+    }
+
+    ~PluginParameterInfosMessage() = default;
+
+    const juce::String& getPluginName() const { return m_pluginName; }
+    const std::vector<PluginParameterInfo>& getParameterInfos() const { return m_parameterInfos; }
+
+protected:
+    juce::MemoryBlock createSerializedContent(size_t& contentSize) const override
+    {
+        juce::MemoryBlock blob;
+
+        // Write name string (length + UTF8 bytes)
+        auto pluginNameUtf8 = m_pluginName.toUTF8();
+        std::uint16_t pluginNameLength = std::uint16_t(strlen(pluginNameUtf8));
+        blob.append(&pluginNameLength, sizeof(std::uint16_t));
+        blob.append(pluginNameUtf8, pluginNameLength);
+
+        auto paramCount = std::uint16_t(m_parameterInfos.size());
+        blob.append(&paramCount, sizeof(std::uint16_t));
+
+        for (const auto& info : m_parameterInfos)
+        {
+            // Write index
+            std::int32_t index = info.index;
+            blob.append(&index, sizeof(std::int32_t));
+
+            // Write id string (length + UTF8 bytes)
+            auto idUtf8 = info.id.toUTF8();
+            std::uint16_t idLength = std::uint16_t(strlen(idUtf8));
+            blob.append(&idLength, sizeof(std::uint16_t));
+            blob.append(idUtf8, idLength);
+
+            // Write name string (length + UTF8 bytes)
+            auto nameUtf8 = info.name.toUTF8();
+            std::uint16_t nameLength = std::uint16_t(strlen(nameUtf8));
+            blob.append(&nameLength, sizeof(std::uint16_t));
+            blob.append(nameUtf8, nameLength);
+
+            // Write float values
+            blob.append(&info.defaultValue, sizeof(float));
+            blob.append(&info.currentValue, sizeof(float));
+
+            // Write label string (length + UTF8 bytes)
+            auto labelUtf8 = info.label.toUTF8();
+            std::uint16_t labelLength = std::uint16_t(strlen(labelUtf8));
+            blob.append(&labelLength, sizeof(std::uint16_t));
+            blob.append(labelUtf8, labelLength);
+
+            // Write bool values
+            blob.append(&info.isAutomatable, sizeof(bool));
+            blob.append(&info.isRemoteControllable, sizeof(bool));
+
+            // Write category as int
+            std::int32_t categoryInt = static_cast<std::int32_t>(info.category);
+            blob.append(&categoryInt, sizeof(std::int32_t));
+
+            // Write range values
+            blob.append(&info.minValue, sizeof(float));
+            blob.append(&info.maxValue, sizeof(float));
+            blob.append(&info.stepSize, sizeof(float));
+            blob.append(&info.isDiscrete, sizeof(bool));
+
+            // Write type
+            blob.append(&info.type, sizeof(ParameterControlType));
+
+            // Write stepCount
+            std::int32_t stepCount = info.stepCount;
+            blob.append(&stepCount, sizeof(std::int32_t));
+
+            // Write stepNames
+            for (const auto& stepName : info.stepNames)
+            {
+                juce::String juceStepName(stepName);
+                auto stepNameUtf8 = juceStepName.toUTF8();
+                std::uint16_t stepNameLength = std::uint16_t(strlen(stepNameUtf8));
+                blob.append(&stepNameLength, sizeof(std::uint16_t));
+                blob.append(stepNameUtf8, stepNameLength);
+            }
+        }
+
+        contentSize = blob.getSize();
+        return blob;
+    }
+
+private:
+    std::vector<PluginParameterInfo>    m_parameterInfos;
+    juce::String                        m_pluginName;
+};
+
+//==============================================================================
+/*
+ * A message type encapsulating a single plugin parameter value change
+ * Used for remote control and synchronization of individual parameter updates
+ */
+class PluginParameterValueMessage : public SerializableMessage
+{
+public:
+    PluginParameterValueMessage() = default;
+    PluginParameterValueMessage(std::uint16_t parameterIndex, const juce::String& parameterId, float value)
+    {
+        m_type = SerializableMessageType::PluginParameterValue;
+        m_parameterIndex = parameterIndex;
+        m_parameterId = parameterId;
+        m_currentValue = value;
+    }
+
+    PluginParameterValueMessage(const juce::MemoryBlock& blob)
+    {
+        jassert(SerializableMessageType::PluginParameterValue == static_cast<SerializableMessageType>(blob[0]));
+
+        m_type = SerializableMessageType::PluginParameterValue;
+
+        auto readPos = int(sizeof(SerializableMessageType));
+
+        // Read index
+        blob.copyTo(&m_parameterIndex, readPos, sizeof(std::uint16_t));
+        readPos += sizeof(std::uint16_t);
+
+        // Read id string length and string
+        std::uint16_t idLength;
+        blob.copyTo(&idLength, readPos, sizeof(std::uint16_t));
+        readPos += sizeof(std::uint16_t);
+        m_parameterId = juce::String(juce::CharPointer_UTF8(static_cast<const char*>(blob.begin()) + readPos), idLength);
+        readPos += idLength;
+
+        // Read current value
+        blob.copyTo(&m_currentValue, readPos, sizeof(float));
+        readPos += sizeof(float);
+    }
+
+    ~PluginParameterValueMessage() = default;
+
+    std::uint16_t getParameterIndex() const { return m_parameterIndex; }
+    const juce::String& getParameterId() const { return m_parameterId; }
+    float getCurrentValue() const { return m_currentValue; }
+
+protected:
+    juce::MemoryBlock createSerializedContent(size_t& contentSize) const override
+    {
+        juce::MemoryBlock blob;
+
+        // Write index
+        blob.append(&m_parameterIndex, sizeof(std::uint16_t));
+
+        // Write id string (length + UTF8 bytes)
+        auto idUtf8 = m_parameterId.toUTF8();
+        std::uint16_t idLength = std::uint16_t(strlen(idUtf8));
+        blob.append(&idLength, sizeof(std::uint16_t));
+        blob.append(idUtf8, idLength);
+
+        // Write current value
+        blob.append(&m_currentValue, sizeof(float));
+
+        contentSize = blob.getSize();
+        return blob;
+    }
+
+private:
+    std::uint16_t m_parameterIndex = 0;
+    juce::String m_parameterId;
+    float m_currentValue = 0.0f;
+};
+
 
 #ifdef NIX // DEBUG
 #define RUN_MESSAGE_TESTS

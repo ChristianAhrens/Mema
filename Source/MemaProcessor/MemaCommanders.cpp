@@ -41,46 +41,46 @@ MemaInputCommander::~MemaInputCommander()
 
 void MemaInputCommander::setInputMuteChangeCallback(const std::function<void(MemaInputCommander* sender, std::uint16_t, bool)>& callback)
 {
-	m_inputMuteChangeCallback = callback;
+	onInputMuteChangeCallback = callback;
 }
 
 void MemaInputCommander::setInputLevelChangeCallback(const std::function<void(MemaInputCommander* sender, std::uint16_t, float)>& callback)
 {
-	m_inputLevelChangeCallback = callback;
+	onInputLevelChangeCallback = callback;
 }
 
 void MemaInputCommander::setInputMutePollCallback(const std::function<void(MemaInputCommander* sender, std::uint16_t)>& callback)
 {
-	m_inputMutePollCallback = callback;
+	onInputMutePollCallback = callback;
 }
 
 void MemaInputCommander::setInputLevelPollCallback(const std::function<void(MemaInputCommander* sender, std::uint16_t)>& callback)
 {
-	m_inputLevelPollCallback = callback;
+	onInputLevelPollCallback = callback;
 }
 
 void MemaInputCommander::inputMuteChange(std::uint16_t channel, bool muteState, MemaInputCommander* /*sender*/)
 {
-	if (m_inputMuteChangeCallback)
-		m_inputMuteChangeCallback(this, channel, muteState);
+	if (onInputMuteChangeCallback)
+		onInputMuteChangeCallback(this, channel, muteState);
 }
 
 void MemaInputCommander::inputLevelChange(std::uint16_t channel, float levelValue, MemaInputCommander* /*sender*/)
 {
-	if (m_inputLevelChangeCallback)
-		m_inputLevelChangeCallback(this, channel, levelValue);
+	if (onInputLevelChangeCallback)
+		onInputLevelChangeCallback(this, channel, levelValue);
 }
 
 void MemaInputCommander::inputMutePoll(std::uint16_t channel, MemaInputCommander* /*sender*/)
 {
-	if (m_inputMutePollCallback)
-		m_inputMutePollCallback(this, channel);
+	if (onInputMutePollCallback)
+		onInputMutePollCallback(this, channel);
 }
 
 void MemaInputCommander::inputLevelPoll(std::uint16_t channel, MemaInputCommander* /*sender*/)
 {
-	if (m_inputLevelPollCallback)
-		m_inputLevelPollCallback(this, channel);
+	if (onInputLevelPollCallback)
+		onInputLevelPollCallback(this, channel);
 }
 
 
@@ -94,46 +94,46 @@ MemaOutputCommander::~MemaOutputCommander()
 
 void MemaOutputCommander::setOutputMuteChangeCallback(const std::function<void(MemaOutputCommander* /*sender*/, std::uint16_t, bool)>& callback)
 {
-	m_outputMuteChangeCallback = callback;
+	onOutputMuteChangeCallback = callback;
 }
 
 void MemaOutputCommander::setOutputLevelChangeCallback(const std::function<void(MemaOutputCommander* /*sender*/, std::uint16_t, float)>& callback)
 {
-	m_outputLevelChangeCallback = callback;
+	onOutputLevelChangeCallback = callback;
 }
 
 void MemaOutputCommander::setOutputMutePollCallback(const std::function<void(MemaOutputCommander* /*sender*/, std::uint16_t)>& callback)
 {
-	m_outputMutePollCallback = callback;
+	onOutputMutePollCallback = callback;
 }
 
 void MemaOutputCommander::setOutputLevelPollCallback(const std::function<void(MemaOutputCommander* /*sender*/, std::uint16_t)>& callback)
 {
-	m_outputLevelPollCallback = callback;
+	onOutputLevelPollCallback = callback;
 }
 
 void MemaOutputCommander::outputMuteChange(std::uint16_t channel, bool muteState, MemaOutputCommander* /*sender*/)
 {
-	if (m_outputMuteChangeCallback)
-		m_outputMuteChangeCallback(nullptr, channel, muteState);
+	if (onOutputMuteChangeCallback)
+		onOutputMuteChangeCallback(nullptr, channel, muteState);
 }
 
 void MemaOutputCommander::outputLevelChange(std::uint16_t channel, float levelValue, MemaOutputCommander* /*sender*/)
 {
-	if (m_outputLevelChangeCallback)
-		m_outputLevelChangeCallback(nullptr, channel, levelValue);
+	if (onOutputLevelChangeCallback)
+		onOutputLevelChangeCallback(nullptr, channel, levelValue);
 }
 
 void MemaOutputCommander::outputMutePoll(std::uint16_t channel, MemaOutputCommander* /*sender*/)
 {
-	if (m_outputMutePollCallback)
-		m_outputMutePollCallback(nullptr, channel);
+	if (onOutputMutePollCallback)
+		onOutputMutePollCallback(nullptr, channel);
 }
 
 void MemaOutputCommander::outputLevelPoll(std::uint16_t channel, MemaOutputCommander* /*sender*/)
 {
-	if (m_outputLevelPollCallback)
-		m_outputLevelPollCallback(nullptr, channel);
+	if (onOutputLevelPollCallback)
+		onOutputLevelPollCallback(nullptr, channel);
 }
 
 
@@ -147,46 +147,101 @@ MemaCrosspointCommander::~MemaCrosspointCommander()
 
 void MemaCrosspointCommander::setCrosspointEnabledChangeCallback(const std::function<void(MemaCrosspointCommander* sender, std::uint16_t, std::uint16_t, bool)>& callback)
 {
-	m_crosspointEnabledChangeCallback = callback;
+	onCrosspointEnabledChangeCallback = callback;
 }
 
 void MemaCrosspointCommander::setCrosspointEnabledPollCallback(const std::function<void(MemaCrosspointCommander* sender, std::uint16_t, std::uint16_t)>& callback)
 {
-	m_crosspointEnabledPollCallback = callback;
+	onCrosspointEnabledPollCallback = callback;
 }
 
 void MemaCrosspointCommander::crosspointEnabledChange(std::uint16_t input, std::uint16_t output, bool enabledState, MemaCrosspointCommander* sender)
 {
-	if (m_crosspointEnabledChangeCallback)
-		m_crosspointEnabledChangeCallback(sender, input, output, enabledState);
+	if (onCrosspointEnabledChangeCallback)
+		onCrosspointEnabledChangeCallback(sender, input, output, enabledState);
 }
 
 void MemaCrosspointCommander::crosspointEnabledPoll(std::uint16_t input, std::uint16_t output, MemaCrosspointCommander* sender)
 {
-	if (m_crosspointEnabledPollCallback)
-		m_crosspointEnabledPollCallback(sender, input, output);
+	if (onCrosspointEnabledPollCallback)
+		onCrosspointEnabledPollCallback(sender, input, output);
 }
 
 void MemaCrosspointCommander::setCrosspointFactorChangeCallback(const std::function<void(MemaCrosspointCommander* sender, std::uint16_t, std::uint16_t, float)>& callback)
 {
-	m_crosspointFactorChangeCallback = callback;
+	onCrosspointFactorChangeCallback = callback;
 }
 
 void MemaCrosspointCommander::setCrosspointFactorPollCallback(const std::function<void(MemaCrosspointCommander* sender, std::uint16_t, std::uint16_t)>& callback)
 {
-	m_crosspointFactorPollCallback = callback;
+	onCrosspointFactorPollCallback = callback;
 }
 
 void MemaCrosspointCommander::crosspointFactorChange(std::uint16_t input, std::uint16_t output, float factor, MemaCrosspointCommander* sender)
 {
-	if (m_crosspointFactorChangeCallback)
-		m_crosspointFactorChangeCallback(sender, input, output, factor);
+	if (onCrosspointFactorChangeCallback)
+		onCrosspointFactorChangeCallback(sender, input, output, factor);
 }
 
 void MemaCrosspointCommander::crosspointFactorPoll(std::uint16_t input, std::uint16_t output, MemaCrosspointCommander* sender)
 {
-	if (m_crosspointFactorPollCallback)
-		m_crosspointFactorPollCallback(sender, input, output);
+	if (onCrosspointFactorPollCallback)
+		onCrosspointFactorPollCallback(sender, input, output);
+}
+
+
+MemaPluginCommander::MemaPluginCommander()
+{
+
+}
+
+MemaPluginCommander::~MemaPluginCommander()
+{
+
+}
+
+void MemaPluginCommander::setPluginParameterInfosChangeCallback(const std::function<void(MemaPluginCommander* sender, const std::vector<PluginParameterInfo>&, const std::string&)>& callback)
+{
+	onPluginParameterInfosChangeCallback = callback;
+}
+
+void MemaPluginCommander::setPluginParameterInfosPollCallback(const std::function<void(MemaPluginCommander* sender)>& callback)
+{
+	onPluginParameterInfosPollCallback = callback;
+}
+
+void MemaPluginCommander::pluginParameterInfosChange(const std::vector<PluginParameterInfo>& infos, const std::string& name, MemaPluginCommander* sender)
+{
+	if (onPluginParameterInfosChangeCallback)
+		onPluginParameterInfosChangeCallback(sender, infos, name);
+}
+
+void MemaPluginCommander::pluginParameterInfosPoll(MemaPluginCommander* sender)
+{
+	if (onPluginParameterInfosPollCallback)
+		onPluginParameterInfosPollCallback(sender);
+}
+
+void MemaPluginCommander::setPluginParameterValueChangeCallback(const std::function<void(MemaPluginCommander* sender, std::uint16_t, std::string, float)>& callback)
+{
+	onPluginParameterValueChangeCallback = callback;
+}
+
+void MemaPluginCommander::setPluginParameterValuePollCallback(const std::function<void(MemaPluginCommander* sender, std::uint16_t, std::string)>& callback)
+{
+	onPluginParameterValuePollCallback = callback;
+}
+
+void MemaPluginCommander::pluginParameterValueChange(std::uint16_t index, std::string id, float currentValue, MemaPluginCommander* sender)
+{
+	if (onPluginParameterValueChangeCallback)
+		onPluginParameterValueChangeCallback(sender, index, id, currentValue);
+}
+
+void MemaPluginCommander::pluginParameterValuePoll(std::uint16_t index, std::string id, MemaPluginCommander * sender)
+{
+	if (onPluginParameterValuePollCallback)
+		onPluginParameterValuePollCallback(sender, index, id);
 }
 
 

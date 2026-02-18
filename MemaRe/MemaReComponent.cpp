@@ -87,14 +87,22 @@ MemaReComponent::MemaReComponent()
     m_panningCtrlComponent->setExternalControlSettings(std::get<0>(m_externalAdmOscSettings), std::get<1>(m_externalAdmOscSettings), std::get<2>(m_externalAdmOscSettings));
     addChildComponent(m_panningCtrlComponent.get());
 
-    setOutputFaderbankCtrlActive();
+    m_pluginCtrlComponent = std::make_unique<Mema::PluginControlComponent>();
+    m_pluginCtrlComponent->onPluginParameterValueChanged = [=](std::uint16_t parameterIndex, std::string parameterId, float value) {
+        DBG(juce::String(__FUNCTION__) + " sending to net (" + juce::String(parameterIndex) + "; " + juce::String(parameterId) + "; " + juce::String(value) + ") ...");
+        if (onMessageReadyToSend)
+            onMessageReadyToSend(std::make_unique<Mema::PluginParameterValueMessage>(parameterIndex, parameterId, value)->getSerializedMessage());
+        };
+    addChildComponent(m_pluginCtrlComponent.get());
+
+    setFaderbankCtrlActive();
 }
 
 MemaReComponent::~MemaReComponent()
 {
 }
 
-void MemaReComponent::setOutputFaderbankCtrlActive()
+void MemaReComponent::setFaderbankCtrlActive()
 {
     auto resizeRequired = false;
     
@@ -111,6 +119,12 @@ void MemaReComponent::setOutputFaderbankCtrlActive()
     {
         m_panningCtrlComponent->resetCtrl();
         m_panningCtrlComponent->setVisible(false);
+        resizeRequired = true;
+    }
+    if (m_pluginCtrlComponent && m_pluginCtrlComponent->isVisible())
+    {
+        m_pluginCtrlComponent->resetCtrl();
+        m_pluginCtrlComponent->setVisible(false);
         resizeRequired = true;
     }
 
@@ -138,6 +152,41 @@ void MemaReComponent::setOutputPanningCtrlActive(const juce::AudioChannelSet& ch
         m_faderbankCtrlComponent->setVisible(false);
         resizeRequired = true;
     }
+    if (m_pluginCtrlComponent && m_pluginCtrlComponent->isVisible())
+    {
+        m_pluginCtrlComponent->resetCtrl();
+        m_pluginCtrlComponent->setVisible(false);
+        resizeRequired = true;
+    }
+
+    if (resizeRequired && !getLocalBounds().isEmpty())
+        resized();
+}
+
+void MemaReComponent::setPluginCtrlActive()
+{
+    auto resizeRequired = false;
+
+    if (m_pluginCtrlComponent)
+    {
+        if (!m_pluginCtrlComponent->isVisible())
+        {
+            m_pluginCtrlComponent->setVisible(true);
+            resizeRequired = true;
+        }
+    }
+    if (m_faderbankCtrlComponent && m_faderbankCtrlComponent->isVisible())
+    {
+        m_faderbankCtrlComponent->resetCtrl();
+        m_faderbankCtrlComponent->setVisible(false);
+        resizeRequired = true;
+    }
+    if (m_panningCtrlComponent && m_panningCtrlComponent->isVisible())
+    {
+        m_panningCtrlComponent->resetCtrl();
+        m_panningCtrlComponent->setVisible(false);
+        resizeRequired = true;
+    }
 
     if (resizeRequired && !getLocalBounds().isEmpty())
         resized();
@@ -149,6 +198,8 @@ void MemaReComponent::resetCtrl()
         m_faderbankCtrlComponent->resetCtrl();
     if (m_panningCtrlComponent)
         m_panningCtrlComponent->resetCtrl();
+    if (m_pluginCtrlComponent)
+        m_pluginCtrlComponent->resetCtrl();
 }
 
 void MemaReComponent::setControlsSize(const Mema::MemaClientControlComponentBase::ControlsSize& ctrlsSize)
@@ -157,6 +208,8 @@ void MemaReComponent::setControlsSize(const Mema::MemaClientControlComponentBase
         m_faderbankCtrlComponent->setControlsSize(ctrlsSize);
     if (m_panningCtrlComponent)
         m_panningCtrlComponent->setControlsSize(ctrlsSize);
+    if (m_pluginCtrlComponent)
+        m_pluginCtrlComponent->setControlsSize(ctrlsSize);
 }
 
 const Mema::MemaClientControlComponentBase::ControlsSize MemaReComponent::getControlsSize()
@@ -165,6 +218,8 @@ const Mema::MemaClientControlComponentBase::ControlsSize MemaReComponent::getCon
         return m_faderbankCtrlComponent->getControlsSize();
     else if (m_panningCtrlComponent)
         return m_panningCtrlComponent->getControlsSize();
+    else if (m_pluginCtrlComponent)
+        return m_pluginCtrlComponent->getControlsSize();
     else
         return Mema::MemaClientControlComponentBase::ControlsSize::S;
 }
@@ -194,6 +249,8 @@ void MemaReComponent::resized()
         m_faderbankCtrlComponent->setBounds(getLocalBounds());
     if (m_panningCtrlComponent && m_panningCtrlComponent->isVisible())
         m_panningCtrlComponent->setBounds(getLocalBounds());
+    if (m_pluginCtrlComponent && m_pluginCtrlComponent->isVisible())
+        m_pluginCtrlComponent->setBounds(getLocalBounds());
 }
 
 void MemaReComponent::handleMessage(const Message& message)
@@ -278,6 +335,27 @@ void MemaReComponent::handleMessage(const Message& message)
                 m_panningCtrlComponent->setCrosspointValues(m_crosspointValues);
         }
 
+        resized();
+    }
+    else if (auto const ppim = dynamic_cast<const Mema::PluginParameterInfosMessage*>(&message))
+    {
+        DBG(juce::String(__FUNCTION__) + " handling PluginParameterInfosMessage (" + juce::String(ppim->getParameterInfos().size()) + ") ...");
+
+        if (m_pluginCtrlComponent && m_pluginCtrlComponent->isVisible())
+        {
+            m_pluginCtrlComponent->setPluginName(ppim->getPluginName().toStdString());
+            m_pluginCtrlComponent->setParameterInfos(ppim->getParameterInfos());
+        }
+
+        resized();
+    }
+    else if (auto const ppvm = dynamic_cast<const Mema::PluginParameterValueMessage*>(&message))
+    {
+        DBG(juce::String(__FUNCTION__) + " handling PluginParameterValueMessage (" + juce::String(ppvm->getParameterIndex()) + "; " + ppvm->getParameterId() + "; " + juce::String(ppvm->getCurrentValue()) + ") ...");
+
+        if (m_pluginCtrlComponent && m_pluginCtrlComponent->isVisible())
+            m_pluginCtrlComponent->setParameterValue(ppvm->getParameterIndex(), ppvm->getParameterId().toStdString(), ppvm->getCurrentValue());
+    
         resized();
     }
 }
