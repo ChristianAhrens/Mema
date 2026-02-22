@@ -52,6 +52,9 @@ public:
     void resetCtrl() override;
     
     //==============================================================================
+    void setControlsSize(const ControlsSize& ctrlsSize) override;
+
+    //==============================================================================
     const std::string& getPluginName();
     void setPluginName(const std::string& pluginName);
 
