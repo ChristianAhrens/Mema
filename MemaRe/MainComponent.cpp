@@ -632,7 +632,10 @@ void MainComponent::setControlsSize(const Mema::MemaClientControlComponentBase::
 void MainComponent::setStatus(const Status& s)
 {
     m_currentStatus = s;
-    resized();
+    juce::MessageManager::callAsync([safeThis = juce::Component::SafePointer<MainComponent>(this)]() {
+        if (safeThis)
+            safeThis->resized();
+    });
 }
 
 const MainComponent::Status MainComponent::getStatus()
