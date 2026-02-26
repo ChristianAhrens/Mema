@@ -36,7 +36,11 @@ See [LATEST RELEASE](https://github.com/ChristianAhrens/Mema/releases/latest) fo
 * [Usecase: Studio sidecar monitoring](#rackmonitoringusecase)
 * [Usecase: Mobile recording monitoring](#mobilerecordingusecase)
 * [Usecase: ADM-OSC driven external panning control](#admoscusecase)
-* [App architecture](#architectureoverview)
+* [Architecture](#architecture)
+  * [Architecture overview](#architectureoverview)
+  * [Mema architecture](#memaarchitecture)
+  * [Mema.Mo architecture](#memamoarchitecture)
+  * [Mema.Re architecture](#memarearchitecture)
 
 
 <a name="introduction" />
@@ -251,8 +255,236 @@ ___This does only work when using X server as graphics backend. Using Wayland re
   * Clips 5-6 configured to control ADM-OSC objects 5-6 with Z=1 -> Mema.Re height panning layer
 
 
+<a name="architecture" />
+
+## Architecture
+
 <a name="architectureoverview" />
 
-## App Architecture
+### Architecture overview - Mema, Mema.Mo, Mema.Re interaction/interconnection
 
-_T.B.D._
+```mermaid
+flowchart LR
+    subgraph mema["Mema — Audio Matrix Server"]
+        subgraph mema_audio["Audio Engine"]
+            audio_dev["Audio Device I/O"]
+            matrix["Routing Matrix & Mutes"]
+            pluginhost["Plugin Host\nVST / AU / LV2"]
+            analyzers["Input & Output Analyzers"]
+        end
+        subgraph mema_net["Network"]
+            tcp_srv["TCP Server :55668"]
+            svc_srv["Multicast Discovery"]
+        end
+    end
+
+    subgraph memo["Mema.Mo — Monitor"]
+        subgraph memo_net["Connection"]
+            mo_disc["Multicast Discovery"]
+            mo_sock["TCP Client"]
+        end
+        subgraph memo_viz["Visualization"]
+            mo_anlz["Local Analyzer"]
+            mo_meter["Meterbridge"]
+            mo_2d["2D Field Output"]
+            mo_wave["Waveform"]
+            mo_spect["Spectrum"]
+        end
+    end
+
+    subgraph mere["Mema.Re — Remote Control"]
+        subgraph mere_net["Connection"]
+            re_disc["Multicast Discovery"]
+            re_sock["TCP Client"]
+        end
+        subgraph mere_ctrl["Controls"]
+            re_fader["Faderbank Control"]
+            re_pan["2D Panning Control"]
+            re_plugin["Plugin Parameter Control"]
+            re_osc["ADM-OSC Receiver"]
+        end
+    end
+
+    audio_dev --> matrix
+    matrix --> pluginhost
+    matrix --> analyzers
+    analyzers --> tcp_srv
+    tcp_srv --> svc_srv
+
+    mo_disc --> mo_sock
+    mo_sock --> mo_anlz
+    mo_anlz --> mo_meter
+    mo_anlz --> mo_2d
+    mo_anlz --> mo_wave
+    mo_anlz --> mo_spect
+
+    re_disc --> re_sock
+    re_sock --> re_fader
+    re_sock --> re_pan
+    re_sock --> re_plugin
+    re_osc --> re_pan
+
+    mo_sock -- TCP --> tcp_srv
+    re_sock -- TCP --> tcp_srv
+```
+
+**Mema** is the core tool, providing matrix processing, a popup-style UI and tcp server for clients to connect and monitor/control data:
+- `MemaProcessor` drives audio I/O via JUCE `AudioDeviceManager`, applying per-channel input/output mutes and a full crosspoint gain matrix
+- An optional plugin (VST/VST3/AU/LADSPA/LV2) can be inserted pre- or post-matrix; each plugin parameter can be individually marked as remotely controllable with a configurable control type (`Continuous`, `Discrete`, `Toggle`)
+- `ProcessorDataAnalyzer` (one per direction) performs peak/RMS/hold metering and FFT spectrum analysis at ~10 ms intervals
+- `InterprocessConnectionServerImpl` serves multiple simultaneous TCP clients on port 55668; `ServiceTopologyManager` announces the server via multicast
+- Network protocol messages include: `ControlParametersMessage`, `AudioInputBufferMessage`/`AudioOutputBufferMessage`, `PluginParameterInfosMessage`, `PluginParameterValueMessage`
+
+**Mema.Mo** is the monitoring client:
+- Discovers Mema via multicast and opens a persistent TCP socket to receive streaming audio output buffers
+- Received buffers are fed into a local `ProcessorDataAnalyzer` replica for level and spectrum computation
+- Four pluggable visualization components subscribe to the analyzer: `MeterbridgeComponent`, `TwoDFieldOutputComponent` (LRS up to 9.1.6 ATMOS layouts), `WaveformAudioComponent`, and `SpectrumAudioComponent`
+
+**Mema.Re** is the remote control client:
+- Discovers Mema via multicast and opens a persistent TCP socket
+- Receives a full `ControlParametersMessage` state snapshot on connect, then sends updated snapshots on user interaction
+- Three control modes: `FaderbankControlComponent` (input×output crosspoint sliders/mutes), `PanningControlComponent` (interactive 2D spatial field backed by `TwoDFieldMultisliderComponent`), and `PluginControlComponent` (per-parameter controls rendered dynamically as slider, combo box, or toggle button based on `ParameterControlType`)
+- `ADMOSController` listens for ADM-OSC UDP packets (x/y/z/width/mute per object) and feeds them directly into the panning control
+
+<a name="memaarchitecture" />
+
+### Mema — Internal Architecture
+
+```mermaid
+flowchart LR
+    adm["AudioDeviceManager\n(JUCE)"]
+    cfg["MemaAppConfiguration\n(XML)"]
+
+    subgraph proc["MemaProcessor"]
+        in_mutes["Input Mutes"]
+        xp["Crosspoint Matrix\ngains & enables"]
+        out_mutes["Output Mutes"]
+        plugin["Plugin Host\nVST / AU / LV2\n(optional, pre or post matrix)"]
+        in_anlz["Input Analyzer\npeak · RMS · hold · FFT"]
+        out_anlz["Output Analyzer\npeak · RMS · hold · FFT"]
+    end
+
+    subgraph ui["MemaProcessorEditor"]
+        in_ctrl["InputControlComponent"]
+        xp_ctrl["CrosspointsControlComponent"]
+        out_ctrl["OutputControlComponent"]
+        plug_ctrl["PluginControlComponent\n(load · pre/post · param types)"]
+        meter["MeterbridgeComponent"]
+    end
+
+    subgraph net["Network"]
+        tcp["InterprocessConnectionServerImpl\n:55668"]
+        disc["ServiceTopologyManager\n(multicast)"]
+    end
+
+    adm -->|audio in| in_mutes
+    in_mutes --> xp
+    xp --> out_mutes
+    out_mutes -->|audio out| adm
+    xp -.- plugin
+
+    in_mutes --> in_anlz
+    out_mutes --> out_anlz
+
+    in_anlz --> in_ctrl
+    in_anlz --> meter
+    out_anlz --> out_ctrl
+    out_anlz --> meter
+    xp --> xp_ctrl
+    plug_ctrl --> plugin
+
+    xp -->|state & audio buffers| tcp
+    tcp --> disc
+
+    cfg -.- proc
+```
+
+<a name="memamoarchitecture" />
+
+### Mema.Mo — Internal Architecture
+
+```mermaid
+flowchart TD
+    multicast[/"Mema Multicast Announcement"/]
+    mema_srv[/"Mema TCP Server :55668"/]
+
+    subgraph app["Mema.Mo Application"]
+        cfg["MemaMoAppConfiguration\n(XML)"]
+        main["MainComponent\n(state machine:\nDiscovering → Connecting → Monitoring)"]
+
+        subgraph connection["Discovery & Connection"]
+            disc_comp["MemaClientDiscoverComponent"]
+            conn_comp["MemaClientConnectingComponent"]
+            sock["InterprocessConnectionImpl\n(TCP client)"]
+        end
+
+        subgraph monitor["MemaMoComponent"]
+            anlz["ProcessorDataAnalyzer\n(local replica)\npeak · RMS · hold · FFT"]
+
+            subgraph viz["Visualization (switchable)"]
+                meter2["MeterbridgeComponent\n(level meters)"]
+                field["TwoDFieldOutputComponent\n(2D spatial: LRS to 9.1.6 ATMOS)"]
+                wave["WaveformAudioComponent"]
+                spect["SpectrumAudioComponent"]
+            end
+        end
+    end
+
+    multicast -->|discovery| disc_comp
+    disc_comp -->|selected service| conn_comp
+    conn_comp --> sock
+    sock <-->|TCP| mema_srv
+    sock -->|AudioOutputBufferMessage\nAnalyzerParametersMessage\nEnvironmentParametersMessage| anlz
+    anlz --> meter2
+    anlz --> field
+    anlz --> wave
+    anlz --> spect
+    cfg -.- main
+    main --> disc_comp
+```
+
+<a name="memarearchitecture" />
+
+### Mema.Re — Internal Architecture
+
+```mermaid
+flowchart TD
+    multicast[/"Mema Multicast Announcement"/]
+    mema_srv[/"Mema TCP Server :55668"/]
+    ext_ctrl[/"External Controller\n(e.g. Grapes)\nADM-OSC UDP"/]
+
+    subgraph app["Mema.Re Application"]
+        cfg["MemaReAppConfiguration\n(XML)"]
+        main["MainComponent\n(state machine:\nDiscovering → Connecting → Controlling)"]
+
+        subgraph connection["Discovery & Connection"]
+            disc_comp["MemaClientDiscoverComponent"]
+            conn_comp["MemaClientConnectingComponent"]
+            sock["InterprocessConnectionImpl\n(TCP client)"]
+        end
+
+        subgraph remote["MemaReComponent"]
+            subgraph modes["Control Modes (switchable)"]
+                fader["FaderbankControlComponent\ninput x output crosspoint sliders & mutes"]
+                pan["PanningControlComponent\n+ TwoDFieldMultisliderComponent\n(LRS to 9.1.6 ATMOS)"]
+                plug["PluginControlComponent\nslider / combobox / toggle\nper ParameterControlType"]
+            end
+            admosc["ADMOSController\n(ADM-OSC UDP)\nx · y · z · width · mute per object"]
+        end
+    end
+
+    multicast -->|discovery| disc_comp
+    disc_comp -->|selected service| conn_comp
+    conn_comp --> sock
+    sock <-->|TCP| mema_srv
+    sock -->|ControlParametersMessage\nPluginParameterInfosMessage| fader
+    sock -->|ControlParametersMessage\nPluginParameterInfosMessage| pan
+    sock -->|PluginParameterInfosMessage| plug
+    fader -->|ControlParametersMessage| sock
+    pan -->|ControlParametersMessage| sock
+    plug -->|PluginParameterValueMessage| sock
+    ext_ctrl -->|OSC UDP| admosc
+    admosc -->|position & mute updates| pan
+    cfg -.- main
+    main --> disc_comp
+```

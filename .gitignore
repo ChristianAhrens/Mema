@@ -5,3 +5,4 @@ MenuBarMatrixMonitor/ContentsPath
 *.dmg
 .DS_Store
 *.exe
+.claude
