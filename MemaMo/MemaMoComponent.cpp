@@ -355,7 +355,7 @@ void MemaMoComponent::resized()
     {
         auto margin = 8;
         auto bounds = getLocalBounds().reduced(margin, margin);
-        if (bounds.getAspectRatio() >= 1)
+        if (!bounds.isEmpty() && bounds.getAspectRatio() >= 1)
         {
             // landscape
             if (m_inputMeteringComponent && m_outputMeteringComponent)
