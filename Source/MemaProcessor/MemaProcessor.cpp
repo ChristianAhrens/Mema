@@ -197,19 +197,32 @@ MemaProcessor::MemaProcessor(XmlElement* stateXml) :
 			};
 			connection->onConnectionMade = [=](int connectionId ) { DBG(juce::String(__FUNCTION__) << " connection " << connectionId << " made");
 				m_trafficTypesPerConnection[connectionId].clear();
-				if (m_networkServer && m_networkServer->hasActiveConnections())
+				if (m_networkServer && m_networkServer->hasActiveConnection(connectionId))
 				{
 					auto paletteStyle = JUCEAppBasics::CustomLookAndFeel::PaletteStyle::PS_Dark;
 					if (getActiveEditor())
 						if (auto claf = dynamic_cast<JUCEAppBasics::CustomLookAndFeel*>(&getActiveEditor()->getLookAndFeel()))
 							paletteStyle = claf->getPaletteStyle();
 
+					std::map<std::uint16_t, bool> inputMuteStates;
+					std::map<std::uint16_t, bool> outputMuteStates;
+					std::map<std::uint16_t, std::map<std::uint16_t, bool>> matrixCrosspointStates;
+					std::map<std::uint16_t, std::map<std::uint16_t, float>> matrixCrosspointValues;
+					{
+						const ScopedLock sl(m_audioDeviceIOCallbackLock);
+						inputMuteStates = m_inputMuteStates;
+						outputMuteStates = m_outputMuteStates;
+						matrixCrosspointStates = m_matrixCrosspointStates;
+						matrixCrosspointValues = m_matrixCrosspointValues;
+					}
+
+					auto sendIds = std::vector<int>{ connectionId };
 					auto success = true;
-					success = success && m_networkServer->enqueueMessage(std::make_unique<AnalyzerParametersMessage>(int(getSampleRate()), getBlockSize())->getSerializedMessage());
-					success = success && m_networkServer->enqueueMessage(std::make_unique<ReinitIOCountMessage>(m_inputChannelCount, m_outputChannelCount)->getSerializedMessage());
-					success = success && m_networkServer->enqueueMessage(std::make_unique<EnvironmentParametersMessage>(paletteStyle)->getSerializedMessage());
-					success = success && m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(m_inputMuteStates, m_outputMuteStates, m_matrixCrosspointStates, m_matrixCrosspointValues)->getSerializedMessage());
-					success = success && m_networkServer->enqueueMessage(std::make_unique<PluginParameterInfosMessage>(m_pluginInstance ? m_pluginInstance->getName().toStdString() : "", m_pluginParameterInfos)->getSerializedMessage());
+					success = success && m_networkServer->enqueueMessage(std::make_unique<AnalyzerParametersMessage>(int(getSampleRate()), getBlockSize())->getSerializedMessage(), sendIds);
+					success = success && m_networkServer->enqueueMessage(std::make_unique<ReinitIOCountMessage>(m_inputChannelCount, m_outputChannelCount)->getSerializedMessage(), sendIds);
+					success = success && m_networkServer->enqueueMessage(std::make_unique<EnvironmentParametersMessage>(paletteStyle)->getSerializedMessage(), sendIds);
+					success = success && m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, matrixCrosspointStates, matrixCrosspointValues)->getSerializedMessage(), sendIds);
+					success = success && m_networkServer->enqueueMessage(std::make_unique<PluginParameterInfosMessage>(m_pluginInstance ? m_pluginInstance->getName().toStdString() : "", m_pluginParameterInfos)->getSerializedMessage(), sendIds);
 					if (!success)
 						m_networkServer->cleanupDeadConnections();
 				}
