@@ -507,6 +507,9 @@ void MainComponent::setMeteringColour(const juce::Colour& meteringColour)
     m_meteringColour = meteringColour;
 
     applyMeteringColour();
+
+    if (m_connectingComponent)
+        m_connectingComponent->lookAndFeelChanged();
 }
 
 void MainComponent::applyMeteringColour()

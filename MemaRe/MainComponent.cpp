@@ -601,6 +601,9 @@ void MainComponent::setControlColour(const juce::Colour& controlColour)
     m_controlColour = controlColour;
 
     applyControlColour();
+
+    if (m_connectingComponent)
+        m_connectingComponent->lookAndFeelChanged();
 }
 
 void MainComponent::applyControlColour()
