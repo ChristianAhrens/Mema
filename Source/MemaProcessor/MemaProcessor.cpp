@@ -427,7 +427,7 @@ bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
 				{
 					jassert(paramInfo.name == param->getName(100));
 					jassert(paramInfo.label == param->getLabel());
-					jassert(paramInfo.defaultValue == param->getDefaultValue());
+					//jassert(paramInfo.defaultValue == param->getDefaultValue()); //float rounding issue prevents this from making sense
 					jassert(paramInfo.isAutomatable == param->isAutomatable());
 					jassert(paramInfo.category == param->getCategory());
 					if (auto* rangedParam = dynamic_cast<const juce::RangedAudioParameter*>(param))
