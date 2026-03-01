@@ -28,7 +28,7 @@ namespace Mema
 
 //==============================================================================
 TwoDFieldOutputComponent::TwoDFieldOutputComponent()
-    : TwoDFieldBase(), AbstractAudioVisualizer()
+    : JUCEAppBasics::TwoDFieldBase(), AbstractAudioVisualizer()
 {
     setUsesValuesInDB(true);
 }

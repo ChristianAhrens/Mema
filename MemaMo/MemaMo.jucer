@@ -30,6 +30,9 @@
               file="../submodules/JUCE-AppBasics/Source/ToggleStateSlider.cpp"/>
         <FILE id="bizpBa" name="ToggleStateSlider.h" compile="0" resource="0"
               file="../submodules/JUCE-AppBasics/Source/ToggleStateSlider.h"/>
+        <FILE id="hLYOrY" name="TwoDFieldBase.cpp" compile="1" resource="0"
+              file="../submodules/JUCE-AppBasics/Source/TwoDFieldBase.cpp"/>
+        <FILE id="YfMF8V" name="TwoDFieldBase.h" compile="0" resource="0" file="../submodules/JUCE-AppBasics/Source/TwoDFieldBase.h"/>
         <FILE id="l9NfyW" name="WebUpdateDetector.cpp" compile="1" resource="0"
               file="../submodules/JUCE-AppBasics/Source/WebUpdateDetector.cpp"/>
         <FILE id="yh3GjW" name="WebUpdateDetector.h" compile="0" resource="0"
@@ -116,9 +119,6 @@
             file="../Source/MemaClientCommon/SpectrumAudioComponent.cpp"/>
       <FILE id="lO4BFH" name="SpectrumAudioComponent.h" compile="0" resource="0"
             file="../Source/MemaClientCommon/SpectrumAudioComponent.h"/>
-      <FILE id="OImvpX" name="TwoDFieldBase.cpp" compile="1" resource="0"
-            file="../Source/MemaClientCommon/TwoDFieldBase.cpp"/>
-      <FILE id="ID9Gbw" name="TwoDFieldBase.h" compile="0" resource="0" file="../Source/MemaClientCommon/TwoDFieldBase.h"/>
       <FILE id="qUZJQI" name="TwoDFieldOutputComponent.cpp" compile="1" resource="0"
             file="../Source/MemaClientCommon/TwoDFieldOutputComponent.cpp"/>
       <FILE id="FncK9u" name="TwoDFieldOutputComponent.h" compile="0" resource="0"

@@ -8,6 +8,9 @@
   <MAINGROUP id="YIs3Nm" name="Mema.Re">
     <GROUP id="{60526C8C-38C9-8A62-4BE8-08FDFBF21423}" name="submodules">
       <GROUP id="{A748DC48-D24B-A4B1-772D-A48B7873F767}" name="JUCEAppBascics">
+        <FILE id="fXAKXR" name="TwoDFieldBase.cpp" compile="1" resource="0"
+              file="../submodules/JUCE-AppBasics/Source/TwoDFieldBase.cpp"/>
+        <FILE id="AGUSiR" name="TwoDFieldBase.h" compile="0" resource="0" file="../submodules/JUCE-AppBasics/Source/TwoDFieldBase.h"/>
         <FILE id="sCmZLF" name="ServiceTopologyTreeView.cpp" compile="1" resource="0"
               file="../submodules/JUCE-AppBasics/Source/ServiceTopologyTreeView.cpp"/>
         <FILE id="Fwn9RQ" name="ServiceTopologyTreeView.h" compile="0" resource="0"
@@ -83,9 +86,6 @@
             file="../Source/MemaClientCommon/PanningControlComponent.cpp"/>
       <FILE id="PFJ6ii" name="PanningControlComponent.h" compile="0" resource="0"
             file="../Source/MemaClientCommon/PanningControlComponent.h"/>
-      <FILE id="XDPBR5" name="TwoDFieldBase.cpp" compile="1" resource="0"
-            file="../Source/MemaClientCommon/TwoDFieldBase.cpp"/>
-      <FILE id="WGIfVA" name="TwoDFieldBase.h" compile="0" resource="0" file="../Source/MemaClientCommon/TwoDFieldBase.h"/>
       <FILE id="PYcLvt" name="TwoDFieldMultisliderComponent.cpp" compile="1"
             resource="0" file="../Source/MemaClientCommon/TwoDFieldMultisliderComponent.cpp"/>
       <FILE id="TZMWx9" name="TwoDFieldMultisliderComponent.h" compile="0"

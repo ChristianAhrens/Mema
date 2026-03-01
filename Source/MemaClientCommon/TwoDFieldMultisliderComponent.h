@@ -20,7 +20,7 @@
 
 #include <JuceHeader.h>
 
-#include "TwoDFieldBase.h"
+#include <TwoDFieldBase.h>
 #include "../MemaProcessorEditor/AbstractAudioVisualizer.h"
 
  /**
@@ -38,7 +38,7 @@ namespace Mema
 //==============================================================================
 /*
 */
-class TwoDFieldMultisliderComponent  :   public TwoDFieldBase, public juce::Component
+class TwoDFieldMultisliderComponent  :   public JUCEAppBasics::TwoDFieldBase, public juce::Component
 {
 public:
     struct TwoDMultisliderValue

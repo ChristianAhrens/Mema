@@ -21,7 +21,7 @@
 #include <JuceHeader.h>
 
 #include "../MemaProcessorEditor/AbstractAudioVisualizer.h"
-#include "TwoDFieldBase.h"
+#include <TwoDFieldBase.h>
 
 namespace Mema
 {
@@ -29,7 +29,7 @@ namespace Mema
 //==============================================================================
 /*
 */
-class TwoDFieldOutputComponent  :   public TwoDFieldBase, public AbstractAudioVisualizer
+class TwoDFieldOutputComponent  :   public JUCEAppBasics::TwoDFieldBase, public AbstractAudioVisualizer
 {
 public:
     TwoDFieldOutputComponent();
