@@ -11,6 +11,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+## [0.10.0] 2026-03-02
+### Added
+- Added Mema plug-in parameter remote control
+- Added Mema.Mo spectrum visualizer
+- Added Mema.Re plug-in control
+- Added Mema.Mo and Mema.Re fullscreen toggling support (Windows, Linux, macOS)
+- Added Mema, Mema.Mo, Mema.Re UI colouring option 'Laser'
+
+### Changed
+- Updated JUCE framework to 8.0.12
+- Changed Windows default deployment to VisualStudio2026
+
+### Fixed
+- Fixed Mema.Re not updation control parameters correctly upon intial connection to Mema
+
 ## [0.9.0] 2025-12-07
 ### Added
 - Added support for 'ServiceTopology' management for detection and connection inbetween Mema, Mema.Mo and Mema.Re
