@@ -86,6 +86,15 @@ MemaProcessorEditor::MemaProcessorEditor(AudioProcessor& processor)
         if (memaProc)
             memaProc->clearPlugin();
     };
+    m_pluginControl->onPluginParametersStatusChanged = [=]() {
+        auto& paramInfos = m_pluginControl->getParameterInfos();
+        auto memaProc = dynamic_cast<MemaProcessor*>(getAudioProcessor());
+        if (memaProc)
+        {
+            for (auto& info : paramInfos)
+                memaProc->setPluginParameterRemoteControlInfos(info.second.index, info.second.isRemoteControllable, info.second.type, info.second.stepCount);
+        }
+    };
     addAndMakeVisible(m_pluginControl.get());
 
     m_ioLabel = std::make_unique<IOLabelComponent>(IOLabelComponent::Direction::OI);
@@ -124,6 +133,7 @@ MemaProcessorEditor::MemaProcessorEditor(AudioProcessor& processor)
         m_pluginControl->setPluginEnabled(memaProc->isPluginEnabled());
         m_pluginControl->setPluginPrePost(memaProc->isPluginPost());
         m_pluginControl->setSelectedPlugin(memaProc->getPluginDescription());
+        m_pluginControl->setParameterInfos(memaProc->getPluginParameterInfos());
     }
 
     m_gridLayout.items = { juce::GridItem(*m_ioLabel), juce::GridItem(*m_inputCtrl), juce::GridItem(*m_outputCtrl), juce::GridItem(*m_crosspointCtrl) };

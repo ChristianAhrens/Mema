@@ -1,7 +1,7 @@
 #define MyAppName "MemaRe"
 #define MyAppExeName "MemaRe.exe"
-#define MyAppExePath "..\..\..\MemaRe\Builds\VisualStudio2022\x64\Release\App\MemaRe.exe"
-#define MyAppVersion GetVersionNumbersString("..\..\..\MemaRe\Builds\VisualStudio2022\x64\Release\App\MemaRe.exe")
+#define MyAppExePath "..\..\..\MemaRe\Builds\VisualStudio2026\x64\Release\App\MemaRe.exe"
+#define MyAppVersion GetVersionNumbersString("..\..\..\MemaRe\Builds\VisualStudio2026\x64\Release\App\MemaRe.exe")
 #define MyAppPublisher "Christian Ahrens"
 #define MyAppURL "https://www.github.com/ChristianAhrens/Mema"
 
@@ -21,7 +21,7 @@ LicenseFile=..\..\..\LICENSE
 InfoAfterFile=..\..\..\CHANGELOG.md
 PrivilegesRequired=lowest
 OutputBaseFilename="{#MyAppName}Setup_v{#MyAppVersion}"
-SetupIconFile=..\..\..\MemaRe\Builds\VisualStudio2022\icon.ico
+SetupIconFile=..\..\..\MemaRe\Builds\VisualStudio2026\icon.ico
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern

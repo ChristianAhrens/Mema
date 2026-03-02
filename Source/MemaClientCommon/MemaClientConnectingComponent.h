@@ -30,8 +30,9 @@ public:
     void setMasterServiceDescription(const juce::String& serviceDescription);
 
     //==============================================================================
-    void resized() override;
     void paint(juce::Graphics& g) override;
+    void resized() override;
+    void lookAndFeelChanged() override;
 
 private:
     double                                  m_progress = -1.0;

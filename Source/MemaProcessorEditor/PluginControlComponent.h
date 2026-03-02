@@ -20,10 +20,13 @@
 
 #include <JuceHeader.h>
 
+#include "../MemaProcessor/MemaPluginParameterInfo.h"
+
+#include <FixedFontTextEditor.h>
+
 
 namespace Mema
 {
-
 
 /**
  * This class was stolen from juce's juce::PluginListComponent::TableModel
@@ -270,6 +273,9 @@ public:
     void setPluginEnabled(bool enabled = true);
     void setPluginPrePost(bool post = false);
     void setSelectedPlugin(const juce::PluginDescription& pluginDescription);
+    void setParameterInfos(const std::vector<PluginParameterInfo>& infos);
+    const std::map<int, Mema::PluginParameterInfo>& getParameterInfos();
+    void showParameterConfig();
 
     //==============================================================================
     void paint (Graphics&) override;
@@ -281,6 +287,7 @@ public:
     std::function<void()>                               onShowPluginEditor;
     std::function<void(bool)>                           onPluginEnabledChange;
     std::function<void(bool)>                           onPluginPrePostChange;
+    std::function<void()>                               onPluginParametersStatusChanged;
     std::function<void()>                               onClearPlugin;
 
 private:
@@ -292,13 +299,24 @@ private:
     std::unique_ptr<juce::TextButton>       m_showEditorButton;
     std::unique_ptr<juce::DrawableButton>   m_triggerSelectButton;
     std::unique_ptr<Spacing>                m_spacing3;
+    std::unique_ptr<juce::DrawableButton>   m_parameterConfigButton;
+    std::unique_ptr<Spacing>                m_spacing4;
     std::unique_ptr<juce::DrawableButton>   m_clearButton;
 
     std::unique_ptr<PluginListAndSelectComponent>   m_pluginSelectionComponent;
     juce::PluginDescription                         m_selectedPluginDescription;
+    
+    std::map<int, Mema::PluginParameterInfo>        m_parameterInfos;
+
+    std::map<int, std::unique_ptr<juce::ToggleButton>>                  m_messageBoxParameterToggles;
+    std::map<int, std::unique_ptr<juce::ComboBox>>                      m_messageBoxParameterCtrlTypess;
+    std::map<int, std::unique_ptr<JUCEAppBasics::FixedFontTextEditor>>  m_messageBoxParameterCtrlStepsEdit;
+    std::unique_ptr<juce::Component>                                    m_messageBoxParameterTogglesContainer;
+    juce::FlexBox                                                       m_messageBoxParameterTogglesFlexBox;
+    std::unique_ptr<juce::AlertWindow>                                  m_messageBox;
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginControlComponent)
 };
 
-}
+} // namespace Mema

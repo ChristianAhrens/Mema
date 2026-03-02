@@ -30,7 +30,7 @@ namespace Mema
 
 
 //==============================================================================
-class MemaNetworkClientCommanderWrapper : public MemaInputCommander, public MemaOutputCommander, public MemaCrosspointCommander
+class MemaNetworkClientCommanderWrapper : public MemaInputCommander, public MemaOutputCommander, public MemaCrosspointCommander, public MemaPluginCommander
 {
 public:
 	void setInputMute(std::uint16_t channel, bool muteState, int userId) override
@@ -101,6 +101,27 @@ public:
 		}
 	};
 
+	void setPluginParameterInfos(const std::vector<PluginParameterInfo>& parameterInfos, const std::string& name, int userId = -1) override
+	{
+		if (m_networkServer && m_networkServer->hasActiveConnections())
+		{
+			auto sendIds = m_networkServer->getActiveConnectionIds();
+			sendIds.erase(std::remove(sendIds.begin(), sendIds.end(), userId), sendIds.end());
+			m_networkServer->enqueueMessage(std::make_unique<PluginParameterInfosMessage>(name, parameterInfos)->getSerializedMessage(), sendIds);
+		}
+	}
+
+	void setPluginParameterValue(std::uint16_t index, std::string id, float currentValue, int userId = -1) override
+	{
+		if (m_networkServer && m_networkServer->hasActiveConnections())
+		{
+			DBG(juce::String(__FUNCTION__) << " sending to net: " << int(index) << " > " << currentValue);
+			auto sendIds = m_networkServer->getActiveConnectionIds();
+			sendIds.erase(std::remove(sendIds.begin(), sendIds.end(), userId), sendIds.end());
+			m_networkServer->enqueueMessage(std::make_unique<PluginParameterValueMessage>(index, id, currentValue)->getSerializedMessage(), sendIds);
+		}
+	}
+
 	void setIOCount(std::uint16_t inputCount, std::uint16_t outputCount) override
 	{
 		if (m_networkServer && m_networkServer->hasActiveConnections())
@@ -142,7 +163,9 @@ MemaProcessor::MemaProcessor(XmlElement* stateXml) :
 	}
 
 	m_inputDataAnalyzer = std::make_unique<ProcessorDataAnalyzer>();
+	m_inputDataAnalyzer->setUseProcessingTypes(true, false, false);
 	m_outputDataAnalyzer = std::make_unique<ProcessorDataAnalyzer>();
+	m_outputDataAnalyzer->setUseProcessingTypes(true, false, false);
 
 	m_deviceManager = std::make_unique<AudioDeviceManager>();
 	m_deviceManager->addAudioCallback(this);
@@ -174,18 +197,32 @@ MemaProcessor::MemaProcessor(XmlElement* stateXml) :
 			};
 			connection->onConnectionMade = [=](int connectionId ) { DBG(juce::String(__FUNCTION__) << " connection " << connectionId << " made");
 				m_trafficTypesPerConnection[connectionId].clear();
-				if (m_networkServer && m_networkServer->hasActiveConnections())
+				if (m_networkServer && m_networkServer->hasActiveConnection(connectionId))
 				{
 					auto paletteStyle = JUCEAppBasics::CustomLookAndFeel::PaletteStyle::PS_Dark;
 					if (getActiveEditor())
 						if (auto claf = dynamic_cast<JUCEAppBasics::CustomLookAndFeel*>(&getActiveEditor()->getLookAndFeel()))
 							paletteStyle = claf->getPaletteStyle();
 
+					std::map<std::uint16_t, bool> inputMuteStates;
+					std::map<std::uint16_t, bool> outputMuteStates;
+					std::map<std::uint16_t, std::map<std::uint16_t, bool>> matrixCrosspointStates;
+					std::map<std::uint16_t, std::map<std::uint16_t, float>> matrixCrosspointValues;
+					{
+						const ScopedLock sl(m_audioDeviceIOCallbackLock);
+						inputMuteStates = m_inputMuteStates;
+						outputMuteStates = m_outputMuteStates;
+						matrixCrosspointStates = m_matrixCrosspointStates;
+						matrixCrosspointValues = m_matrixCrosspointValues;
+					}
+
+					auto sendIds = std::vector<int>{ connectionId };
 					auto success = true;
-					success = success && m_networkServer->enqueueMessage(std::make_unique<AnalyzerParametersMessage>(int(getSampleRate()), getBlockSize())->getSerializedMessage());
-					success = success && m_networkServer->enqueueMessage(std::make_unique<ReinitIOCountMessage>(m_inputChannelCount, m_outputChannelCount)->getSerializedMessage());
-					success = success && m_networkServer->enqueueMessage(std::make_unique<EnvironmentParametersMessage>(paletteStyle)->getSerializedMessage());
-					success = success && m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(m_inputMuteStates, m_outputMuteStates, m_matrixCrosspointStates, m_matrixCrosspointValues)->getSerializedMessage());
+					success = success && m_networkServer->enqueueMessage(std::make_unique<AnalyzerParametersMessage>(int(getSampleRate()), getBlockSize())->getSerializedMessage(), sendIds);
+					success = success && m_networkServer->enqueueMessage(std::make_unique<ReinitIOCountMessage>(m_inputChannelCount, m_outputChannelCount)->getSerializedMessage(), sendIds);
+					success = success && m_networkServer->enqueueMessage(std::make_unique<EnvironmentParametersMessage>(paletteStyle)->getSerializedMessage(), sendIds);
+					success = success && m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, matrixCrosspointStates, matrixCrosspointValues)->getSerializedMessage(), sendIds);
+					success = success && m_networkServer->enqueueMessage(std::make_unique<PluginParameterInfosMessage>(m_pluginInstance ? m_pluginInstance->getName().toStdString() : "", m_pluginParameterInfos)->getSerializedMessage(), sendIds);
 					if (!success)
 						m_networkServer->cleanupDeadConnections();
 				}
@@ -206,6 +243,7 @@ MemaProcessor::MemaProcessor(XmlElement* stateXml) :
 	addInputCommander(static_cast<MemaInputCommander*>(m_networkCommanderWrapper.get()));
 	addOutputCommander(static_cast<MemaOutputCommander*>(m_networkCommanderWrapper.get()));
 	addCrosspointCommander(static_cast<MemaCrosspointCommander*>(m_networkCommanderWrapper.get()));
+	addPluginCommander(static_cast<MemaPluginCommander*>(m_networkCommanderWrapper.get()));
 
 	m_timedConfigurationDumper = std::make_unique<juce::TimedCallback>([=]() {
 		if (isTimedConfigurationDumpPending())
@@ -259,6 +297,14 @@ std::unique_ptr<juce::XmlElement> MemaProcessor::createStateXml()
 		juce::MemoryBlock destData;
 		m_pluginInstance->getStateInformation(destData);
 		plgConfElm->addTextElement(juce::Base64::toBase64(destData.getData(), destData.getSize()));
+	}
+	for (auto const plgParam : getPluginParameterInfos())
+	{
+		auto plgParamElm = std::make_unique<juce::XmlElement>(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::PLUGINPARAM));
+		plgParamElm->setAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::IDX), plgParam.index);
+		plgParamElm->setAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::CONTROLLABLE), isPluginParameterRemoteControllable(plgParam.index));
+		plgParamElm->addTextElement(plgParam.toString());
+		plgConfElm->addChildElement(plgParamElm.release());
 	}
 	stateXml->addChildElement(plgConfElm.release());
 
@@ -359,6 +405,43 @@ bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
 				juce::MemoryOutputStream destDataStream;
 				juce::Base64::convertFromBase64(destDataStream, pluginDescriptionXml->getAllSubText());
 				m_pluginInstance->setStateInformation(destDataStream.getData(), int(destDataStream.getDataSize()));
+			}
+		}
+
+		for (auto* plgParamElm : plgConfElm->getChildWithTagNameIterator(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::PLUGINPARAM)))
+		{
+			if (nullptr != plgParamElm)
+			{
+				auto index = plgParamElm->getIntAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::IDX));
+				auto paramString = plgParamElm->getAllSubText();
+				auto paramInfo = PluginParameterInfo::fromString(paramString);
+				paramInfo.isRemoteControllable = (plgParamElm->getIntAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::CONTROLLABLE)) == 1);
+				jassert(paramInfo.index == index);
+				// update the pluginparameterinfo
+				auto iter = std::find_if(getPluginParameterInfos().begin(), getPluginParameterInfos().end(), [=](const auto& info) { return info.index == index; });
+				if (iter != getPluginParameterInfos().end())
+					iter->initializeFromString(paramString);
+				// set the parameter
+				auto* param = getPluginParameter(index);
+				if (param)
+				{
+					jassert(paramInfo.name == param->getName(100));
+					jassert(paramInfo.label == param->getLabel());
+					//jassert(paramInfo.defaultValue == param->getDefaultValue()); //float rounding issue prevents this from making sense
+					jassert(paramInfo.isAutomatable == param->isAutomatable());
+					jassert(paramInfo.category == param->getCategory());
+					if (auto* rangedParam = dynamic_cast<const juce::RangedAudioParameter*>(param))
+					{
+						auto range = rangedParam->getNormalisableRange();
+						jassert(paramInfo.minValue == range.start);
+						jassert(paramInfo.maxValue == range.end);
+						jassert(paramInfo.stepSize == range.interval);
+						jassert(paramInfo.isDiscrete == range.interval > 0.0f);
+					}
+
+					setPluginParameterRemoteControlInfos(paramInfo.index, paramInfo.isRemoteControllable, paramInfo.type, paramInfo.stepCount);
+					param->setValue(paramInfo.currentValue);
+				}
 			}
 		}
 	}
@@ -669,6 +752,40 @@ void MemaProcessor::removeCrosspointCommander(MemaCrosspointCommander* commander
 		m_crosspointCommanders.erase(existingCrosspointCommander);
 }
 
+void MemaProcessor::addPluginCommander(MemaPluginCommander* commander)
+{
+	if (commander == nullptr)
+		return;
+
+	if (std::find(m_pluginCommanders.begin(), m_pluginCommanders.end(), commander) == m_pluginCommanders.end())
+	{
+		initializePluginCommander(commander);
+
+		m_pluginCommanders.push_back(commander);
+		commander->setPluginParameterValueChangeCallback([=](MemaPluginCommander* sender, std::uint16_t index, std::string id, float value) { return setPluginParameterValue(index, id, value, sender); });
+	}
+}
+
+void MemaProcessor::initializePluginCommander(MemaPluginCommander* commander)
+{
+	if (nullptr != commander)
+	{
+		//// TODO: required? : const ScopedLock sl(m_audioDeviceIOCallbackLock);
+		//for (auto const& inputMuteStatesKV : m_inputMuteStates)
+		//	commander->setInputMute(inputMuteStatesKV.first, inputMuteStatesKV.second);
+	}
+}
+
+void MemaProcessor::removePluginCommander(MemaPluginCommander* commander)
+{
+	if (commander == nullptr)
+		return;
+
+	auto existingPluginCommander = std::find(m_pluginCommanders.begin(), m_pluginCommanders.end(), commander);
+	if (existingPluginCommander != m_pluginCommanders.end())
+		m_pluginCommanders.erase(existingPluginCommander);
+}
+
 void MemaProcessor::updateCommanders()
 {
 	for (auto const& ic : m_inputCommanders)
@@ -685,6 +802,10 @@ void MemaProcessor::updateCommanders()
 	{
 		oc->setChannelCount(m_outputChannelCount > 0 ? std::uint16_t(m_outputChannelCount) : 0);
 		initializeOutputCommander(oc);
+	}
+	for (auto const& pc : m_pluginCommanders)
+	{
+		initializePluginCommander(pc);
 	}
 }
 
@@ -858,12 +979,33 @@ bool MemaProcessor::setPlugin(const juce::PluginDescription& pluginDescription)
 			// threadsafe locking in scope to access plugin
 			{
 				const ScopedLock sl(m_pluginProcessingLock);
+
+				// Clean up old parameter listeners in case another plugin was already loaded
+				if (m_pluginInstance)
+				{
+					for (auto const& param : m_pluginInstance->getParameters())
+						param->addListener(this);
+				}
+
+				m_pluginParameterInfos.clear();
+
 				m_pluginInstance = format->createInstanceFromDescription(pluginDescription, getSampleRate(), getBlockSize(), errorMessage);
 				if (m_pluginInstance)
-                {
-                    m_pluginInstance->setPlayConfigDetails(m_inputChannelCount, m_inputChannelCount, getSampleRate(), getBlockSize());
-                    m_pluginInstance->prepareToPlay(getSampleRate(), getBlockSize());
-                }
+				{
+					m_pluginInstance->setPlayConfigDetails(m_inputChannelCount, m_inputChannelCount, getSampleRate(), getBlockSize());
+
+					// Extract parameters here
+					m_pluginParameterInfos.clear();
+					for (auto const& param : m_pluginInstance->getParameters())
+						m_pluginParameterInfos.push_back(PluginParameterInfo::fromAudioProcessorParameter(*param));
+					postMessage(std::make_unique<PluginParameterInfosChangedMessage>().release());
+
+					// Attach listeners to track parameter changes
+					for (auto const& param : m_pluginInstance->getParameters())
+						param->addListener(this);
+
+					m_pluginInstance->prepareToPlay(getSampleRate(), getBlockSize());
+				}
 			}
 			success = errorMessage.isEmpty();
 			break;
@@ -928,6 +1070,7 @@ void MemaProcessor::clearPlugin()
 	{
 		const ScopedLock sl(m_pluginProcessingLock);
 		m_pluginInstance.reset();
+		m_pluginParameterInfos.clear();
 	}
 
 	if (onPluginSet)
@@ -958,6 +1101,107 @@ void MemaProcessor::closePluginEditor(bool deleteEditorWindow)
 		std::unique_ptr<juce::AudioProcessorEditor>(m_pluginInstance->getActiveEditor()).reset();
 	if (deleteEditorWindow)
 		m_pluginEditorWindow.reset();
+}
+
+std::vector<PluginParameterInfo>& MemaProcessor::getPluginParameterInfos()
+{
+	return m_pluginParameterInfos;
+}
+
+void MemaProcessor::setPluginParameterRemoteControlInfos(int parameterIndex, bool remoteControllable, ParameterControlType type, int steps)
+{
+	if (parameterIndex >= 0 && parameterIndex < m_pluginParameterInfos.size())
+	{
+		m_pluginParameterInfos[parameterIndex].isRemoteControllable = remoteControllable;
+		m_pluginParameterInfos[parameterIndex].type = type;
+		m_pluginParameterInfos[parameterIndex].stepCount = steps;
+
+		jassert(m_pluginInstance);
+		if (m_pluginInstance)
+		{
+			m_pluginParameterInfos[parameterIndex].stepNames.clear();
+			auto param = m_pluginInstance->getParameters()[parameterIndex];
+			if (param && steps > 1)
+			{
+				auto stepSize = 1.0f / (steps - 1);
+				for (int i = 0; i < steps; i++)
+				{
+					m_pluginParameterInfos[parameterIndex].stepNames.push_back(param->getText(i * stepSize, 100).toStdString());
+				}
+			}
+		}
+
+		triggerConfigurationUpdate(false);
+	}
+}
+
+bool MemaProcessor::isPluginParameterRemoteControllable(int parameterIndex)
+{
+	if (parameterIndex >= 0 && parameterIndex < m_pluginParameterInfos.size())
+		return m_pluginParameterInfos[parameterIndex].isRemoteControllable;
+	else
+		return false;
+}
+
+float MemaProcessor::getPluginParameterValue(std::uint16_t parameterIndex) const
+{
+	if (!m_pluginInstance)
+		return 0.0f;
+
+	auto& parameters = m_pluginInstance->getParameters();
+	auto idxInRange = parameterIndex >= 0 && parameterIndex < parameters.size();
+	jassert(idxInRange);
+	if (!idxInRange)
+		return 0.0f;
+
+	const ScopedLock sl(m_pluginProcessingLock);
+	return parameters[parameterIndex]->getValue();
+}
+
+void MemaProcessor::setPluginParameterValue(std::uint16_t parameterIndex, std::string id, float normalizedValue, MemaPluginCommander* sender, int userId)
+{
+	if (!m_pluginInstance)
+		return;
+
+	auto& parameters = m_pluginInstance->getParameters();
+	auto idxInRange = parameterIndex >= 0 && parameterIndex < parameters.size();
+	jassert(idxInRange);
+	if (!idxInRange)
+		return;
+
+	for (auto const& pluginCommander : m_pluginCommanders)
+	{
+		if (pluginCommander != reinterpret_cast<MemaPluginCommander*>(sender) || nullptr != reinterpret_cast<MemaNetworkClientCommanderWrapper*>(sender))
+			pluginCommander->setPluginParameterValue(parameterIndex, id, normalizedValue, userId);
+	}
+
+
+	{
+		const ScopedLock sl(m_pluginProcessingLock);
+
+		parameters[parameterIndex]->setValue(normalizedValue);
+
+		// Update cached value
+		if (parameterIndex < m_pluginParameterInfos.size())
+			m_pluginParameterInfos[parameterIndex].currentValue = normalizedValue;
+	}
+
+	setTimedConfigurationDumpPending();
+}
+
+juce::AudioProcessorParameter* MemaProcessor::getPluginParameter(int parameterIndex) const
+{
+	const ScopedLock sl(m_pluginProcessingLock);
+
+	if (!m_pluginInstance)
+		return nullptr;
+
+	auto& parameters = m_pluginInstance->getParameters();
+
+	if (parameterIndex >= 0 && parameterIndex < parameters.size())
+		return parameters[parameterIndex];
+
+	return nullptr;
 }
 
 AudioDeviceManager* MemaProcessor::getDeviceManager()
@@ -1107,6 +1351,11 @@ void MemaProcessor::handleMessage(const Message& message)
 {
 	auto tId = SerializableMessage::SerializableMessageType::None;
 	juce::MemoryBlock serializedMessageMemoryBlock;
+
+	auto origId = -1;
+	if (auto const sm = dynamic_cast<const SerializableMessage*>(&message))
+		origId = sm->getId();
+
 	if (auto const epm = dynamic_cast<const EnvironmentParametersMessage*>(&message))
 	{
 		serializedMessageMemoryBlock = epm->getSerializedMessage();
@@ -1167,7 +1416,7 @@ void MemaProcessor::handleMessage(const Message& message)
 			for (auto const& crosspointOStateKV : crosspointStateKV.second)
 			{
 				auto& outputNumber = crosspointOStateKV.first;
-				setMatrixCrosspointEnabledValue(inputNumber, outputNumber, crosspointOStateKV.second, static_cast<MemaCrosspointCommander*>(m_networkCommanderWrapper.get()));
+				setMatrixCrosspointEnabledValue(inputNumber, outputNumber, crosspointOStateKV.second, static_cast<MemaCrosspointCommander*>(m_networkCommanderWrapper.get()), origId);
 			}
 		}
 		for (auto const& crosspointValueKV : cpm->getCrosspointValues())
@@ -1176,7 +1425,7 @@ void MemaProcessor::handleMessage(const Message& message)
 			for (auto const& crosspointOValueKV : crosspointValueKV.second)
 			{
 				auto& outputNumber = crosspointOValueKV.first;
-				setMatrixCrosspointFactorValue(inputNumber, outputNumber, crosspointOValueKV.second, static_cast<MemaCrosspointCommander*>(m_networkCommanderWrapper.get()));
+				setMatrixCrosspointFactorValue(inputNumber, outputNumber, crosspointOValueKV.second, static_cast<MemaCrosspointCommander*>(m_networkCommanderWrapper.get()), origId);
 			}
 		}
 
@@ -1187,23 +1436,75 @@ void MemaProcessor::handleMessage(const Message& message)
 		if (!dtsm->hasUserId())
 			DBG("Incoming DataTrafficTypeSelecitonMessage cannot be associated with a connection");
 		else
-			setTrafficTypesForConnectionId(dtsm->getTrafficTypes(), dtsm->getId());
+			setTrafficTypesForConnectionId(dtsm->getTrafficTypes(), origId);
 
 		tId = dtsm->getType();
+	}
+	else if (auto const ppim = dynamic_cast<const PluginParameterInfosMessage*>(&message))
+	{
+		DBG(juce::String(__FUNCTION__) << " ppiCnt:" << ppim->getParameterInfos().size());
+		
+		jassertfalse; // why would parameterinfos of a plugin loaded in mema be changed externally?
+
+		serializedMessageMemoryBlock = ppim->getSerializedMessage();
+
+		tId = ppim->getType();
+	}
+	else if (auto const ppvm = dynamic_cast<const PluginParameterValueMessage*>(&message))
+	{
+		DBG(juce::String(__FUNCTION__) << " ppvIdx:" << int(ppvm->getParameterIndex()) << " > " << ppvm->getCurrentValue());
+		
+		setPluginParameterValue(ppvm->getParameterIndex(), ppvm->getParameterId().toStdString(), ppvm->getCurrentValue(), static_cast<MemaPluginCommander*>(m_networkCommanderWrapper.get()), origId);
+
+		serializedMessageMemoryBlock = ppvm->getSerializedMessage();
+
+		tId = ppvm->getType();
+	}
+	// exception - totally different message type, to decouple callback from processing asynchronously...
+	else if (auto const ppicm = dynamic_cast<const PluginParameterInfosChangedMessage*>(&message))
+	{
+		if (onPluginParameterInfosChanged)
+			onPluginParameterInfosChanged();
+
+		return; // ...abort further handling below here therefor
 	}
 
 	std::vector<int> sendIds;
 	for (auto const& cId : m_trafficTypesPerConnection)
 	{
-		// if the connection did not define relevant traffic types, add its connectionId to list of recipients
-		if (cId.second.empty())
-			sendIds.push_back(cId.first);
-		// if the traffic type is active for a connection, add the connectionId to list of recipients
-		else if (cId.second.end() != std::find(cId.second.begin(), cId.second.end(), tId))
-			sendIds.push_back(cId.first);
+		if (cId.first != origId) // avoid spamming the originator of the data with a resend
+		{
+			// if the connection did not define relevant traffic types, add its connectionId to list of recipients
+			if (cId.second.empty())
+				sendIds.push_back(cId.first);
+			// if the traffic type is active for a connection, add the connectionId to list of recipients
+			else if (cId.second.end() != std::find(cId.second.begin(), cId.second.end(), tId))
+				sendIds.push_back(cId.first);
+		}
 	}
 	if (!sendIds.empty())
 		sendMessageToClients(serializedMessageMemoryBlock, sendIds);
+}
+
+void MemaProcessor::parameterValueChanged(int parameterIndex, float newValue)
+{
+	auto iter = std::find_if(getPluginParameterInfos().begin(), getPluginParameterInfos().end(), [=](const auto& info) { return info.index == parameterIndex; });
+	if (iter != getPluginParameterInfos().end())
+	{
+		// Update commanders (UIs and Remotes)
+		for (auto const& pluginCommander : m_pluginCommanders)
+			pluginCommander->setPluginParameterValue(static_cast<std::uint16_t>(parameterIndex), iter->id.toStdString(), newValue);
+
+		// Update cached value
+		if (parameterIndex < m_pluginParameterInfos.size())
+			m_pluginParameterInfos[parameterIndex].currentValue = newValue;
+	}
+}
+
+void MemaProcessor::parameterGestureChanged(int parameterIndex, bool gestureIsStarting)
+{
+	ignoreUnused(parameterIndex);
+	ignoreUnused(gestureIsStarting);
 }
 
 void MemaProcessor::sendMessageToClients(const MemoryBlock& messageMemoryBlock, const std::vector<int>& sendIds)
@@ -1381,23 +1682,13 @@ void MemaProcessor::initializeCtrlValues(int inputCount, int outputCount)
 
 	auto inputChannelCount = std::uint16_t((inputCount > s_minInputsCount) ? inputCount : s_minInputsCount);
 	for (std::uint16_t channel = 1; channel <= inputChannelCount; channel++)
-	{
 		for (auto& inputCommander : m_inputCommanders)
-		{
-			if (inputCommander != reinterpret_cast<MemaInputCommander*>(&inputCommander))
-				inputCommander->setInputMute(channel, inputMuteStates[channel]);
-		}
-	}
+			inputCommander->setInputMute(channel, inputMuteStates[channel]);
 
 	auto outputChannelCount = std::uint16_t((outputCount > s_minOutputsCount) ? outputCount : s_minOutputsCount);
 	for (std::uint16_t channel = 1; channel <= outputChannelCount; channel++)
-	{
 		for (auto& outputCommander : m_outputCommanders)
-		{
-			if (outputCommander != reinterpret_cast<MemaOutputCommander*>(&outputCommander))
-				outputCommander->setOutputMute(channel, outputMuteStates[channel]);
-		}
-	}
+			outputCommander->setOutputMute(channel, outputMuteStates[channel]);
 
 	for (std::uint16_t in = 1; in <= inputChannelCount; in++)
 	{
@@ -1405,14 +1696,24 @@ void MemaProcessor::initializeCtrlValues(int inputCount, int outputCount)
 		{
 			for (auto& crosspointCommander : m_crosspointCommanders)
 			{
-				if (crosspointCommander != reinterpret_cast<MemaCrosspointCommander*>(&crosspointCommander))
-				{
-					crosspointCommander->setCrosspointEnabledValue(in, out, matrixCrosspointStates[in][out]);
-					crosspointCommander->setCrosspointFactorValue(in, out, matrixCrosspointValues[in][out]);
-				}
+				crosspointCommander->setCrosspointEnabledValue(in, out, matrixCrosspointStates[in][out]);
+				crosspointCommander->setCrosspointFactorValue(in, out, matrixCrosspointValues[in][out]);
 			}
 		}
 	}
+
+	juce::Array<juce::AudioProcessorParameter*> pluginParameters;
+	juce::String pluginName;
+	if (m_pluginInstance)
+	{
+		// copy the processing relevant data to not block audio thread during all the xml handling
+		const ScopedLock sl(m_pluginProcessingLock);
+		pluginName = m_pluginInstance->getName();
+		pluginParameters = m_pluginInstance->getParameters();
+	}
+	auto pluginParameterInfos = Mema::PluginParameterInfo::parametersToInfos(pluginParameters);
+	for (auto& pluginCommander : m_pluginCommanders)
+		pluginCommander->setPluginParameterInfos(pluginParameterInfos, pluginName.toStdString());
 }
 
 void MemaProcessor::initializeCtrlValuesToUnity(int inputCount, int outputCount)

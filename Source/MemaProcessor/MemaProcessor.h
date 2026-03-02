@@ -22,6 +22,7 @@
 
 #include "MemaMessages.h"
 #include "ProcessorDataAnalyzer.h"
+#include "MemaPluginParameterInfo.h"
 #include "../MemaProcessorEditor/MemaProcessorEditor.h"
 #include "../MemaAppConfiguration.h"
 
@@ -37,6 +38,7 @@ class MemaChannelCommander;
 class MemaInputCommander;
 class MemaOutputCommander;
 class MemaCrosspointCommander;
+class MemaPluginCommander;
 class MemaNetworkClientCommanderWrapper;
 
 
@@ -70,10 +72,19 @@ public:
 };
 
 //==============================================================================
+class PluginParameterInfosChangedMessage : public juce::Message
+{
+public:
+    PluginParameterInfosChangedMessage() = default;
+    virtual ~PluginParameterInfosChangedMessage() = default;
+};
+
+//==============================================================================
 class MemaProcessor : public juce::AudioProcessor,
     public juce::AudioIODeviceCallback,
     public juce::MessageListener,
     public juce::ChangeListener,
+    public juce::AudioProcessorParameter::Listener,
     public MemaAppConfiguration::XmlConfigurableElement
 {
 public:
@@ -99,6 +110,10 @@ public:
     void initializeCrosspointCommander(MemaCrosspointCommander* commander);
     void removeCrosspointCommander(MemaCrosspointCommander* comander);
 
+    void addPluginCommander(MemaPluginCommander* commander);
+    void initializePluginCommander(MemaPluginCommander* commander);
+    void removePluginCommander(MemaPluginCommander* commander);
+
     void updateCommanders();
 
     //==============================================================================
@@ -110,6 +125,9 @@ public:
 
     float getMatrixCrosspointFactorValue(std::uint16_t inputNumber, std::uint16_t outputNumber);
     void setMatrixCrosspointFactorValue(std::uint16_t inputNumber, std::uint16_t outputNumber, float factor, MemaChannelCommander* sender = nullptr, int userId = -1);
+
+    float getPluginParameterValue(std::uint16_t pluginParameterIndex) const;
+    void setPluginParameterValue(std::uint16_t pluginParameterIndex, std::string id, float normalizedValue, MemaPluginCommander* sender = nullptr, int userId = -1);
 
     bool getOutputMuteState(std::uint16_t channelNumber);
     void setOutputMuteState(std::uint16_t channelNumber, bool muted, MemaChannelCommander* sender = nullptr, int userId = -1);
@@ -127,6 +145,13 @@ public:
     void openPluginEditor();
     void closePluginEditor(bool deleteEditorWindow = true);
     std::function<void(const juce::PluginDescription&)> onPluginSet;
+    // Parameter management
+    std::vector<PluginParameterInfo>& getPluginParameterInfos();
+    void setPluginParameterRemoteControlInfos(int pluginParameterIndex, bool remoteControllable, ParameterControlType type, int steps);
+    bool isPluginParameterRemoteControllable(int parameterIndex);
+    juce::AudioProcessorParameter* getPluginParameter(int parameterIndex) const;
+    std::function<void(int pluginParameterIndex, float newValue)> onPluginParameterChanged;
+    std::function<void()> onPluginParameterInfosChanged;
 
     //==============================================================================
     AudioDeviceManager* getDeviceManager();
@@ -175,6 +200,10 @@ public:
 
     //==============================================================================
     void handleMessage(const Message& message) override;
+
+    //==============================================================================
+    void parameterValueChanged(int parameterIndex, float newValue) override;
+    void parameterGestureChanged(int parameterIndex, bool gestureIsStarting) override;
 
     //==============================================================================
     std::unique_ptr<XmlElement> createStateXml() override;
@@ -231,6 +260,7 @@ private:
     std::vector<MemaInputCommander*>    m_inputCommanders;
     std::vector<MemaOutputCommander*>   m_outputCommanders;
     std::vector<MemaCrosspointCommander*>   m_crosspointCommanders;
+    std::vector<MemaPluginCommander*>   m_pluginCommanders;
 
     //==============================================================================
     std::map<std::uint16_t, bool> m_inputMuteStates;
@@ -253,6 +283,7 @@ private:
     bool                                                            m_pluginEnabled = false;
     bool                                                            m_pluginPost = false;
     std::unique_ptr<ResizeableWindowWithTitleBarAndCloseCallback>   m_pluginEditorWindow;
+    std::vector<PluginParameterInfo>                                m_pluginParameterInfos;
 
     //==============================================================================
     std::unique_ptr<JUCEAppBasics::ServiceTopologyManager>  m_serviceTopologyManager;

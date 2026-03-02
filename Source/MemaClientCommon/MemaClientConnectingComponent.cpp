@@ -18,6 +18,8 @@
 
 #include "MemaClientConnectingComponent.h"
 
+#include <CustomLookAndFeel.h>
+
 MemaClientConnectingComponent::MemaClientConnectingComponent()
     : juce::Component()
 {
@@ -35,6 +37,14 @@ void MemaClientConnectingComponent::setMasterServiceDescription(const juce::Stri
     repaint();
 }
 
+void MemaClientConnectingComponent::paint(Graphics& g)
+{
+    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::ColourIds::backgroundColourId));
+
+    g.setColour(getLookAndFeel().findColour(juce::TextEditor::ColourIds::textColourId));
+    g.drawFittedText("Waiting for\n" + (m_serviceDescription.isNotEmpty() ? m_serviceDescription : "UNKNOWN"), getLocalBounds().reduced(35), juce::Justification::centred, 2);
+}
+
 void MemaClientConnectingComponent::resized()
 {
     auto bounds = getLocalBounds();
@@ -49,11 +59,9 @@ void MemaClientConnectingComponent::resized()
 
 }
 
-void MemaClientConnectingComponent::paint(Graphics& g)
+void MemaClientConnectingComponent::lookAndFeelChanged()
 {
-    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::ColourIds::backgroundColourId));
-
-    g.setColour(getLookAndFeel().findColour(juce::TextEditor::ColourIds::textColourId));
-    g.drawFittedText("Waiting for\n" + (m_serviceDescription.isNotEmpty() ? m_serviceDescription : "UNKNOWN"), getLocalBounds().reduced(35), juce::Justification::centred, 2);
+    if (m_startupProgressIndicator)
+        m_startupProgressIndicator->setColour(juce::ProgressBar::ColourIds::foregroundColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
 }
 

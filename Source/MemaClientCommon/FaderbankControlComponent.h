@@ -30,10 +30,6 @@ namespace JUCEAppBasics
 {
     class ToggleStateSlider;
 }
-namespace Mema
-{
-    class TwoDFieldMultisliderComponent;
-}
 
 namespace Mema
 {
@@ -78,6 +74,8 @@ private:
     std::unique_ptr<juce::Component>    m_horizontalScrollContainerComponent;
     std::unique_ptr<juce::Viewport>     m_verticalScrollViewport;
     std::unique_ptr<juce::Component>    m_verticalScrollContainerComponent;
+    std::unique_ptr<juce::Viewport>     m_hvScrollViewport;
+    std::unique_ptr<juce::Component>    m_hvScrollContainerComponent;
 
     std::unique_ptr<juce::Grid>                     m_inputControlsGrid;
     std::vector<std::unique_ptr<juce::TextButton>>  m_inputSelectButtons;
@@ -89,7 +87,6 @@ private:
 
     std::unique_ptr<juce::Grid>                                     m_crosspointsControlsGrid;
     std::vector<std::unique_ptr<JUCEAppBasics::ToggleStateSlider>>  m_crosspointGainSliders;
-    std::unique_ptr<juce::Label>                                    m_crosspointsNoSelectionLabel;
 
     std::pair<ControlDirection, int>    m_currentIOChannel = { ControlDirection::None, 0 };
 

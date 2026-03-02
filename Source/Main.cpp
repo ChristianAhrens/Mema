@@ -105,8 +105,10 @@ public:
     bool moreThanOneInstanceAllowed() override             { return false; }
 
     //==============================================================================
-    void initialise (const juce::String& /*commandLine*/) override
+    void initialise (const juce::String& commandLine) override
     {
+        auto isHeadless = commandLine.contains("--headless");
+        
 #if JUCE_MAC
         // Ignore SIGPIPE globally, to prevent occasional unexpected app
         // termination when Mema.Mo instances disconnect while sending by
@@ -114,37 +116,42 @@ public:
         signal(SIGPIPE, SIG_IGN);
 #endif
 
-        // a single instance of tooltip window is required and used by JUCE everywhere a tooltip is required.
-        m_toolTipWindowInstance = std::make_unique<TooltipWindow>();
+        if (!isHeadless)
+        {
+            // a single instance of tooltip window is required and used by JUCE everywhere a tooltip is required.
+            m_toolTipWindowInstance = std::make_unique<TooltipWindow>();
+            
+            m_taskbarComponent = std::make_unique<MemaTaskbarComponent>([=](juce::Point<int> mousePosition) { showUiAsCalloutBox(mousePosition); });
+            m_taskbarComponent->setName(getApplicationName() + " taskbar icon");
+        }
         
-        m_taskbarComponent = std::make_unique<MemaTaskbarComponent>([=](juce::Point<int> mousePosition) { showUiAsCalloutBox(mousePosition); });
-        m_taskbarComponent->setName(getApplicationName() + " taskbar icon");
-
         Mema::Mema::getInstance();
         
+        if (!isHeadless)
+        {
 #if JUCE_MAC
-        m_macMainMenu = std::make_unique<MemaMacMainMenuMenuBarModel>();
-        auto optionsPopupMenu = juce::PopupMenu();
-        optionsPopupMenu.addItem("Show as standalone window", true, false, [=]() {
-            if (auto currentProcEditor = Mema::Mema::getInstance()->getMemaProcessorEditor())
-                if (auto callout = currentProcEditor->findParentComponentOfClass<juce::CallOutBox>())
-                    callout->exitModalState(0);
-            juce::MessageManager::callAsync([=]() { showUiAsStandaloneWindow(); });
-        });
-        optionsPopupMenu.addSeparator();
-        optionsPopupMenu.addItem("Load config...", true, false, [=]() {
-            Mema::Mema::getInstance()->triggerPromptLoadConfig();
-        });
-        optionsPopupMenu.addItem("Save config...", true, false, [=]() {
-            Mema::Mema::getInstance()->triggerPromptSaveConfig();
-        });
-        m_macMainMenu->addMenu(0, "Options", optionsPopupMenu);
-        
-        juce::MenuBarModel::setMacMainMenu(m_macMainMenu.get());
+            m_macMainMenu = std::make_unique<MemaMacMainMenuMenuBarModel>();
+            auto optionsPopupMenu = juce::PopupMenu();
+            optionsPopupMenu.addItem("Show as standalone window", true, false, [=]() {
+                if (auto currentProcEditor = Mema::Mema::getInstance()->getMemaProcessorEditor())
+                    if (auto callout = currentProcEditor->findParentComponentOfClass<juce::CallOutBox>())
+                        callout->exitModalState(0);
+                juce::MessageManager::callAsync([=]() { showUiAsStandaloneWindow(); });
+            });
+            optionsPopupMenu.addSeparator();
+            optionsPopupMenu.addItem("Load config...", true, false, [=]() {
+                Mema::Mema::getInstance()->triggerPromptLoadConfig();
+            });
+            optionsPopupMenu.addItem("Save config...", true, false, [=]() {
+                Mema::Mema::getInstance()->triggerPromptSaveConfig();
+            });
+            m_macMainMenu->addMenu(0, "Options", optionsPopupMenu);
+            
+            juce::MenuBarModel::setMacMainMenu(m_macMainMenu.get());
 #elif JUCE_LINUX
-        showUiAsStandaloneWindow();
+            showUiAsStandaloneWindow();
 #endif
-
+        }
     }
 
     void shutdown() override

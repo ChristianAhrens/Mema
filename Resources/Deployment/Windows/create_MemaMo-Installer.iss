@@ -1,7 +1,7 @@
 #define MyAppName "MemaMo"
 #define MyAppExeName "MemaMo.exe"
-#define MyAppExePath "..\..\..\MemaMo\Builds\VisualStudio2022\x64\Release\App\MemaMo.exe"
-#define MyAppVersion GetVersionNumbersString("..\..\..\MemaMo\Builds\VisualStudio2022\x64\Release\App\MemaMo.exe")
+#define MyAppExePath "..\..\..\MemaMo\Builds\VisualStudio2026\x64\Release\App\MemaMo.exe"
+#define MyAppVersion GetVersionNumbersString("..\..\..\MemaMo\Builds\VisualStudio2026\x64\Release\App\MemaMo.exe")
 #define MyAppPublisher "Christian Ahrens"
 #define MyAppURL "https://www.github.com/ChristianAhrens/Mema"
 
@@ -21,7 +21,7 @@ LicenseFile=..\..\..\LICENSE
 InfoAfterFile=..\..\..\CHANGELOG.md
 PrivilegesRequired=lowest
 OutputBaseFilename="{#MyAppName}Setup_v{#MyAppVersion}"
-SetupIconFile=..\..\..\MemaMo\Builds\VisualStudio2022\icon.ico
+SetupIconFile=..\..\..\MemaMo\Builds\VisualStudio2026\icon.ico
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern

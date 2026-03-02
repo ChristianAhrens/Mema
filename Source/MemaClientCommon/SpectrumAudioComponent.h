@@ -1,4 +1,4 @@
-/* Copyright (c) 2024-2025, Christian Ahrens
+/* Copyright (c) 2025, Christian Ahrens
  *
  * This file is part of Mema <https://github.com/ChristianAhrens/Mema>
  *
@@ -21,35 +21,57 @@
 #include <JuceHeader.h>
 
 #include "../MemaProcessorEditor/AbstractAudioVisualizer.h"
-#include <TwoDFieldBase.h>
 
 namespace Mema
 {
 
+class CustomPaintingAudioVisualiserComponent;
+
 //==============================================================================
 /*
 */
-class TwoDFieldOutputComponent  :   public JUCEAppBasics::TwoDFieldBase, public AbstractAudioVisualizer
+class SpectrumAudioComponent    :   public AbstractAudioVisualizer
 {
 public:
-    TwoDFieldOutputComponent();
-    ~TwoDFieldOutputComponent();
+    //==============================================================================
+    struct PlotPoints
+    {
+        std::vector<float> peaks;
+        std::vector<float> holds;
+        float minFreq;
+        float maxFreq;
+        float freqRes;
+    };
+
+public:
+    //==============================================================================
+    SpectrumAudioComponent();
+    ~SpectrumAudioComponent();
 
     //==============================================================================
-    void paint (Graphics&) override;
+    void setNumVisibleChannels(int numChannels);
+    int getNumVisibleChannels();
+    
+    //==============================================================================
+    void paint (juce::Graphics&) override;
     void resized() override;
+    void lookAndFeelChanged() override;
     
     //==============================================================================
     void processingDataChanged(AbstractProcessorData *data) override;
 
 private:
     //==============================================================================
-    void paintCircularLevelIndication(juce::Graphics& g, const juce::Rectangle<float>& circleArea, const std::map<int, juce::Point<float>>& channelLevelMaxPoints, const juce::Array<juce::AudioChannelSet::ChannelType>& channelsToPaint);
-    void paintLevelMeterIndication(juce::Graphics& g, const juce::Rectangle<float>& levelMeterArea, const juce::Array<juce::AudioChannelSet::ChannelType>& channelsToPaint);
+    std::unique_ptr<juce::DrawableButton>   m_chNumSelButton;
+    std::vector<PlotPoints>                 m_plotPoints;
 
-    ProcessorLevelData  m_levelData;
-    
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (TwoDFieldOutputComponent)
+    //==============================================================================
+    int m_numAvailableChannels = 0;
+    int m_numVisibleChannels = 1;
+    int m_legendWidth = 20;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SpectrumAudioComponent)
 };
+
 
 }

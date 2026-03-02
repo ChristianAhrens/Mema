@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="ja98xe" name="Mema.Mo" projectType="guiapp" useAppConfig="0"
-              jucerFormatVersion="1" version="0.9.1" companyWebsite="github.com/ChristianAhrens/Mema"
+              jucerFormatVersion="1" version="0.10.0" companyWebsite="github.com/ChristianAhrens/Mema"
               bundleIdentifier="com.ChristianAhrens.MemaMo" headerPath="../../../submodules/JUCE-AppBasics/Source&#10;../../../Source"
               defines="JUCE_USE_LAME_AUDIO_FORMAT=1,&#10;JUCE_USE_MP3AUDIOFORMAT=1,&#10;JUCE_DISPLAY_SPLASH_SCREEN=0"
               companyName="ChristianAhrens" companyCopyright="Copyright (c) 2024 Christian Ahrens.">
@@ -30,6 +30,9 @@
               file="../submodules/JUCE-AppBasics/Source/ToggleStateSlider.cpp"/>
         <FILE id="bizpBa" name="ToggleStateSlider.h" compile="0" resource="0"
               file="../submodules/JUCE-AppBasics/Source/ToggleStateSlider.h"/>
+        <FILE id="hLYOrY" name="TwoDFieldBase.cpp" compile="1" resource="0"
+              file="../submodules/JUCE-AppBasics/Source/TwoDFieldBase.cpp"/>
+        <FILE id="YfMF8V" name="TwoDFieldBase.h" compile="0" resource="0" file="../submodules/JUCE-AppBasics/Source/TwoDFieldBase.h"/>
         <FILE id="l9NfyW" name="WebUpdateDetector.cpp" compile="1" resource="0"
               file="../submodules/JUCE-AppBasics/Source/WebUpdateDetector.cpp"/>
         <FILE id="yh3GjW" name="WebUpdateDetector.h" compile="0" resource="0"
@@ -112,9 +115,10 @@
             file="../Source/MemaProcessor/ProcessorSpectrumData.cpp"/>
       <FILE id="qCeR2y" name="ProcessorSpectrumData.h" compile="0" resource="0"
             file="../Source/MemaProcessor/ProcessorSpectrumData.h"/>
-      <FILE id="OImvpX" name="TwoDFieldBase.cpp" compile="1" resource="0"
-            file="../Source/MemaClientCommon/TwoDFieldBase.cpp"/>
-      <FILE id="ID9Gbw" name="TwoDFieldBase.h" compile="0" resource="0" file="../Source/MemaClientCommon/TwoDFieldBase.h"/>
+      <FILE id="bSNw0H" name="SpectrumAudioComponent.cpp" compile="1" resource="0"
+            file="../Source/MemaClientCommon/SpectrumAudioComponent.cpp"/>
+      <FILE id="lO4BFH" name="SpectrumAudioComponent.h" compile="0" resource="0"
+            file="../Source/MemaClientCommon/SpectrumAudioComponent.h"/>
       <FILE id="qUZJQI" name="TwoDFieldOutputComponent.cpp" compile="1" resource="0"
             file="../Source/MemaClientCommon/TwoDFieldOutputComponent.cpp"/>
       <FILE id="FncK9u" name="TwoDFieldOutputComponent.h" compile="0" resource="0"
@@ -243,8 +247,8 @@
     </XCODE_IPHONE>
     <VS2026 targetFolder="Builds/VisualStudio2026" smallIcon="FTY1kZ" bigIcon="FTY1kZ">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug"/>
-        <CONFIGURATION isDebug="0" name="Release"/>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="MemaMo"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="MemaMo"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_audio_basics" path="..\submodules\JUCE\modules"/>

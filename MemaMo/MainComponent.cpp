@@ -121,6 +121,13 @@ MainComponent::MainComponent()
     m_aboutButton->setColour(juce::DrawableButton::ColourIds::backgroundOnColourId, juce::Colours::transparentBlack);
     addAndMakeVisible(m_aboutButton.get());
 
+    // Ctrl+F11 on Windows/Linux, Cmd+Ctrl+F on macOS
+#if JUCE_WINDOWS
+    auto fullscreenShortCutHint = std::string(" (Ctrl+F11)");
+#elif JUCE_MAC
+    auto fullscreenShortCutHint = std::string(" (Cmd+Ctrl+F)");
+#endif
+
     // default lookandfeel is follow local, therefor none selected
     m_settingsItems[MemaMoSettingsOption::LookAndFeel_FollowHost] = std::make_pair("Follow Mema", 0);
     m_settingsItems[MemaMoSettingsOption::LookAndFeel_Dark] = std::make_pair("Dark", 1);
@@ -138,11 +145,18 @@ MainComponent::MainComponent()
     m_settingsItems[MemaMoSettingsOption::OutputVisuType_9point1point6] = std::make_pair(juce::AudioChannelSet::create9point1point6().getDescription().toStdString(), 0);
     m_settingsItems[MemaMoSettingsOption::OutputVisuType_Quadrophonic] = std::make_pair(juce::AudioChannelSet::quadraphonic().getDescription().toStdString(), 0);
     m_settingsItems[MemaMoSettingsOption::OutputVisuType_Waveform] = std::make_pair("Waveform", 0);
+    m_settingsItems[MemaMoSettingsOption::OutputVisuType_Spectrum] = std::make_pair("Spectrum", 0);
     // default metering colour is green
     m_settingsItems[MemaMoSettingsOption::MeteringColour_Green] = std::make_pair("Green", 1);
     m_settingsItems[MemaMoSettingsOption::MeteringColour_Red] = std::make_pair("Red", 0);
     m_settingsItems[MemaMoSettingsOption::MeteringColour_Blue] = std::make_pair("Blue", 0);
     m_settingsItems[MemaMoSettingsOption::MeteringColour_Pink] = std::make_pair("Anni Pink", 0);
+    m_settingsItems[MemaMoSettingsOption::MeteringColour_Laser] = std::make_pair("Laser", 0);
+#if JUCE_WINDOWS || JUCE_MAC
+    // fullscreen toggling
+    m_settingsItems[MemaMoSettingsOption::FullscreenWindowMode] = std::make_pair("Toggle fullscreen mode" + fullscreenShortCutHint, 0);
+#endif
+    // Further components
     m_settingsButton = std::make_unique<juce::DrawableButton>("Settings", juce::DrawableButton::ButtonStyle::ImageFitted);
     m_settingsButton->setTooltip(juce::String("Settings for") + juce::JUCEApplication::getInstance()->getApplicationName());
     m_settingsButton->onClick = [this] {
@@ -162,6 +176,10 @@ MainComponent::MainComponent()
         settingsMenu.addSubMenu("LookAndFeel", lookAndFeelSubMenu);
         settingsMenu.addSubMenu("Output monitoring", outputVisuTypeSubMenu);
         settingsMenu.addSubMenu("Metering colour", meteringColourSubMenu);
+#if JUCE_WINDOWS || JUCE_MAC
+        settingsMenu.addSeparator();
+        settingsMenu.addItem(MemaMoSettingsOption::FullscreenWindowMode, m_settingsItems[MemaMoSettingsOption::FullscreenWindowMode].first, true, false);
+#endif
         settingsMenu.showMenuAsync(juce::PopupMenu::Options(), [=](int selectedId) {
             handleSettingsMenuResult(selectedId);
             if (m_config)
@@ -219,6 +237,8 @@ MainComponent::MainComponent()
     // add this main component to watchers
     m_config->addWatcher(this); // without initial update - that we have to do externally after lambdas were assigned
 
+    // we want keyboard focus for fullscreen toggle shortcut
+    setWantsKeyboardFocus(true);
 }
 
 MainComponent::~MainComponent()
@@ -300,6 +320,8 @@ void MainComponent::handleSettingsMenuResult(int selectedId)
         handleSettingsOutputVisuTypeMenuResult(selectedId);
     else if (MemaMoSettingsOption::MeteringColour_First <= selectedId && MemaMoSettingsOption::MeteringColour_Last >= selectedId)
         handleSettingsMeteringColourMenuResult(selectedId);
+    else if (MemaMoSettingsOption::FullscreenWindowMode == selectedId)
+        handleSettingsFullscreenModeToggleResult();
     else
         jassertfalse; // unhandled menu entry!?
 }
@@ -339,7 +361,7 @@ void MainComponent::handleSettingsLookAndFeelMenuResult(int selectedId)
 void MainComponent::handleSettingsOutputVisuTypeMenuResult(int selectedId)
 {
     // helper internal function to avoid code clones
-    std::function<void(int, int, int, int, int, int, int, int, int, int, int, int)> setSettingsItemsCheckState = [=](int a, int b, int c, int d, int e, int f, int g, int h, int i, int j, int k, int l) {
+    std::function<void(int, int, int, int, int, int, int, int, int, int, int, int, int)> setSettingsItemsCheckState = [=](int a, int b, int c, int d, int e, int f, int g, int h, int i, int j, int k, int l, int m) {
         m_settingsItems[MemaMoSettingsOption::OutputVisuType_Meterbridge].second = a;
         m_settingsItems[MemaMoSettingsOption::OutputVisuType_LRS].second = b;
         m_settingsItems[MemaMoSettingsOption::OutputVisuType_LCRS].second = c;
@@ -352,69 +374,75 @@ void MainComponent::handleSettingsOutputVisuTypeMenuResult(int selectedId)
         m_settingsItems[MemaMoSettingsOption::OutputVisuType_9point1point6].second = j;
         m_settingsItems[MemaMoSettingsOption::OutputVisuType_Quadrophonic].second = k;
         m_settingsItems[MemaMoSettingsOption::OutputVisuType_Waveform].second = l;
+        m_settingsItems[MemaMoSettingsOption::OutputVisuType_Spectrum].second = m;
     };
 
     switch (selectedId)
     {
     case MemaMoSettingsOption::OutputVisuType_Meterbridge:
-        setSettingsItemsCheckState(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputMeteringVisuActive();
         break;
     case MemaMoSettingsOption::OutputVisuType_LRS:
-        setSettingsItemsCheckState(0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::createLRS());
         break;
     case MemaMoSettingsOption::OutputVisuType_LCRS:
-        setSettingsItemsCheckState(0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::createLCRS());
         break;
     case MemaMoSettingsOption::OutputVisuType_5point0:
-        setSettingsItemsCheckState(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::create5point0());
         break;
     case MemaMoSettingsOption::OutputVisuType_5point1:
-        setSettingsItemsCheckState(0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::create5point1());
         break;
     case MemaMoSettingsOption::OutputVisuType_5point1point2:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::create5point1point2());
         break;
     case MemaMoSettingsOption::OutputVisuType_7point0:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::create7point0());
         break;
     case MemaMoSettingsOption::OutputVisuType_7point1:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::create7point1());
         break;
     case MemaMoSettingsOption::OutputVisuType_7point1point4:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::create7point1point4());
         break;
     case MemaMoSettingsOption::OutputVisuType_9point1point6:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::create9point1point6());
         break;
     case MemaMoSettingsOption::OutputVisuType_Quadrophonic:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0);
         if (m_monitorComponent)
             m_monitorComponent->setOutputFieldVisuActive(juce::AudioChannelSet::quadraphonic());
         break;
     case MemaMoSettingsOption::OutputVisuType_Waveform:
-        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1);
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0);
         if (m_monitorComponent)
             m_monitorComponent->setWaveformVisuActive();
+        break;
+    case MemaMoSettingsOption::OutputVisuType_Spectrum:
+        setSettingsItemsCheckState(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1);
+        if (m_monitorComponent)
+            m_monitorComponent->setSpectrumVisuActive();
         break;
     default:
         jassertfalse; // unknown id fed in unintentionally ?!
@@ -427,34 +455,51 @@ void MainComponent::handleSettingsOutputVisuTypeMenuResult(int selectedId)
 void MainComponent::handleSettingsMeteringColourMenuResult(int selectedId)
 {
     // helper internal function to avoid code clones
-    std::function<void(int, int, int, int)> setSettingsItemsCheckState = [=](int green, int red, int blue, int pink) {
+    std::function<void(int, int, int, int, int)> setSettingsItemsCheckState = [=](int green, int red, int blue, int pink, int laser) {
         m_settingsItems[MemaMoSettingsOption::MeteringColour_Green].second = green;
         m_settingsItems[MemaMoSettingsOption::MeteringColour_Red].second = red;
         m_settingsItems[MemaMoSettingsOption::MeteringColour_Blue].second = blue;
         m_settingsItems[MemaMoSettingsOption::MeteringColour_Pink].second = pink;
-    };
+        m_settingsItems[MemaMoSettingsOption::MeteringColour_Laser].second = laser;
+        };
 
     switch (selectedId)
     {
     case MemaMoSettingsOption::MeteringColour_Green:
-        setSettingsItemsCheckState(1, 0, 0, 0);
+        setSettingsItemsCheckState(1, 0, 0, 0, 0);
         setMeteringColour(juce::Colours::forestgreen);
         break;
     case MemaMoSettingsOption::MeteringColour_Red:
-        setSettingsItemsCheckState(0, 1, 0, 0);
+        setSettingsItemsCheckState(0, 1, 0, 0, 0);
         setMeteringColour(juce::Colours::orangered);
         break;
     case MemaMoSettingsOption::MeteringColour_Blue:
-        setSettingsItemsCheckState(0, 0, 1, 0);
+        setSettingsItemsCheckState(0, 0, 1, 0, 0);
         setMeteringColour(juce::Colours::dodgerblue);
         break;
     case MemaMoSettingsOption::MeteringColour_Pink:
-        setSettingsItemsCheckState(0, 0, 0, 1);
+        setSettingsItemsCheckState(0, 0, 0, 1, 0);
         setMeteringColour(juce::Colours::deeppink);
+        break;
+    case MemaMoSettingsOption::MeteringColour_Laser:
+        setSettingsItemsCheckState(0, 0, 0, 0, 1);
+        setMeteringColour(juce::Colour(0xd1, 0xff, 0x4f));
         break;
     default:
         break;
     }
+}
+
+void MainComponent::handleSettingsFullscreenModeToggleResult()
+{
+    toggleFullscreenMode();
+}
+
+void MainComponent::toggleFullscreenMode()
+{
+    auto enabled = isFullscreenEnabled();
+    if (onSetFullscreenWindow)
+        onSetFullscreenWindow(!enabled);
 }
 
 void MainComponent::setMeteringColour(const juce::Colour& meteringColour)
@@ -462,6 +507,9 @@ void MainComponent::setMeteringColour(const juce::Colour& meteringColour)
     m_meteringColour = meteringColour;
 
     applyMeteringColour();
+
+    if (m_connectingComponent)
+        m_connectingComponent->lookAndFeelChanged();
 }
 
 void MainComponent::applyMeteringColour()
@@ -497,7 +545,10 @@ std::optional<int> MainComponent::getNumVisibleChannels()
 void MainComponent::setStatus(const Status& s)
 {
     m_currentStatus = s;
-    resized();
+    juce::MessageManager::callAsync([safeThis = juce::Component::SafePointer<MainComponent>(this)]() {
+        if (safeThis)
+            safeThis->resized();
+    });
 }
 
 const MainComponent::Status MainComponent::getStatus()
@@ -540,6 +591,18 @@ void MainComponent::timerCallback()
     }
     else
         stopTimer();
+}
+
+bool MainComponent::keyPressed(const juce::KeyPress& key)
+{
+    // Ctrl+F11 on Windows/Linux, Cmd+Ctrl+F on macOS
+    if (key == juce::KeyPress(juce::KeyPress::F11Key, juce::ModifierKeys::ctrlModifier, 0) ||
+        key == juce::KeyPress('f', juce::ModifierKeys::commandModifier | juce::ModifierKeys::ctrlModifier, 0))
+    {
+        toggleFullscreenMode();
+        return true;
+    }
+    return false;
 }
 
 void MainComponent::performConfigurationDump()
@@ -637,5 +700,19 @@ void MainComponent::onConfigUpdated()
             handleSettingsMeteringColourMenuResult(meteringColourSettingsOptionId);
         }
     }
+}
+
+bool MainComponent::isFullscreenEnabled()
+{
+#if JUCE_WINDOWS
+    return juce::Desktop::getInstance().getKioskModeComponent() != nullptr;
+#elif JUCE_MAC
+    if (auto* topLevel = getTopLevelComponent())
+        if (auto* peer = topLevel->getPeer())
+            return peer->isFullScreen();
+
+    jassertfalse;
+    return false;
+#endif
 }
 

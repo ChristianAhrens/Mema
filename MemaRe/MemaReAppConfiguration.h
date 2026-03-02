@@ -34,8 +34,8 @@ public:
         CONNECTIONCONFIG,
         SERVICEDESCRIPTION,
         VISUCONFIG,
-        OUTPUTPANNINGTYPE,
-        PANNINGCOLOUR,
+        CONTROLFORMAT,
+        CONTROLCOLOUR,
         LOOKANDFEEL,
         CONTROLSSIZE,
         EXTCTRLCONFIG,
@@ -52,10 +52,10 @@ public:
             return "SERVICEDESCRIPTION";
         case VISUCONFIG:
             return "VISUCONFIG";
-        case OUTPUTPANNINGTYPE:
-            return "OUTPUTPANNINGTYPE";
-        case PANNINGCOLOUR:
-            return "PANNINGCOLOUR";
+        case CONTROLFORMAT:
+            return "CONTROLFORMAT";
+        case CONTROLCOLOUR:
+            return "CONTROLCOLOUR";
         case LOOKANDFEEL:
             return "LOOKANDFEEL";
         case CONTROLSSIZE:

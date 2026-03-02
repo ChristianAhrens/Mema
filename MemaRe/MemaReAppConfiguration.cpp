@@ -56,7 +56,7 @@ bool MemaReAppConfiguration::isValid(const std::unique_ptr<juce::XmlElement>& xm
 	auto visuConfigSectionElement = xmlConfig->getChildByName(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::VISUCONFIG));
 	if (visuConfigSectionElement)
 	{
-		auto outputPanningXmlElement = visuConfigSectionElement->getChildByName(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::OUTPUTPANNINGTYPE));
+		auto outputPanningXmlElement = visuConfigSectionElement->getChildByName(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::CONTROLFORMAT));
 		if (outputPanningXmlElement)
 		{
 			//validate
@@ -64,7 +64,7 @@ bool MemaReAppConfiguration::isValid(const std::unique_ptr<juce::XmlElement>& xm
 		else
 			return false;
 
-		auto panningColourXmlElement = visuConfigSectionElement->getChildByName(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::PANNINGCOLOUR));
+		auto panningColourXmlElement = visuConfigSectionElement->getChildByName(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::CONTROLCOLOUR));
 		if (panningColourXmlElement)
 		{
 			// validate

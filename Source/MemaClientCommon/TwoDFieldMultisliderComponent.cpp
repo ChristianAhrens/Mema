@@ -92,7 +92,7 @@ private:
 
 //==============================================================================
 TwoDFieldMultisliderComponent::TwoDFieldMultisliderComponent()
-    :   TwoDFieldBase(), juce::Component()
+    : JUCEAppBasics::TwoDFieldBase(), juce::Component()
 {
     m_sharpnessEdit = std::make_unique<JUCEAppBasics::FixedFontTextEditor>("SharpnessEdit");
     m_sharpnessEdit->setTooltip("Panning sharpness 0.0 ... 1.0");

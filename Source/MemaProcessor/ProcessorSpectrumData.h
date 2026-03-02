@@ -28,7 +28,7 @@ public:
     struct SpectrumBands
     {
         enum {
-            count = 1024
+            count = 512
         };
 
         SpectrumBands()
@@ -38,11 +38,12 @@ public:
                 bandsPeak[i] = 0.0f;
                 bandsHold[i] = 0.0f;
             }
+
             mindB = 0.0f;
             maxdB = 0.0f;
-            minFreq = 0.0f;
-            maxFreq = 0.0f;
-            freqRes = 0.0f;
+            minFreq = 20.0f;
+            maxFreq = 20000.0f;
+            freqRes = static_cast<float>((maxFreq - minFreq) / ProcessorSpectrumData::SpectrumBands::count);
         };
         
         float   bandsPeak[count];

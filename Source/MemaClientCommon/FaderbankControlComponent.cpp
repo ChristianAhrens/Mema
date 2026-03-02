@@ -38,6 +38,10 @@ FaderbankControlComponent::FaderbankControlComponent()
     m_verticalScrollViewport = std::make_unique<juce::Viewport>();
     m_verticalScrollViewport->setViewedComponent(m_verticalScrollContainerComponent.get(), false);
     addAndMakeVisible(m_verticalScrollViewport.get());
+    m_hvScrollContainerComponent = std::make_unique<juce::Component>();
+    m_hvScrollViewport = std::make_unique<juce::Viewport>();
+    m_hvScrollViewport->setViewedComponent(m_hvScrollContainerComponent.get(), false);
+    addAndMakeVisible(m_hvScrollViewport.get());
 
     m_inputControlsGrid = std::make_unique<juce::Grid>();
     m_inputControlsGrid->setGap(juce::Grid::Px(s_gap));
@@ -47,9 +51,6 @@ FaderbankControlComponent::FaderbankControlComponent()
 
     m_crosspointsControlsGrid = std::make_unique<juce::Grid>();
     m_crosspointsControlsGrid->setGap(juce::Grid::Px(s_gap));
-    m_crosspointsNoSelectionLabel = std::make_unique<juce::Label>("NoSelectLabel", "Select a channel to control crosspoints.");
-    m_crosspointsNoSelectionLabel->setJustificationType(juce::Justification::centred);
-    addAndMakeVisible(m_crosspointsNoSelectionLabel.get());
 }
 
 FaderbankControlComponent::~FaderbankControlComponent()
@@ -58,12 +59,22 @@ FaderbankControlComponent::~FaderbankControlComponent()
 
 void FaderbankControlComponent::paint(juce::Graphics& g)
 {
-    g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
-
     auto ctrlsSize = 2 * (m_controlsSize + s_gap);
+    
+    // crosspointsControls body background
+    g.setColour(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
+    g.fillRect(getLocalBounds().removeFromBottom(getHeight() - ctrlsSize).removeFromRight(getWidth() - ctrlsSize));
+
+    // horizontal and vertical controls background
     g.setColour(getLookAndFeel().findColour(juce::Slider::backgroundColourId));
-    g.fillRect(getLocalBounds().removeFromTop(ctrlsSize + s_scrollbarsize).removeFromRight(getWidth() - ctrlsSize));
-    g.fillRect(getLocalBounds().removeFromLeft(ctrlsSize + s_scrollbarsize).removeFromBottom(getHeight() - ctrlsSize));
+    g.fillRect(getLocalBounds().removeFromTop(ctrlsSize + s_scrollbarsize).removeFromRight(getWidth() - ctrlsSize - s_scrollbarsize));
+    g.fillRect(getLocalBounds().removeFromLeft(ctrlsSize + s_scrollbarsize).removeFromBottom(getHeight() - ctrlsSize - s_scrollbarsize));
+
+    // upper-left controls rectangle background
+    g.setColour(getLookAndFeel().findColour(juce::Slider::backgroundColourId));
+    g.fillRect(juce::Rectangle<int>(0, 0, ctrlsSize + s_scrollbarsize, ctrlsSize + s_scrollbarsize));
+    g.setColour(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId));
+    g.fillRect(juce::Rectangle<int>(0, 0, ctrlsSize, ctrlsSize));
 }
 
 void FaderbankControlComponent::resized()
@@ -74,12 +85,22 @@ void FaderbankControlComponent::resized()
     auto crosspointControlBounds = getLocalBounds();
 
     if (m_inputControlsGrid)
-        m_inputControlsGrid->performLayout({ 0, 0, currentInputsWidth, ctrlsSize - s_scrollbarsize });
+    {
+        if (ControlDirection::None == m_currentIOChannel.first)
+            m_inputControlsGrid->performLayout({ ctrlsSize, 0, currentInputsWidth, ctrlsSize - s_scrollbarsize });
+        else
+            m_inputControlsGrid->performLayout({ 0, 0, currentInputsWidth, ctrlsSize - s_scrollbarsize });
+    }
 
     if (m_outputControlsGrid)
-        m_outputControlsGrid->performLayout({ 0, 0, ctrlsSize - s_scrollbarsize, currentOutputsHeight });
+    {
+        if (ControlDirection::None == m_currentIOChannel.first)
+            m_outputControlsGrid->performLayout({ 0, ctrlsSize, ctrlsSize - s_scrollbarsize, currentOutputsHeight });
+        else
+            m_outputControlsGrid->performLayout({ 0, 0, ctrlsSize - s_scrollbarsize, currentOutputsHeight });
+    }
 
-    if (m_crosspointsControlsGrid && m_currentIOChannel.first != ControlDirection::None)
+    if (m_crosspointsControlsGrid)
     {
         if (ControlDirection::Input == m_currentIOChannel.first)
         {
@@ -91,22 +112,22 @@ void FaderbankControlComponent::resized()
             crosspointControlBounds.removeFromTop(ctrlsSize);
             crosspointControlBounds.removeFromBottom(s_gap);
         }
+        else if (ControlDirection::None == m_currentIOChannel.first)
+        {
+            crosspointControlBounds.removeFromLeft(ctrlsSize);
+            crosspointControlBounds.removeFromRight(s_gap);
+            crosspointControlBounds.removeFromTop(ctrlsSize);
+            crosspointControlBounds.removeFromBottom(s_gap);
+        }
         m_crosspointsControlsGrid->performLayout(crosspointControlBounds);
-        m_crosspointsNoSelectionLabel->setVisible(false);
-    }
-    else if (m_currentIOChannel.first == ControlDirection::None)
-    {
-        for (auto const& item : m_crosspointsControlsGrid->items)
-            if (nullptr != item.associatedComponent)
-                item.associatedComponent->setVisible(false);
-        crosspointControlBounds.removeFromTop(ctrlsSize);
-        crosspointControlBounds.removeFromLeft(ctrlsSize);
-        m_crosspointsNoSelectionLabel->setVisible(true);
-        m_crosspointsNoSelectionLabel->setBounds(crosspointControlBounds);
     }
 
     if (ControlDirection::Input == m_currentIOChannel.first)
     {
+        addAndMakeVisible(m_horizontalScrollViewport.get());
+        addAndMakeVisible(m_verticalScrollViewport.get());
+        if (m_hvScrollViewport) m_hvScrollViewport->setVisible(false);
+
         m_horizontalScrollContainerComponent->setBounds({ 0, 0, currentInputsWidth, ctrlsSize - s_scrollbarsize });
         m_horizontalScrollViewport->setBounds(getLocalBounds().removeFromTop(ctrlsSize).removeFromRight(getWidth() - ctrlsSize));
         m_verticalScrollContainerComponent->setBounds({ 0, 0, getWidth() - s_scrollbarsize, currentOutputsHeight });
@@ -114,19 +135,23 @@ void FaderbankControlComponent::resized()
     }
     else if (ControlDirection::Output == m_currentIOChannel.first)
     {
+        addAndMakeVisible(m_horizontalScrollViewport.get());
+        addAndMakeVisible(m_verticalScrollViewport.get());
+        if (m_hvScrollViewport) m_hvScrollViewport->setVisible(false);
+
         m_horizontalScrollContainerComponent->setBounds({ 0, 0, currentInputsWidth, getHeight() - s_scrollbarsize });
         m_horizontalScrollViewport->setBounds(getLocalBounds().removeFromRight(getWidth() - ctrlsSize));
         m_verticalScrollContainerComponent->setBounds({ 0, 0, ctrlsSize - s_scrollbarsize, currentOutputsHeight });
         m_verticalScrollViewport->setBounds(getLocalBounds().removeFromBottom(getHeight() - ctrlsSize));
     }
-    else //if (ControlDirection::None == m_currentIOChannel.first)
+    else if (ControlDirection::None == m_currentIOChannel.first)
     {
-        m_horizontalScrollContainerComponent->setBounds({ 0, 0, currentInputsWidth, ctrlsSize - s_scrollbarsize });
-        m_horizontalScrollViewport->setBounds(getLocalBounds().removeFromRight(getWidth() - ctrlsSize));
-        m_verticalScrollContainerComponent->setBounds({ 0, 0, ctrlsSize - s_scrollbarsize, currentOutputsHeight });
-        m_verticalScrollViewport->setBounds(getLocalBounds().removeFromBottom(getHeight() - ctrlsSize));
+        if (m_horizontalScrollViewport) m_horizontalScrollViewport->setVisible(false);
+        if (m_verticalScrollViewport) m_verticalScrollViewport->setVisible(false);
+        addAndMakeVisible(m_hvScrollViewport.get());
 
-        m_crosspointsNoSelectionLabel->setBounds(getLocalBounds().removeFromBottom(getHeight() - ctrlsSize).removeFromRight(getWidth() - ctrlsSize));
+        m_hvScrollContainerComponent->setBounds({ 0, 0, currentInputsWidth + ctrlsSize, currentOutputsHeight + ctrlsSize });
+        m_hvScrollViewport->setBounds(getLocalBounds());
     }
 }
 
@@ -213,7 +238,10 @@ void FaderbankControlComponent::rebuildInputControls(bool force)
                 else
                     jassertfalse;
                 };
-            m_horizontalScrollContainerComponent->addAndMakeVisible(m_inputSelectButtons.at(i).get());
+            if (ControlDirection::None == m_currentIOChannel.first)
+                m_hvScrollContainerComponent->addAndMakeVisible(m_inputSelectButtons.at(i).get());
+            else
+                m_horizontalScrollContainerComponent->addAndMakeVisible(m_inputSelectButtons.at(i).get());
             m_inputControlsGrid->items.add(juce::GridItem(m_inputSelectButtons.at(i).get()));
         }
         for (auto i = 0; i < ioCount.first; i++)
@@ -231,7 +259,10 @@ void FaderbankControlComponent::rebuildInputControls(bool force)
                 if (onInputMutesChanged)
                     onInputMutesChanged(inputMuteStates);
                 };
-            m_horizontalScrollContainerComponent->addAndMakeVisible(m_inputMuteButtons.at(i).get());
+            if (ControlDirection::None == m_currentIOChannel.first)
+                m_hvScrollContainerComponent->addAndMakeVisible(m_inputMuteButtons.at(i).get());
+            else
+                m_horizontalScrollContainerComponent->addAndMakeVisible(m_inputMuteButtons.at(i).get());
             m_inputControlsGrid->items.add(juce::GridItem(m_inputMuteButtons.at(i).get()));
         }
     }
@@ -271,7 +302,10 @@ void FaderbankControlComponent::rebuildOutputControls(bool force)
                 else
                     jassertfalse;
                 };
-            m_verticalScrollContainerComponent->addAndMakeVisible(m_outputSelectButtons.at(o).get());
+            if (ControlDirection::None == m_currentIOChannel.first)
+                m_hvScrollContainerComponent->addAndMakeVisible(m_outputSelectButtons.at(o).get());
+            else
+                m_verticalScrollContainerComponent->addAndMakeVisible(m_outputSelectButtons.at(o).get());
             m_outputControlsGrid->items.add(juce::GridItem(m_outputSelectButtons.at(o).get()));
 
             m_outputMuteButtons.at(o) = std::make_unique<juce::TextButton>("M");
@@ -286,7 +320,10 @@ void FaderbankControlComponent::rebuildOutputControls(bool force)
                 if (onOutputMutesChanged)
                     onOutputMutesChanged(outputMuteStates);
                 };
-            m_verticalScrollContainerComponent->addAndMakeVisible(m_outputMuteButtons.at(o).get());
+            if (ControlDirection::None == m_currentIOChannel.first)
+                m_hvScrollContainerComponent->addAndMakeVisible(m_outputMuteButtons.at(o).get());
+            else
+                m_verticalScrollContainerComponent->addAndMakeVisible(m_outputMuteButtons.at(o).get());
             m_outputControlsGrid->items.add(juce::GridItem(m_outputMuteButtons.at(o).get()));
         }
     }
@@ -298,7 +335,7 @@ void FaderbankControlComponent::rebuildCrosspointControls(bool force)
 
     if (ControlDirection::Output == m_currentIOChannel.first)
     {
-        if (ioCount.first != m_crosspointGainSliders.size() || force)
+        if (force || ioCount.first != m_crosspointGainSliders.size())
         {
             auto templateColums = juce::Array<juce::Grid::TrackInfo>();
             for (auto in = 0; in < ioCount.first; in++)
@@ -362,7 +399,7 @@ void FaderbankControlComponent::rebuildCrosspointControls(bool force)
     }
     else if (ControlDirection::Input == m_currentIOChannel.first)
     {
-        if (ioCount.second != m_crosspointGainSliders.size() || force)
+        if (force || ioCount.second != m_crosspointGainSliders.size())
         {
             auto templateRows = juce::Array<juce::Grid::TrackInfo>();
             for (auto out = 0; out < ioCount.second; out++)
@@ -421,6 +458,80 @@ void FaderbankControlComponent::rebuildCrosspointControls(bool force)
                 //m_crosspointGainSliders.at(o)->setValue(juce::Decibels::gainToDecibels(double(crosspointState.second), static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())), juce::dontSendNotification);
                 m_crosspointGainSliders.at(o)->setValue(double(crosspointValue), juce::dontSendNotification);
                 m_crosspointGainSliders.at(o)->setVisible(true);
+            }
+        }
+    }
+    else if (ControlDirection::None == m_currentIOChannel.first)
+    {
+        if (force || (ioCount.first * ioCount.second) != m_crosspointGainSliders.size())
+        {
+            auto templateColumns = juce::Array<juce::Grid::TrackInfo>();
+            for (auto in = 0; in < ioCount.first; in++)
+                templateColumns.add(juce::Grid::TrackInfo(juce::Grid::Px(m_controlsSize)));
+            auto templateRows = juce::Array<juce::Grid::TrackInfo>();
+            for (auto out = 0; out < ioCount.second; out++)
+                templateRows.add(juce::Grid::TrackInfo(juce::Grid::Px(m_controlsSize)));
+            
+            m_crosspointGainSliders.resize(ioCount.first * ioCount.second);
+            m_crosspointsControlsGrid->items.clear();
+            m_crosspointsControlsGrid->templateColumns = templateColumns;
+            m_crosspointsControlsGrid->templateRows = templateRows;
+
+            for (auto o = 0; o < ioCount.second; o++)
+            {
+                for (auto i = 0; i < ioCount.first; i++)
+                {
+                    auto idx = o + i * ioCount.second;
+                    m_crosspointGainSliders.at(idx) = std::make_unique<JUCEAppBasics::ToggleStateSlider>(juce::Slider::Rotary, juce::Slider::NoTextBox);
+                    m_crosspointGainSliders.at(idx)->setColour(juce::Slider::ColourIds::trackColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
+                    m_crosspointGainSliders.at(idx)->setRange(0.0, 1.0, 0.01);
+                    m_crosspointGainSliders.at(idx)->displayValueConverter = [](double val) { return juce::String(juce::Decibels::gainToDecibels(val, static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())), 1) + " dB"; };
+                    //juce::Decibels::gainToDecibels(0.0, static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())),
+                    //juce::Decibels::gainToDecibels(1.0, static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())),
+                    //0.1);
+                    m_crosspointGainSliders.at(idx)->onValueChange = [this, idx, i, o] {
+                        auto crosspointValues = std::map<std::uint16_t, std::map<std::uint16_t, float>>();
+                        //auto faderValue = juce::Decibels::decibelsToGain(m_crosspointGainSliders.at(o)->getValue(), static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB()));
+                        auto faderValue = m_crosspointGainSliders.at(idx)->getValue();
+                        auto in = std::uint16_t(i + 1);
+                        auto out = std::uint16_t(o + 1);
+                        crosspointValues[in][out] = float(faderValue);
+                        if (onCrosspointValuesChanged)
+                            onCrosspointValuesChanged(crosspointValues);
+                        addCrosspointValues(crosspointValues);
+                        };
+                    m_crosspointGainSliders.at(idx)->onToggleStateChange = [this, idx, i, o] {
+                        auto crosspointStates = std::map<std::uint16_t, std::map<std::uint16_t, bool>>();
+                        auto faderState = m_crosspointGainSliders.at(idx)->getToggleState();
+                        auto in = std::uint16_t(i + 1);
+                        auto out = std::uint16_t(o + 1);
+                        crosspointStates[in][out] = faderState;
+                        if (onCrosspointStatesChanged)
+                            onCrosspointStatesChanged(crosspointStates);
+                        addCrosspointStates(crosspointStates);
+                        };
+                    m_hvScrollContainerComponent->addAndMakeVisible(m_crosspointGainSliders.at(idx).get());
+                    m_crosspointsControlsGrid->items.add(juce::GridItem(m_crosspointGainSliders.at(idx).get()));
+                
+                }
+            }
+        }
+        for (auto i = 0; i < ioCount.first; i++)
+        {
+            for (auto o = 0; o < ioCount.second; o++)
+            {
+                auto idx = i * ioCount.second + o;
+                if (m_crosspointGainSliders.size() > idx)
+                {
+                    auto in = std::uint16_t(i + 1);
+                    auto out = std::uint16_t(o + 1);
+                    auto crosspointState = ((getCrosspointStates().count(in) != 0) != 0 && getCrosspointStates().at(in).count(out) != 0) ? getCrosspointStates().at(in).at(out) : false;
+                    auto crosspointValue = ((getCrosspointValues().count(in) != 0) != 0 && getCrosspointValues().at(in).count(out) != 0) ? getCrosspointValues().at(in).at(out) : 0.0f;
+                    m_crosspointGainSliders.at(idx)->setToggleState(crosspointState, juce::dontSendNotification);
+                    //m_crosspointGainSliders.at(idx)->setValue(juce::Decibels::gainToDecibels(double(crosspointState.second), static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())), juce::dontSendNotification);
+                    m_crosspointGainSliders.at(idx)->setValue(double(crosspointValue), juce::dontSendNotification);
+                    m_crosspointGainSliders.at(idx)->setVisible(true);
+                }
             }
         }
     }
@@ -515,16 +626,22 @@ void FaderbankControlComponent::updateCrosspointFaderValues()
 
             auto i = in - 1;
             auto o = out - 1;
+            auto idx = i * getIOCount().second + o;
 
             if (ControlDirection::Input == m_currentIOChannel.first && in == m_currentIOChannel.second && m_crosspointGainSliders.size() > o)
             {
                 m_crosspointGainSliders.at(o)->setToggleState(state, juce::dontSendNotification);
                 m_crosspointGainSliders.at(o)->setValue(value, juce::dontSendNotification);
             }
-            if (ControlDirection::Output == m_currentIOChannel.first && out == m_currentIOChannel.second && m_crosspointGainSliders.size() > i)
+            else if (ControlDirection::Output == m_currentIOChannel.first && out == m_currentIOChannel.second && m_crosspointGainSliders.size() > i)
             {
                 m_crosspointGainSliders.at(i)->setToggleState(state, juce::dontSendNotification);
                 m_crosspointGainSliders.at(i)->setValue(value, juce::dontSendNotification);
+            }
+            else if (ControlDirection::None == m_currentIOChannel.first && m_crosspointGainSliders.size() > idx)
+            {
+                m_crosspointGainSliders.at(idx)->setToggleState(state, juce::dontSendNotification);
+                m_crosspointGainSliders.at(idx)->setValue(value, juce::dontSendNotification);
             }
         }
     }
