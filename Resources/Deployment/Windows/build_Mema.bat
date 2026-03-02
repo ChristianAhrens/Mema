@@ -1,9 +1,9 @@
 @echo off
 
-set VSDIR=C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE
+set VSDIR=C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE
 set WORKSPACE=..\..\..
 set JUCEDIR=%WORKSPACE%\submodules\JUCE
-set PROJUCERVSDIR=%JUCEDIR%\extras\Projucer\Builds\VisualStudio2022
+set PROJUCERVSDIR=%JUCEDIR%\extras\Projucer\Builds\VisualStudio2026
 echo.
 
 echo Using variables:
@@ -22,5 +22,5 @@ echo Exporting Projucer project
 echo.
 
 echo Build release
-"%VSDIR%\devenv.com" %WORKSPACE%\Builds\VisualStudio2022\Mema.sln /build Release
+"%VSDIR%\devenv.com" %WORKSPACE%\Builds\VisualStudio2026\Mema.sln /build Release
 echo.
