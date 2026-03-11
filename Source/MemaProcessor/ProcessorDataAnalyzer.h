@@ -28,12 +28,13 @@
 namespace Mema
 {
 
-//==============================================================================
-/*
-*/
+/** @class ProcessorDataAnalyzer
+ *  @brief Analyses a stream of audio buffers and broadcasts level and spectrum data to registered listeners.
+ */
 class ProcessorDataAnalyzer :   public juce::Timer
 {
 public:
+    /** @class Listener @brief Interface for objects that wish to receive analyzer data change notifications. */
     class Listener
     {
     public:
@@ -48,6 +49,7 @@ public:
     ~ProcessorDataAnalyzer();
 
     //==============================================================================
+    /** @brief Configures which data types (level, spectrum, audio signal) the analyzer computes. */
     void setUseProcessingTypes(bool useLevelProcessing, bool useBufferProcessing, bool useSepctrumProcessing);
     bool isLevelProcessingUsed();
     bool isBufferProcessingUsed();
@@ -71,9 +73,11 @@ public:
     void removeListener(Listener* listener);
 
     //==============================================================================
+    /** @brief Submits a new audio buffer for analysis. */
     void analyzeData(const juce::AudioBuffer<float>& buffer);
 
     //==============================================================================
+    /** @brief Timer callback that broadcasts pending data changes to all registered listeners. */
     void timerCallback() override;
 
     //==============================================================================

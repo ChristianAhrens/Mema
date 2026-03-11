@@ -25,7 +25,9 @@ namespace Mema
 {
 
 
-//==============================================================================
+/** @class InterprocessConnectionImpl
+ *  @brief Client-side TCP connection wrapper that forwards JUCE IPC events to std::function callbacks.
+ */
 class InterprocessConnectionImpl : public juce::InterprocessConnection
 {
 public:
@@ -49,7 +51,9 @@ private:
 
 };
 
-//==============================================================================
+/** @class InterprocessConnectionServerImpl
+ *  @brief TCP server that accepts multiple simultaneous client connections on a fixed port.
+ */
 class InterprocessConnectionServerImpl : public juce::InterprocessConnectionServer
 {
 public:

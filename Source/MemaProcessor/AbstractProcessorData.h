@@ -23,23 +23,30 @@
 namespace Mema
 {
 
+/** @class AbstractProcessorData
+ *  @brief Base class for all data objects exchanged between the audio processor and its analyzers/visualisers.
+ */
 class AbstractProcessorData
 {
 public:
+    /** @brief Identifies the concrete payload type carried by this data object. */
     enum Type
     {
-        Invalid,
-		AudioSignal,
-        Level,
-        Spectrum,
+        Invalid,    ///< Uninitialised or unknown data.
+        AudioSignal, ///< Raw audio buffer data.
+        Level,      ///< Peak/RMS/hold level metering data.
+        Spectrum,   ///< FFT frequency-spectrum data.
     };
-    
+
     AbstractProcessorData();
     virtual ~AbstractProcessorData();
-    
+
+    /** @brief Returns the concrete type of this data object. */
     Type GetDataType();
-    
+
+    /** @brief Sets the number of audio channels this data object covers. */
     virtual void SetChannelCount(unsigned long count) = 0;
+    /** @brief Returns the number of audio channels this data object covers. */
     virtual unsigned long GetChannelCount() = 0;
     
 protected:

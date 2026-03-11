@@ -21,6 +21,7 @@
 #include <JuceHeader.h>
 
 
+/** @class MemaClientConnectingComponent @brief Progress indicator shown while the TCP connection to a Mema server is being established. */
 class MemaClientConnectingComponent :   public juce::Component
 {
 public:

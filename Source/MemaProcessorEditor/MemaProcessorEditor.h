@@ -91,7 +91,9 @@ private:
     Direction m_direction{ IO };
 };
 
-//==============================================================================
+/** @class MemaProcessorEditor
+ *  @brief Top-level editor component for the Mema processor — composes the input, crosspoint, output, and plugin control strips.
+ */
 class MemaProcessorEditor :  public juce::AudioProcessorEditor
 {
 public:

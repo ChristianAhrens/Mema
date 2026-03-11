@@ -26,16 +26,15 @@
 namespace Mema
 {
 
-//==============================================================================
-/*
-*/
+/** @class MeterbridgeComponent @brief Level-meter bar component supporting horizontal and vertical orientations. */
 class MeterbridgeComponent : public AbstractAudioVisualizer
 {
 public:
+    /** @brief Orientation of the meter bars. */
     enum Direction
     {
-        Horizontal,
-        Vertical
+        Horizontal, ///< Bars grow left-to-right.
+        Vertical    ///< Bars grow bottom-to-top.
     };
 
 public:

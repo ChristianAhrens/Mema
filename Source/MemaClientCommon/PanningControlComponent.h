@@ -39,6 +39,13 @@ class InputPositionMapper;
 class TwoDFieldMultisliderComponent;
 
 
+/** @class PanningControlComponent
+ *  @brief 2-D spatial panning remote control for Mema.Re.
+ *
+ * Hosts a TwoDFieldMultisliderComponent for interactive speaker-layout panning and an
+ * ADMOSController for receiving external ADM-OSC position/mute updates.  Sends updated
+ * ControlParametersMessage payloads back to Mema via the onMessageReadyToSend callback.
+ */
 class PanningControlComponent : public MemaClientControlComponentBase
 {
 public:

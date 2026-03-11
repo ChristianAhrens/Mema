@@ -24,21 +24,26 @@
 namespace Mema
 {
 
+/** @class ProcessorAudioSignalData @brief Audio buffer data object carrying raw PCM samples plus sample-rate metadata. */
 class ProcessorAudioSignalData :    public AbstractProcessorData,
 public juce::AudioBuffer<float>
 {
 public:
     ProcessorAudioSignalData();
     ~ProcessorAudioSignalData();
-    
+
+    /** @brief Sets the number of channels in the audio buffer. */
     void SetChannelCount(unsigned long count) override;
+    /** @brief Returns the number of channels in the audio buffer. */
     unsigned long GetChannelCount() override;
 
+    /** @brief Sets the sample rate associated with this buffer. */
     void SetSampleRate(unsigned long rate);
+    /** @brief Returns the sample rate associated with this buffer. */
     unsigned long GetSampleRate();
 
 private:
-    unsigned long m_sampleRate;
+    unsigned long m_sampleRate; ///< Sample rate of the audio buffer in Hz.
     
 };
 

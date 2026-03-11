@@ -37,6 +37,7 @@ namespace Mema
 {
 
 
+/** @class PluginControlComponent @brief Client-side plugin parameter control — renders sliders, combo boxes, and toggle buttons dynamically from MemaPluginParameterInfo descriptors. */
 class PluginControlComponent : public MemaClientControlComponentBase
 {
 public:

@@ -25,9 +25,13 @@ namespace Mema
 {
 
 
-//==============================================================================
-/*
-*/
+/** @class ADMOSController
+ *  @brief Receives ADM-OSC UDP packets and translates them into panning position and mute updates.
+ *
+ * Listens on a configurable UDP port for ADM-OSC messages (/adm/obj/n/x|y|z|xy|xyz|w|mute)
+ * and forwards decoded parameter values to registered callbacks, which are consumed by
+ * PanningControlComponent to drive TwoDFieldMultisliderComponent.
+ */
 class ADMOSController : public juce::OSCReceiver::Listener<juce::OSCReceiver::RealtimeCallback>, public juce::MessageListener
 {
 public:

@@ -27,20 +27,24 @@
 namespace Mema
 {
 
+/** @class MemaAppConfiguration
+ *  @brief XML-backed application configuration manager for the Mema audio matrix tool.
+ */
 class MemaAppConfiguration : public JUCEAppBasics::AppConfigurationBase
 {
 
 public:
+    /** @brief XML element tag identifiers used when serialising/deserialising the configuration. */
     enum TagID
     {
-        PROCESSORCONFIG,
-        DEVCONFIG,
-        UICONFIG,
-        PLUGINCONFIG,
-        INPUTMUTES,
-        OUTPUTMUTES,
-        CROSSPOINTGAINS,
-        PLUGINPARAM,
+        PROCESSORCONFIG,    ///< Audio processor settings.
+        DEVCONFIG,          ///< Audio device configuration.
+        UICONFIG,           ///< UI layout and appearance.
+        PLUGINCONFIG,       ///< Plugin host settings.
+        INPUTMUTES,         ///< Per-channel input mute states.
+        OUTPUTMUTES,        ///< Per-channel output mute states.
+        CROSSPOINTGAINS,    ///< Crosspoint matrix gain values.
+        PLUGINPARAM,        ///< Individual plugin parameter entry.
     };
     static juce::String getTagName(TagID ID)
     {
@@ -67,14 +71,15 @@ public:
         }
     };
 
+    /** @brief XML attribute identifiers used alongside TagID elements. */
     enum AttributeID
     {
-        ENABLED,
-        POST,
-        PALETTESTYLE,
-        METERINGCOLOR,
-        IDX,
-        CONTROLLABLE,
+        ENABLED,        ///< Boolean enabled flag.
+        POST,           ///< Post-matrix plugin insertion flag.
+        PALETTESTYLE,   ///< Look-and-feel palette style index.
+        METERINGCOLOR,  ///< Metering bar colour.
+        IDX,            ///< Channel or parameter index.
+        CONTROLLABLE,   ///< Whether a plugin parameter is remotely controllable.
     };
     static juce::String getAttributeName(AttributeID ID)
     {
@@ -98,15 +103,20 @@ public:
     };
 
 public:
+    /** @brief Constructs the configuration, loading from or creating the given XML file. */
     explicit MemaAppConfiguration(const File &file);
     ~MemaAppConfiguration() override;
 
+    /** @brief Returns true when the loaded XML contains all required configuration nodes. */
     bool isValid() override;
+    /** @brief Static variant — validates an already-parsed XmlElement without a file. */
     static bool isValid(const std::unique_ptr<juce::XmlElement>& xmlConfig);
 
+    /** @brief Resets every value to factory defaults and triggers a dump. */
     bool ResetToDefault();
 
 protected:
+    /** @brief Called when the persisted config version differs from the current app version. */
     bool HandleConfigVersionConflict(const Version& configVersionFound) override;
 
 private:

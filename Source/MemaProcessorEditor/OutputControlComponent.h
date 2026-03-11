@@ -32,9 +32,12 @@ namespace Mema
  */
 class MeterbridgeComponent;
 
-//==============================================================================
-/*
-*/
+/** @class OutputControlComponent
+ *  @brief Output-channel control strip — shows level meters and mute buttons for all output channels.
+ *
+ * Inherits AbstractAudioVisualizer (receives output analyzer data) and MemaOutputCommander
+ * (sends mute commands back to MemaProcessor).
+ */
 class OutputControlComponent :  public AbstractAudioVisualizer,
                                 public MemaOutputCommander,
                                 public juce::TextButton::Listener

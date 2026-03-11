@@ -25,20 +25,28 @@ namespace Mema
 {
 
 
+/** @class MemaClientControlComponentBase
+ *  @brief Abstract base for all Mema.Re client control panels.
+ *
+ * Defines the common interface for receiving Mema server state (IO counts, mute states,
+ * crosspoint values) and propagating user interactions back to the network layer.
+ */
 class MemaClientControlComponentBase : public juce::Component
 {
 public:
+    /** @brief Direction of a control strip within the panel layout. */
     enum ControlDirection
     {
-        None = 0,
-        Input,
-        Output
+        None = 0,   ///< No directional context.
+        Input,      ///< Strip controls input channels.
+        Output      ///< Strip controls output channels.
     };
+    /** @brief Size category for rendered control elements. */
     enum ControlsSize
     {
-        S = 35,
-        M = 50,
-        L = 65
+        S = 35,     ///< Small — suited for desktop with many channels.
+        M = 50,     ///< Medium.
+        L = 65      ///< Large — suited for touch screens.
     };
 
     static constexpr int s_gap = 3;

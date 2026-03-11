@@ -29,25 +29,25 @@ enum class ParameterControlType
     Continuous   // Slider/Fader for continuous values
 };
 
+/** @brief Metadata describing a single plugin parameter exposed for remote control. */
 struct PluginParameterInfo
 {
-    int index = 0;
-    juce::String id = "0";
-    juce::String name = "";
-    float defaultValue = 0.0f;
-    float currentValue = 0.0f;
-    juce::String label = "";
-    bool isAutomatable = false;
-    bool isRemoteControllable = true;  // User-controllable remote access
-    juce::AudioProcessorParameter::Category category = juce::AudioProcessorParameter::Category::genericParameter;
-    // Range information
-    float minValue = 0.0f;
-    float maxValue = 1.0f;
-    float stepSize = 0.0f;
-    bool isDiscrete = false;
-    ParameterControlType type = ParameterControlType::Continuous;
-    int stepCount = 0;
-    std::vector<std::string> stepNames;
+    int index = 0;                              ///< Zero-based parameter index within the plugin.
+    juce::String id = "0";                      ///< Unique string identifier of the parameter.
+    juce::String name = "";                     ///< Human-readable parameter name.
+    float defaultValue = 0.0f;                  ///< Factory default value (normalised 0..1).
+    float currentValue = 0.0f;                  ///< Current parameter value (normalised 0..1).
+    juce::String label = "";                    ///< Unit label (e.g. "dB", "Hz").
+    bool isAutomatable = false;                 ///< Whether the host can automate this parameter.
+    bool isRemoteControllable = true;           ///< Whether this parameter is exposed for remote control.
+    juce::AudioProcessorParameter::Category category = juce::AudioProcessorParameter::Category::genericParameter; ///< JUCE parameter category.
+    float minValue = 0.0f;                      ///< Minimum value in the parameter's native range.
+    float maxValue = 1.0f;                      ///< Maximum value in the parameter's native range.
+    float stepSize = 0.0f;                      ///< Step interval for discrete parameters (0 = continuous).
+    bool isDiscrete = false;                    ///< True if the parameter has a finite set of steps.
+    ParameterControlType type = ParameterControlType::Continuous; ///< Control widget type (slider, combo, toggle).
+    int stepCount = 0;                          ///< Number of discrete steps (0 if continuous).
+    std::vector<std::string> stepNames;         ///< Display names for each discrete step.
 
     // Equality operator
     bool operator==(const PluginParameterInfo& other) const

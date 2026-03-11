@@ -27,9 +27,7 @@ namespace Mema
 
 class CustomPaintingAudioVisualiserComponent;
 
-//==============================================================================
-/*
-*/
+/** @class WaveformAudioComponent @brief Scrolling waveform visualisation component for Mema.Mo. */
 class WaveformAudioComponent    :   public AbstractAudioVisualizer
 {
 public:

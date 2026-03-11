@@ -35,6 +35,12 @@ namespace Mema
 {
 
 
+/** @class FaderbankControlComponent
+ *  @brief Fader-bank remote control — presents input×output crosspoint sliders and mute buttons.
+ *
+ * Part of the Mema.Re client.  Implements MemaClientControlComponentBase to receive state
+ * snapshots from MemaProcessor and send updated ControlParametersMessage payloads back.
+ */
 class FaderbankControlComponent : public MemaClientControlComponentBase
 {
 public:

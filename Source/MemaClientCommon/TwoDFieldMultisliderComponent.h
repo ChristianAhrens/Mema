@@ -35,9 +35,7 @@ namespace Mema
 {
 
 
-//==============================================================================
-/*
-*/
+/** @class TwoDFieldMultisliderComponent @brief Interactive 2-D sound-field component with one draggable handle per input channel. */
 class TwoDFieldMultisliderComponent  :   public JUCEAppBasics::TwoDFieldBase, public juce::Component
 {
 public:
@@ -50,16 +48,17 @@ public:
         float relYPos = 0.0f;
     };
 
+    /** @brief Position data for a single source handle in the 2-D field. */
     struct TwoDMultisliderSourcePosition
     {
         TwoDMultisliderSourcePosition() = default;
         TwoDMultisliderSourcePosition(ChannelLayer l, TwoDMultisliderValue v, float s, bool iS, bool iO) { layer = l; value = v; sharpness = s; isSliding = iS; isOn = iO; };
 
-        ChannelLayer layer = ChannelLayer::Positioned;
-        TwoDMultisliderValue value = { 0.0f, 0.0f };
-        float sharpness = 0.4f;
-        bool isSliding = false;
-        bool isOn = true;
+        ChannelLayer layer = ChannelLayer::Positioned;  ///< Height layer index (0 = ground, 1 = elevated).
+        TwoDMultisliderValue value = { 0.0f, 0.0f };    ///< x/y position in the 2-D field.
+        float sharpness = 0.4f;                         ///< Panning sharpness / width [0, 1].
+        bool isSliding = false;                         ///< True while the user is dragging this handle.
+        bool isOn = true;                               ///< Whether this input source is active.
     };
 
 public:
