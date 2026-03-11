@@ -1,0 +1,9 @@
+<map id="Mema::CrosspointsControlComponent" name="Mema::CrosspointsControlComponent">
+<area shape="rect" id="Node000001" title=" " alt="" coords="85,152,279,192"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,79,137,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="100,110,157,150,154,154,97,114"/>
+<area shape="rect" id="Node000003" href="$classMema_1_1MemaCrosspointCommander.html" title=" " alt="" coords="162,79,423,104"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="267,114,210,154,207,150,264,110"/>
+<area shape="rect" id="Node000004" href="$classMema_1_1MemaChannelCommander.html" title=" " alt="" coords="170,5,415,31"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="295,44,295,79,290,79,290,44"/>
+</map>

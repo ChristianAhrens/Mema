@@ -1,0 +1,5 @@
+<map id="Mema::MemaProcessorEditor" name="Mema::MemaProcessorEditor">
+<area shape="rect" id="Node000001" title="Top&#45;level editor component for the Mema processor — composes the input, crosspoint,..." alt="" coords="5,79,219,104"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="15,5,209,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="115,44,115,79,109,79,109,44"/>
+</map>
