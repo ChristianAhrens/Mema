@@ -27,13 +27,11 @@ namespace Mema
 
 class CustomPaintingAudioVisualiserComponent;
 
-//==============================================================================
-/*
-*/
+/** @class SpectrumAudioComponent @brief FFT frequency-spectrum visualisation component for Mema.Mo. */
 class SpectrumAudioComponent    :   public AbstractAudioVisualizer
 {
 public:
-    //==============================================================================
+    /** @brief Cached per-channel FFT peak and hold data ready for painting. */
     struct PlotPoints
     {
         std::vector<float> peaks;

@@ -23,12 +23,11 @@
 namespace Mema
 {
 
-//==============================================================================
-/*
-*/
+/** @class AudioSelectComponent @brief UI component for selecting the audio input/output device and channel configuration. */
 class AudioSelectComponent    : public juce::AudioDeviceSelectorComponent
 {
 public:
+    /** @brief Snapshot of the currently selected device's relevant characteristics used to detect changes. */
 	struct RelevantDeviceCharacteristics
 	{
 		RelevantDeviceCharacteristics()

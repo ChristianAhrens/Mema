@@ -25,10 +25,7 @@ namespace Mema
 {
 
 
-//==============================================================================
-/*
- *
- */
+/** @class InputPositionMapper @brief Maps input-channel 2-D positions to distances from configured output speaker positions. */
 class InputPositionMapper
 {
 public:

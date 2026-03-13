@@ -23,9 +23,11 @@
 namespace Mema
 {
 
+/** @class ProcessorLevelData @brief Level-metering data object carrying peak, RMS, and hold values for each channel. */
 class ProcessorLevelData : public AbstractProcessorData
 {
 public:
+    /** @brief Per-channel level values in both linear and dB domains. */
     struct LevelVal
     {
         LevelVal()
@@ -62,13 +64,13 @@ public:
             return (-1 * minusInfdb + holddB) / (-1 * minusInfdb);
         }
         
-        float   peak;
-        float   rms;
-        float   hold;
-        float   peakdB;
-        float   rmsdB;
-        float   holddB;
-        float   minusInfdb;
+        float   peak;       ///< Linear peak level.
+        float   rms;        ///< Linear RMS level.
+        float   hold;       ///< Linear hold level.
+        float   peakdB;     ///< Peak level in dB.
+        float   rmsdB;      ///< RMS level in dB.
+        float   holddB;     ///< Hold level in dB.
+        float   minusInfdb; ///< Value used as -infinity in dB calculations.
     };
     
 public:

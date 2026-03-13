@@ -22,9 +22,11 @@
 namespace Mema
 {
 
+/** @class ProcessorSpectrumData @brief Frequency-spectrum data object carrying FFT magnitude bins for each channel. */
 class ProcessorSpectrumData : public AbstractProcessorData
 {
 public:
+    /** @brief FFT output for a single channel — 512 frequency bins with peak and hold values. */
     struct SpectrumBands
     {
         enum {

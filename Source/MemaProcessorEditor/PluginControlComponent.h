@@ -262,7 +262,7 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginListAndSelectComponent)
 };
 
-//==============================================================================
+/** @class PluginControlComponent @brief Editor-side plugin control — manages plugin loading, pre/post toggle, and exposes parameter controllability settings. */
 class PluginControlComponent :   public juce::Component
 {
 public:

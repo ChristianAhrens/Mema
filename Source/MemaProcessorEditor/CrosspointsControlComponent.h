@@ -29,7 +29,7 @@
 namespace Mema
 {
 
-//==============================================================================
+/** @class CrosspointComponent @brief Individual node in the crosspoint matrix — draggable to set gain, clickable to toggle enable. */
 class CrosspointComponent : public juce::Component
 {
 public:
@@ -163,8 +163,8 @@ private:
     bool m_isDragging = false;
 };
 
-//==============================================================================
-class CrosspointsControlComponent : public juce::Component, 
+/** @class CrosspointsControlComponent @brief Matrix grid component showing and controlling all input×output crosspoints. */
+class CrosspointsControlComponent : public juce::Component,
     public MemaCrosspointCommander
 {
 public:

@@ -24,14 +24,22 @@
 namespace Mema
 {
 
+/** @class MemaServiceData @brief Compile-time constants for the Mema multicast service discovery protocol. */
 struct ServiceData
 {
+    /** @brief Returns the base string for building service type UIDs. */
 	static juce::String getServiceTypeUIDBase();
+    /** @brief Returns the UID for the Mema master (server) service. */
 	static juce::String getMasterServiceTypeUID();
+    /** @brief Returns the UID for the Mema.Mo monitor service. */
 	static juce::String getMonitorServiceTypeUID();
+    /** @brief Returns the UID for the Mema.Re remote-control service. */
 	static juce::String getRemoteServiceTypeUID();
+    /** @brief Returns the human-readable service description string. */
 	static juce::String getServiceDescription();
+    /** @brief Returns the UDP port used for multicast service announcements. */
 	static int getBroadcastPort();
+    /** @brief Returns the TCP port used for client connections (55668). */
 	static int getConnectionPort();
 
 private:

@@ -27,6 +27,7 @@ namespace JUCEAppBasics
     class ServiceTopologyTreeView;
 }
 
+/** @class MemaClientDiscoverComponent @brief Service-discovery panel that listens for Mema multicast announcements and lists available instances. */
 class MemaClientDiscoverComponent :   public juce::Component
 {
 public:

@@ -21,20 +21,24 @@
 #include <JuceHeader.h>
 
 
+/** @class AboutComponent @brief Popup component displaying application info, icon and repository link. */
 class AboutComponent :   public juce::Component
 {
 public:
+    /** @brief Constructs the about component with embedded image data. */
     AboutComponent(const char* imageData, int imageDataSize);
     ~AboutComponent() override;
 
     //========================================================================*
+    /** @brief Renders the component. */
     void paint(juce::Graphics&) override;
+    /** @brief Lays out child components. */
     void resized() override;
 
 private:
-    std::unique_ptr<juce::DrawableButton>   m_appIcon;
-    std::unique_ptr<juce::Label>            m_appInfoLabel;
-    std::unique_ptr<juce::HyperlinkButton>  m_appRepoLink;
+    std::unique_ptr<juce::DrawableButton>   m_appIcon;          ///< Application icon button.
+    std::unique_ptr<juce::Label>            m_appInfoLabel;     ///< Label showing app name and version.
+    std::unique_ptr<juce::HyperlinkButton>  m_appRepoLink;      ///< Clickable link to the source repository.
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (AboutComponent)
 };

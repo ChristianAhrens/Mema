@@ -26,9 +26,7 @@
 namespace Mema
 {
 
-//==============================================================================
-/*
-*/
+/** @class TwoDFieldOutputComponent @brief 2-D spatial output level display — paints circular level indicators at speaker positions for LRS up to 9.1.6 ATMOS layouts. */
 class TwoDFieldOutputComponent  :   public JUCEAppBasics::TwoDFieldBase, public AbstractAudioVisualizer
 {
 public:

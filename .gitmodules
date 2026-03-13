@@ -7,3 +7,6 @@
 [submodule "submodules/create-dmg"]
 	path = submodules/create-dmg
 	url = https://github.com/create-dmg/create-dmg
+[submodule "submodules/doxygen-awesome-css"]
+	path = submodules/doxygen-awesome-css
+	url = https://github.com/jothepro/doxygen-awesome-css.git

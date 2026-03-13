@@ -27,6 +27,7 @@ namespace Mema
 {
 
 
+/** @class MemaChannelCommander @brief Base commander interface for a single audio channel — provides channel index and dirty-flag tracking. */
 class MemaChannelCommander
 {
 public:
@@ -40,6 +41,7 @@ protected:
 private:
 };
 
+/** @class MemaInputCommander @brief Commander interface for an input channel — extends MemaChannelCommander with mute control. */
 class MemaInputCommander : public MemaChannelCommander
 {
 public:
@@ -70,6 +72,7 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MemaInputCommander)
 };
 
+/** @class MemaOutputCommander @brief Commander interface for an output channel — extends MemaChannelCommander with mute control. */
 class MemaOutputCommander : public MemaChannelCommander
 {
 public:
@@ -101,6 +104,7 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MemaOutputCommander)
 };
     
+/** @class MemaCrosspointCommander @brief Commander interface for a crosspoint node — controls enable state and gain. */
 class MemaCrosspointCommander : public MemaChannelCommander
 {
 public:
@@ -136,6 +140,7 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MemaCrosspointCommander)
 };
 
+/** @class MemaPluginCommander @brief Commander interface for plugin parameter control — manages parameter info and value updates. */
 class MemaPluginCommander
 {
 public:

@@ -25,10 +25,13 @@
 namespace Mema
 {
 
-//==============================================================================
-/*
-*/
-class AbstractAudioVisualizer : public juce::Component, 
+/** @class AbstractAudioVisualizer
+ *  @brief Base class for all audio-data visualisation components in the Mema processor editor.
+ *
+ * Implements juce::Timer and ProcessorDataAnalyzer::Listener to receive level/spectrum
+ * notifications and trigger repaints at a configurable refresh rate.
+ */
+class AbstractAudioVisualizer : public juce::Component,
                                 public ProcessorDataAnalyzer::Listener,
                                 public juce::Timer
 {
@@ -37,16 +40,23 @@ public:
     virtual ~AbstractAudioVisualizer();
     
     //==============================================================================
+    /** @brief Marks that new data is available and triggers a repaint on the next timer tick. */
     void notifyChanges();
+    /** @brief Called on the message thread to update cached data before repainting. */
     virtual void processChanges();
-    
+
     //==============================================================================
+    /** @brief Paints the visualiser background. */
     void paint (Graphics&) override;
+    /** @brief Lays out child components. */
     void resized() override;
+    /** @brief Handles mouse-down events (e.g. right-click context menu). */
     void mouseDown(const MouseEvent& event) override;
 
     //==============================================================================
+    /** @brief Sets the display refresh rate in Hz. */
     void setRefreshFrequency(int frequency);
+    /** @brief Timer callback that calls processChanges() and triggers a repaint if data changed. */
     void timerCallback() override;
 
 protected:

@@ -21,9 +21,11 @@
 #include <JuceHeader.h>
 
 
+/** @class CustomAboutItem @brief Custom popup menu item that wraps an arbitrary component and computes a sensible ideal size. */
 class CustomAboutItem : public juce::PopupMenu::CustomComponent
 {
 public:
+    /** @brief Constructs the item, holding the given component with a minimum size hint. */
 	CustomAboutItem(juce::Component* componentToHold, juce::Rectangle<int> minIdealSize)
 	{
 		m_component = componentToHold;
@@ -37,6 +39,7 @@ public:
 			m_component->setVisible(false);
 	}
 
+    /** @brief Returns the ideal display size for this item, scaled to the main window. */
     void getIdealSize(int& idealWidth, int& idealHeight) override
 	{
 		auto resultingIdealSize = juce::Rectangle<int>(idealWidth, idealHeight);
@@ -75,6 +78,7 @@ public:
 		}
 	}
 
+    /** @brief Resizes the held component to fill the item bounds. */
     void resized() override
 	{
 		if (m_component)
@@ -82,7 +86,7 @@ public:
 	}
 
 private:
-    juce::Component*        m_component = nullptr;
-    juce::Rectangle<int>    m_minIdealSize;
+    juce::Component*        m_component = nullptr;     ///< The component displayed inside the menu item.
+    juce::Rectangle<int>    m_minIdealSize;             ///< Minimum acceptable ideal size for the item.
 };
 
