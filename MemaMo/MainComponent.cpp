@@ -227,10 +227,14 @@ MainComponent::MainComponent()
 
 #if defined IGNORE_UPDATES
 #else
-    auto updater = JUCEAppBasics::WebUpdateDetector::getInstance();
-    updater->SetReferenceVersion(ProjectInfo::versionString);
-    updater->SetDownloadUpdateWebAddress("https://github.com/christianahrens/mema/releases/latest");
-    updater->CheckForNewVersion(true, "https://raw.githubusercontent.com/ChristianAhrens/Mema/refs/heads/main/");
+    auto noUpdates = juce::JUCEApplication::getInstance()->getCommandLineParameters().contains("--noupdates");
+    if (!noUpdates)
+    {
+        auto updater = JUCEAppBasics::WebUpdateDetector::getInstance();
+        updater->SetReferenceVersion(ProjectInfo::versionString);
+        updater->SetDownloadUpdateWebAddress("https://github.com/christianahrens/mema/releases/latest");
+        updater->CheckForNewVersion(true, "https://raw.githubusercontent.com/ChristianAhrens/Mema/refs/heads/main/");
+    }
 #endif
 
 

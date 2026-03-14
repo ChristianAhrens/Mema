@@ -30,6 +30,7 @@ See [LATEST RELEASE](https://github.com/ChristianAhrens/Mema/releases/latest) fo
   * [Mema.Mo UI](#MemaMoUI)
   * [Mema.Re UI](#MemaReUI)
   * [Mema.Re ADM-OSC external control](#MemaReADMOSC)
+* [Command-line parameters](#commandlineparameters)
 * [How to build the tools](#howtobuild)
   * [Mema](#buildMema)
   * [Mema.Mo](#buildMemaMo)
@@ -135,6 +136,37 @@ _Currently only the cartesian coordinate control parameters are supported for pa
 | xyz coordinate              | /adm/obj/n/xyz  | f f f | -1.0f ... 1.0f | Combined horizontal and vertical panning position and height layer association. |
 | width                       | /adm/obj/n/w    | f     | 0.0f ... 1.0f  | Associated with panning sharpness value. |
 | mute                        | /adm/obj/n/mute | i     | 0 ... 1        | Input mute. |
+
+
+<a name="commandlineparameters" />
+
+## Command-line parameters
+
+All three applications (Mema, Mema.Mo, Mema.Re) share a common set of command-line parameters. Parameters are passed directly when launching the executable from a terminal or as part of a launch script.
+
+| Parameter | Applies to | Description |
+|:----------|:-----------|:------------|
+| `--headless` | Mema only | Launches Mema without a graphical user interface. Activates an interactive, numbered CLI menu for full configuration of input/output mutes, crosspoint matrix gains, audio device setup, and config file load/save. On Windows, a console window is attached (or created) automatically. |
+| `--noupdates` | Mema, Mema.Mo, Mema.Re | Disables the automatic online update check performed by `JUCEAppBasics::WebUpdateDetector` at startup. Useful in network-restricted environments, automated deployments, or kiosk setups where outbound HTTP requests to GitHub should be avoided. |
+
+**Examples**
+
+```sh
+# Launch Mema in headless mode (no GUI, interactive CLI):
+./Mema --headless
+
+# Launch Mema without the automatic update check:
+./Mema --noupdates
+
+# Combine both flags:
+./Mema --headless --noupdates
+
+# Launch Mema.Mo without the automatic update check:
+./MemaMo --noupdates
+
+# Launch Mema.Re without the automatic update check:
+./MemaRe --noupdates
+```
 
 
 <a name="howtobuild" />
