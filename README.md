@@ -31,6 +31,7 @@ See [LATEST RELEASE](https://github.com/ChristianAhrens/Mema/releases/latest) fo
   * [Mema.Re UI](#MemaReUI)
   * [Mema.Re ADM-OSC external control](#MemaReADMOSC)
 * [Command-line parameters](#commandlineparameters)
+  * [Mema headless CLI menu](#headlesscli)
 * [How to build the tools](#howtobuild)
   * [Mema](#buildMema)
   * [Mema.Mo](#buildMemaMo)
@@ -149,6 +150,37 @@ All three applications (Mema, Mema.Mo, Mema.Re) share a common set of command-li
 | `--headless` | Mema only | Launches Mema without a graphical user interface. Activates an interactive, numbered CLI menu for full configuration of input/output mutes, crosspoint matrix gains, audio device setup, and config file load/save. On Windows, a console window is attached (or created) automatically. |
 | `--noupdates` | Mema, Mema.Mo, Mema.Re | Disables the automatic online update check performed by `JUCEAppBasics::WebUpdateDetector` at startup. Useful in network-restricted environments, automated deployments, or kiosk setups where outbound HTTP requests to GitHub should be avoided. |
 | `--noconfigui` | Mema.Mo, Mema.Re | Hides the three configuration buttons (About, Settings, Disconnect) in the upper-left corner of the UI. Intended for kiosk or embedded deployments where the user should not be able to change settings or disconnect from the Mema server. |
+
+<a name="headlesscli" />
+
+### Mema headless CLI menu
+
+When Mema is started with `--headless` a fully interactive, numbered menu is printed to the terminal. No graphical window is opened. On Windows, Mema attaches to the parent console automatically (or opens a new one if launched outside a terminal).
+
+The menu is organised as a tree of numbered sub-menus. At every level, pressing `b` returns to the previous menu and `q` quits the application.
+
+```
+Main menu
+├── 1  Input mutes      — list all active input channels; enter a number to toggle mute
+├── 2  Output mutes     — list all active output channels; enter a number to toggle mute
+├── 3  Matrix gains     — view the routing matrix grid ('+' enabled, '.' disabled)
+│                          enter "in out" (e.g. "2 3") to select a crosspoint, then:
+│                            t  toggle enable/disable
+│                            g  set gain in dB
+│                            b  back to matrix overview
+├── 4  Audio device     — show current device, driver, sample rate, buffer size, channel counts
+│                          sub-options:
+│                            1  select input device  (lists all available devices by type)
+│                            2  select output device (lists all available devices by type)
+│                            3  select sample rate   (lists rates reported by device)
+│                            4  select buffer size   (lists sizes reported by device)
+│                            b  back to main menu
+├── 5  Load config      — type a file path to load a .config XML file from disk
+├── 6  Save config      — type a file path to write the current configuration to disk
+└── q  Quit             — request application shutdown
+```
+
+The main menu shows a live status summary next to each item (e.g. number of muted channels, current device name and sample rate) so the current state is always visible without entering a sub-menu.
 
 **Examples**
 
