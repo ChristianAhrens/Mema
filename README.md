@@ -148,6 +148,7 @@ All three applications (Mema, Mema.Mo, Mema.Re) share a common set of command-li
 |:----------|:-----------|:------------|
 | `--headless` | Mema only | Launches Mema without a graphical user interface. Activates an interactive, numbered CLI menu for full configuration of input/output mutes, crosspoint matrix gains, audio device setup, and config file load/save. On Windows, a console window is attached (or created) automatically. |
 | `--noupdates` | Mema, Mema.Mo, Mema.Re | Disables the automatic online update check performed by `JUCEAppBasics::WebUpdateDetector` at startup. Useful in network-restricted environments, automated deployments, or kiosk setups where outbound HTTP requests to GitHub should be avoided. |
+| `--noconfigui` | Mema.Mo, Mema.Re | Hides the three configuration buttons (About, Settings, Disconnect) in the upper-left corner of the UI. Intended for kiosk or embedded deployments where the user should not be able to change settings or disconnect from the Mema server. |
 
 **Examples**
 
@@ -166,6 +167,12 @@ All three applications (Mema, Mema.Mo, Mema.Re) share a common set of command-li
 
 # Launch Mema.Re without the automatic update check:
 ./MemaRe --noupdates
+
+# Launch Mema.Mo in kiosk mode (no config buttons, no update check):
+./MemaMo --noconfigui --noupdates
+
+# Launch Mema.Re in kiosk mode (no config buttons, no update check):
+./MemaRe --noconfigui --noupdates
 ```
 
 
