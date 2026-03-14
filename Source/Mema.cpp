@@ -128,6 +128,11 @@ juce::Component* Mema::getDeviceSetupComponent()
         return nullptr;
 }
 
+const std::unique_ptr<MemaProcessor>& Mema::getMemaProcessor() const
+{
+    return m_MemaProcessor;
+}
+
 void Mema::clearUICallbacks()
 {
     onEditorSizeChangeRequested = nullptr;

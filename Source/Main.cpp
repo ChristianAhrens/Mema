@@ -21,11 +21,18 @@
 #include "Mema.h"
 #include "MemaUIComponent.h"
 #include "CustomPopupMenuComponent.h"
+#include "HeadlessCLIMenu.h"
 
 #include <AppConfigurationBase.h>
 
 #if JUCE_MAC
 #include <signal.h>
+#endif
+
+#if JUCE_WINDOWS
+// Required for AttachConsole / AllocConsole used in headless mode.
+#include <windows.h>
+#include <cstdio>
 #endif
 
 //==============================================================================
@@ -108,7 +115,25 @@ public:
     void initialise (const juce::String& commandLine) override
     {
         auto isHeadless = commandLine.contains("--headless");
-        
+
+#if JUCE_WINDOWS
+        if (isHeadless)
+        {
+            // JUCE GUI applications are built as SUBSYSTEM:WINDOWS, so the process
+            // has no console attached even when launched from a terminal.
+            // Attach to the parent shell's console (cmd.exe / PowerShell), or open
+            // a fresh console window when Mema was not launched from a terminal.
+            if (!AttachConsole(ATTACH_PARENT_PROCESS))
+                AllocConsole();
+
+            // Reopen the standard C streams so std::cin / std::cout work correctly.
+            FILE* dummy = nullptr;
+            freopen_s(&dummy, "CON", "r", stdin);
+            freopen_s(&dummy, "CON", "w", stdout);
+            freopen_s(&dummy, "CON", "w", stderr);
+        }
+#endif
+
 #if JUCE_MAC
         // Ignore SIGPIPE globally, to prevent occasional unexpected app
         // termination when Mema.Mo instances disconnect while sending by
@@ -120,13 +145,26 @@ public:
         {
             // a single instance of tooltip window is required and used by JUCE everywhere a tooltip is required.
             m_toolTipWindowInstance = std::make_unique<TooltipWindow>();
-            
+
             m_taskbarComponent = std::make_unique<MemaTaskbarComponent>([=](juce::Point<int> mousePosition) { showUiAsCalloutBox(mousePosition); });
             m_taskbarComponent->setName(getApplicationName() + " taskbar icon");
         }
-        
+
         Mema::Mema::getInstance();
-        
+
+        if (isHeadless)
+        {
+            // Start the interactive CLI configuration menu on its own thread so
+            // that blocking stdin reads never stall the JUCE message loop.
+            auto& proc = Mema::Mema::getInstance()->getMemaProcessor();
+            jassert(proc);
+            if (proc != nullptr)
+            {
+                m_cliMenu = std::make_unique<Mema::HeadlessCLIMenu>(*proc);
+                m_cliMenu->startThread();
+            }
+        }
+
         if (!isHeadless)
         {
 #if JUCE_MAC
@@ -156,6 +194,13 @@ public:
 
     void shutdown() override
     {
+        // Stop the CLI menu thread before the processor is destroyed.
+        if (m_cliMenu != nullptr)
+        {
+            m_cliMenu->stopThread(3000);
+            m_cliMenu.reset();
+        }
+
 #if JUCE_MAC
         juce::MenuBarModel::setMacMainMenu(nullptr);
 #endif
@@ -329,7 +374,10 @@ private:
     std::unique_ptr<juce::Component>        m_taskbarComponent;
     std::unique_ptr<juce::TooltipWindow>    m_toolTipWindowInstance;
     std::unique_ptr<juce::LookAndFeel>      m_lookAndFeel;
-    
+
+    /** @brief The interactive CLI configuration menu, active only in --headless mode. */
+    std::unique_ptr<Mema::HeadlessCLIMenu>  m_cliMenu;
+
 #if JUCE_MAC
     std::unique_ptr<MemaMacMainMenuMenuBarModel>    m_macMainMenu;
 #endif
