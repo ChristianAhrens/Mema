@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+## [0.10.1] 2026-03-15
+### Added
+- Added comandline parameter --noupdates to Mema, Mema.Mo and Mema.Re to prevent automatic search for updates and resulting popup notification
+- Added comandline parameter --noconfigui to Mema.Mo and Mema.Re to hide the upper-left-corner config ui elements
+- Added simple CLI menu interface to Mema when running in headless mode (--headless) incl. README documentation
+
+### Changed
+
+### Fixed
+
 ## [0.10.0] 2026-03-02
 ### Added
 - Added Mema plug-in parameter remote control
