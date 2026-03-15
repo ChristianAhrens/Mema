@@ -57,6 +57,16 @@ public:
     /** @brief Returns the audio device setup component. */
     juce::Component* getDeviceSetupComponent();
 
+    /**
+     * @brief Provides read access to the owned MemaProcessor instance.
+     * @details Intended for use by subsystems (e.g. HeadlessCLIMenu) that need to interact
+     *          with the processor directly but must not take ownership of it.  The returned
+     *          reference remains valid for the lifetime of this Mema singleton.
+     * @return A const reference to the unique_ptr that owns the MemaProcessor.
+     *         Callers can check operator bool() to verify the processor is initialised before use.
+     */
+    const std::unique_ptr<MemaProcessor>& getMemaProcessor() const;
+
     //==========================================================================
     std::function<void(int)> onCpuUsageUpdate;                                                          ///< Called when CPU load percentage changes.
     std::function<void(const std::map<int, std::pair<double, bool>>&)> onNetworkUsageUpdate;            ///< Called when network traffic metrics change.

@@ -231,6 +231,13 @@ MainComponent::MainComponent()
     m_disconnectButton->setColour(juce::DrawableButton::ColourIds::backgroundOnColourId, juce::Colours::transparentBlack);
     addAndMakeVisible(m_disconnectButton.get());
 
+    if (juce::JUCEApplication::getInstance()->getCommandLineParameters().contains("--noconfigui"))
+    {
+        m_aboutButton->setVisible(false);
+        m_settingsButton->setVisible(false);
+        m_disconnectButton->setVisible(false);
+    }
+
 #ifdef RUN_MESSAGE_TESTS
     Mema::runTests();
 #endif
@@ -247,10 +254,14 @@ MainComponent::MainComponent()
 
 #if defined IGNORE_UPDATES
 #else
-    auto updater = JUCEAppBasics::WebUpdateDetector::getInstance();
-    updater->SetReferenceVersion(ProjectInfo::versionString);
-    updater->SetDownloadUpdateWebAddress("https://github.com/christianahrens/mema/releases/latest");
-    updater->CheckForNewVersion(true, "https://raw.githubusercontent.com/ChristianAhrens/Mema/refs/heads/main/");
+    auto noUpdates = juce::JUCEApplication::getInstance()->getCommandLineParameters().contains("--noupdates");
+    if (!noUpdates)
+    {
+        auto updater = JUCEAppBasics::WebUpdateDetector::getInstance();
+        updater->SetReferenceVersion(ProjectInfo::versionString);
+        updater->SetDownloadUpdateWebAddress("https://github.com/christianahrens/mema/releases/latest");
+        updater->CheckForNewVersion(true, "https://raw.githubusercontent.com/ChristianAhrens/Mema/refs/heads/main/");
+    }
 #endif
 
 
@@ -297,11 +308,14 @@ void MainComponent::resized()
             break;
     }
 
-    auto leftButtons = safeBounds.removeFromLeft(36);
-    auto rightButtons = safeBounds.removeFromLeft(36);
-    m_aboutButton->setBounds(leftButtons.removeFromTop(35).removeFromBottom(30));
-    m_settingsButton->setBounds(leftButtons.removeFromTop(35).removeFromBottom(30));
-    m_disconnectButton->setBounds(rightButtons.removeFromTop(35).removeFromBottom(30));
+    if (!juce::JUCEApplication::getInstance()->getCommandLineParameters().contains("--noconfigui"))
+    {
+        auto leftButtons = safeBounds.removeFromLeft(36);
+        auto rightButtons = safeBounds.removeFromLeft(36);
+        m_aboutButton->setBounds(leftButtons.removeFromTop(35).removeFromBottom(30));
+        m_settingsButton->setBounds(leftButtons.removeFromTop(35).removeFromBottom(30));
+        m_disconnectButton->setBounds(rightButtons.removeFromTop(35).removeFromBottom(30));
+    }
 }
 
 void MainComponent::paint(juce::Graphics& g)

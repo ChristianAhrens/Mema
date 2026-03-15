@@ -73,10 +73,14 @@ Mema::Mema() :  juce::Timer()
 
 #if defined IGNORE_UPDATES
 #else
-    auto updater = JUCEAppBasics::WebUpdateDetector::getInstance();
-    updater->SetReferenceVersion(ProjectInfo::versionString);
-    updater->SetDownloadUpdateWebAddress("https://github.com/christianahrens/mema/releases/latest");
-    updater->CheckForNewVersion(true, "https://raw.githubusercontent.com/ChristianAhrens/Mema/refs/heads/main/");
+    auto noUpdates = juce::JUCEApplication::getInstance()->getCommandLineParameters().contains("--noupdates");
+    if (!noUpdates)
+    {
+        auto updater = JUCEAppBasics::WebUpdateDetector::getInstance();
+        updater->SetReferenceVersion(ProjectInfo::versionString);
+        updater->SetDownloadUpdateWebAddress("https://github.com/christianahrens/mema/releases/latest");
+        updater->CheckForNewVersion(true, "https://raw.githubusercontent.com/ChristianAhrens/Mema/refs/heads/main/");
+    }
 #endif
 }
 
@@ -126,6 +130,11 @@ juce::Component* Mema::getDeviceSetupComponent()
         return m_audioDeviceSelectComponent.get();
     else
         return nullptr;
+}
+
+const std::unique_ptr<MemaProcessor>& Mema::getMemaProcessor() const
+{
+    return m_MemaProcessor;
 }
 
 void Mema::clearUICallbacks()

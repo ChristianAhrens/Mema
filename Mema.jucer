@@ -151,6 +151,10 @@
             file="Source/AboutComponent.h"/>
       <FILE id="Q8jLPX" name="CustomPopupMenuComponent.h" compile="0" resource="0"
             file="Source/CustomPopupMenuComponent.h"/>
+      <FILE id="HCLm01" name="HeadlessCLIMenu.cpp" compile="1" resource="0"
+            file="Source/HeadlessCLIMenu.cpp"/>
+      <FILE id="HCLm02" name="HeadlessCLIMenu.h" compile="0" resource="0"
+            file="Source/HeadlessCLIMenu.h"/>
       <FILE id="xmecvf" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
       <FILE id="jTXcC7" name="Mema.cpp" compile="1" resource="0" file="Source/Mema.cpp"/>
       <FILE id="eleQrX" name="Mema.h" compile="0" resource="0" file="Source/Mema.h"/>
