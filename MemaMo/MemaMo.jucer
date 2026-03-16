@@ -248,7 +248,7 @@
     <VS2026 targetFolder="Builds/VisualStudio2026" smallIcon="FTY1kZ" bigIcon="FTY1kZ">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" targetName="MemaMo"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="MemaMo"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="MemaMo" useRuntimeLibDLL="0"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_audio_basics" path="..\submodules\JUCE\modules"/>
