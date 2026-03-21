@@ -944,13 +944,6 @@ void MemaProcessor::setChannelCounts(std::uint16_t inputChannelCount, std::uint1
     {
         m_inputChannelCount = inputChannelCount;
         reinitRequired = true;
-
-		// threadsafe locking in scope to access plugin
-        {
-            const ScopedLock sl(m_pluginProcessingLock);
-			if (m_pluginInstance)
-	            m_pluginInstance->setPlayConfigDetails(m_inputChannelCount, m_inputChannelCount, getSampleRate(), getBlockSize());
-        }
     }
     if (m_outputChannelCount != outputChannelCount)
     {
@@ -958,7 +951,31 @@ void MemaProcessor::setChannelCounts(std::uint16_t inputChannelCount, std::uint1
         reinitRequired = true;
     }
     if (reinitRequired)
+    {
+        // Reconfigure plugin channel layout whenever either count changes: the correct
+        // count depends on the current pre/post position (see configurePluginForCurrentPosition).
+        {
+            const ScopedLock sl(m_pluginProcessingLock);
+            configurePluginForCurrentPosition();
+        }
         postMessage(new ReinitIOCountMessage(m_inputChannelCount, m_outputChannelCount));
+    }
+}
+
+void MemaProcessor::configurePluginForCurrentPosition()
+{
+    // Must be called under m_pluginProcessingLock.
+    if (!m_pluginInstance)
+        return;
+
+    // Pre-matrix: the plugin receives the raw device input, so it must handle
+    // inputChannelCount channels on both sides — the routing matrix widens/narrows
+    // to outputChannelCount afterwards.
+    // Post-matrix: the plugin sits after the routing matrix, so it must handle
+    // outputChannelCount channels on both sides.
+    auto channelCount = m_pluginPost ? m_outputChannelCount : m_inputChannelCount;
+    m_pluginInstance->setPlayConfigDetails(channelCount, channelCount, getSampleRate(), getBlockSize());
+    m_pluginInstance->prepareToPlay(getSampleRate(), getBlockSize());
 }
 
 bool MemaProcessor::setPlugin(const juce::PluginDescription& pluginDescription)
@@ -980,11 +997,11 @@ bool MemaProcessor::setPlugin(const juce::PluginDescription& pluginDescription)
 			{
 				const ScopedLock sl(m_pluginProcessingLock);
 
-				// Clean up old parameter listeners in case another plugin was already loaded
+				// Detach listeners from the outgoing plugin instance before replacing it
 				if (m_pluginInstance)
 				{
 					for (auto const& param : m_pluginInstance->getParameters())
-						param->addListener(this);
+						param->removeListener(this);
 				}
 
 				m_pluginParameterInfos.clear();
@@ -992,7 +1009,10 @@ bool MemaProcessor::setPlugin(const juce::PluginDescription& pluginDescription)
 				m_pluginInstance = format->createInstanceFromDescription(pluginDescription, getSampleRate(), getBlockSize(), errorMessage);
 				if (m_pluginInstance)
 				{
-					m_pluginInstance->setPlayConfigDetails(m_inputChannelCount, m_inputChannelCount, getSampleRate(), getBlockSize());
+					// Size the plugin correctly for its current pre/post position:
+					// pre-matrix → inputChannelCount × inputChannelCount
+					// post-matrix → outputChannelCount × outputChannelCount
+					configurePluginForCurrentPosition();
 
 					// Extract parameters here
 					m_pluginParameterInfos.clear();
@@ -1003,8 +1023,6 @@ bool MemaProcessor::setPlugin(const juce::PluginDescription& pluginDescription)
 					// Attach listeners to track parameter changes
 					for (auto const& param : m_pluginInstance->getParameters())
 						param->addListener(this);
-
-					m_pluginInstance->prepareToPlay(getSampleRate(), getBlockSize());
 				}
 			}
 			success = errorMessage.isEmpty();
@@ -1048,10 +1066,18 @@ bool MemaProcessor::isPluginEnabled()
 
 void MemaProcessor::setPluginPrePostState(bool post)
 {
-	// threadsafe locking in scope to access plugin enabled
+	// threadsafe locking in scope to access plugin
 	{
 		const ScopedLock sl(m_pluginProcessingLock);
-		m_pluginPost = post;
+		if (m_pluginPost != post)
+		{
+			m_pluginPost = post;
+			// Reconfigure channel layout for the new position before the audio thread
+			// can route any buffers through the plugin:
+			// pre-matrix → inputChannelCount × inputChannelCount
+			// post-matrix → outputChannelCount × outputChannelCount
+			configurePluginForCurrentPosition();
+		}
 	}
 
 	triggerConfigurationUpdate(false);

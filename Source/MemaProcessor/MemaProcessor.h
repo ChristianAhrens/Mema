@@ -537,6 +537,16 @@ private:
     void sendMessageToClients(const MemoryBlock& messageMemoryBlock, const std::vector<int>& sendIds);
 
     //==============================================================================
+    /**
+     * @brief Reconfigures the loaded plugin's channel layout and calls prepareToPlay for the current pre/post position.
+     * @details Pre-matrix: plugin is sized to inputChannelCount × inputChannelCount so the routing matrix
+     *          can widen or narrow to the output count afterwards.
+     *          Post-matrix: plugin is sized to outputChannelCount × outputChannelCount.
+     * @note Must be called under m_pluginProcessingLock.
+     */
+    void configurePluginForCurrentPosition();
+
+    //==============================================================================
     juce::String    m_Name; ///< Processor name string returned by getName().
 
     //==============================================================================
