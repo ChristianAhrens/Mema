@@ -37,6 +37,7 @@
               file="../submodules/JUCE-AppBasics/Source/ToggleStateSlider.h"/>
         <FILE id="iFIFTc" name="iOS_utils.cpp" compile="1" resource="0" file="../submodules/JUCE-AppBasics/Source/iOS_utils.cpp"/>
         <FILE id="u9384n" name="iOS_utils.h" compile="0" resource="0" file="../submodules/JUCE-AppBasics/Source/iOS_utils.h"/>
+        <FILE id="Nm3rKq" name="iOS_utils_native.mm" compile="1" resource="0" file="../submodules/JUCE-AppBasics/Source/iOS_utils_native.mm"/>
         <FILE id="l9NfyW" name="WebUpdateDetector.cpp" compile="1" resource="0"
               file="../submodules/JUCE-AppBasics/Source/WebUpdateDetector.cpp"/>
         <FILE id="yh3GjW" name="WebUpdateDetector.h" compile="0" resource="0"

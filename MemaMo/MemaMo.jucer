@@ -18,6 +18,7 @@
               file="../submodules/JUCE-AppBasics/Source/CustomLookAndFeel.h"/>
         <FILE id="iFIFTc" name="iOS_utils.cpp" compile="1" resource="0" file="../submodules/JUCE-AppBasics/Source/iOS_utils.cpp"/>
         <FILE id="u9384n" name="iOS_utils.h" compile="0" resource="0" file="../submodules/JUCE-AppBasics/Source/iOS_utils.h"/>
+        <FILE id="Nm3rKp" name="iOS_utils_native.mm" compile="1" resource="0" file="../submodules/JUCE-AppBasics/Source/iOS_utils_native.mm"/>
         <FILE id="xMG5QP" name="ServiceTopologyManager.cpp" compile="1" resource="0"
               file="../submodules/JUCE-AppBasics/Source/ServiceTopologyManager.cpp"/>
         <FILE id="MwzBUV" name="ServiceTopologyManager.h" compile="0" resource="0"
