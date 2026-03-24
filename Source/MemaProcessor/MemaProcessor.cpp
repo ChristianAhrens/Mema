@@ -1321,6 +1321,8 @@ void MemaProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMes
 		}
 	}
 
+	postMessage(std::make_unique<AudioInputBufferMessage>(buffer).release());
+
 	// threadsafe locking in scope to access plugin - processing only takes place if NOT set to post matrix
 	{
 		const ScopedLock sl(m_pluginProcessingLock);
@@ -1333,8 +1335,6 @@ void MemaProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMes
 			m_pluginInstance->processBlock(pluginBuffer, midiMessages);
 		}
 	}
-
-	postMessage(std::make_unique<AudioInputBufferMessage>(buffer).release());
 
 	// process data in buffer to be what shall be used as output
 	juce::AudioBuffer<float> processedBuffer;
