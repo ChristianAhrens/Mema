@@ -1325,7 +1325,13 @@ void MemaProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMes
 	{
 		const ScopedLock sl(m_pluginProcessingLock);
 		if (m_pluginInstance && m_pluginEnabled && !m_pluginPost)
-			m_pluginInstance->processBlock(buffer, midiMessages);
+		{
+			// The incoming buffer has max(numIn, numOut) channels, but the plugin was prepared
+			// for m_inputChannelCount channels. Pass a sub-buffer view over the first
+			// m_inputChannelCount channels only to satisfy the AU preparedChannels assertion.
+			juce::AudioBuffer<float> pluginBuffer(buffer.getArrayOfWritePointers(), m_inputChannelCount, buffer.getNumSamples());
+			m_pluginInstance->processBlock(pluginBuffer, midiMessages);
+		}
 	}
 
 	postMessage(std::make_unique<AudioInputBufferMessage>(buffer).release());
@@ -1358,7 +1364,12 @@ void MemaProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMes
 	{
 		const ScopedLock sl(m_pluginProcessingLock);
 		if (m_pluginInstance && m_pluginEnabled && m_pluginPost)
-			m_pluginInstance->processBlock(buffer, midiMessages);
+		{
+			// After makeCopyOf, buffer has m_outputChannelCount channels, matching what the
+			// plugin was prepared for. Use a sub-buffer view for consistency and safety.
+			juce::AudioBuffer<float> pluginBuffer(buffer.getArrayOfWritePointers(), m_outputChannelCount, buffer.getNumSamples());
+			m_pluginInstance->processBlock(pluginBuffer, midiMessages);
+		}
 	}
 
 	for (std::uint16_t output = 1; output <= m_outputChannelCount; output++)
