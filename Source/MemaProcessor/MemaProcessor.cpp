@@ -1267,8 +1267,11 @@ void MemaProcessor::prepareToPlay(double sampleRate, int maximumExpectedSamplesP
 	// threadsafe locking in scope to access plugin
 	{
 		const ScopedLock sl(m_pluginProcessingLock);
-		if (m_pluginInstance)
-			m_pluginInstance->prepareToPlay(sampleRate, maximumExpectedSamplesPerBlock);
+		// configurePluginForCurrentPosition calls setPlayConfigDetails before prepareToPlay,
+		// ensuring the AU plugin's bus layout (and thus preparedChannels) matches the buffer
+		// channel count. Calling prepareToPlay directly risks the AU reinitializing with its
+		// default layout (e.g. stereo), causing a preparedChannels mismatch assertion.
+		configurePluginForCurrentPosition();
 	}
 
 	if (m_inputDataAnalyzer)
