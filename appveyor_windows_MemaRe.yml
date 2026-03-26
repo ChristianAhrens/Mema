@@ -11,7 +11,7 @@ build_script:
 - cmd: >-
     cd Resources/Deployment/Windows
     
-    create_MemaRe-Installer.bat
+    create_MemaRe-Installer.bat VS2022
 artifacts:
 - path: MemaRe*.exe
   name: Installer Binary

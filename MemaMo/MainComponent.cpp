@@ -250,10 +250,13 @@ MainComponent::MainComponent()
 
     // we want keyboard focus for fullscreen toggle shortcut
     setWantsKeyboardFocus(true);
+
+    JUCEAppBasics::iOS_utils::initialise([this] { resized(); });
 }
 
 MainComponent::~MainComponent()
 {
+    JUCEAppBasics::iOS_utils::deinitialise();
 }
 
 void MainComponent::resized()

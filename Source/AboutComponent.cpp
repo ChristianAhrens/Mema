@@ -32,7 +32,7 @@ AboutComponent::AboutComponent(const char* imageData, int imageDataSize)
 	m_appInfoLabel->setFont(juce::Font(juce::FontOptions(16.0, juce::Font::plain)));
 	addAndMakeVisible(m_appInfoLabel.get());
 
-	m_appRepoLink = std::make_unique<juce::HyperlinkButton>(juce::JUCEApplication::getInstance()->getApplicationName() + juce::String(" on GitHub"), URL("https://www.github.com/ChristianAhrens/Mema"));
+	m_appRepoLink = std::make_unique<juce::HyperlinkButton>(juce::JUCEApplication::getInstance()->getApplicationName() + juce::String(" on GitHub"), URL("https://christianahrens.github.io/Mema"));
 	m_appRepoLink->setFont(juce::Font(juce::FontOptions(16.0, juce::Font::plain)), false /* do not resize */);
 	m_appRepoLink->setJustificationType(juce::Justification::centredTop);
 	addAndMakeVisible(m_appRepoLink.get());

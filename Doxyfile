@@ -47,6 +47,8 @@ FULL_SIDEBAR           = NO
 TREEVIEW_WIDTH         = 280
 ENUM_VALUES_PER_LINE   = 1
 
+MERMAID_PATH           = mmdc
+
 HAVE_DOT               = YES
 DOT_NUM_THREADS        = 0
 CLASS_GRAPH            = YES

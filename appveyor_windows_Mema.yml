@@ -11,7 +11,7 @@ build_script:
 - cmd: >-
     cd Resources/Deployment/Windows
     
-    create_Mema-Installer.bat
+    create_Mema-Installer.bat VS2022
 artifacts:
 - path: Mema*.exe
   name: Installer Binary

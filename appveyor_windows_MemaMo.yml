@@ -11,7 +11,7 @@ build_script:
 - cmd: >-
     cd Resources/Deployment/Windows
     
-    create_MemaMo-Installer.bat
+    create_MemaMo-Installer.bat VS2022
 artifacts:
 - path: MemaMo*.exe
   name: Installer Binary

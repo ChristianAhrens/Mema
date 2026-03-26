@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="ja98xe" name="Mema.Mo" projectType="guiapp" useAppConfig="0"
-              jucerFormatVersion="1" version="0.10.2" companyWebsite="github.com/ChristianAhrens/Mema"
+              jucerFormatVersion="1" version="0.10.2" companyWebsite="https://christianahrens.github.io/Mema"
               bundleIdentifier="com.ChristianAhrens.MemaMo" headerPath="../../../submodules/JUCE-AppBasics/Source&#10;../../../Source"
               defines="JUCE_USE_LAME_AUDIO_FORMAT=1,&#10;JUCE_USE_MP3AUDIOFORMAT=1,&#10;JUCE_DISPLAY_SPLASH_SCREEN=0"
               companyName="ChristianAhrens" companyCopyright="Copyright (c) 2024 Christian Ahrens.">
@@ -18,6 +18,7 @@
               file="../submodules/JUCE-AppBasics/Source/CustomLookAndFeel.h"/>
         <FILE id="iFIFTc" name="iOS_utils.cpp" compile="1" resource="0" file="../submodules/JUCE-AppBasics/Source/iOS_utils.cpp"/>
         <FILE id="u9384n" name="iOS_utils.h" compile="0" resource="0" file="../submodules/JUCE-AppBasics/Source/iOS_utils.h"/>
+        <FILE id="Nm3rKp" name="iOS_utils_native.mm" compile="1" resource="0" file="../submodules/JUCE-AppBasics/Source/iOS_utils_native.mm"/>
         <FILE id="xMG5QP" name="ServiceTopologyManager.cpp" compile="1" resource="0"
               file="../submodules/JUCE-AppBasics/Source/ServiceTopologyManager.cpp"/>
         <FILE id="MwzBUV" name="ServiceTopologyManager.h" compile="0" resource="0"
@@ -248,7 +249,7 @@
     <VS2026 targetFolder="Builds/VisualStudio2026" smallIcon="FTY1kZ" bigIcon="FTY1kZ">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" targetName="MemaMo"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="MemaMo"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="MemaMo" useRuntimeLibDLL="0"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_audio_basics" path="..\submodules\JUCE\modules"/>

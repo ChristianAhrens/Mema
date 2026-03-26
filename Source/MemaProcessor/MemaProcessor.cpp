@@ -944,13 +944,6 @@ void MemaProcessor::setChannelCounts(std::uint16_t inputChannelCount, std::uint1
     {
         m_inputChannelCount = inputChannelCount;
         reinitRequired = true;
-
-		// threadsafe locking in scope to access plugin
-        {
-            const ScopedLock sl(m_pluginProcessingLock);
-			if (m_pluginInstance)
-	            m_pluginInstance->setPlayConfigDetails(m_inputChannelCount, m_inputChannelCount, getSampleRate(), getBlockSize());
-        }
     }
     if (m_outputChannelCount != outputChannelCount)
     {
@@ -958,7 +951,31 @@ void MemaProcessor::setChannelCounts(std::uint16_t inputChannelCount, std::uint1
         reinitRequired = true;
     }
     if (reinitRequired)
+    {
+        // Reconfigure plugin channel layout whenever either count changes: the correct
+        // count depends on the current pre/post position (see configurePluginForCurrentPosition).
+        {
+            const ScopedLock sl(m_pluginProcessingLock);
+            configurePluginForCurrentPosition();
+        }
         postMessage(new ReinitIOCountMessage(m_inputChannelCount, m_outputChannelCount));
+    }
+}
+
+void MemaProcessor::configurePluginForCurrentPosition()
+{
+    // Must be called under m_pluginProcessingLock.
+    if (!m_pluginInstance)
+        return;
+
+    // Pre-matrix: the plugin receives the raw device input, so it must handle
+    // inputChannelCount channels on both sides — the routing matrix widens/narrows
+    // to outputChannelCount afterwards.
+    // Post-matrix: the plugin sits after the routing matrix, so it must handle
+    // outputChannelCount channels on both sides.
+    auto channelCount = m_pluginPost ? m_outputChannelCount : m_inputChannelCount;
+    m_pluginInstance->setPlayConfigDetails(channelCount, channelCount, getSampleRate(), getBlockSize());
+    m_pluginInstance->prepareToPlay(getSampleRate(), getBlockSize());
 }
 
 bool MemaProcessor::setPlugin(const juce::PluginDescription& pluginDescription)
@@ -980,11 +997,11 @@ bool MemaProcessor::setPlugin(const juce::PluginDescription& pluginDescription)
 			{
 				const ScopedLock sl(m_pluginProcessingLock);
 
-				// Clean up old parameter listeners in case another plugin was already loaded
+				// Detach listeners from the outgoing plugin instance before replacing it
 				if (m_pluginInstance)
 				{
 					for (auto const& param : m_pluginInstance->getParameters())
-						param->addListener(this);
+						param->removeListener(this);
 				}
 
 				m_pluginParameterInfos.clear();
@@ -992,7 +1009,10 @@ bool MemaProcessor::setPlugin(const juce::PluginDescription& pluginDescription)
 				m_pluginInstance = format->createInstanceFromDescription(pluginDescription, getSampleRate(), getBlockSize(), errorMessage);
 				if (m_pluginInstance)
 				{
-					m_pluginInstance->setPlayConfigDetails(m_inputChannelCount, m_inputChannelCount, getSampleRate(), getBlockSize());
+					// Size the plugin correctly for its current pre/post position:
+					// pre-matrix → inputChannelCount × inputChannelCount
+					// post-matrix → outputChannelCount × outputChannelCount
+					configurePluginForCurrentPosition();
 
 					// Extract parameters here
 					m_pluginParameterInfos.clear();
@@ -1003,8 +1023,6 @@ bool MemaProcessor::setPlugin(const juce::PluginDescription& pluginDescription)
 					// Attach listeners to track parameter changes
 					for (auto const& param : m_pluginInstance->getParameters())
 						param->addListener(this);
-
-					m_pluginInstance->prepareToPlay(getSampleRate(), getBlockSize());
 				}
 			}
 			success = errorMessage.isEmpty();
@@ -1048,10 +1066,18 @@ bool MemaProcessor::isPluginEnabled()
 
 void MemaProcessor::setPluginPrePostState(bool post)
 {
-	// threadsafe locking in scope to access plugin enabled
+	// threadsafe locking in scope to access plugin
 	{
 		const ScopedLock sl(m_pluginProcessingLock);
-		m_pluginPost = post;
+		if (m_pluginPost != post)
+		{
+			m_pluginPost = post;
+			// Reconfigure channel layout for the new position before the audio thread
+			// can route any buffers through the plugin:
+			// pre-matrix → inputChannelCount × inputChannelCount
+			// post-matrix → outputChannelCount × outputChannelCount
+			configurePluginForCurrentPosition();
+		}
 	}
 
 	triggerConfigurationUpdate(false);
@@ -1241,8 +1267,11 @@ void MemaProcessor::prepareToPlay(double sampleRate, int maximumExpectedSamplesP
 	// threadsafe locking in scope to access plugin
 	{
 		const ScopedLock sl(m_pluginProcessingLock);
-		if (m_pluginInstance)
-			m_pluginInstance->prepareToPlay(sampleRate, maximumExpectedSamplesPerBlock);
+		// configurePluginForCurrentPosition calls setPlayConfigDetails before prepareToPlay,
+		// ensuring the AU plugin's bus layout (and thus preparedChannels) matches the buffer
+		// channel count. Calling prepareToPlay directly risks the AU reinitializing with its
+		// default layout (e.g. stereo), causing a preparedChannels mismatch assertion.
+		configurePluginForCurrentPosition();
 	}
 
 	if (m_inputDataAnalyzer)
@@ -1292,14 +1321,20 @@ void MemaProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMes
 		}
 	}
 
+	postMessage(std::make_unique<AudioInputBufferMessage>(buffer).release());
+
 	// threadsafe locking in scope to access plugin - processing only takes place if NOT set to post matrix
 	{
 		const ScopedLock sl(m_pluginProcessingLock);
 		if (m_pluginInstance && m_pluginEnabled && !m_pluginPost)
-			m_pluginInstance->processBlock(buffer, midiMessages);
+		{
+			// The incoming buffer has max(numIn, numOut) channels, but the plugin was prepared
+			// for m_inputChannelCount channels. Pass a sub-buffer view over the first
+			// m_inputChannelCount channels only to satisfy the AU preparedChannels assertion.
+			juce::AudioBuffer<float> pluginBuffer(buffer.getArrayOfWritePointers(), m_inputChannelCount, buffer.getNumSamples());
+			m_pluginInstance->processBlock(pluginBuffer, midiMessages);
+		}
 	}
-
-	postMessage(std::make_unique<AudioInputBufferMessage>(buffer).release());
 
 	// process data in buffer to be what shall be used as output
 	juce::AudioBuffer<float> processedBuffer;
@@ -1329,7 +1364,12 @@ void MemaProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMes
 	{
 		const ScopedLock sl(m_pluginProcessingLock);
 		if (m_pluginInstance && m_pluginEnabled && m_pluginPost)
-			m_pluginInstance->processBlock(buffer, midiMessages);
+		{
+			// After makeCopyOf, buffer has m_outputChannelCount channels, matching what the
+			// plugin was prepared for. Use a sub-buffer view for consistency and safety.
+			juce::AudioBuffer<float> pluginBuffer(buffer.getArrayOfWritePointers(), m_outputChannelCount, buffer.getNumSamples());
+			m_pluginInstance->processBlock(pluginBuffer, midiMessages);
+		}
 	}
 
 	for (std::uint16_t output = 1; output <= m_outputChannelCount; output++)

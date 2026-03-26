@@ -27,6 +27,7 @@ See [LATEST RELEASE](https://github.com/ChristianAhrens/Mema/releases/latest) fo
 * [Introduction](#introduction)
   * [Mema, Mema.Mo and Mema.Re](#MemaNMoNRe)
   * [Mema UI](#MemaUI)
+    * [Mema UI plug-in signal chain](#MemaPluginSignalChain)
   * [Mema.Mo UI](#MemaMoUI)
   * [Mema.Re UI](#MemaReUI)
   * [Mema.Re ADM-OSC external control](#MemaReADMOSC)
@@ -89,6 +90,62 @@ Use what is provided here at your own risk!
 #### Mema UI plug-in handling details
 
 ![Showreel.006.png](Resources/Documentation/Showreel/Showreel.006.png "Mema UI plug-in handling")
+
+<a name="MemaPluginSignalChain" />
+
+#### Plug-in signal chain
+
+The **`Post` toggle** in the plug-in section of the Mema UI controls where in the signal chain the loaded plug-in is inserted.
+
+<table>
+<tr>
+<th>Pre-matrix &nbsp;—&nbsp; <code>Post</code> toggle <strong>OFF</strong></th>
+<th>Post-matrix &nbsp;—&nbsp; <code>Post</code> toggle <strong>ON</strong></th>
+</tr>
+<tr>
+<td>
+
+```mermaid
+flowchart TD
+    A([Audio In])
+    B[Input Mutes]
+    C[Input Metering]
+    D[/PLUGIN/]
+    E[Crosspoint Matrix]
+    F[Output Mutes]
+    G[Output Metering]
+    H([Audio Out])
+
+    A --> B --> C --> D --> E --> F --> G --> H
+```
+
+</td>
+<td>
+
+```mermaid
+flowchart TD
+    A([Audio In])
+    B[Input Mutes]
+    C[Input Metering]
+    E[Crosspoint Matrix]
+    D[/PLUGIN/]
+    F[Output Mutes]
+    G[Output Metering]
+    H([Audio Out])
+
+    A --> B --> C --> E --> D --> F --> G --> H
+```
+
+</td>
+</tr>
+<tr>
+<td>The plug-in processes the raw (muted) input signal after input metering has captured the unprocessed levels. Its output feeds directly into the routing matrix, so all crosspoint gains and routes apply to the plug-in's output.<br><br><strong>Required channel count:</strong> number of active <em>input</em> channels.</td>
+<td>The plug-in receives the fully routed and mixed signal after the crosspoint matrix. Output mutes and output metering are applied to the plug-in's output.<br><br><strong>Required channel count:</strong> number of active <em>output</em> channels.</td>
+</tr>
+</table>
+
+A typical use-case for **Pre** is per-input processing (e.g. noise gate, EQ) before routing.
+A typical use-case for **Post** is bus processing or upmixing (e.g. stereo → immersive) after routing.
 
 <a name="MemaMoUI" />
 
@@ -402,7 +459,7 @@ flowchart LR
 ```
 
 **Mema** is the core tool, providing matrix processing, a popup-style UI and tcp server for clients to connect and monitor/control data:
-- `MemaProcessor` drives audio I/O via JUCE `AudioDeviceManager`, applying per-channel input/output mutes and a full crosspoint gain matrix
+- `MemaProcessor` drives audio I/O via JUCE `AudioDeviceManager`; the per-block signal chain is: **Input Mutes → Input Metering → [Plugin, pre-matrix] → Crosspoint Matrix → [Plugin, post-matrix] → Output Mutes → Output Metering** — only one plugin position is active at a time, selected by the `Post` toggle
 - An optional plugin (VST/VST3/AU/LADSPA/LV2) can be inserted pre- or post-matrix; each plugin parameter can be individually marked as remotely controllable with a configurable control type (`Continuous`, `Discrete`, `Toggle`)
 - `ProcessorDataAnalyzer` (one per direction) performs peak/RMS/hold metering and FFT spectrum analysis at ~10 ms intervals
 - `InterprocessConnectionServerImpl` serves multiple simultaneous TCP clients on port 55668; `ServiceTopologyManager` announces the server via multicast
@@ -425,15 +482,17 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    adm["AudioDeviceManager\n(JUCE)"]
+    adm_in["AudioDeviceManager\n(JUCE) — input"]
+    adm_out["AudioDeviceManager\n(JUCE) — output"]
     cfg["MemaAppConfiguration\n(XML)"]
 
-    subgraph proc["MemaProcessor"]
+    subgraph proc["MemaProcessor — Signal Chain (left to right)"]
         in_mutes["Input Mutes"]
-        xp["Crosspoint Matrix\ngains & enables"]
-        out_mutes["Output Mutes"]
-        plugin["Plugin Host\nVST / AU / LV2\n(optional, pre or post matrix)"]
         in_anlz["Input Analyzer\npeak · RMS · hold · FFT"]
+        plugin_pre["Plugin Host\nVST / AU / LV2\nPre-matrix\n(Post toggle OFF)"]
+        xp["Crosspoint Matrix\ngains & enables"]
+        plugin_post["Plugin Host\nVST / AU / LV2\nPost-matrix\n(Post toggle ON)"]
+        out_mutes["Output Mutes"]
         out_anlz["Output Analyzer\npeak · RMS · hold · FFT"]
     end
 
@@ -450,21 +509,22 @@ flowchart LR
         disc["ServiceTopologyManager\n(multicast)"]
     end
 
-    adm -->|audio in| in_mutes
-    in_mutes --> xp
-    xp --> out_mutes
-    out_mutes -->|audio out| adm
-    xp -.- plugin
-
+    adm_in -->|audio in| in_mutes
     in_mutes --> in_anlz
+    in_anlz -->|Post OFF| plugin_pre --> xp
+    in_anlz -->|Post ON| xp
+    xp -->|Post ON| plugin_post --> out_mutes
+    xp -->|Post OFF| out_mutes
     out_mutes --> out_anlz
+    out_anlz -->|audio out| adm_out
 
     in_anlz --> in_ctrl
     in_anlz --> meter
     out_anlz --> out_ctrl
     out_anlz --> meter
     xp --> xp_ctrl
-    plug_ctrl --> plugin
+    plug_ctrl --> plugin_pre
+    plug_ctrl --> plugin_post
 
     xp -->|state & audio buffers| tcp
     tcp --> disc

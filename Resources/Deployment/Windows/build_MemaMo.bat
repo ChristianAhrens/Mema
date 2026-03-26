@@ -1,16 +1,29 @@
 @echo off
 
-set VSDIR=C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE
+set VSVER=%1
+if "%VSVER%"=="" set VSVER=VS2026
+
 set WORKSPACE=..\..\..
 set JUCEDIR=%WORKSPACE%\submodules\JUCE
-set PROJUCERVSDIR=%JUCEDIR%\extras\Projucer\Builds\VisualStudio2026
-echo.
 
+if "%VSVER%"=="VS2022" (
+    set VSDIR=C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE
+    set PROJUCERVSDIR=%JUCEDIR%\extras\Projucer\Builds\VisualStudio2022
+    set BUILDSLN=%WORKSPACE%\MemaMo\Builds\VisualStudio2022\Mema.sln
+) else (
+    set VSDIR=C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE
+    set PROJUCERVSDIR=%JUCEDIR%\extras\Projucer\Builds\VisualStudio2026
+    set BUILDSLN=%WORKSPACE%\MemaMo\Builds\VisualStudio2026\Mema.sln
+)
+
+echo.
 echo Using variables:
-echo JUCEDIR = %JUCEDIR%
-echo VSDIR = %VSDIR%
+echo VSVER         = %VSVER%
+echo JUCEDIR       = %JUCEDIR%
+echo VSDIR         = %VSDIR%
 echo PROJUCERVSDIR = %PROJUCERVSDIR%
-echo WORKSPACE = %WORKSPACE%
+echo WORKSPACE     = %WORKSPACE%
+echo BUILDSLN      = %BUILDSLN%
 echo.
 
 echo Building Projucer binary
@@ -22,5 +35,5 @@ echo Exporting Projucer project
 echo.
 
 echo Build release
-"%VSDIR%\devenv.com" %WORKSPACE%\MemaMo\Builds\VisualStudio2026\Mema.sln /build Release
+"%VSDIR%\devenv.com" %BUILDSLN% /build Release
 echo.
