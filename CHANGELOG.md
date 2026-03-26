@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+## [0.10.2] 2026-03-26
+### Added
+
+### Changed
+- Changed VS build to statically link vs runtime
+- Changed company website and about dialog link to github pages
+- Changed metering audio tap-in to be pre-plugin for 'pre' setting and post-plugin for 'post' setting, incl. README documentation
+
+### Fixed
+- Fixed Mema plug-in pre/post processing and potential incorrect initialization and buffer processing
+- Fixed iOS native device insets handling (e.g. iPad top-bar overlap) by integrating updated JUCE-AppBasics
+- Fixed broken VS2022 CI and github pages content deployment
+
 ## [0.10.1] 2026-03-15
 ### Added
 - Added comandline parameter --noupdates to Mema, Mema.Mo and Mema.Re to prevent automatic search for updates and resulting popup notification
