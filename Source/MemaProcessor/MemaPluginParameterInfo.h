@@ -213,7 +213,8 @@ struct PluginParameterInfo
 
     static std::vector<PluginParameterInfo> parametersToInfos(juce::Array<juce::AudioProcessorParameter*> processorParameters)
     {
-        std::vector<PluginParameterInfo> infos(processorParameters.size());
+        std::vector<PluginParameterInfo> infos;
+        infos.reserve(processorParameters.size());
         for (auto param : processorParameters)
             infos.push_back(fromAudioProcessorParameter(*param));
         return infos;

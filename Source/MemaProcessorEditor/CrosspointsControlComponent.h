@@ -86,7 +86,10 @@ public:
     void toggleChecked()
     {
         setChecked(!m_checked);
-        
+
+        if (m_checked && m_factor == 0.0f)
+            setFactor(1.0f);
+
         if (onCheckedChanged)
             onCheckedChanged(m_checked, this);
         if (onFactorChanged)

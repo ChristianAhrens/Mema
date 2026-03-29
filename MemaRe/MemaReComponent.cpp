@@ -174,6 +174,12 @@ void MemaReComponent::setPluginCtrlActive()
             m_pluginCtrlComponent->setVisible(true);
             resizeRequired = true;
         }
+        // Apply any data that arrived before the component was made visible
+        if (!m_pluginName.empty() || !m_pluginParameterInfos.empty())
+        {
+            m_pluginCtrlComponent->setPluginName(m_pluginName);
+            m_pluginCtrlComponent->setParameterInfos(m_pluginParameterInfos);
+        }
     }
     if (m_faderbankCtrlComponent && m_faderbankCtrlComponent->isVisible())
     {
@@ -194,6 +200,13 @@ void MemaReComponent::setPluginCtrlActive()
 
 void MemaReComponent::resetCtrl()
 {
+    m_pluginName.clear();
+    m_pluginParameterInfos.clear();
+    m_inputMuteStates.clear();
+    m_outputMuteStates.clear();
+    m_crosspointStates.clear();
+    m_crosspointValues.clear();
+
     if (m_faderbankCtrlComponent)
         m_faderbankCtrlComponent->resetCtrl();
     if (m_panningCtrlComponent)
@@ -341,10 +354,13 @@ void MemaReComponent::handleMessage(const Message& message)
     {
         DBG(juce::String(__FUNCTION__) + " handling PluginParameterInfosMessage (" + juce::String(ppim->getParameterInfos().size()) + ") ...");
 
+        m_pluginName = ppim->getPluginName().toStdString();
+        m_pluginParameterInfos = ppim->getParameterInfos();
+
         if (m_pluginCtrlComponent && m_pluginCtrlComponent->isVisible())
         {
-            m_pluginCtrlComponent->setPluginName(ppim->getPluginName().toStdString());
-            m_pluginCtrlComponent->setParameterInfos(ppim->getParameterInfos());
+            m_pluginCtrlComponent->setPluginName(m_pluginName);
+            m_pluginCtrlComponent->setParameterInfos(m_pluginParameterInfos);
         }
 
         resized();
@@ -353,9 +369,16 @@ void MemaReComponent::handleMessage(const Message& message)
     {
         DBG(juce::String(__FUNCTION__) + " handling PluginParameterValueMessage (" + juce::String(ppvm->getParameterIndex()) + "; " + ppvm->getParameterId() + "; " + juce::String(ppvm->getCurrentValue()) + ") ...");
 
+        auto paramIdx = ppvm->getParameterIndex();
+        if (paramIdx < m_pluginParameterInfos.size())
+        {
+            m_pluginParameterInfos[paramIdx].currentValue = ppvm->getCurrentValue();
+            m_pluginParameterInfos[paramIdx].id = ppvm->getParameterId();
+        }
+
         if (m_pluginCtrlComponent && m_pluginCtrlComponent->isVisible())
-            m_pluginCtrlComponent->setParameterValue(ppvm->getParameterIndex(), ppvm->getParameterId().toStdString(), ppvm->getCurrentValue());
-    
+            m_pluginCtrlComponent->setParameterValue(paramIdx, ppvm->getParameterId().toStdString(), ppvm->getCurrentValue());
+
         resized();
     }
 }

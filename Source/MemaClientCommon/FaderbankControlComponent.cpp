@@ -186,6 +186,10 @@ void FaderbankControlComponent::resetCtrl()
 {
     setIOCount({ 0,0 });
     selectIOChannel(ControlDirection::None, 0);
+    setInputMuteStates({});
+    setOutputMuteStates({});
+    setCrosspointStates({});
+    setCrosspointValues({});
 }
 
 void FaderbankControlComponent::setIOCount(const std::pair<int, int>& ioCount)

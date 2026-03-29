@@ -419,19 +419,33 @@ void TwoDFieldMultisliderComponent::resized()
         m_positionedChannelsArea.removeFromTop(height * (1.4f / 10.0f));
     }
 
+    // Constrain each field area to a square so the drawn circle is not distorted
+    if (!m_positionedChannelsArea.isEmpty())
+    {
+        auto squareSize = juce::jmin(m_positionedChannelsArea.getWidth(), m_positionedChannelsArea.getHeight());
+        m_positionedChannelsArea = juce::Rectangle<float>(squareSize, squareSize).withCentre(m_positionedChannelsArea.getCentre());
+    }
+    if (!m_positionedHeightChannelsArea.isEmpty())
+    {
+        auto squareSize = juce::jmin(m_positionedHeightChannelsArea.getWidth(), m_positionedHeightChannelsArea.getHeight());
+        m_positionedHeightChannelsArea = juce::Rectangle<float>(squareSize, squareSize).withCentre(m_positionedHeightChannelsArea.getCentre());
+    }
+
     for (auto const& channelType : m_clockwiseOrderedChannelTypes)
     {
         auto angleRad = juce::degreesToRadians(getAngleForChannelTypeInCurrentConfiguration(channelType));
-        auto xLength = sinf(angleRad) * (m_positionedChannelsArea.getHeight() / 2);
-        auto yLength = cosf(angleRad) * (m_positionedChannelsArea.getWidth() / 2);
+        auto radius = m_positionedChannelsArea.getWidth() / 2;
+        auto xLength = sinf(angleRad) * radius;
+        auto yLength = cosf(angleRad) * radius;
         m_channelLevelMaxPoints[channelType] = m_positionedChannelsArea.getCentre() + juce::Point<float>(xLength, -yLength);
     }
 
     for (auto const& channelType : m_clockwiseOrderedHeightChannelTypes)
     {
         auto angleRad = juce::degreesToRadians(getAngleForChannelTypeInCurrentConfiguration(channelType));
-        auto xLength = sinf(angleRad) * (m_positionedHeightChannelsArea.getHeight() / 2);
-        auto yLength = cosf(angleRad) * (m_positionedHeightChannelsArea.getWidth() / 2);
+        auto radius = m_positionedHeightChannelsArea.getWidth() / 2;
+        auto xLength = sinf(angleRad) * radius;
+        auto yLength = cosf(angleRad) * radius;
         m_channelHeightLevelMaxPoints[channelType] = m_positionedHeightChannelsArea.getCentre() + juce::Point<float>(xLength, -yLength);
     }
 

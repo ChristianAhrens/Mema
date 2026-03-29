@@ -129,6 +129,7 @@ MemaProcessorEditor::MemaProcessorEditor(AudioProcessor& processor)
         memaProc->addOutputCommander(m_outputCtrl.get());
 
         memaProc->onPluginSet = [=](const juce::PluginDescription& pluginDescription) { if (m_pluginControl) m_pluginControl->setSelectedPlugin(pluginDescription); };
+        memaProc->onPluginParameterInfosChanged = [=]() { if (m_pluginControl) m_pluginControl->setParameterInfos(memaProc->getPluginParameterInfos()); };
 
         m_pluginControl->setPluginEnabled(memaProc->isPluginEnabled());
         m_pluginControl->setPluginPrePost(memaProc->isPluginPost());
