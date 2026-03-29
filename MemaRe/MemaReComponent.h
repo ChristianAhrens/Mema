@@ -121,6 +121,9 @@ private:
 
     std::tuple<int, juce::IPAddress, int>   m_externalAdmOscSettings = { 4001, juce::IPAddress::local(), 4002 }; ///< ADM-OSC {listenPort, remoteIP, remotePort}.
 
+    std::string                                 m_pluginName;               ///< Cached plugin name from last received PluginParameterInfosMessage.
+    std::vector<Mema::PluginParameterInfo>      m_pluginParameterInfos;     ///< Cached parameter infos from last received PluginParameterInfosMessage.
+
     float m_ioRatio = 0.5f; ///< Vertical split ratio between input and output control areas (faderbank mode).
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MemaReComponent)
