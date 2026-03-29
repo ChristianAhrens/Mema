@@ -11,6 +11,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+## [0.10.3] 2026-03-29
+### Added
+
+### Changed
+- Changed Mema.Re plug-in parameters UI layouting to be aspect ratio respecting and centered
+
+### Fixed
+- Fixed Mema.Re continuous plug-in parameters resetting to defaults on new connection
+- Fixed Mema.Re blank plug-in parameters UI when initially connecting to Mema
+- Fixed Mema.Re stale crosspoint/mute data from previous sessions obscuring the displayed initial UI values
+- Fixed Mema.Re distorted 2D Field circle painting
+- Fixed Mema plug-in parameter reinitializing/resetting and broadcasting to connected clients on plug-in (re-)load
+- Fixed Mema UI crosspoints toggle issue
+
 ## [0.10.2] 2026-03-26
 ### Added
 
