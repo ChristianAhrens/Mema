@@ -1,0 +1,9 @@
+<map id="Mema::MemaOutputCommander" name="Mema::MemaOutputCommander">
+<area shape="rect" id="Node000001" title=" " alt="" coords="173,79,409,104"/>
+<area shape="rect" id="Node000003" href="$classMema_1_1MemaNetworkClientCommanderWrapper.html" title=" " alt="" coords="5,152,291,192"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="259,113,184,154,181,150,256,109"/>
+<area shape="rect" id="Node000004" href="$classMema_1_1OutputControlComponent.html" title="Output&#45;channel control strip — shows level meters and mute buttons for all output channels." alt="" coords="315,159,552,185"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="325,108,413,157,411,161,322,113"/>
+<area shape="rect" id="Node000002" href="$classMema_1_1MemaChannelCommander.html" title=" " alt="" coords="168,5,413,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="293,44,293,79,288,79,288,44"/>
+</map>

@@ -1,0 +1,9 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" title=" " alt="" coords="5,55,277,80"/>
+<area shape="rect" id="Node000001" href="$classMema_1_1MemaAppConfiguration.html" title="XML&#45;backed application configuration manager for the Mema audio matrix tool." alt="" coords="325,5,549,31"/>
+<area shape="poly" id="edge94_Node000000_Node000001" title=" " alt="" coords="231,50,360,28,361,33,232,55"/>
+<area shape="rect" id="Node000002" href="$classMemaMoAppConfiguration.html" title="XML&#45;backed configuration manager for the Mema.Mo monitor application." alt="" coords="340,55,535,80"/>
+<area shape="poly" id="edge95_Node000000_Node000002" title=" " alt="" coords="291,65,340,65,340,70,291,70"/>
+<area shape="rect" id="Node000003" href="$classMemaReAppConfiguration.html" title="XML&#45;backed configuration manager for the Mema.Re remote&#45;control application." alt="" coords="341,104,533,129"/>
+<area shape="poly" id="edge96_Node000000_Node000003" title=" " alt="" coords="232,80,361,101,360,107,231,85"/>
+</map>

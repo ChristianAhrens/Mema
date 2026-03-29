@@ -1,0 +1,12 @@
+<map id="Source/MemaProcessorEditor/PluginControlComponent.cpp" name="Source/MemaProcessorEditor/PluginControlComponent.cpp">
+<area shape="rect" id="Node000001" title=" " alt="" coords="26,5,241,45"/>
+<area shape="rect" id="Node000002" href="$MemaProcessorEditor_2PluginControlComponent_8h.html" title=" " alt="" coords="36,93,232,119"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="136,46,136,79,131,79,131,46"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="6,255,112,280"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="82,121,44,139,27,152,13,168,8,187,13,207,24,226,38,243,34,247,20,229,8,209,3,187,9,165,23,148,41,134,80,116"/>
+<area shape="rect" id="Node000004" href="$MemaPluginParameterInfo_8h.html" title=" " alt="" coords="22,167,245,207"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="136,119,136,153,131,153,131,119"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="268,174,428,199"/>
+<area shape="poly" id="edge5_Node000002_Node000005" title=" " alt="" coords="166,116,305,167,303,172,164,121"/>
+<area shape="poly" id="edge4_Node000004_Node000003" title=" " alt="" coords="118,209,82,246,78,243,114,205"/>
+</map>

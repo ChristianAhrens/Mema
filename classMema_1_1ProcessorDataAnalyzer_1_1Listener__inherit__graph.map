@@ -1,0 +1,17 @@
+<map id="Mema::ProcessorDataAnalyzer::Listener" name="Mema::ProcessorDataAnalyzer::Listener">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,122,228,162"/>
+<area shape="rect" id="Node000002" href="$classMema_1_1AbstractAudioVisualizer.html" title="Base class for all audio&#45;data visualisation components in the Mema processor editor." alt="" coords="276,129,503,155"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="242,139,276,139,276,145,242,145"/>
+<area shape="rect" id="Node000003" href="$classMema_1_1InputControlComponent.html" title="Input&#45;channel control strip — shows level meters and mute buttons for all input channels." alt="" coords="565,5,792,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="416,119,475,78,512,57,550,40,587,28,588,33,552,44,514,62,478,83,419,123"/>
+<area shape="rect" id="Node000004" href="$classMema_1_1MeterbridgeComponent.html" title=" " alt="" coords="566,55,791,80"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="439,122,550,89,602,77,603,83,551,94,440,127"/>
+<area shape="rect" id="Node000005" href="$classMema_1_1OutputControlComponent.html" title="Output&#45;channel control strip — shows level meters and mute buttons for all output channels." alt="" coords="560,104,797,129"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="516,128,559,124,560,130,517,134"/>
+<area shape="rect" id="Node000006" href="$classMema_1_1SpectrumAudioComponent.html" title=" " alt="" coords="556,153,801,179"/>
+<area shape="poly" id="edge5_Node000002_Node000006" title=" " alt="" coords="517,150,556,153,556,158,516,155"/>
+<area shape="rect" id="Node000007" href="$classMema_1_1TwoDFieldOutputComponent.html" title=" " alt="" coords="551,203,807,228"/>
+<area shape="poly" id="edge6_Node000002_Node000007" title=" " alt="" coords="443,156,551,187,608,200,607,205,550,193,442,161"/>
+<area shape="rect" id="Node000008" href="$classMema_1_1WaveformAudioComponent.html" title=" " alt="" coords="553,252,804,277"/>
+<area shape="poly" id="edge7_Node000002_Node000008" title=" " alt="" coords="420,161,479,200,552,237,593,249,592,254,550,242,476,205,417,165"/>
+</map>

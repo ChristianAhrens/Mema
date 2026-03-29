@@ -1,0 +1,17 @@
+<map id="Mema::OutputControlComponent" name="Mema::OutputControlComponent">
+<area shape="rect" id="Node000001" title="Output&#45;channel control strip — shows level meters and mute buttons for all output channels." alt="" coords="583,155,820,180"/>
+<area shape="rect" id="Node000002" href="$classMema_1_1AbstractAudioVisualizer.html" title="Base class for all audio&#45;data visualisation components in the Mema processor editor." alt="" coords="303,77,530,103"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="478,104,654,152,653,157,477,109"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="62,5,194,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="208,31,251,41,374,75,373,80,250,46,207,36"/>
+<area shape="rect" id="Node000004" href="$classMema_1_1ProcessorDataAnalyzer_1_1Listener.html" title=" " alt="" coords="17,55,239,95"/>
+<area shape="poly" id="edge3_Node000002_Node000004" title=" " alt="" coords="253,79,303,82,303,87,253,84"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="81,120,175,145"/>
+<area shape="poly" id="edge4_Node000002_Node000005" title=" " alt="" coords="189,121,330,100,330,105,190,126"/>
+<area shape="rect" id="Node000006" href="$classMema_1_1MemaOutputCommander.html" title=" " alt="" coords="299,155,535,180"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="548,165,582,165,582,170,548,170"/>
+<area shape="rect" id="Node000007" href="$classMema_1_1MemaChannelCommander.html" title=" " alt="" coords="5,169,251,195"/>
+<area shape="poly" id="edge6_Node000006_Node000007" title=" " alt="" coords="265,172,298,171,298,176,265,178"/>
+<area shape="rect" id="Node000008" title=" " alt="" coords="323,204,510,229"/>
+<area shape="poly" id="edge7_Node000001_Node000008" title=" " alt="" coords="504,199,627,177,628,183,505,204"/>
+</map>

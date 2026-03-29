@@ -1,0 +1,9 @@
+<map id="Mema::AbstractAudioVisualizer" name="Mema::AbstractAudioVisualizer">
+<area shape="rect" id="Node000001" title="Base class for all audio&#45;data visualisation components in the Mema processor editor." alt="" coords="159,93,386,119"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,13,137,38"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="114,40,244,91,242,96,112,45"/>
+<area shape="rect" id="Node000003" href="$classMema_1_1ProcessorDataAnalyzer_1_1Listener.html" title=" " alt="" coords="161,5,384,45"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="275,59,275,93,270,93,270,59"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="408,13,503,38"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="417,46,300,96,298,91,415,41"/>
+</map>

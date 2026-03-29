@@ -1,0 +1,29 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" title=" " alt="" coords="5,151,120,177"/>
+<area shape="rect" id="Node000001" href="$classMema_1_1ADMOSController_1_1ADMOSCParameterChangedMessage.html" title=" " alt="" coords="168,80,439,120"/>
+<area shape="poly" id="edge76_Node000000_Node000001" title=" " alt="" coords="115,145,167,129,214,117,215,123,169,135,117,150"/>
+<area shape="rect" id="Node000002" href="$classMema_1_1PluginParameterInfosChangedMessage.html" title="Internal JUCE message posted to the message thread when plugin parameter descriptors change." alt="" coords="198,144,409,184"/>
+<area shape="poly" id="edge77_Node000000_Node000002" title=" " alt="" coords="134,161,198,161,198,167,134,167"/>
+<area shape="rect" id="Node000003" href="$classMema_1_1SerializableMessage.html" title="Base class for all messages exchanged between Mema, Mema.Mo, and Mema.Re over TCP." alt="" coords="201,209,406,234"/>
+<area shape="poly" id="edge78_Node000000_Node000003" title=" " alt="" coords="115,178,169,193,227,206,226,211,167,199,114,183"/>
+<area shape="rect" id="Node000004" href="$classMema_1_1AnalyzerParametersMessage.html" title="Carries audio&#45;device parameters (sample rate, block size) from Mema to clients." alt="" coords="511,5,713,45"/>
+<area shape="poly" id="edge79_Node000003_Node000004" title=" " alt="" coords="417,207,437,194,451,178,458,162,461,127,463,91,471,73,485,55,509,39,512,44,488,59,475,76,468,92,466,127,463,163,455,181,440,198,420,211"/>
+<area shape="rect" id="Node000005" href="$classMema_1_1AudioBufferMessage.html" title="Base message carrying a serialised audio buffer and its flow&#45;direction metadata." alt="" coords="509,70,715,95"/>
+<area shape="poly" id="edge80_Node000003_Node000005" title=" " alt="" coords="418,205,437,194,448,184,454,174,460,151,467,128,474,117,485,106,508,93,511,98,488,110,478,120,472,130,465,153,459,176,452,187,440,198,420,210"/>
+<area shape="rect" id="Node000008" href="$classMema_1_1ControlParametersMessage.html" title="Full routing&#45;matrix state snapshot exchanged bidirectionally between Mema and Mema...." alt="" coords="487,119,737,145"/>
+<area shape="poly" id="edge83_Node000003_Node000008" title=" " alt="" coords="415,202,437,194,451,185,461,175,471,165,485,155,521,142,523,147,488,160,474,169,465,179,455,189,440,198,417,207"/>
+<area shape="rect" id="Node000009" href="$classMema_1_1DataTrafficTypeSelectionMessage.html" title="Sent by a client to opt in to receiving specific message types from Mema." alt="" coords="497,169,727,209"/>
+<area shape="poly" id="edge84_Node000003_Node000009" title=" " alt="" coords="419,207,496,199,497,204,420,212"/>
+<area shape="rect" id="Node000010" href="$classMema_1_1EnvironmentParametersMessage.html" title="Carries the active look&#45;and&#45;feel palette style from Mema to connected clients." alt="" coords="498,233,726,273"/>
+<area shape="poly" id="edge85_Node000003_Node000010" title=" " alt="" coords="420,231,498,239,498,244,419,236"/>
+<area shape="rect" id="Node000011" href="$classMema_1_1PluginParameterInfosMessage.html" title="Carries the plugin name and complete parameter descriptor list from Mema to Mema.Re clients." alt="" coords="507,297,717,337"/>
+<area shape="poly" id="edge86_Node000003_Node000011" title=" " alt="" coords="352,236,487,283,530,295,528,300,486,288,350,241"/>
+<area shape="rect" id="Node000012" href="$classMema_1_1PluginParameterValueMessage.html" title="Carries a single normalised plugin parameter value from Mema.Re to Mema." alt="" coords="505,361,719,401"/>
+<area shape="poly" id="edge87_Node000003_Node000012" title=" " alt="" coords="331,241,399,294,442,322,488,347,518,359,516,364,486,352,439,327,396,298,328,245"/>
+<area shape="rect" id="Node000013" href="$classMema_1_1ReinitIOCountMessage.html" title="Instructs clients to tear down and rebuild their UI for a new channel count." alt="" coords="503,426,721,451"/>
+<area shape="poly" id="edge88_Node000003_Node000013" title=" " alt="" coords="322,244,349,282,387,327,434,373,488,411,517,423,515,428,485,416,431,377,384,331,345,285,318,247"/>
+<area shape="rect" id="Node000006" href="$classMema_1_1AudioInputBufferMessage.html" title="Carries a pre&#45;matrix input audio buffer streamed continuously from Mema to subscribed clients." alt="" coords="791,46,1029,71"/>
+<area shape="poly" id="edge81_Node000005_Node000006" title=" " alt="" coords="728,71,790,66,791,71,728,76"/>
+<area shape="rect" id="Node000007" href="$classMema_1_1AudioOutputBufferMessage.html" title="Carries a post&#45;matrix output audio buffer streamed continuously from Mema to subscribed clients." alt="" coords="785,95,1035,121"/>
+<area shape="poly" id="edge82_Node000005_Node000007" title=" " alt="" coords="729,90,785,95,785,100,728,95"/>
+</map>

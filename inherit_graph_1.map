@@ -1,0 +1,126 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" title=" " alt="" coords="23,184,233,209"/>
+<area shape="rect" id="Node000001" href="$classMema_1_1MemaProcessor.html" title="Core audio processor — owns the AudioDeviceManager, routing matrix, plugin host, and IPC server." alt="" coords="363,156,538,181"/>
+<area shape="poly" id="edge2_Node000000_Node000001" title=" " alt="" coords="246,184,363,174,363,179,246,189"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="49,233,207,259"/>
+<area shape="poly" id="edge3_Node000002_Node000001" title=" " alt="" coords="206,228,250,218,403,179,404,184,251,223,207,233"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="49,5,207,31"/>
+<area shape="poly" id="edge4_Node000003_Node000001" title=" " alt="" coords="221,31,252,41,307,68,359,99,435,154,432,158,356,103,305,72,250,46,220,36"/>
+<area shape="rect" id="Node000009" title=" " alt="" coords="62,768,194,793"/>
+<area shape="rect" id="Node000010" href="$classAboutComponent.html" title=" " alt="" coords="383,444,518,469"/>
+<area shape="poly" id="edge5_Node000009_Node000010" title=" " alt="" coords="133,754,152,696,184,621,206,581,232,544,262,509,297,480,317,469,339,461,383,453,384,458,340,466,319,473,300,484,266,513,236,547,211,584,189,623,157,698,138,756"/>
+<area shape="rect" id="Node000011" href="$classEmptySpace.html" title=" " alt="" coords="399,493,502,519"/>
+<area shape="poly" id="edge6_Node000009_Node000011" title=" " alt="" coords="136,754,158,705,192,643,238,581,266,553,297,529,322,517,348,509,399,502,400,507,349,514,324,522,300,534,270,557,242,584,196,646,163,707,141,756"/>
+<area shape="rect" id="Node000012" href="$classLoadBar.html" title=" " alt="" coords="413,543,488,568"/>
+<area shape="poly" id="edge7_Node000009_Node000012" title=" " alt="" coords="140,754,165,715,200,666,244,618,297,578,326,566,357,558,413,552,413,557,357,563,328,571,300,583,248,622,204,670,169,718,145,757"/>
+<area shape="rect" id="Node000013" href="$classMainComponent.html" title="Top&#45;level application component for Mema.Mo (MenubarMatrixMonitor)." alt="" coords="386,1172,515,1197"/>
+<area shape="poly" id="edge8_Node000009_Node000013" title=" " alt="" coords="158,801,207,847,232,877,253,910,265,939,271,965,272,1013,276,1059,285,1082,301,1107,322,1129,348,1146,402,1169,400,1174,345,1150,319,1133,297,1110,280,1084,271,1060,267,1013,266,966,260,941,248,913,228,881,203,851,155,804"/>
+<area shape="rect" id="Node000017" href="$classMema_1_1AbstractAudioVisualizer.html" title="Base class for all audio&#45;data visualisation components in the Mema processor editor." alt="" coords="337,1240,564,1265"/>
+<area shape="poly" id="edge9_Node000009_Node000017" title=" " alt="" coords="159,800,208,846,233,877,253,910,269,954,273,995,271,1033,266,1069,262,1103,264,1137,276,1172,301,1208,321,1226,346,1238,344,1242,319,1230,297,1212,271,1174,259,1138,257,1103,261,1068,266,1032,268,995,263,955,248,912,228,880,204,850,155,804"/>
+<area shape="rect" id="Node000041" href="$classMema_1_1CrosspointComponent.html" title=" " alt="" coords="343,592,558,617"/>
+<area shape="poly" id="edge16_Node000009_Node000041" title=" " alt="" coords="146,756,208,691,250,656,298,628,342,612,344,617,300,632,253,660,211,695,150,759"/>
+<area shape="rect" id="Node000024" href="$classMema_1_1CrosspointsControlComponent.html" title=" " alt="" coords="696,1290,891,1330"/>
+<area shape="poly" id="edge17_Node000009_Node000024" title=" " alt="" coords="208,781,443,797,548,811,584,819,604,829,616,846,625,867,633,920,634,984,631,1053,628,1123,628,1186,635,1240,642,1260,653,1276,673,1292,697,1302,695,1307,670,1297,649,1280,638,1263,630,1241,622,1187,622,1122,626,1053,629,984,628,921,620,868,612,848,601,833,582,824,547,816,442,802,207,786"/>
+<area shape="rect" id="Node000042" href="$classMema_1_1IOLabelComponent.html" title=" " alt="" coords="353,743,548,768"/>
+<area shape="poly" id="edge18_Node000009_Node000042" title=" " alt="" coords="208,772,353,760,353,766,208,777"/>
+<area shape="rect" id="Node000043" href="$classMema_1_1MemaClientControlComponentBase.html" title="Abstract base for all Mema.Re client control panels." alt="" coords="299,641,603,667"/>
+<area shape="poly" id="edge19_Node000009_Node000043" title=" " alt="" coords="158,758,221,720,298,684,367,664,368,669,300,688,223,725,161,763"/>
+<area shape="rect" id="Node000046" href="$classMema_1_1PluginControlComponent.html" title=" " alt="" coords="677,692,910,717"/>
+<area shape="poly" id="edge24_Node000009_Node000046" title=" " alt="" coords="176,761,234,743,298,729,397,715,498,707,676,701,677,706,498,712,398,721,299,734,235,748,178,766"/>
+<area shape="rect" id="Node000047" href="$classMema_1_1MemaUIComponent.html" title="Main UI shell for the Mema application — composes the processor editor, toolbar, load bars,..." alt="" coords="350,1347,551,1372"/>
+<area shape="poly" id="edge23_Node000009_Node000047" title=" " alt="" coords="160,800,209,846,234,877,253,910,264,951,268,1003,268,1128,268,1191,272,1248,282,1296,290,1315,301,1329,323,1346,351,1356,349,1361,321,1351,297,1333,286,1318,277,1298,267,1249,263,1191,263,1128,263,1003,259,952,248,912,229,880,205,850,156,804"/>
+<area shape="rect" id="Node000052" href="$classMema_1_1PluginListAndSelectComponent.html" title=" " alt="" coords="351,843,550,883"/>
+<area shape="poly" id="edge25_Node000009_Node000052" title=" " alt="" coords="192,794,299,822,372,841,370,846,298,827,191,799"/>
+<area shape="rect" id="Node000053" href="$classMema_1_1Spacing.html" title=" " alt="" coords="389,908,512,933"/>
+<area shape="poly" id="edge26_Node000009_Node000053" title=" " alt="" coords="155,800,218,848,258,873,300,893,345,906,390,914,389,919,343,912,298,898,255,877,215,852,152,804"/>
+<area shape="rect" id="Node000032" href="$classMema_1_1TwoDFieldMultisliderComponent.html" title=" " alt="" coords="347,1057,554,1097"/>
+<area shape="poly" id="edge27_Node000009_Node000032" title=" " alt="" coords="157,801,205,848,231,878,253,910,263,930,268,949,272,982,278,1013,286,1028,300,1043,323,1057,348,1067,346,1072,320,1062,297,1047,282,1031,273,1015,267,983,263,950,258,932,248,913,226,881,201,852,153,804"/>
+<area shape="rect" id="Node000054" href="$classMemaClientConnectingComponent.html" title=" " alt="" coords="326,957,575,983"/>
+<area shape="poly" id="edge28_Node000009_Node000054" title=" " alt="" coords="152,802,227,882,267,920,300,944,328,955,326,960,297,948,264,924,223,886,148,806"/>
+<area shape="rect" id="Node000055" href="$classMemaClientDiscoverComponent.html" title=" " alt="" coords="334,1007,567,1032"/>
+<area shape="poly" id="edge29_Node000009_Node000055" title=" " alt="" coords="155,801,202,849,253,910,266,935,273,956,282,975,300,993,335,1010,333,1014,297,998,278,978,268,958,261,937,248,913,198,853,151,805"/>
+<area shape="rect" id="Node000008" href="$classMemaMoComponent.html" title="Central monitoring panel of the Mema.Mo application." alt="" coords="371,345,530,371"/>
+<area shape="poly" id="edge30_Node000009_Node000008" title=" " alt="" coords="129,754,142,679,170,577,192,523,220,471,255,422,297,381,332,363,370,354,372,359,334,368,300,385,259,426,224,473,197,525,175,579,147,680,135,755"/>
+<area shape="rect" id="Node000056" href="$classMemaReComponent.html" title="Central remote&#45;control panel of the Mema.Re application." alt="" coords="373,395,528,420"/>
+<area shape="poly" id="edge31_Node000009_Node000056" title=" " alt="" coords="131,754,147,687,177,599,199,552,226,507,258,466,297,430,333,412,372,404,374,409,335,417,300,435,262,469,230,510,204,555,182,601,152,689,136,755"/>
+<area shape="rect" id="Node000018" href="$classMema_1_1InputControlComponent.html" title="Input&#45;channel control strip — shows level meters and mute buttons for all input channels." alt="" coords="680,1465,907,1491"/>
+<area shape="poly" id="edge10_Node000017_Node000018" title=" " alt="" coords="578,1264,604,1280,617,1293,625,1307,632,1334,637,1362,643,1376,653,1391,678,1414,706,1434,761,1463,758,1468,703,1439,674,1419,649,1394,638,1379,632,1364,626,1335,620,1309,613,1296,601,1284,576,1269"/>
+<area shape="rect" id="Node000028" href="$classMema_1_1MeterbridgeComponent.html" title=" " alt="" coords="681,1355,906,1380"/>
+<area shape="poly" id="edge11_Node000017_Node000028" title=" " alt="" coords="579,1267,604,1280,620,1295,629,1311,637,1326,652,1340,682,1353,679,1358,649,1344,633,1329,624,1313,616,1298,601,1284,576,1272"/>
+<area shape="rect" id="Node000020" href="$classMema_1_1OutputControlComponent.html" title="Output&#45;channel control strip — shows level meters and mute buttons for all output channels." alt="" coords="675,1515,912,1540"/>
+<area shape="poly" id="edge12_Node000017_Node000020" title=" " alt="" coords="578,1262,605,1280,625,1308,633,1336,633,1365,629,1393,625,1421,625,1449,633,1476,652,1501,676,1517,673,1522,649,1505,628,1478,620,1450,620,1421,624,1393,628,1364,628,1337,620,1310,601,1284,575,1266"/>
+<area shape="rect" id="Node000029" href="$classMema_1_1SpectrumAudioComponent.html" title=" " alt="" coords="671,1191,916,1216"/>
+<area shape="poly" id="edge13_Node000017_Node000029" title=" " alt="" coords="552,1235,704,1213,705,1219,553,1241"/>
+<area shape="rect" id="Node000030" href="$classMema_1_1TwoDFieldOutputComponent.html" title=" " alt="" coords="665,1131,921,1156"/>
+<area shape="poly" id="edge14_Node000017_Node000030" title=" " alt="" coords="524,1234,602,1208,625,1192,650,1177,723,1153,725,1159,652,1182,628,1197,604,1212,526,1239"/>
+<area shape="rect" id="Node000033" href="$classMema_1_1WaveformAudioComponent.html" title=" " alt="" coords="668,1240,919,1265"/>
+<area shape="poly" id="edge15_Node000017_Node000033" title=" " alt="" coords="578,1250,668,1250,668,1255,578,1255"/>
+<area shape="rect" id="Node000044" href="$classMema_1_1FaderbankControlComponent.html" title="Fader&#45;bank remote control — presents input×output crosspoint sliders and mute buttons." alt="" coords="663,643,923,668"/>
+<area shape="poly" id="edge20_Node000043_Node000044" title=" " alt="" coords="617,652,663,652,663,657,617,657"/>
+<area shape="rect" id="Node000045" href="$classMema_1_1PanningControlComponent.html" title="2&#45;D spatial panning remote control for Mema.Re." alt="" coords="671,593,915,619"/>
+<area shape="poly" id="edge21_Node000043_Node000045" title=" " alt="" coords="555,637,701,616,702,621,556,642"/>
+<area shape="poly" id="edge22_Node000043_Node000046" title=" " alt="" coords="551,666,707,689,706,695,551,671"/>
+<area shape="rect" id="Node000048" title=" " alt="" coords="17,1408,239,1433"/>
+<area shape="poly" id="edge33_Node000048_Node000047" title=" " alt="" coords="204,1403,250,1393,298,1382,369,1369,370,1375,299,1387,251,1398,205,1408"/>
+<area shape="rect" id="Node000049" href="$classMainApplication_1_1MainWindow.html" title=" " alt="" coords="341,1445,560,1471"/>
+<area shape="poly" id="edge32_Node000048_Node000049" title=" " alt="" coords="252,1432,341,1443,341,1448,251,1438"/>
+<area shape="rect" id="Node000050" title=" " alt="" coords="40,1587,216,1612"/>
+<area shape="poly" id="edge34_Node000050_Node000049" title=" " alt="" coords="228,1584,249,1572,260,1562,266,1551,272,1528,278,1504,285,1492,297,1481,318,1469,340,1461,342,1466,320,1474,300,1485,290,1495,283,1506,277,1529,271,1553,264,1565,252,1576,231,1588"/>
+<area shape="rect" id="Node000036" title=" " alt="" coords="41,1458,215,1498"/>
+<area shape="rect" id="Node000035" href="$classMema_1_1Mema.html" title=" " alt="" coords="395,1396,507,1421"/>
+<area shape="poly" id="edge35_Node000036_Node000035" title=" " alt="" coords="218,1452,298,1431,394,1414,395,1419,299,1437,219,1457"/>
+<area shape="rect" id="Node000014" title=" " alt="" coords="31,1101,225,1141"/>
+<area shape="poly" id="edge36_Node000014_Node000013" title=" " alt="" coords="239,1140,386,1169,385,1175,238,1145"/>
+<area shape="rect" id="Node000015" title=" " alt="" coords="32,1165,224,1205"/>
+<area shape="poly" id="edge37_Node000015_Node000013" title=" " alt="" coords="238,1182,386,1182,386,1187,238,1187"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="16,55,240,95"/>
+<area shape="poly" id="edge38_Node000004_Node000001" title=" " alt="" coords="221,96,251,105,411,153,409,159,250,110,219,101"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="53,283,203,323"/>
+<area shape="rect" id="Node000006" href="$classMema_1_1ADMOSController.html" title="Receives ADM&#45;OSC UDP packets and translates them into panning position and mute updates." alt="" coords="359,292,543,317"/>
+<area shape="poly" id="edge39_Node000007_Node000006" title=" " alt="" coords="216,301,359,302,359,307,216,306"/>
+<area shape="rect" id="Node000019" title=" " alt="" coords="357,1495,544,1520"/>
+<area shape="poly" id="edge40_Node000019_Node000018" title=" " alt="" coords="557,1496,680,1485,680,1490,558,1501"/>
+<area shape="poly" id="edge41_Node000019_Node000020" title=" " alt="" coords="558,1511,674,1518,674,1523,557,1516"/>
+<area shape="rect" id="Node000034" href="$classMema_1_1ProcessorDataAnalyzer_1_1Listener.html" title=" " alt="" coords="17,1229,239,1269"/>
+<area shape="poly" id="edge42_Node000034_Node000017" title=" " alt="" coords="253,1248,337,1249,337,1254,253,1253"/>
+<area shape="rect" id="Node000025" href="$classMema_1_1MemaChannelCommander.html" title=" " alt="" coords="5,1636,251,1661"/>
+<area shape="rect" id="Node000023" href="$classMema_1_1MemaCrosspointCommander.html" title=" " alt="" coords="320,1544,581,1569"/>
+<area shape="poly" id="edge43_Node000025_Node000023" title=" " alt="" coords="233,1629,249,1622,264,1612,273,1601,282,1590,297,1580,332,1567,334,1572,300,1584,286,1594,277,1605,267,1616,252,1627,235,1634"/>
+<area shape="rect" id="Node000026" href="$classMema_1_1MemaInputCommander.html" title=" " alt="" coords="338,1593,563,1619"/>
+<area shape="poly" id="edge46_Node000025_Node000026" title=" " alt="" coords="238,1632,354,1616,354,1621,238,1637"/>
+<area shape="rect" id="Node000021" href="$classMema_1_1MemaOutputCommander.html" title=" " alt="" coords="333,1643,569,1668"/>
+<area shape="poly" id="edge49_Node000025_Node000021" title=" " alt="" coords="265,1649,332,1650,332,1656,265,1654"/>
+<area shape="poly" id="edge44_Node000023_Node000024" title=" " alt="" coords="592,1538,601,1531,618,1509,626,1486,627,1463,625,1439,623,1415,623,1390,631,1365,649,1341,670,1326,695,1315,697,1320,673,1330,653,1345,636,1368,629,1391,628,1414,630,1439,632,1463,631,1487,623,1511,605,1535,595,1542"/>
+<area shape="rect" id="Node000022" href="$classMema_1_1MemaNetworkClientCommanderWrapper.html" title=" " alt="" coords="651,1610,936,1650"/>
+<area shape="poly" id="edge45_Node000023_Node000022" title=" " alt="" coords="549,1569,603,1579,719,1607,718,1612,602,1585,548,1574"/>
+<area shape="poly" id="edge47_Node000026_Node000018" title=" " alt="" coords="575,1593,601,1580,617,1562,624,1542,631,1521,649,1501,678,1486,681,1491,652,1505,636,1524,629,1544,622,1565,604,1584,578,1598"/>
+<area shape="poly" id="edge48_Node000026_Node000022" title=" " alt="" coords="578,1612,651,1617,650,1623,577,1618"/>
+<area shape="poly" id="edge51_Node000021_Node000020" title=" " alt="" coords="579,1637,602,1629,626,1614,649,1596,709,1563,762,1538,764,1543,711,1568,652,1600,629,1618,604,1634,581,1642"/>
+<area shape="poly" id="edge50_Node000021_Node000022" title=" " alt="" coords="582,1643,650,1638,650,1643,583,1648"/>
+<area shape="rect" id="Node000027" href="$classMema_1_1MemaPluginCommander.html" title=" " alt="" coords="335,1692,567,1717"/>
+<area shape="poly" id="edge52_Node000027_Node000022" title=" " alt="" coords="554,1687,602,1678,723,1647,725,1653,603,1683,555,1692"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="45,348,211,373"/>
+<area shape="poly" id="edge54_Node000005_Node000001" title=" " alt="" coords="224,345,249,333,265,321,274,308,283,294,297,277,367,221,427,179,430,184,370,225,301,281,287,297,278,311,269,325,252,338,226,349"/>
+<area shape="poly" id="edge55_Node000005_Node000008" title=" " alt="" coords="225,357,371,356,371,361,225,363"/>
+<area shape="poly" id="edge56_Node000005_Node000056" title=" " alt="" coords="226,372,374,394,373,399,225,377"/>
+<area shape="poly" id="edge53_Node000005_Node000006" title=" " alt="" coords="215,343,376,315,377,320,216,348"/>
+<area shape="rect" id="Node000016" title=" " alt="" coords="81,1293,175,1319"/>
+<area shape="poly" id="edge57_Node000016_Node000013" title=" " alt="" coords="188,1298,220,1291,249,1278,264,1267,273,1254,282,1240,297,1226,341,1206,385,1193,386,1198,342,1211,300,1231,286,1243,277,1257,268,1270,252,1283,221,1296,189,1304"/>
+<area shape="poly" id="edge58_Node000016_Node000017" title=" " alt="" coords="188,1293,372,1263,373,1268,189,1299"/>
+<area shape="poly" id="edge59_Node000016_Node000035" title=" " alt="" coords="189,1308,221,1316,252,1329,268,1342,277,1357,285,1370,300,1382,347,1399,395,1406,394,1411,346,1404,297,1387,281,1374,272,1360,264,1346,249,1334,220,1321,188,1313"/>
+<area shape="rect" id="Node000038" href="$classMema_1_1ProcessorDataAnalyzer.html" title="Analyses a stream of audio buffers and broadcasts level and spectrum data to registered listeners." alt="" coords="339,1293,562,1319"/>
+<area shape="poly" id="edge60_Node000016_Node000038" title=" " alt="" coords="189,1303,339,1303,339,1309,189,1309"/>
+<area shape="rect" id="Node000031" title=" " alt="" coords="15,923,241,948"/>
+<area shape="poly" id="edge62_Node000031_Node000030" title=" " alt="" coords="245,953,253,959,268,977,275,997,276,1036,278,1073,285,1091,300,1107,326,1121,362,1131,455,1144,562,1149,665,1147,665,1153,562,1154,455,1150,361,1136,324,1125,297,1111,281,1093,273,1075,271,1036,270,998,263,980,249,963,242,957"/>
+<area shape="poly" id="edge61_Node000031_Node000032" title=" " alt="" coords="241,952,252,959,270,980,277,1002,284,1023,300,1043,323,1056,348,1065,346,1070,321,1060,297,1047,279,1026,272,1003,266,982,249,963,239,956"/>
+<area shape="rect" id="Node000037" title=" " alt="" coords="41,1522,215,1562"/>
+<area shape="poly" id="edge63_Node000037_Node000035" title=" " alt="" coords="227,1520,249,1508,265,1490,272,1471,279,1450,297,1432,320,1420,345,1412,394,1405,395,1410,346,1417,322,1425,300,1436,284,1453,277,1472,269,1493,252,1512,230,1525"/>
+<area shape="rect" id="Node000039" title=" " alt="" coords="31,973,225,1013"/>
+<area shape="poly" id="edge64_Node000039_Node000013" title=" " alt="" coords="239,1013,252,1023,266,1039,273,1056,277,1089,281,1121,287,1136,300,1151,319,1164,341,1173,386,1182,385,1187,339,1178,317,1168,297,1155,283,1139,276,1122,272,1089,268,1057,262,1042,249,1027,236,1017"/>
+<area shape="rect" id="Node000040" title=" " alt="" coords="32,1037,224,1077"/>
+<area shape="poly" id="edge65_Node000040_Node000013" title=" " alt="" coords="238,1078,252,1087,269,1103,277,1120,285,1136,300,1150,342,1169,386,1179,385,1184,340,1174,297,1155,281,1139,272,1122,264,1106,249,1091,235,1083"/>
+<area shape="rect" id="Node000051" title=" " alt="" coords="8,1343,248,1383"/>
+<area shape="poly" id="edge66_Node000051_Node000047" title=" " alt="" coords="261,1359,350,1358,350,1363,262,1364"/>
+<area shape="rect" id="Node000057" title=" " alt="" coords="32,119,224,159"/>
+<area shape="poly" id="edge67_Node000057_Node000001" title=" " alt="" coords="238,147,363,158,363,163,237,152"/>
+</map>

@@ -1,0 +1,9 @@
+<map id="Mema::AudioOutputBufferMessage" name="Mema::AudioOutputBufferMessage">
+<area shape="rect" id="Node000001" title="Carries a post&#45;matrix output audio buffer streamed continuously from Mema to subscribed clients." alt="" coords="5,225,255,251"/>
+<area shape="rect" id="Node000002" href="$classMema_1_1AudioBufferMessage.html" title="Base message carrying a serialised audio buffer and its flow&#45;direction metadata." alt="" coords="27,152,233,177"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="133,191,133,225,127,225,127,191"/>
+<area shape="rect" id="Node000003" href="$classMema_1_1SerializableMessage.html" title="Base class for all messages exchanged between Mema, Mema.Mo, and Mema.Re over TCP." alt="" coords="27,79,233,104"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="133,118,133,152,127,152,127,118"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="73,5,187,31"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="133,44,133,79,127,79,127,44"/>
+</map>

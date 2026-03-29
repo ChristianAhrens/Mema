@@ -1,0 +1,12 @@
+<map id="MemaMo/MainComponent.h" name="MemaMo/MainComponent.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="97,5,303,31"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,152,112,177"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="162,33,123,52,104,65,87,80,72,109,64,139,59,137,67,107,83,77,100,61,120,47,160,28"/>
+<area shape="rect" id="Node000003" href="$MemaMoAppConfiguration_8h.html" title=" " alt="" coords="97,79,303,104"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="203,31,203,65,197,65,197,31"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="327,79,523,104"/>
+<area shape="poly" id="edge5_Node000001_Node000005" title=" " alt="" coords="237,28,377,72,375,77,235,33"/>
+<area shape="poly" id="edge3_Node000003_Node000002" title=" " alt="" coords="178,106,95,148,93,143,176,102"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="136,152,315,177"/>
+<area shape="poly" id="edge4_Node000003_Node000004" title=" " alt="" coords="207,103,219,138,214,140,202,105"/>
+</map>
