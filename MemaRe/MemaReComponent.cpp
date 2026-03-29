@@ -202,6 +202,10 @@ void MemaReComponent::resetCtrl()
 {
     m_pluginName.clear();
     m_pluginParameterInfos.clear();
+    m_inputMuteStates.clear();
+    m_outputMuteStates.clear();
+    m_crosspointStates.clear();
+    m_crosspointValues.clear();
 
     if (m_faderbankCtrlComponent)
         m_faderbankCtrlComponent->resetCtrl();

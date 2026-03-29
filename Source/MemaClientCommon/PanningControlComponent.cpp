@@ -149,6 +149,10 @@ void PanningControlComponent::resetCtrl()
 {
     setIOCount({ 0,0 });
     selectInputChannel(0);
+    setInputMuteStates({});
+    setOutputMuteStates({});
+    setCrosspointStates({});
+    setCrosspointValues({});
 }
 
 void PanningControlComponent::setIOCount(const std::pair<int, int>& ioCount)
