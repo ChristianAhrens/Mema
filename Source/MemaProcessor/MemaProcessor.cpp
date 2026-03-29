@@ -1099,6 +1099,8 @@ void MemaProcessor::clearPlugin()
 		m_pluginParameterInfos.clear();
 	}
 
+	postMessage(std::make_unique<PluginParameterInfosChangedMessage>().release());
+
 	if (onPluginSet)
 		onPluginSet(juce::PluginDescription());
 
@@ -1158,6 +1160,7 @@ void MemaProcessor::setPluginParameterRemoteControlInfos(int parameterIndex, boo
 		}
 
 		triggerConfigurationUpdate(false);
+		postMessage(std::make_unique<PluginParameterInfosChangedMessage>().release());
 	}
 }
 
@@ -1503,6 +1506,11 @@ void MemaProcessor::handleMessage(const Message& message)
 	// exception - totally different message type, to decouple callback from processing asynchronously...
 	else if (auto const ppicm = dynamic_cast<const PluginParameterInfosChangedMessage*>(&message))
 	{
+		// Broadcast updated parameter infos to all connected network clients
+		for (auto& pluginCommander : m_pluginCommanders)
+			pluginCommander->setPluginParameterInfos(m_pluginParameterInfos,
+				m_pluginInstance ? m_pluginInstance->getName().toStdString() : "");
+
 		if (onPluginParameterInfosChanged)
 			onPluginParameterInfosChanged();
 
