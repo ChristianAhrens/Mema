@@ -178,14 +178,14 @@ void PluginControlComponent::rebuildControls()
         else if (parameterInfo.type == ParameterControlType::Continuous)
         {
             if (m_parameterValueSliders.count(parameterInfo.index) != 0)
-                m_parameterValueSliders.at(parameterInfo.index)->setValue(int(parameterInfo.currentValue));
+                m_parameterValueSliders.at(parameterInfo.index)->setValue(parameterInfo.currentValue, juce::dontSendNotification);
             else
             {
                 m_parameterValueSliders[parameterInfo.index] = std::make_unique<JUCEAppBasics::ToggleStateSlider>(juce::Slider::Rotary, juce::Slider::NoTextBox);
                 m_parameterValueSliders[parameterInfo.index]->setSliderStyle(juce::Slider::SliderStyle::Rotary);
                 m_parameterValueSliders[parameterInfo.index]->setTogglalbe(false);
-                m_parameterValueSliders[parameterInfo.index]->setRange(parameterInfo.minValue, parameterInfo.maxValue, juce::dontSendNotification);
-                m_parameterValueSliders[parameterInfo.index]->setValue(parameterInfo.currentValue);
+                m_parameterValueSliders[parameterInfo.index]->setRange(parameterInfo.minValue, parameterInfo.maxValue);
+                m_parameterValueSliders[parameterInfo.index]->setValue(parameterInfo.currentValue, juce::dontSendNotification);
                 m_parameterValueSliders[parameterInfo.index]->onValueChange = [=]() {
                     auto pIdx = parameterInfo.index;
                     if (m_parameterValueSliders.count(pIdx) > 0 && m_pluginParameterInfos.size() > pIdx)
