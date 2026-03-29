@@ -234,61 +234,67 @@ void PluginControlComponent::rebuildLayout()
     if (bounds.isEmpty())
         return;
 
-    // Get the number of items to display
     auto itemCount = int(m_parameterValueComboBoxes.size() + m_parameterValueSliders.size() + m_parameterValueButtons.size());
     if (itemCount == 0)
         return;
 
-    // Get the control size from the method
-    auto gridItemControlSize = 3 * int(getControlsSize());
-
-    // Calculate how many items fit per row based on available width and control size
+    const auto gridItemControlSize = 3 * int(getControlsSize());
     const int labelHeight = 30;
     const int controlMargin = 5;
+    const int rowPairHeight = labelHeight + gridItemControlSize;
 
-    int availableWidth = bounds.getWidth();
-    int availableHeight = bounds.getHeight();
+    const int availableWidth = bounds.getWidth();
+    const int availableHeight = bounds.getHeight();
+    const float availableAspect = float(availableWidth) / float(juce::jmax(1, availableHeight));
 
-    // Calculate items per row based on control size
-    int itemsPerRow = juce::jmax(1, availableWidth / gridItemControlSize);
-    itemsPerRow = juce::jmin(itemCount, itemsPerRow); // Don't exceed total items
+    // Find itemsPerRow whose layout aspect ratio is closest to the available area's aspect ratio
+    const int maxItemsPerRow = juce::jmin(itemCount, juce::jmax(1, availableWidth / gridItemControlSize));
+    int itemsPerRow = 1;
+    float bestAspectDiff = std::numeric_limits<float>::max();
+    for (int n = 1; n <= maxItemsPerRow; ++n)
+    {
+        int rows = static_cast<int>(std::ceil(float(itemCount) / float(n)));
+        float layoutAspect = float(n * gridItemControlSize) / float(juce::jmax(1, rows * rowPairHeight));
+        float diff = std::abs(layoutAspect - availableAspect);
+        if (diff < bestAspectDiff)
+        {
+            bestAspectDiff = diff;
+            itemsPerRow = n;
+        }
+    }
 
-    // Calculate how many row pairs we need (each item takes 2 rows: label + control)
-    int numRowPairs = static_cast<int>(std::ceil(static_cast<float>(itemCount) / static_cast<float>(itemsPerRow)));
+    const int numRowPairs = static_cast<int>(std::ceil(float(itemCount) / float(itemsPerRow)));
+    const int totalGridWidth  = itemsPerRow * gridItemControlSize;
+    const int totalGridHeight = numRowPairs  * rowPairHeight;
 
-    // Use controlSize for both column width and control height
-    int columnWidth = gridItemControlSize;
-    int controlHeight = gridItemControlSize;
+    // Center the grid within the available bounds
+    auto gridBounds = juce::Rectangle<int>(
+        bounds.getX() + juce::jmax(0, (availableWidth  - totalGridWidth)  / 2),
+        bounds.getY() + juce::jmax(0, (availableHeight - totalGridHeight) / 2),
+        juce::jmin(totalGridWidth,  availableWidth),
+        juce::jmin(totalGridHeight, availableHeight));
 
     // Build the grid
     m_parameterControlsGrid->templateRows.clear();
     m_parameterControlsGrid->templateColumns.clear();
     m_parameterControlsGrid->items.clear();
 
-    // Set up rows: alternating between label rows and control rows
     for (int i = 0; i < numRowPairs; ++i)
     {
         m_parameterControlsGrid->templateRows.add(juce::Grid::TrackInfo(juce::Grid::Px(labelHeight)));
-        m_parameterControlsGrid->templateRows.add(juce::Grid::TrackInfo(juce::Grid::Px(controlHeight)));
+        m_parameterControlsGrid->templateRows.add(juce::Grid::TrackInfo(juce::Grid::Px(gridItemControlSize)));
     }
-
-    // Set up columns with calculated width
     for (int i = 0; i < itemsPerRow; ++i)
-        m_parameterControlsGrid->templateColumns.add(juce::Grid::TrackInfo(juce::Grid::Px(columnWidth)));
+        m_parameterControlsGrid->templateColumns.add(juce::Grid::TrackInfo(juce::Grid::Px(gridItemControlSize)));
 
-    // Track current position in grid
     int currentItem = 0;
 
     // Add buttons
     for (auto const& buttonKV : m_parameterValueButtons)
     {
         auto* button = buttonKV.second.get();
-
-        // Calculate grid position
         int row = (currentItem / itemsPerRow) * 2;
         int col = currentItem % itemsPerRow;
-
-        // Add button (row + 1, col) - centered and square
         auto buttonSize = float(gridItemControlSize - (controlMargin * 2));
 
         m_parameterControlsGrid->items.add(juce::GridItem(*button)
@@ -307,24 +313,17 @@ void PluginControlComponent::rebuildLayout()
     {
         auto paramIndex = comboKV.first;
         auto* combo = comboKV.second.get();
-
-        // Find corresponding label
         auto labelIter = m_parameterNameLabels.find(paramIndex);
         if (labelIter == m_parameterNameLabels.end() || !labelIter->second)
             continue;
-
         auto* label = labelIter->second.get();
 
-        // Calculate grid position
         int row = (currentItem / itemsPerRow) * 2;
         int col = currentItem % itemsPerRow;
 
-        // Add label (row, col) - Grid uses 1-based indexing
         m_parameterControlsGrid->items.add(juce::GridItem(*label)
             .withArea(row + 1, col + 1)
             .withMargin(juce::GridItem::Margin(2.0f)));
-
-        // Add control (row + 1, col)
         m_parameterControlsGrid->items.add(juce::GridItem(*combo)
             .withArea(row + 2, col + 1)
             .withMargin(juce::GridItem::Margin(controlMargin))
@@ -340,26 +339,18 @@ void PluginControlComponent::rebuildLayout()
     {
         auto paramIndex = sliderKV.first;
         auto* slider = sliderKV.second.get();
-
-        // Find corresponding label
         auto labelIter = m_parameterNameLabels.find(paramIndex);
         if (labelIter == m_parameterNameLabels.end() || !labelIter->second)
             continue;
-
         auto* label = labelIter->second.get();
 
-        // Calculate grid position
         int row = (currentItem / itemsPerRow) * 2;
         int col = currentItem % itemsPerRow;
+        auto sliderSize = float(gridItemControlSize - (controlMargin * 2));
 
-        // Add label (row, col)
         m_parameterControlsGrid->items.add(juce::GridItem(*label)
             .withArea(row + 1, col + 1)
             .withMargin(juce::GridItem::Margin(2.0f)));
-
-        // Add slider (row + 1, col) - centered and square
-        auto sliderSize = float(gridItemControlSize - (controlMargin * 2));
-
         m_parameterControlsGrid->items.add(juce::GridItem(*slider)
             .withArea(row + 2, col + 1)
             .withMargin(juce::GridItem::Margin(controlMargin))
@@ -371,8 +362,7 @@ void PluginControlComponent::rebuildLayout()
         currentItem++;
     }
 
-    // CRITICAL: Actually perform the layout with the bounds
-    m_parameterControlsGrid->performLayout(bounds);
+    m_parameterControlsGrid->performLayout(gridBounds);
 }
 
 
