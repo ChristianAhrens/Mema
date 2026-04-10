@@ -101,13 +101,23 @@ public:
 		}
 	};
 
-	void setPluginParameterInfos(const std::vector<PluginParameterInfo>& parameterInfos, const std::string& name, int userId = -1) override
+	void setPluginParameterInfos(const std::vector<PluginParameterInfo>& parameterInfos, const std::string& name, bool enabled, bool post, int userId = -1) override
 	{
 		if (m_networkServer && m_networkServer->hasActiveConnections())
 		{
 			auto sendIds = m_networkServer->getActiveConnectionIds();
 			sendIds.erase(std::remove(sendIds.begin(), sendIds.end(), userId), sendIds.end());
-			m_networkServer->enqueueMessage(std::make_unique<PluginParameterInfosMessage>(name, parameterInfos)->getSerializedMessage(), sendIds);
+			m_networkServer->enqueueMessage(std::make_unique<PluginParameterInfosMessage>(name, enabled, post, parameterInfos)->getSerializedMessage(), sendIds);
+		}
+	}
+
+	void setPluginProcessingState(bool enabled, bool post, int userId = -1) override
+	{
+		if (m_networkServer && m_networkServer->hasActiveConnections())
+		{
+			auto sendIds = m_networkServer->getActiveConnectionIds();
+			sendIds.erase(std::remove(sendIds.begin(), sendIds.end(), userId), sendIds.end());
+			m_networkServer->enqueueMessage(std::make_unique<PluginProcessingStateMessage>(enabled, post)->getSerializedMessage(), sendIds);
 		}
 	}
 
@@ -222,7 +232,7 @@ MemaProcessor::MemaProcessor(XmlElement* stateXml) :
 					success = success && m_networkServer->enqueueMessage(std::make_unique<ReinitIOCountMessage>(m_inputChannelCount, m_outputChannelCount)->getSerializedMessage(), sendIds);
 					success = success && m_networkServer->enqueueMessage(std::make_unique<EnvironmentParametersMessage>(paletteStyle)->getSerializedMessage(), sendIds);
 					success = success && m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, matrixCrosspointStates, matrixCrosspointValues)->getSerializedMessage(), sendIds);
-					success = success && m_networkServer->enqueueMessage(std::make_unique<PluginParameterInfosMessage>(m_pluginInstance ? m_pluginInstance->getName().toStdString() : "", m_pluginParameterInfos)->getSerializedMessage(), sendIds);
+					success = success && m_networkServer->enqueueMessage(std::make_unique<PluginParameterInfosMessage>(m_pluginInstance ? m_pluginInstance->getName().toStdString() : "", m_pluginEnabled, m_pluginPost, m_pluginParameterInfos)->getSerializedMessage(), sendIds);
 					if (!success)
 						m_networkServer->cleanupDeadConnections();
 				}
@@ -1093,6 +1103,9 @@ void MemaProcessor::setPluginEnabledState(bool enabled)
 		m_pluginEnabled = enabled;
 	}
 
+	for (auto& pluginCommander : m_pluginCommanders)
+		pluginCommander->setPluginProcessingState(m_pluginEnabled, m_pluginPost);
+
 	triggerConfigurationUpdate(false);
 }
 
@@ -1116,6 +1129,9 @@ void MemaProcessor::setPluginPrePostState(bool post)
 			configurePluginForCurrentPosition();
 		}
 	}
+
+	for (auto& pluginCommander : m_pluginCommanders)
+		pluginCommander->setPluginProcessingState(m_pluginEnabled, m_pluginPost);
 
 	triggerConfigurationUpdate(false);
 }
@@ -1534,12 +1550,36 @@ void MemaProcessor::handleMessage(const Message& message)
 	else if (auto const ppvm = dynamic_cast<const PluginParameterValueMessage*>(&message))
 	{
 		DBG(juce::String(__FUNCTION__) << " ppvIdx:" << int(ppvm->getParameterIndex()) << " > " << ppvm->getCurrentValue());
-		
+
 		setPluginParameterValue(ppvm->getParameterIndex(), ppvm->getParameterId().toStdString(), ppvm->getCurrentValue(), static_cast<MemaPluginCommander*>(m_networkCommanderWrapper.get()), origId);
 
 		serializedMessageMemoryBlock = ppvm->getSerializedMessage();
 
 		tId = ppvm->getType();
+	}
+	else if (auto const pesm = dynamic_cast<const PluginProcessingStateMessage*>(&message))
+	{
+		DBG(juce::String(__FUNCTION__) << " pluginEnabled:" << int(pesm->isEnabled()) << " pluginPost:" << int(pesm->isPost()));
+
+		// Update state directly to avoid triggering the commander broadcasts (which would double-relay to other clients).
+		// The fallthrough sendMessageToClients below handles relaying to other Mema.Re clients.
+		{
+			const ScopedLock sl(m_pluginProcessingLock);
+			m_pluginEnabled = pesm->isEnabled();
+			if (m_pluginPost != pesm->isPost())
+			{
+				m_pluginPost = pesm->isPost();
+				configurePluginForCurrentPosition();
+			}
+		}
+		triggerConfigurationUpdate(false);
+
+		if (onPluginProcessingStateChanged)
+			onPluginProcessingStateChanged(m_pluginEnabled, m_pluginPost);
+
+		serializedMessageMemoryBlock = pesm->getSerializedMessage();
+
+		tId = pesm->getType();
 	}
 	// exception - totally different message type, to decouple callback from processing asynchronously...
 	else if (auto const ppicm = dynamic_cast<const PluginParameterInfosChangedMessage*>(&message))
@@ -1547,7 +1587,8 @@ void MemaProcessor::handleMessage(const Message& message)
 		// Broadcast updated parameter infos to all connected network clients
 		for (auto& pluginCommander : m_pluginCommanders)
 			pluginCommander->setPluginParameterInfos(m_pluginParameterInfos,
-				m_pluginInstance ? m_pluginInstance->getName().toStdString() : "");
+				m_pluginInstance ? m_pluginInstance->getName().toStdString() : "",
+				m_pluginEnabled, m_pluginPost);
 
 		if (onPluginParameterInfosChanged)
 			onPluginParameterInfosChanged();
@@ -1799,7 +1840,7 @@ void MemaProcessor::initializeCtrlValues(int inputCount, int outputCount)
 	}
 	auto pluginParameterInfos = Mema::PluginParameterInfo::parametersToInfos(pluginParameters);
 	for (auto& pluginCommander : m_pluginCommanders)
-		pluginCommander->setPluginParameterInfos(pluginParameterInfos, pluginName.toStdString());
+		pluginCommander->setPluginParameterInfos(pluginParameterInfos, pluginName.toStdString(), m_pluginEnabled, m_pluginPost);
 }
 
 void MemaProcessor::initializeCtrlValuesToUnity(int inputCount, int outputCount)

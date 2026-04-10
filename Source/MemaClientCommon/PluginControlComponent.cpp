@@ -31,9 +31,35 @@ PluginControlComponent::PluginControlComponent()
     : MemaClientControlComponentBase()
 {
     m_parameterControlsGrid = std::make_unique<juce::Grid>();
+
+    auto noconfigui = juce::JUCEApplication::getInstance()->getCommandLineParameters().contains("--noconfigui");
+
+    m_enableButton = std::make_unique<juce::DrawableButton>("pluginEnable", juce::DrawableButton::ImageOnButtonBackground);
+    m_enableButton->setClickingTogglesState(true);
+    m_enableButton->setTooltip("Toggle plugin processing on/off");
+    m_enableButton->onStateChange = [=]() {
+        if (onPluginEnabledChanged)
+            onPluginEnabledChanged(m_enableButton->getToggleState());
+    };
+    if (noconfigui)
+        addChildComponent(m_enableButton.get());
+    else
+        addAndMakeVisible(m_enableButton.get());
+
+    m_prePostButton = std::make_unique<juce::TextButton>("Post", "Toggle plugin pre/post matrix insertion");
+    m_prePostButton->setClickingTogglesState(true);
+    m_prePostButton->onStateChange = [=]() {
+        if (onPluginPrePostChanged)
+            onPluginPrePostChanged(m_prePostButton->getToggleState());
+    };
+    if (noconfigui)
+        addChildComponent(m_prePostButton.get());
+    else
+        addAndMakeVisible(m_prePostButton.get());
+
     m_pluginNameLabel = std::make_unique<juce::Label>("pluginName");
     m_pluginNameLabel->setFont(m_pluginNameLabel->getFont().withHeight(25));
-    m_pluginNameLabel->setJustificationType(juce::Justification::centred);
+    m_pluginNameLabel->setJustificationType(juce::Justification::centredLeft);
     addAndMakeVisible(m_pluginNameLabel.get());
 }
 
@@ -51,8 +77,44 @@ void PluginControlComponent::resized()
 {
     auto margin = 25;
     auto bounds = getLocalBounds();
-    if (m_pluginNameLabel)
-        m_pluginNameLabel->setBounds(bounds.removeFromTop(margin));
+    auto headerRow = bounds.removeFromTop(margin);
+
+    const bool enableVisible  = m_enableButton  && m_enableButton->isVisible();
+    const bool prePostVisible = m_prePostButton && m_prePostButton->isVisible();
+
+    if (enableVisible || prePostVisible)
+    {
+        // Fixed widths for the config buttons
+        const int enableBtnWidth  = margin;          // square icon button
+        const int prePostBtnWidth = 2 * margin;      // "Post" text button
+
+        int totalBtnsWidth = 0;
+        if (enableVisible)  totalBtnsWidth += enableBtnWidth;
+        if (prePostVisible) totalBtnsWidth += prePostBtnWidth;
+
+        // Give the label half the available width, but at least enough for the buttons' companion
+        const int labelWidth = juce::jmax(80, headerRow.getWidth() / 2);
+        const int groupWidth = totalBtnsWidth + labelWidth;
+
+        // Center the group horizontally in the header row
+        const int groupX = headerRow.getX() + juce::jmax(0, (headerRow.getWidth() - groupWidth) / 2);
+        auto groupBounds = juce::Rectangle<int>(groupX, headerRow.getY(),
+                                                juce::jmin(groupWidth, headerRow.getWidth()),
+                                                headerRow.getHeight());
+
+        if (enableVisible)
+            m_enableButton->setBounds(groupBounds.removeFromLeft(enableBtnWidth).reduced(2));
+        if (prePostVisible)
+            m_prePostButton->setBounds(groupBounds.removeFromLeft(prePostBtnWidth).reduced(2));
+        if (m_pluginNameLabel)
+            m_pluginNameLabel->setBounds(groupBounds);
+    }
+    else
+    {
+        if (m_pluginNameLabel)
+            m_pluginNameLabel->setBounds(headerRow);
+    }
+
     bounds.removeFromLeft(margin);
     bounds.removeFromRight(margin);
     m_parameterBounds = bounds;
@@ -61,12 +123,22 @@ void PluginControlComponent::resized()
 
 void PluginControlComponent::lookAndFeelChanged()
 {
+    auto accentColour = getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId);
+    auto textColour   = getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId);
+
     for (auto const& comboKV : m_parameterValueComboBoxes)
-        comboKV.second->setColour(juce::ComboBox::ColourIds::focusedOutlineColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
+        comboKV.second->setColour(juce::ComboBox::ColourIds::focusedOutlineColourId, accentColour);
     for (auto const& sliderKV : m_parameterValueSliders)
-        sliderKV.second->setColour(juce::Slider::ColourIds::trackColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
+        sliderKV.second->setColour(juce::Slider::ColourIds::trackColourId, accentColour);
     for (auto const& buttonKV : m_parameterValueButtons)
-        buttonKV.second->setColour(juce::TextButton::ColourIds::buttonOnColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
+        buttonKV.second->setColour(juce::TextButton::ColourIds::buttonOnColourId, accentColour);
+
+    if (m_enableButton)
+    {
+        auto drawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::power_settings_24dp_svg).get());
+        drawable->replaceColour(juce::Colours::black, textColour);
+        m_enableButton->setImages(drawable.get(), nullptr, nullptr, nullptr, drawable.get());
+    }
 }
 
 void PluginControlComponent::resetCtrl()
@@ -75,6 +147,11 @@ void PluginControlComponent::resetCtrl()
 
     m_pluginName.clear();
     m_pluginParameterInfos.clear();
+
+    if (m_enableButton)
+        m_enableButton->setToggleState(false, juce::dontSendNotification);
+    if (m_prePostButton)
+        m_prePostButton->setToggleState(false, juce::dontSendNotification);
 }
 
 void PluginControlComponent::setControlsSize(const ControlsSize& ctrlsSize)
@@ -111,6 +188,18 @@ void PluginControlComponent::setParameterInfos(const std::vector<Mema::PluginPar
         rebuildControls();
         rebuildLayout();
     }
+}
+
+void PluginControlComponent::setPluginEnabled(bool enabled)
+{
+    if (m_enableButton)
+        m_enableButton->setToggleState(enabled, juce::dontSendNotification);
+}
+
+void PluginControlComponent::setPluginPrePost(bool post)
+{
+    if (m_prePostButton)
+        m_prePostButton->setToggleState(post, juce::dontSendNotification);
 }
 
 void PluginControlComponent::setParameterValue(std::uint16_t index, std::string id, float value)

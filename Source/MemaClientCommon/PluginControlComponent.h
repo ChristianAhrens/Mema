@@ -64,8 +64,13 @@ public:
 
     void setParameterValue(std::uint16_t index, std::string id, float value);
 
+    void setPluginEnabled(bool enabled);
+    void setPluginPrePost(bool post);
+
     //==============================================================================
     std::function<void(std::uint16_t, std::string, float)> onPluginParameterValueChanged;
+    std::function<void(bool)> onPluginEnabledChanged;
+    std::function<void(bool)> onPluginPrePostChanged;
 
 protected:
     //==============================================================================
@@ -76,6 +81,8 @@ private:
     //==============================================================================
     std::unique_ptr<juce::Grid> m_parameterControlsGrid;
 
+    std::unique_ptr<juce::DrawableButton>                                        m_enableButton;
+    std::unique_ptr<juce::TextButton>                                            m_prePostButton;
     std::unique_ptr<juce::Label>                                                m_pluginNameLabel;
     std::map<std::uint16_t, std::unique_ptr<juce::Label>>                       m_parameterNameLabels;
     std::map<std::uint16_t, std::unique_ptr<juce::TextButton>>                  m_parameterValueButtons;

@@ -367,6 +367,7 @@ public:
     juce::AudioProcessorParameter* getPluginParameter(int parameterIndex) const;
     std::function<void(int pluginParameterIndex, float newValue)> onPluginParameterChanged; ///< Fired (on the message thread) when a hosted plugin parameter value changes; receives the zero-based index and new normalised value.
     std::function<void()> onPluginParameterInfosChanged; ///< Fired when the set of exposed plugin parameters changes (plugin load/unload or controllability settings change).
+    std::function<void(bool enabled, bool post)> onPluginProcessingStateChanged; ///< Fired when the plugin enabled or pre/post state changes externally (e.g. from a Mema.Re client).
 
     //==============================================================================
     /** @brief Returns a raw pointer to the JUCE AudioDeviceManager. Used by the audio-setup UI component. */

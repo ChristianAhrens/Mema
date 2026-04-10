@@ -93,6 +93,18 @@ MemaReComponent::MemaReComponent()
         if (onMessageReadyToSend)
             onMessageReadyToSend(std::make_unique<Mema::PluginParameterValueMessage>(parameterIndex, parameterId, value)->getSerializedMessage());
         };
+    m_pluginCtrlComponent->onPluginEnabledChanged = [=](bool enabled) {
+        m_pluginEnabled = enabled;
+        DBG(juce::String(__FUNCTION__) + " sending enabled state to net: " + juce::String(int(enabled)));
+        if (onMessageReadyToSend)
+            onMessageReadyToSend(std::make_unique<Mema::PluginProcessingStateMessage>(m_pluginEnabled, m_pluginPost)->getSerializedMessage());
+        };
+    m_pluginCtrlComponent->onPluginPrePostChanged = [=](bool post) {
+        m_pluginPost = post;
+        DBG(juce::String(__FUNCTION__) + " sending pre/post state to net: " + juce::String(int(post)));
+        if (onMessageReadyToSend)
+            onMessageReadyToSend(std::make_unique<Mema::PluginProcessingStateMessage>(m_pluginEnabled, m_pluginPost)->getSerializedMessage());
+        };
     addChildComponent(m_pluginCtrlComponent.get());
 
     setFaderbankCtrlActive();
@@ -142,6 +154,14 @@ void MemaReComponent::setOutputPanningCtrlActive(const juce::AudioChannelSet& ch
         {
             m_panningCtrlComponent->setIOCount(m_currentIOCount);
             m_panningCtrlComponent->setVisible(true);
+            if (!m_inputMuteStates.empty())
+                m_panningCtrlComponent->setInputMuteStates(m_inputMuteStates);
+            if (!m_outputMuteStates.empty())
+                m_panningCtrlComponent->setOutputMuteStates(m_outputMuteStates);
+            if (!m_crosspointStates.empty())
+                m_panningCtrlComponent->setCrosspointStates(m_crosspointStates);
+            if (!m_crosspointValues.empty())
+                m_panningCtrlComponent->setCrosspointValues(m_crosspointValues);
             resizeRequired = true;
         }
         m_panningCtrlComponent->setChannelConfig(channelConfiguration);
@@ -180,6 +200,8 @@ void MemaReComponent::setPluginCtrlActive()
             m_pluginCtrlComponent->setPluginName(m_pluginName);
             m_pluginCtrlComponent->setParameterInfos(m_pluginParameterInfos);
         }
+        m_pluginCtrlComponent->setPluginEnabled(m_pluginEnabled);
+        m_pluginCtrlComponent->setPluginPrePost(m_pluginPost);
     }
     if (m_faderbankCtrlComponent && m_faderbankCtrlComponent->isVisible())
     {
@@ -202,6 +224,8 @@ void MemaReComponent::resetCtrl()
 {
     m_pluginName.clear();
     m_pluginParameterInfos.clear();
+    m_pluginEnabled = false;
+    m_pluginPost = false;
     m_inputMuteStates.clear();
     m_outputMuteStates.clear();
     m_crosspointStates.clear();
@@ -297,7 +321,7 @@ void MemaReComponent::handleMessage(const Message& message)
 
         if (m_faderbankCtrlComponent)
             m_faderbankCtrlComponent->setIOCount(m_currentIOCount);
-        if (m_panningCtrlComponent)
+        if (m_panningCtrlComponent && m_panningCtrlComponent->isVisible())
             m_panningCtrlComponent->setIOCount(m_currentIOCount);
 
         resized();
@@ -312,7 +336,7 @@ void MemaReComponent::handleMessage(const Message& message)
         {
             if (m_faderbankCtrlComponent)
                 m_faderbankCtrlComponent->setInputMuteStates(m_inputMuteStates);
-            if (m_panningCtrlComponent)
+            if (m_panningCtrlComponent && m_panningCtrlComponent->isVisible())
                 m_panningCtrlComponent->setInputMuteStates(m_inputMuteStates);
         }
 
@@ -322,7 +346,7 @@ void MemaReComponent::handleMessage(const Message& message)
         {
             if (m_faderbankCtrlComponent)
                 m_faderbankCtrlComponent->setOutputMuteStates(m_outputMuteStates);
-            if (m_panningCtrlComponent)
+            if (m_panningCtrlComponent && m_panningCtrlComponent->isVisible())
                 m_panningCtrlComponent->setOutputMuteStates(m_outputMuteStates);
         }
 
@@ -333,7 +357,7 @@ void MemaReComponent::handleMessage(const Message& message)
         {
             if (m_faderbankCtrlComponent)
                 m_faderbankCtrlComponent->setCrosspointStates(m_crosspointStates);
-            if (m_panningCtrlComponent)
+            if (m_panningCtrlComponent && m_panningCtrlComponent->isVisible())
                 m_panningCtrlComponent->setCrosspointStates(m_crosspointStates);
         }
 
@@ -344,7 +368,7 @@ void MemaReComponent::handleMessage(const Message& message)
         {
             if (m_faderbankCtrlComponent)
                 m_faderbankCtrlComponent->setCrosspointValues(m_crosspointValues);
-            if (m_panningCtrlComponent)
+            if (m_panningCtrlComponent && m_panningCtrlComponent->isVisible())
                 m_panningCtrlComponent->setCrosspointValues(m_crosspointValues);
         }
 
@@ -356,14 +380,31 @@ void MemaReComponent::handleMessage(const Message& message)
 
         m_pluginName = ppim->getPluginName().toStdString();
         m_pluginParameterInfos = ppim->getParameterInfos();
+        m_pluginEnabled = ppim->isPluginEnabled();
+        m_pluginPost = ppim->isPluginPost();
 
         if (m_pluginCtrlComponent && m_pluginCtrlComponent->isVisible())
         {
             m_pluginCtrlComponent->setPluginName(m_pluginName);
             m_pluginCtrlComponent->setParameterInfos(m_pluginParameterInfos);
+            m_pluginCtrlComponent->setPluginEnabled(m_pluginEnabled);
+            m_pluginCtrlComponent->setPluginPrePost(m_pluginPost);
         }
 
         resized();
+    }
+    else if (auto const pesm = dynamic_cast<const Mema::PluginProcessingStateMessage*>(&message))
+    {
+        DBG(juce::String(__FUNCTION__) + " handling PluginProcessingStateMessage (enabled:" + juce::String(int(pesm->isEnabled())) + " post:" + juce::String(int(pesm->isPost())) + ") ...");
+
+        m_pluginEnabled = pesm->isEnabled();
+        m_pluginPost = pesm->isPost();
+
+        if (m_pluginCtrlComponent && m_pluginCtrlComponent->isVisible())
+        {
+            m_pluginCtrlComponent->setPluginEnabled(m_pluginEnabled);
+            m_pluginCtrlComponent->setPluginPrePost(m_pluginPost);
+        }
     }
     else if (auto const ppvm = dynamic_cast<const Mema::PluginParameterValueMessage*>(&message))
     {

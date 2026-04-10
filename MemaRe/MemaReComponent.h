@@ -123,6 +123,8 @@ private:
 
     std::string                                 m_pluginName;               ///< Cached plugin name from last received PluginParameterInfosMessage.
     std::vector<Mema::PluginParameterInfo>      m_pluginParameterInfos;     ///< Cached parameter infos from last received PluginParameterInfosMessage.
+    bool                                        m_pluginEnabled = false;    ///< Cached plugin enabled state from last received PluginParameterInfosMessage or PluginProcessingStateMessage.
+    bool                                        m_pluginPost = false;       ///< Cached plugin pre/post state from last received PluginParameterInfosMessage or PluginProcessingStateMessage.
 
     float m_ioRatio = 0.5f; ///< Vertical split ratio between input and output control areas (faderbank mode).
 

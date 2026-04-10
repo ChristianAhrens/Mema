@@ -149,11 +149,14 @@ public:
 
     void setPluginParameterInfosChangeCallback(const std::function<void(MemaPluginCommander* sender, const std::vector<PluginParameterInfo>&, const std::string& name)>& callback);
     void setPluginParameterInfosPollCallback(const std::function<void(MemaPluginCommander* sender)>& callback);
-    virtual void setPluginParameterInfos(const std::vector<PluginParameterInfo>&, const std::string& name, int userId = -1) = 0;
+    virtual void setPluginParameterInfos(const std::vector<PluginParameterInfo>&, const std::string& name, bool enabled, bool post, int userId = -1) = 0;
 
     void setPluginParameterValueChangeCallback(const std::function<void(MemaPluginCommander* sender, std::uint16_t, std::string, float)>& callback);
     void setPluginParameterValuePollCallback(const std::function<void(MemaPluginCommander* sender, std::uint16_t, std::string)>& callback);
     virtual void setPluginParameterValue(std::uint16_t index, std::string id, float currentValue, int userId = -1) = 0;
+
+    void setPluginProcessingStateChangeCallback(const std::function<void(MemaPluginCommander* sender, bool, bool)>& callback);
+    virtual void setPluginProcessingState(bool enabled, bool post, int userId = -1) = 0;
 
 protected:
     void pluginParameterInfosChange(const std::vector<PluginParameterInfo>&, const std::string&, MemaPluginCommander* sender);
@@ -162,12 +165,16 @@ protected:
     void pluginParameterValueChange(std::uint16_t index, std::string id, float currentValue, MemaPluginCommander* sender);
     void pluginParameterValuePoll(std::uint16_t index, std::string id, MemaPluginCommander* sender);
 
+    void pluginProcessingStateChange(bool enabled, bool post, MemaPluginCommander* sender);
+
 private:
     std::function<void(MemaPluginCommander* sender, const std::vector<PluginParameterInfo>&, const std::string&)>   onPluginParameterInfosChangeCallback{ nullptr };
     std::function<void(MemaPluginCommander* sender)>                                                                onPluginParameterInfosPollCallback{ nullptr };
 
     std::function<void(MemaPluginCommander* sender, std::uint16_t, std::string, float)> onPluginParameterValueChangeCallback{ nullptr };
     std::function<void(MemaPluginCommander* sender, std::uint16_t, std::string)>        onPluginParameterValuePollCallback{ nullptr };
+
+    std::function<void(MemaPluginCommander* sender, bool, bool)> onPluginProcessingStateChangeCallback{ nullptr };
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MemaPluginCommander)
 };

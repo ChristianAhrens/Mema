@@ -41,6 +41,7 @@ class DataTrafficTypeSelectionMessage;
 class ControlParametersMessage;
 class PluginParameterInfosMessage;
 class PluginParameterValueMessage;
+class PluginProcessingStateMessage;
 
 /**
  * @class SerializableMessage
@@ -86,7 +87,8 @@ public:
         DataTrafficTypeSelection,    ///< Sent by a client to opt in/out of specific message types (bandwidth control).
         ControlParameters,           ///< Full routing-matrix state snapshot; sent by Mema on connect and echoed by Mema.Re on change.
         PluginParameterInfos,        ///< Plugin name and full parameter descriptor list; sent by Mema when a plugin is loaded or changed.
-        PluginParameterValue         ///< Single parameter value update sent from Mema.Re to Mema.
+        PluginParameterValue,        ///< Single parameter value update sent from Mema.Re to Mema.
+        PluginProcessingState        ///< Plugin enabled and pre/post processing state; sent bidirectionally between Mema and Mema.Re.
     };
 
 public:
@@ -154,6 +156,8 @@ public:
             return reinterpret_cast<SerializableMessage*>(std::make_unique<PluginParameterInfosMessage>(blob).release());
         case PluginParameterValue:
             return reinterpret_cast<SerializableMessage*>(std::make_unique<PluginParameterValueMessage>(blob).release());
+        case PluginProcessingState:
+            return reinterpret_cast<SerializableMessage*>(std::make_unique<PluginProcessingStateMessage>(blob).release());
         case None:
         default:
             return nullptr;
@@ -209,6 +213,11 @@ public:
             case PluginParameterValue:
                 {
                     auto ppvm = std::unique_ptr<PluginParameterValueMessage>(reinterpret_cast<PluginParameterValueMessage*>(message));
+                }
+                break;
+            case PluginProcessingState:
+                {
+                    auto pesm = std::unique_ptr<PluginProcessingStateMessage>(reinterpret_cast<PluginProcessingStateMessage*>(message));
                 }
                 break;
             case None:
@@ -836,11 +845,13 @@ class PluginParameterInfosMessage : public SerializableMessage
 {
 public:
     PluginParameterInfosMessage() = default;
-    PluginParameterInfosMessage(const std::string& pluginName, const std::vector<PluginParameterInfo>& parameterInfos)
+    PluginParameterInfosMessage(const std::string& pluginName, bool pluginEnabled, bool pluginPost, const std::vector<PluginParameterInfo>& parameterInfos)
     {
         m_type = SerializableMessageType::PluginParameterInfos;
         m_parameterInfos = parameterInfos;
         m_pluginName = pluginName;
+        m_pluginEnabled = pluginEnabled;
+        m_pluginPost = pluginPost;
     }
 
     PluginParameterInfosMessage(const juce::MemoryBlock& blob)
@@ -857,6 +868,12 @@ public:
         readPos += sizeof(std::uint16_t);
         m_pluginName = juce::String(juce::CharPointer_UTF8(static_cast<const char*>(blob.begin()) + readPos), pluginNameLength);
         readPos += pluginNameLength;
+
+        // Read enabled and post state
+        blob.copyTo(&m_pluginEnabled, readPos, sizeof(bool));
+        readPos += sizeof(bool);
+        blob.copyTo(&m_pluginPost, readPos, sizeof(bool));
+        readPos += sizeof(bool);
 
         std::uint16_t paramCount;
         blob.copyTo(&paramCount, readPos, sizeof(std::uint16_t));
@@ -955,6 +972,10 @@ public:
     const juce::String& getPluginName() const { return m_pluginName; }
     /** @brief Returns the ordered list of parameter descriptors for the loaded plugin. */
     const std::vector<PluginParameterInfo>& getParameterInfos() const { return m_parameterInfos; }
+    /** @brief Returns whether plugin processing is currently enabled. */
+    bool isPluginEnabled() const { return m_pluginEnabled; }
+    /** @brief Returns whether the plugin is inserted post-matrix (true) or pre-matrix (false). */
+    bool isPluginPost() const { return m_pluginPost; }
 
 protected:
     juce::MemoryBlock createSerializedContent(size_t& contentSize) const override
@@ -966,6 +987,10 @@ protected:
         std::uint16_t pluginNameLength = std::uint16_t(strlen(pluginNameUtf8));
         blob.append(&pluginNameLength, sizeof(std::uint16_t));
         blob.append(pluginNameUtf8, pluginNameLength);
+
+        // Write enabled and post state
+        blob.append(&m_pluginEnabled, sizeof(bool));
+        blob.append(&m_pluginPost, sizeof(bool));
 
         auto paramCount = std::uint16_t(m_parameterInfos.size());
         blob.append(&paramCount, sizeof(std::uint16_t));
@@ -1037,6 +1062,8 @@ protected:
 private:
     std::vector<PluginParameterInfo>    m_parameterInfos; ///< Ordered parameter descriptors matching the plugin's parameter list.
     juce::String                        m_pluginName; ///< Display name of the loaded plugin (empty if no plugin is loaded).
+    bool                                m_pluginEnabled = false; ///< Whether plugin processing is currently enabled.
+    bool                                m_pluginPost = false; ///< Whether the plugin is inserted post-matrix (true) or pre-matrix (false).
 };
 
 /**
@@ -1124,6 +1151,64 @@ private:
     std::uint16_t m_parameterIndex = 0; ///< Zero-based index into the plugin's parameter list.
     juce::String m_parameterId; ///< Stable string ID for cross-session safety.
     float m_currentValue = 0.0f; ///< Normalised value in [0, 1].
+};
+
+
+/**
+ * @class PluginProcessingStateMessage
+ * @brief Carries the plugin enabled and pre/post insertion state between Mema and Mema.Re.
+ *
+ * @details Sent by `MemaProcessor` to all connected Mema.Re clients whenever the plugin enabled
+ * or pre/post state changes.  Also sent from `PluginControlComponent` (Mema.Re side) back to
+ * Mema when the user clicks the enabled or pre/post buttons.
+ *
+ * **Wire payload:** enabled (bool) + post (bool).
+ */
+class PluginProcessingStateMessage : public SerializableMessage
+{
+public:
+    PluginProcessingStateMessage() = default;
+    PluginProcessingStateMessage(bool enabled, bool post)
+    {
+        m_type = SerializableMessageType::PluginProcessingState;
+        m_enabled = enabled;
+        m_post = post;
+    }
+
+    PluginProcessingStateMessage(const juce::MemoryBlock& blob)
+    {
+        jassert(SerializableMessageType::PluginProcessingState == static_cast<SerializableMessageType>(blob[0]));
+
+        m_type = SerializableMessageType::PluginProcessingState;
+
+        auto readPos = int(sizeof(SerializableMessageType));
+
+        blob.copyTo(&m_enabled, readPos, sizeof(bool));
+        readPos += sizeof(bool);
+        blob.copyTo(&m_post, readPos, sizeof(bool));
+        readPos += sizeof(bool);
+    }
+
+    ~PluginProcessingStateMessage() = default;
+
+    /** @brief Returns whether plugin processing is enabled. */
+    bool isEnabled() const { return m_enabled; }
+    /** @brief Returns whether the plugin is inserted post-matrix (true) or pre-matrix (false). */
+    bool isPost() const { return m_post; }
+
+protected:
+    juce::MemoryBlock createSerializedContent(size_t& contentSize) const override
+    {
+        juce::MemoryBlock blob;
+        blob.append(&m_enabled, sizeof(bool));
+        blob.append(&m_post, sizeof(bool));
+        contentSize = blob.getSize();
+        return blob;
+    }
+
+private:
+    bool m_enabled = false; ///< Whether plugin processing is enabled.
+    bool m_post = false; ///< Whether the plugin is inserted post-matrix.
 };
 
 

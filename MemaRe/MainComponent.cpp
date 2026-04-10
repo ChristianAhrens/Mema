@@ -51,11 +51,12 @@ MainComponent::MainComponent()
         DBG(__FUNCTION__);
 
         std::vector<Mema::SerializableMessage::SerializableMessageType> desiredTrafficTypes = {
-            Mema::SerializableMessage::EnvironmentParameters, 
-            Mema::SerializableMessage::ReinitIOCount, 
+            Mema::SerializableMessage::EnvironmentParameters,
+            Mema::SerializableMessage::ReinitIOCount,
             Mema::SerializableMessage::ControlParameters,
             Mema::SerializableMessage::PluginParameterInfos,
-            Mema::SerializableMessage::PluginParameterValue };
+            Mema::SerializableMessage::PluginParameterValue,
+            Mema::SerializableMessage::PluginProcessingState };
         m_networkConnection->sendMessage(std::make_unique<Mema::DataTrafficTypeSelectionMessage>(desiredTrafficTypes)->getSerializedMessage());
 
         setStatus(Status::Monitoring);
