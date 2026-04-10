@@ -298,7 +298,7 @@ std::unique_ptr<juce::XmlElement> MemaProcessor::createStateXml()
 		m_pluginInstance->getStateInformation(destData);
 		plgConfElm->addTextElement(juce::Base64::toBase64(destData.getData(), destData.getSize()));
 	}
-	for (auto const plgParam : getPluginParameterInfos())
+	for (auto const& plgParam : getPluginParameterInfos())
 	{
 		auto plgParamElm = std::make_unique<juce::XmlElement>(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::PLUGINPARAM));
 		plgParamElm->setAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::IDX), plgParam.index);
@@ -968,13 +968,50 @@ void MemaProcessor::configurePluginForCurrentPosition()
     if (!m_pluginInstance)
         return;
 
-    // Pre-matrix: the plugin receives the raw device input, so it must handle
-    // inputChannelCount channels on both sides — the routing matrix widens/narrows
-    // to outputChannelCount afterwards.
-    // Post-matrix: the plugin sits after the routing matrix, so it must handle
-    // outputChannelCount channels on both sides.
-    auto channelCount = m_pluginPost ? m_outputChannelCount : m_inputChannelCount;
-    m_pluginInstance->setPlayConfigDetails(channelCount, channelCount, getSampleRate(), getBlockSize());
+    // AU plugins assert inside canApplyBusesLayout if setBusesLayout is called
+    // while the plugin is in the prepared state. Release first so negotiation
+    // always starts from a clean slate; prepareToPlay() re-prepares at the end.
+    m_pluginInstance->releaseResources();
+
+    // Pre-matrix: device input count is the upper bound for plugin I/O.
+    // Post-matrix: device output count is the upper bound for plugin I/O.
+    auto channelLimit = m_pluginPost ? m_outputChannelCount : m_inputChannelCount;
+
+    // Walk from the widest possible count down to mono. At each count, all
+    // named sets (speaker-labelled, including Atmos, ambisonics, etc.) are
+    // offered first via channelSetsWithNumberOfChannels(), which covers every
+    // format JUCE knows about for that count without requiring a hand-written
+    // list. A generic discrete fallback is tried last for counts that have no
+    // named set or whose named sets were all rejected.
+    // This works correctly for any device channel count — 12, 32, 128, or more.
+    auto tryLayout = [&](const juce::AudioChannelSet& candidate) -> bool
+    {
+        juce::AudioProcessor::BusesLayout layout;
+        layout.inputBuses.add(candidate);
+        layout.outputBuses.add(candidate);
+
+        if (m_pluginInstance->setBusesLayout(layout))
+        {
+            m_pluginConfiguredChannelCount = candidate.size();
+            m_pluginInstance->prepareToPlay(getSampleRate(), getBlockSize());
+            return true;
+        }
+        return false;
+    };
+
+    for (int count = channelLimit; count >= 1; --count)
+    {
+        for (auto const& named : juce::AudioChannelSet::channelSetsWithNumberOfChannels(count))
+            if (tryLayout(named))
+                return;
+
+        if (tryLayout(juce::AudioChannelSet::discreteChannels(count)))
+            return;
+    }
+
+    // Absolute fallback: no layout was accepted at all — use the legacy API.
+    m_pluginInstance->setPlayConfigDetails(channelLimit, channelLimit, getSampleRate(), getBlockSize());
+    m_pluginConfiguredChannelCount = channelLimit;
     m_pluginInstance->prepareToPlay(getSampleRate(), getBlockSize());
 }
 
@@ -1200,7 +1237,7 @@ void MemaProcessor::setPluginParameterValue(std::uint16_t parameterIndex, std::s
 
 	for (auto const& pluginCommander : m_pluginCommanders)
 	{
-		if (pluginCommander != reinterpret_cast<MemaPluginCommander*>(sender) || nullptr != reinterpret_cast<MemaNetworkClientCommanderWrapper*>(sender))
+		if (pluginCommander != reinterpret_cast<MemaPluginCommander*>(sender) || nullptr != static_cast<MemaNetworkClientCommanderWrapper*>(sender))
 			pluginCommander->setPluginParameterValue(parameterIndex, id, normalizedValue, userId);
 	}
 
@@ -1331,10 +1368,10 @@ void MemaProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMes
 		const ScopedLock sl(m_pluginProcessingLock);
 		if (m_pluginInstance && m_pluginEnabled && !m_pluginPost)
 		{
-			// The incoming buffer has max(numIn, numOut) channels, but the plugin was prepared
-			// for m_inputChannelCount channels. Pass a sub-buffer view over the first
-			// m_inputChannelCount channels only to satisfy the AU preparedChannels assertion.
-			juce::AudioBuffer<float> pluginBuffer(buffer.getArrayOfWritePointers(), m_inputChannelCount, buffer.getNumSamples());
+			// Pass a sub-buffer view sized to the negotiated plugin channel count.
+			// This may be narrower than m_inputChannelCount when the plugin only
+			// accepted a layout smaller than the device input count.
+			juce::AudioBuffer<float> pluginBuffer(buffer.getArrayOfWritePointers(), m_pluginConfiguredChannelCount, buffer.getNumSamples());
 			m_pluginInstance->processBlock(pluginBuffer, midiMessages);
 		}
 	}
@@ -1368,9 +1405,10 @@ void MemaProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMes
 		const ScopedLock sl(m_pluginProcessingLock);
 		if (m_pluginInstance && m_pluginEnabled && m_pluginPost)
 		{
-			// After makeCopyOf, buffer has m_outputChannelCount channels, matching what the
-			// plugin was prepared for. Use a sub-buffer view for consistency and safety.
-			juce::AudioBuffer<float> pluginBuffer(buffer.getArrayOfWritePointers(), m_outputChannelCount, buffer.getNumSamples());
+			// Pass a sub-buffer view sized to the negotiated plugin channel count.
+			// This may be narrower than m_outputChannelCount when the plugin only
+			// accepted a layout smaller than the device output count.
+			juce::AudioBuffer<float> pluginBuffer(buffer.getArrayOfWritePointers(), m_pluginConfiguredChannelCount, buffer.getNumSamples());
 			m_pluginInstance->processBlock(pluginBuffer, midiMessages);
 		}
 	}

@@ -587,6 +587,7 @@ private:
     std::unique_ptr<juce::AudioPluginInstance>                      m_pluginInstance; ///< The hosted AudioPluginInstance (null if no plugin is loaded).
     bool                                                            m_pluginEnabled = false; ///< Whether plugin processing is active (false = bypass).
     bool                                                            m_pluginPost = false; ///< True = plugin inserted post-matrix; false = pre-matrix.
+    int                                                             m_pluginConfiguredChannelCount{ 0 }; ///< Actual channel count the plugin was prepared with after bus layout negotiation.
     std::unique_ptr<ResizeableWindowWithTitleBarAndCloseCallback>   m_pluginEditorWindow; ///< Floating window hosting the plugin's editor UI.
     std::vector<PluginParameterInfo>                                m_pluginParameterInfos; ///< Cached parameter descriptor list for the loaded plugin.
 
