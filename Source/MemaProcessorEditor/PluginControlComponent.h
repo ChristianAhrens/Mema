@@ -312,6 +312,7 @@ private:
     std::map<int, std::unique_ptr<juce::ComboBox>>                      m_messageBoxParameterCtrlTypess;
     std::map<int, std::unique_ptr<JUCEAppBasics::FixedFontTextEditor>>  m_messageBoxParameterCtrlStepsEdit;
     std::unique_ptr<juce::Component>                                    m_messageBoxParameterTogglesContainer;
+    std::unique_ptr<juce::Viewport>                                     m_messageBoxParameterTogglesViewport;
     juce::FlexBox                                                       m_messageBoxParameterTogglesFlexBox;
     std::unique_ptr<juce::AlertWindow>                                  m_messageBox;
 

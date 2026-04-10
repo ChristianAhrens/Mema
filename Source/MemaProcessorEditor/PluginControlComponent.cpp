@@ -264,8 +264,16 @@ void PluginControlComponent::showParameterConfig()
 
 		grid.performLayout(m_messageBoxParameterTogglesContainer->getLocalBounds());
 
-		// Add the container to the alert window
-		m_messageBox->addCustomComponent(m_messageBoxParameterTogglesContainer.get());
+		// Wrap container in a scrollable viewport capped to avoid overflowing the screen
+		const int maxViewportHeight = 400;
+		const int viewportHeight = juce::jmin(totalHeight, maxViewportHeight);
+
+		m_messageBoxParameterTogglesViewport = std::make_unique<juce::Viewport>();
+		m_messageBoxParameterTogglesViewport->setViewedComponent(m_messageBoxParameterTogglesContainer.get(), false);
+		m_messageBoxParameterTogglesViewport->setScrollBarsShown(totalHeight > maxViewportHeight, false);
+		m_messageBoxParameterTogglesViewport->setSize(totalWidth + (totalHeight > maxViewportHeight ? m_messageBoxParameterTogglesViewport->getScrollBarThickness() : 0), viewportHeight);
+
+		m_messageBox->addCustomComponent(m_messageBoxParameterTogglesViewport.get());
 
 		m_messageBox->addButton("Cancel", 0, juce::KeyPress(juce::KeyPress::escapeKey));
 		m_messageBox->addButton("Ok", 1, juce::KeyPress(juce::KeyPress::returnKey));
@@ -321,6 +329,7 @@ void PluginControlComponent::showParameterConfig()
 			m_messageBoxParameterToggles.clear();
 			m_messageBoxParameterCtrlTypess.clear();
 			m_messageBoxParameterCtrlStepsEdit.clear();
+			m_messageBoxParameterTogglesViewport.reset();
 			m_messageBoxParameterTogglesContainer.reset();
 			m_messageBox.reset();
 			}));
