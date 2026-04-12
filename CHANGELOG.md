@@ -11,6 +11,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+## [0.10.4] 2026-04-12
+### Added
+- Added Mema plug-in post+enable state remote control possibility and added support for this to Mema.Re
+- Added Mema plug-in parameter control user sorting and added support for parameter order to Mema.Re
+
+### Changed
+
+### Fixed
+- Fixed Mema plug-in parameter popup displaying of long list of items by adding scrollable viewport
+- Fixed Mema plug-in hosting to support all possible channelset formats with given device channel count (pre/post dependant)
+
 ## [0.10.3] 2026-03-29
 ### Added
 
