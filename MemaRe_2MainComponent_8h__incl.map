@@ -1,0 +1,15 @@
+<map id="MemaRe/MainComponent.h" name="MemaRe/MainComponent.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="169,5,372,31"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="93,167,200,192"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="170,32,76,51,38,64,15,80,8,98,16,117,28,133,44,145,82,162,79,167,42,149,25,136,11,120,3,98,11,77,36,59,74,46,169,27"/>
+<area shape="rect" id="Node000003" href="$MemaReAppConfiguration_8h.html" title=" " alt="" coords="293,86,497,111"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="290,29,366,76,363,81,287,33"/>
+<area shape="rect" id="Node000005" href="$MemaClientControlComponentBase_8h.html" title=" " alt="" coords="25,79,268,119"/>
+<area shape="poly" id="edge5_Node000001_Node000005" title=" " alt="" coords="254,33,190,73,187,69,251,29"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="521,86,717,111"/>
+<area shape="poly" id="edge7_Node000001_Node000006" title=" " alt="" coords="322,28,555,80,554,86,321,33"/>
+<area shape="poly" id="edge3_Node000003_Node000002" title=" " alt="" coords="359,114,196,165,195,160,358,109"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="305,167,484,192"/>
+<area shape="poly" id="edge4_Node000003_Node000004" title=" " alt="" coords="397,112,397,153,392,153,392,112"/>
+<area shape="poly" id="edge6_Node000005_Node000002" title=" " alt="" coords="149,119,149,153,144,153,144,119"/>
+</map>
