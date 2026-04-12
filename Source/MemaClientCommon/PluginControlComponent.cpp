@@ -378,75 +378,71 @@ void PluginControlComponent::rebuildLayout()
 
     int currentItem = 0;
 
-    // Add buttons
-    for (auto const& buttonKV : m_parameterValueButtons)
+    // Iterate in display order (m_pluginParameterInfos arrives ordered from the server)
+    for (auto const& parameterInfo : m_pluginParameterInfos)
     {
-        auto* button = buttonKV.second.get();
-        int row = (currentItem / itemsPerRow) * 2;
-        int col = currentItem % itemsPerRow;
-        auto buttonSize = float(gridItemControlSize - (controlMargin * 2));
-
-        m_parameterControlsGrid->items.add(juce::GridItem(*button)
-            .withArea(row + 2, col + 1)
-            .withMargin(juce::GridItem::Margin(controlMargin))
-            .withWidth(buttonSize)
-            .withHeight(buttonSize)
-            .withJustifySelf(juce::GridItem::JustifySelf::center)
-            .withAlignSelf(juce::GridItem::AlignSelf::center));
-
-        currentItem++;
-    }
-
-    // Add combo boxes
-    for (auto const& comboKV : m_parameterValueComboBoxes)
-    {
-        auto paramIndex = comboKV.first;
-        auto* combo = comboKV.second.get();
-        auto labelIter = m_parameterNameLabels.find(paramIndex);
-        if (labelIter == m_parameterNameLabels.end() || !labelIter->second)
+        if (!parameterInfo.isRemoteControllable)
             continue;
-        auto* label = labelIter->second.get();
 
         int row = (currentItem / itemsPerRow) * 2;
         int col = currentItem % itemsPerRow;
 
-        m_parameterControlsGrid->items.add(juce::GridItem(*label)
-            .withArea(row + 1, col + 1)
-            .withMargin(juce::GridItem::Margin(2.0f)));
-        m_parameterControlsGrid->items.add(juce::GridItem(*combo)
-            .withArea(row + 2, col + 1)
-            .withMargin(juce::GridItem::Margin(controlMargin))
-            .withHeight(30)
-            .withJustifySelf(juce::GridItem::JustifySelf::center)
-            .withAlignSelf(juce::GridItem::AlignSelf::center));
+        if (parameterInfo.type == ParameterControlType::Toggle)
+        {
+            auto buttonIter = m_parameterValueButtons.find(parameterInfo.index);
+            if (buttonIter == m_parameterValueButtons.end() || !buttonIter->second)
+                continue;
+            auto* button = buttonIter->second.get();
+            auto buttonSize = float(gridItemControlSize - (controlMargin * 2));
 
-        currentItem++;
-    }
+            m_parameterControlsGrid->items.add(juce::GridItem(*button)
+                .withArea(row + 2, col + 1)
+                .withMargin(juce::GridItem::Margin(controlMargin))
+                .withWidth(buttonSize)
+                .withHeight(buttonSize)
+                .withJustifySelf(juce::GridItem::JustifySelf::center)
+                .withAlignSelf(juce::GridItem::AlignSelf::center));
+        }
+        else if (parameterInfo.type == ParameterControlType::Discrete)
+        {
+            auto comboIter = m_parameterValueComboBoxes.find(parameterInfo.index);
+            auto labelIter = m_parameterNameLabels.find(parameterInfo.index);
+            if (comboIter == m_parameterValueComboBoxes.end() || !comboIter->second)
+                continue;
+            if (labelIter == m_parameterNameLabels.end() || !labelIter->second)
+                continue;
 
-    // Add sliders
-    for (auto const& sliderKV : m_parameterValueSliders)
-    {
-        auto paramIndex = sliderKV.first;
-        auto* slider = sliderKV.second.get();
-        auto labelIter = m_parameterNameLabels.find(paramIndex);
-        if (labelIter == m_parameterNameLabels.end() || !labelIter->second)
-            continue;
-        auto* label = labelIter->second.get();
+            m_parameterControlsGrid->items.add(juce::GridItem(*labelIter->second)
+                .withArea(row + 1, col + 1)
+                .withMargin(juce::GridItem::Margin(2.0f)));
+            m_parameterControlsGrid->items.add(juce::GridItem(*comboIter->second)
+                .withArea(row + 2, col + 1)
+                .withMargin(juce::GridItem::Margin(controlMargin))
+                .withHeight(30)
+                .withJustifySelf(juce::GridItem::JustifySelf::center)
+                .withAlignSelf(juce::GridItem::AlignSelf::center));
+        }
+        else if (parameterInfo.type == ParameterControlType::Continuous)
+        {
+            auto sliderIter = m_parameterValueSliders.find(parameterInfo.index);
+            auto labelIter  = m_parameterNameLabels.find(parameterInfo.index);
+            if (sliderIter == m_parameterValueSliders.end() || !sliderIter->second)
+                continue;
+            if (labelIter == m_parameterNameLabels.end() || !labelIter->second)
+                continue;
+            auto sliderSize = float(gridItemControlSize - (controlMargin * 2));
 
-        int row = (currentItem / itemsPerRow) * 2;
-        int col = currentItem % itemsPerRow;
-        auto sliderSize = float(gridItemControlSize - (controlMargin * 2));
-
-        m_parameterControlsGrid->items.add(juce::GridItem(*label)
-            .withArea(row + 1, col + 1)
-            .withMargin(juce::GridItem::Margin(2.0f)));
-        m_parameterControlsGrid->items.add(juce::GridItem(*slider)
-            .withArea(row + 2, col + 1)
-            .withMargin(juce::GridItem::Margin(controlMargin))
-            .withWidth(sliderSize)
-            .withHeight(sliderSize)
-            .withJustifySelf(juce::GridItem::JustifySelf::center)
-            .withAlignSelf(juce::GridItem::AlignSelf::center));
+            m_parameterControlsGrid->items.add(juce::GridItem(*labelIter->second)
+                .withArea(row + 1, col + 1)
+                .withMargin(juce::GridItem::Margin(2.0f)));
+            m_parameterControlsGrid->items.add(juce::GridItem(*sliderIter->second)
+                .withArea(row + 2, col + 1)
+                .withMargin(juce::GridItem::Margin(controlMargin))
+                .withWidth(sliderSize)
+                .withHeight(sliderSize)
+                .withJustifySelf(juce::GridItem::JustifySelf::center)
+                .withAlignSelf(juce::GridItem::AlignSelf::center));
+        }
 
         currentItem++;
     }

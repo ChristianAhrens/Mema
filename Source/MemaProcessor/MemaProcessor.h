@@ -361,6 +361,14 @@ public:
      * @param steps                Number of discrete steps for `Discrete` type parameters.
      */
     void setPluginParameterRemoteControlInfos(int pluginParameterIndex, bool remoteControllable, ParameterControlType type, int steps);
+    /**
+     * @brief Sets the display order in which plugin parameters are presented to Mema.Re clients.
+     * @param order Vector of zero-based parameter indices in the desired display order.
+     *              Must be a permutation of all parameter indices.  Persisted to XML config.
+     */
+    void setPluginParameterDisplayOrder(const std::vector<int>& order);
+    /** @brief Returns the current display order vector, or an empty vector if none has been set. */
+    const std::vector<int>& getPluginParameterDisplayOrder() const;
     /** @brief Returns `true` if the given parameter is flagged as remotely controllable. @param parameterIndex Zero-based parameter index. */
     bool isPluginParameterRemoteControllable(int parameterIndex);
     /** @brief Returns a pointer to the underlying JUCE `AudioProcessorParameter` at the given index. @param parameterIndex Zero-based index. @return `nullptr` if no plugin is loaded or the index is out of range. */
@@ -591,6 +599,7 @@ private:
     int                                                             m_pluginConfiguredChannelCount{ 0 }; ///< Actual channel count the plugin was prepared with after bus layout negotiation.
     std::unique_ptr<ResizeableWindowWithTitleBarAndCloseCallback>   m_pluginEditorWindow; ///< Floating window hosting the plugin's editor UI.
     std::vector<PluginParameterInfo>                                m_pluginParameterInfos; ///< Cached parameter descriptor list for the loaded plugin.
+    std::vector<int>                                                m_pluginParameterDisplayOrder; ///< User-defined display order: each element is a parameter index. Empty = natural order.
 
     //==============================================================================
     std::unique_ptr<JUCEAppBasics::ServiceTopologyManager>  m_serviceTopologyManager; ///< Manages multicast service announcements so Mema.Mo/Re can discover this instance.

@@ -232,7 +232,19 @@ MemaProcessor::MemaProcessor(XmlElement* stateXml) :
 					success = success && m_networkServer->enqueueMessage(std::make_unique<ReinitIOCountMessage>(m_inputChannelCount, m_outputChannelCount)->getSerializedMessage(), sendIds);
 					success = success && m_networkServer->enqueueMessage(std::make_unique<EnvironmentParametersMessage>(paletteStyle)->getSerializedMessage(), sendIds);
 					success = success && m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, matrixCrosspointStates, matrixCrosspointValues)->getSerializedMessage(), sendIds);
-					success = success && m_networkServer->enqueueMessage(std::make_unique<PluginParameterInfosMessage>(m_pluginInstance ? m_pluginInstance->getName().toStdString() : "", m_pluginEnabled, m_pluginPost, m_pluginParameterInfos)->getSerializedMessage(), sendIds);
+					{
+						auto orderedParams = m_pluginParameterInfos;
+						if (!m_pluginParameterDisplayOrder.empty() && m_pluginParameterDisplayOrder.size() == m_pluginParameterInfos.size())
+						{
+							orderedParams.clear();
+							for (int idx : m_pluginParameterDisplayOrder)
+								if (idx >= 0 && idx < static_cast<int>(m_pluginParameterInfos.size()))
+									orderedParams.push_back(m_pluginParameterInfos[idx]);
+							if (orderedParams.size() != m_pluginParameterInfos.size())
+								orderedParams = m_pluginParameterInfos;
+						}
+						success = success && m_networkServer->enqueueMessage(std::make_unique<PluginParameterInfosMessage>(m_pluginInstance ? m_pluginInstance->getName().toStdString() : "", m_pluginEnabled, m_pluginPost, orderedParams)->getSerializedMessage(), sendIds);
+					}
 					if (!success)
 						m_networkServer->cleanupDeadConnections();
 				}
@@ -315,6 +327,13 @@ std::unique_ptr<juce::XmlElement> MemaProcessor::createStateXml()
 		plgParamElm->setAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::CONTROLLABLE), isPluginParameterRemoteControllable(plgParam.index));
 		plgParamElm->addTextElement(plgParam.toString());
 		plgConfElm->addChildElement(plgParamElm.release());
+	}
+	if (!m_pluginParameterDisplayOrder.empty())
+	{
+		juce::StringArray orderStrs;
+		for (int idx : m_pluginParameterDisplayOrder)
+			orderStrs.add(juce::String(idx));
+		plgConfElm->setAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::PARAMORDER), orderStrs.joinIntoString(","));
 	}
 	stateXml->addChildElement(plgConfElm.release());
 
@@ -416,6 +435,16 @@ bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
 				juce::Base64::convertFromBase64(destDataStream, pluginDescriptionXml->getAllSubText());
 				m_pluginInstance->setStateInformation(destDataStream.getData(), int(destDataStream.getDataSize()));
 			}
+		}
+
+		auto orderAttr = plgConfElm->getStringAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::PARAMORDER));
+		if (orderAttr.isNotEmpty())
+		{
+			m_pluginParameterDisplayOrder.clear();
+			juce::StringArray orderStrs;
+			orderStrs.addTokens(orderAttr, ",", "");
+			for (auto const& s : orderStrs)
+				m_pluginParameterDisplayOrder.push_back(s.getIntValue());
 		}
 
 		for (auto* plgParamElm : plgConfElm->getChildWithTagNameIterator(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::PLUGINPARAM)))
@@ -1052,6 +1081,7 @@ bool MemaProcessor::setPlugin(const juce::PluginDescription& pluginDescription)
 				}
 
 				m_pluginParameterInfos.clear();
+				m_pluginParameterDisplayOrder.clear();
 
 				m_pluginInstance = format->createInstanceFromDescription(pluginDescription, getSampleRate(), getBlockSize(), errorMessage);
 				if (m_pluginInstance)
@@ -1150,6 +1180,7 @@ void MemaProcessor::clearPlugin()
 		const ScopedLock sl(m_pluginProcessingLock);
 		m_pluginInstance.reset();
 		m_pluginParameterInfos.clear();
+		m_pluginParameterDisplayOrder.clear();
 	}
 
 	postMessage(std::make_unique<PluginParameterInfosChangedMessage>().release());
@@ -1215,6 +1246,18 @@ void MemaProcessor::setPluginParameterRemoteControlInfos(int parameterIndex, boo
 		triggerConfigurationUpdate(false);
 		postMessage(std::make_unique<PluginParameterInfosChangedMessage>().release());
 	}
+}
+
+void MemaProcessor::setPluginParameterDisplayOrder(const std::vector<int>& order)
+{
+	m_pluginParameterDisplayOrder = order;
+	triggerConfigurationUpdate(false);
+	postMessage(std::make_unique<PluginParameterInfosChangedMessage>().release());
+}
+
+const std::vector<int>& MemaProcessor::getPluginParameterDisplayOrder() const
+{
+	return m_pluginParameterDisplayOrder;
 }
 
 bool MemaProcessor::isPluginParameterRemoteControllable(int parameterIndex)
@@ -1584,9 +1627,21 @@ void MemaProcessor::handleMessage(const Message& message)
 	// exception - totally different message type, to decouple callback from processing asynchronously...
 	else if (auto const ppicm = dynamic_cast<const PluginParameterInfosChangedMessage*>(&message))
 	{
+		// Build a copy of the parameter list in user-defined display order (falls back to natural order)
+		auto orderedParams = m_pluginParameterInfos;
+		if (!m_pluginParameterDisplayOrder.empty() && m_pluginParameterDisplayOrder.size() == m_pluginParameterInfos.size())
+		{
+			orderedParams.clear();
+			for (int idx : m_pluginParameterDisplayOrder)
+				if (idx >= 0 && idx < static_cast<int>(m_pluginParameterInfos.size()))
+					orderedParams.push_back(m_pluginParameterInfos[idx]);
+			if (orderedParams.size() != m_pluginParameterInfos.size())
+				orderedParams = m_pluginParameterInfos; // safety fallback
+		}
+
 		// Broadcast updated parameter infos to all connected network clients
 		for (auto& pluginCommander : m_pluginCommanders)
-			pluginCommander->setPluginParameterInfos(m_pluginParameterInfos,
+			pluginCommander->setPluginParameterInfos(orderedParams,
 				m_pluginInstance ? m_pluginInstance->getName().toStdString() : "",
 				m_pluginEnabled, m_pluginPost);
 

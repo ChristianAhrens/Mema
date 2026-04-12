@@ -262,6 +262,67 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginListAndSelectComponent)
 };
 
+/** @class ParameterRowComponent @brief One row in the parameter-config popup: grip handle, remote-control toggle, type combo, and step-count editor for a single plugin parameter. */
+class ParameterRowComponent : public juce::Component,
+                               public juce::DragAndDropTarget
+{
+public:
+    static constexpr int gripWidth = 20;
+
+    ParameterRowComponent(int paramIdx, const Mema::PluginParameterInfo& info);
+    ~ParameterRowComponent() override = default;
+
+    void resized() override;
+    void paint(juce::Graphics& g) override;
+    void mouseDown(const juce::MouseEvent& e) override;
+    void mouseDrag(const juce::MouseEvent& e) override;
+    void mouseUp(const juce::MouseEvent& e) override;
+
+    // DragAndDropTarget — each row is both a potential drop destination and drag source
+    bool isInterestedInDragSource(const SourceDetails& details) override;
+    void itemDragEnter(const SourceDetails& details) override;
+    void itemDragMove(const SourceDetails& details) override;
+    void itemDragExit(const SourceDetails& details) override;
+    void itemDropped(const SourceDetails& details) override;
+
+    // Widgets – read by PluginControlComponent on dialog OK
+    std::unique_ptr<juce::ToggleButton>                 toggleButton;
+    std::unique_ptr<juce::ComboBox>                     typeCombo;
+    std::unique_ptr<JUCEAppBasics::FixedFontTextEditor> stepsEdit;
+
+    int paramIndex = 0;
+
+    /** Called by ParameterListComponent; fires when the user drops another row onto this one. */
+    std::function<void(int fromParamIndex, int toParamIndex, bool insertBefore)> onRowDropped;
+
+private:
+    bool m_mouseDownInGrip = false;
+    bool m_showInsertionLine = false;
+    bool m_insertionLineAtTop = true;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ParameterRowComponent)
+};
+
+/** @class ParameterListComponent @brief Scrollable list of ParameterRowComponents that acts as the DragAndDropContainer for row reordering. */
+class ParameterListComponent : public juce::Component,
+                                public juce::DragAndDropContainer
+{
+public:
+    ParameterListComponent() = default;
+    ~ParameterListComponent() override = default;
+
+    void addRow(std::unique_ptr<ParameterRowComponent> row);
+    void layoutRows();
+    std::vector<int> getDisplayOrder() const;
+    ParameterRowComponent* getRowForParamIndex(int paramIdx);
+    void reorderRow(int fromParamIndex, int toParamIndex, bool insertBefore);
+
+private:
+    std::vector<std::unique_ptr<ParameterRowComponent>> m_rows;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ParameterListComponent)
+};
+
 /** @class PluginControlComponent @brief Editor-side plugin control — manages plugin loading, pre/post toggle, and exposes parameter controllability settings. */
 class PluginControlComponent :   public juce::Component
 {
@@ -275,6 +336,8 @@ public:
     void setSelectedPlugin(const juce::PluginDescription& pluginDescription);
     void setParameterInfos(const std::vector<PluginParameterInfo>& infos);
     const std::map<int, Mema::PluginParameterInfo>& getParameterInfos();
+    void setParameterDisplayOrder(const std::vector<int>& order);
+    const std::vector<int>& getParameterDisplayOrder();
     void showParameterConfig();
 
     //==============================================================================
@@ -307,14 +370,11 @@ private:
     juce::PluginDescription                         m_selectedPluginDescription;
     
     std::map<int, Mema::PluginParameterInfo>        m_parameterInfos;
+    std::vector<int>                                m_parameterDisplayOrder;
 
-    std::map<int, std::unique_ptr<juce::ToggleButton>>                  m_messageBoxParameterToggles;
-    std::map<int, std::unique_ptr<juce::ComboBox>>                      m_messageBoxParameterCtrlTypess;
-    std::map<int, std::unique_ptr<JUCEAppBasics::FixedFontTextEditor>>  m_messageBoxParameterCtrlStepsEdit;
-    std::unique_ptr<juce::Component>                                    m_messageBoxParameterTogglesContainer;
-    std::unique_ptr<juce::Viewport>                                     m_messageBoxParameterTogglesViewport;
-    juce::FlexBox                                                       m_messageBoxParameterTogglesFlexBox;
-    std::unique_ptr<juce::AlertWindow>                                  m_messageBox;
+    std::unique_ptr<ParameterListComponent>         m_messageBoxParameterListComponent;
+    std::unique_ptr<juce::Viewport>                 m_messageBoxParameterTogglesViewport;
+    std::unique_ptr<juce::AlertWindow>              m_messageBox;
 
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (PluginControlComponent)
