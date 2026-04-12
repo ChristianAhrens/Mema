@@ -101,13 +101,23 @@ public:
 		}
 	};
 
-	void setPluginParameterInfos(const std::vector<PluginParameterInfo>& parameterInfos, const std::string& name, int userId = -1) override
+	void setPluginParameterInfos(const std::vector<PluginParameterInfo>& parameterInfos, const std::string& name, bool enabled, bool post, int userId = -1) override
 	{
 		if (m_networkServer && m_networkServer->hasActiveConnections())
 		{
 			auto sendIds = m_networkServer->getActiveConnectionIds();
 			sendIds.erase(std::remove(sendIds.begin(), sendIds.end(), userId), sendIds.end());
-			m_networkServer->enqueueMessage(std::make_unique<PluginParameterInfosMessage>(name, parameterInfos)->getSerializedMessage(), sendIds);
+			m_networkServer->enqueueMessage(std::make_unique<PluginParameterInfosMessage>(name, enabled, post, parameterInfos)->getSerializedMessage(), sendIds);
+		}
+	}
+
+	void setPluginProcessingState(bool enabled, bool post, int userId = -1) override
+	{
+		if (m_networkServer && m_networkServer->hasActiveConnections())
+		{
+			auto sendIds = m_networkServer->getActiveConnectionIds();
+			sendIds.erase(std::remove(sendIds.begin(), sendIds.end(), userId), sendIds.end());
+			m_networkServer->enqueueMessage(std::make_unique<PluginProcessingStateMessage>(enabled, post)->getSerializedMessage(), sendIds);
 		}
 	}
 
@@ -222,7 +232,19 @@ MemaProcessor::MemaProcessor(XmlElement* stateXml) :
 					success = success && m_networkServer->enqueueMessage(std::make_unique<ReinitIOCountMessage>(m_inputChannelCount, m_outputChannelCount)->getSerializedMessage(), sendIds);
 					success = success && m_networkServer->enqueueMessage(std::make_unique<EnvironmentParametersMessage>(paletteStyle)->getSerializedMessage(), sendIds);
 					success = success && m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, matrixCrosspointStates, matrixCrosspointValues)->getSerializedMessage(), sendIds);
-					success = success && m_networkServer->enqueueMessage(std::make_unique<PluginParameterInfosMessage>(m_pluginInstance ? m_pluginInstance->getName().toStdString() : "", m_pluginParameterInfos)->getSerializedMessage(), sendIds);
+					{
+						auto orderedParams = m_pluginParameterInfos;
+						if (!m_pluginParameterDisplayOrder.empty() && m_pluginParameterDisplayOrder.size() == m_pluginParameterInfos.size())
+						{
+							orderedParams.clear();
+							for (int idx : m_pluginParameterDisplayOrder)
+								if (idx >= 0 && idx < static_cast<int>(m_pluginParameterInfos.size()))
+									orderedParams.push_back(m_pluginParameterInfos[idx]);
+							if (orderedParams.size() != m_pluginParameterInfos.size())
+								orderedParams = m_pluginParameterInfos;
+						}
+						success = success && m_networkServer->enqueueMessage(std::make_unique<PluginParameterInfosMessage>(m_pluginInstance ? m_pluginInstance->getName().toStdString() : "", m_pluginEnabled, m_pluginPost, orderedParams)->getSerializedMessage(), sendIds);
+					}
 					if (!success)
 						m_networkServer->cleanupDeadConnections();
 				}
@@ -298,13 +320,20 @@ std::unique_ptr<juce::XmlElement> MemaProcessor::createStateXml()
 		m_pluginInstance->getStateInformation(destData);
 		plgConfElm->addTextElement(juce::Base64::toBase64(destData.getData(), destData.getSize()));
 	}
-	for (auto const plgParam : getPluginParameterInfos())
+	for (auto const& plgParam : getPluginParameterInfos())
 	{
 		auto plgParamElm = std::make_unique<juce::XmlElement>(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::PLUGINPARAM));
 		plgParamElm->setAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::IDX), plgParam.index);
 		plgParamElm->setAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::CONTROLLABLE), isPluginParameterRemoteControllable(plgParam.index));
 		plgParamElm->addTextElement(plgParam.toString());
 		plgConfElm->addChildElement(plgParamElm.release());
+	}
+	if (!m_pluginParameterDisplayOrder.empty())
+	{
+		juce::StringArray orderStrs;
+		for (int idx : m_pluginParameterDisplayOrder)
+			orderStrs.add(juce::String(idx));
+		plgConfElm->setAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::PARAMORDER), orderStrs.joinIntoString(","));
 	}
 	stateXml->addChildElement(plgConfElm.release());
 
@@ -406,6 +435,16 @@ bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
 				juce::Base64::convertFromBase64(destDataStream, pluginDescriptionXml->getAllSubText());
 				m_pluginInstance->setStateInformation(destDataStream.getData(), int(destDataStream.getDataSize()));
 			}
+		}
+
+		auto orderAttr = plgConfElm->getStringAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::PARAMORDER));
+		if (orderAttr.isNotEmpty())
+		{
+			m_pluginParameterDisplayOrder.clear();
+			juce::StringArray orderStrs;
+			orderStrs.addTokens(orderAttr, ",", "");
+			for (auto const& s : orderStrs)
+				m_pluginParameterDisplayOrder.push_back(s.getIntValue());
 		}
 
 		for (auto* plgParamElm : plgConfElm->getChildWithTagNameIterator(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::PLUGINPARAM)))
@@ -968,13 +1007,50 @@ void MemaProcessor::configurePluginForCurrentPosition()
     if (!m_pluginInstance)
         return;
 
-    // Pre-matrix: the plugin receives the raw device input, so it must handle
-    // inputChannelCount channels on both sides — the routing matrix widens/narrows
-    // to outputChannelCount afterwards.
-    // Post-matrix: the plugin sits after the routing matrix, so it must handle
-    // outputChannelCount channels on both sides.
-    auto channelCount = m_pluginPost ? m_outputChannelCount : m_inputChannelCount;
-    m_pluginInstance->setPlayConfigDetails(channelCount, channelCount, getSampleRate(), getBlockSize());
+    // AU plugins assert inside canApplyBusesLayout if setBusesLayout is called
+    // while the plugin is in the prepared state. Release first so negotiation
+    // always starts from a clean slate; prepareToPlay() re-prepares at the end.
+    m_pluginInstance->releaseResources();
+
+    // Pre-matrix: device input count is the upper bound for plugin I/O.
+    // Post-matrix: device output count is the upper bound for plugin I/O.
+    auto channelLimit = m_pluginPost ? m_outputChannelCount : m_inputChannelCount;
+
+    // Walk from the widest possible count down to mono. At each count, all
+    // named sets (speaker-labelled, including Atmos, ambisonics, etc.) are
+    // offered first via channelSetsWithNumberOfChannels(), which covers every
+    // format JUCE knows about for that count without requiring a hand-written
+    // list. A generic discrete fallback is tried last for counts that have no
+    // named set or whose named sets were all rejected.
+    // This works correctly for any device channel count — 12, 32, 128, or more.
+    auto tryLayout = [&](const juce::AudioChannelSet& candidate) -> bool
+    {
+        juce::AudioProcessor::BusesLayout layout;
+        layout.inputBuses.add(candidate);
+        layout.outputBuses.add(candidate);
+
+        if (m_pluginInstance->setBusesLayout(layout))
+        {
+            m_pluginConfiguredChannelCount = candidate.size();
+            m_pluginInstance->prepareToPlay(getSampleRate(), getBlockSize());
+            return true;
+        }
+        return false;
+    };
+
+    for (int count = channelLimit; count >= 1; --count)
+    {
+        for (auto const& named : juce::AudioChannelSet::channelSetsWithNumberOfChannels(count))
+            if (tryLayout(named))
+                return;
+
+        if (tryLayout(juce::AudioChannelSet::discreteChannels(count)))
+            return;
+    }
+
+    // Absolute fallback: no layout was accepted at all — use the legacy API.
+    m_pluginInstance->setPlayConfigDetails(channelLimit, channelLimit, getSampleRate(), getBlockSize());
+    m_pluginConfiguredChannelCount = channelLimit;
     m_pluginInstance->prepareToPlay(getSampleRate(), getBlockSize());
 }
 
@@ -1005,6 +1081,7 @@ bool MemaProcessor::setPlugin(const juce::PluginDescription& pluginDescription)
 				}
 
 				m_pluginParameterInfos.clear();
+				m_pluginParameterDisplayOrder.clear();
 
 				m_pluginInstance = format->createInstanceFromDescription(pluginDescription, getSampleRate(), getBlockSize(), errorMessage);
 				if (m_pluginInstance)
@@ -1056,6 +1133,9 @@ void MemaProcessor::setPluginEnabledState(bool enabled)
 		m_pluginEnabled = enabled;
 	}
 
+	for (auto& pluginCommander : m_pluginCommanders)
+		pluginCommander->setPluginProcessingState(m_pluginEnabled, m_pluginPost);
+
 	triggerConfigurationUpdate(false);
 }
 
@@ -1080,6 +1160,9 @@ void MemaProcessor::setPluginPrePostState(bool post)
 		}
 	}
 
+	for (auto& pluginCommander : m_pluginCommanders)
+		pluginCommander->setPluginProcessingState(m_pluginEnabled, m_pluginPost);
+
 	triggerConfigurationUpdate(false);
 }
 
@@ -1097,6 +1180,7 @@ void MemaProcessor::clearPlugin()
 		const ScopedLock sl(m_pluginProcessingLock);
 		m_pluginInstance.reset();
 		m_pluginParameterInfos.clear();
+		m_pluginParameterDisplayOrder.clear();
 	}
 
 	postMessage(std::make_unique<PluginParameterInfosChangedMessage>().release());
@@ -1164,6 +1248,18 @@ void MemaProcessor::setPluginParameterRemoteControlInfos(int parameterIndex, boo
 	}
 }
 
+void MemaProcessor::setPluginParameterDisplayOrder(const std::vector<int>& order)
+{
+	m_pluginParameterDisplayOrder = order;
+	triggerConfigurationUpdate(false);
+	postMessage(std::make_unique<PluginParameterInfosChangedMessage>().release());
+}
+
+const std::vector<int>& MemaProcessor::getPluginParameterDisplayOrder() const
+{
+	return m_pluginParameterDisplayOrder;
+}
+
 bool MemaProcessor::isPluginParameterRemoteControllable(int parameterIndex)
 {
 	if (parameterIndex >= 0 && parameterIndex < m_pluginParameterInfos.size())
@@ -1200,7 +1296,7 @@ void MemaProcessor::setPluginParameterValue(std::uint16_t parameterIndex, std::s
 
 	for (auto const& pluginCommander : m_pluginCommanders)
 	{
-		if (pluginCommander != reinterpret_cast<MemaPluginCommander*>(sender) || nullptr != reinterpret_cast<MemaNetworkClientCommanderWrapper*>(sender))
+		if (pluginCommander != reinterpret_cast<MemaPluginCommander*>(sender) || nullptr != static_cast<MemaNetworkClientCommanderWrapper*>(sender))
 			pluginCommander->setPluginParameterValue(parameterIndex, id, normalizedValue, userId);
 	}
 
@@ -1331,10 +1427,10 @@ void MemaProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMes
 		const ScopedLock sl(m_pluginProcessingLock);
 		if (m_pluginInstance && m_pluginEnabled && !m_pluginPost)
 		{
-			// The incoming buffer has max(numIn, numOut) channels, but the plugin was prepared
-			// for m_inputChannelCount channels. Pass a sub-buffer view over the first
-			// m_inputChannelCount channels only to satisfy the AU preparedChannels assertion.
-			juce::AudioBuffer<float> pluginBuffer(buffer.getArrayOfWritePointers(), m_inputChannelCount, buffer.getNumSamples());
+			// Pass a sub-buffer view sized to the negotiated plugin channel count.
+			// This may be narrower than m_inputChannelCount when the plugin only
+			// accepted a layout smaller than the device input count.
+			juce::AudioBuffer<float> pluginBuffer(buffer.getArrayOfWritePointers(), m_pluginConfiguredChannelCount, buffer.getNumSamples());
 			m_pluginInstance->processBlock(pluginBuffer, midiMessages);
 		}
 	}
@@ -1368,9 +1464,10 @@ void MemaProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMes
 		const ScopedLock sl(m_pluginProcessingLock);
 		if (m_pluginInstance && m_pluginEnabled && m_pluginPost)
 		{
-			// After makeCopyOf, buffer has m_outputChannelCount channels, matching what the
-			// plugin was prepared for. Use a sub-buffer view for consistency and safety.
-			juce::AudioBuffer<float> pluginBuffer(buffer.getArrayOfWritePointers(), m_outputChannelCount, buffer.getNumSamples());
+			// Pass a sub-buffer view sized to the negotiated plugin channel count.
+			// This may be narrower than m_outputChannelCount when the plugin only
+			// accepted a layout smaller than the device output count.
+			juce::AudioBuffer<float> pluginBuffer(buffer.getArrayOfWritePointers(), m_pluginConfiguredChannelCount, buffer.getNumSamples());
 			m_pluginInstance->processBlock(pluginBuffer, midiMessages);
 		}
 	}
@@ -1496,20 +1593,57 @@ void MemaProcessor::handleMessage(const Message& message)
 	else if (auto const ppvm = dynamic_cast<const PluginParameterValueMessage*>(&message))
 	{
 		DBG(juce::String(__FUNCTION__) << " ppvIdx:" << int(ppvm->getParameterIndex()) << " > " << ppvm->getCurrentValue());
-		
+
 		setPluginParameterValue(ppvm->getParameterIndex(), ppvm->getParameterId().toStdString(), ppvm->getCurrentValue(), static_cast<MemaPluginCommander*>(m_networkCommanderWrapper.get()), origId);
 
 		serializedMessageMemoryBlock = ppvm->getSerializedMessage();
 
 		tId = ppvm->getType();
 	}
+	else if (auto const pesm = dynamic_cast<const PluginProcessingStateMessage*>(&message))
+	{
+		DBG(juce::String(__FUNCTION__) << " pluginEnabled:" << int(pesm->isEnabled()) << " pluginPost:" << int(pesm->isPost()));
+
+		// Update state directly to avoid triggering the commander broadcasts (which would double-relay to other clients).
+		// The fallthrough sendMessageToClients below handles relaying to other Mema.Re clients.
+		{
+			const ScopedLock sl(m_pluginProcessingLock);
+			m_pluginEnabled = pesm->isEnabled();
+			if (m_pluginPost != pesm->isPost())
+			{
+				m_pluginPost = pesm->isPost();
+				configurePluginForCurrentPosition();
+			}
+		}
+		triggerConfigurationUpdate(false);
+
+		if (onPluginProcessingStateChanged)
+			onPluginProcessingStateChanged(m_pluginEnabled, m_pluginPost);
+
+		serializedMessageMemoryBlock = pesm->getSerializedMessage();
+
+		tId = pesm->getType();
+	}
 	// exception - totally different message type, to decouple callback from processing asynchronously...
 	else if (auto const ppicm = dynamic_cast<const PluginParameterInfosChangedMessage*>(&message))
 	{
+		// Build a copy of the parameter list in user-defined display order (falls back to natural order)
+		auto orderedParams = m_pluginParameterInfos;
+		if (!m_pluginParameterDisplayOrder.empty() && m_pluginParameterDisplayOrder.size() == m_pluginParameterInfos.size())
+		{
+			orderedParams.clear();
+			for (int idx : m_pluginParameterDisplayOrder)
+				if (idx >= 0 && idx < static_cast<int>(m_pluginParameterInfos.size()))
+					orderedParams.push_back(m_pluginParameterInfos[idx]);
+			if (orderedParams.size() != m_pluginParameterInfos.size())
+				orderedParams = m_pluginParameterInfos; // safety fallback
+		}
+
 		// Broadcast updated parameter infos to all connected network clients
 		for (auto& pluginCommander : m_pluginCommanders)
-			pluginCommander->setPluginParameterInfos(m_pluginParameterInfos,
-				m_pluginInstance ? m_pluginInstance->getName().toStdString() : "");
+			pluginCommander->setPluginParameterInfos(orderedParams,
+				m_pluginInstance ? m_pluginInstance->getName().toStdString() : "",
+				m_pluginEnabled, m_pluginPost);
 
 		if (onPluginParameterInfosChanged)
 			onPluginParameterInfosChanged();
@@ -1761,7 +1895,7 @@ void MemaProcessor::initializeCtrlValues(int inputCount, int outputCount)
 	}
 	auto pluginParameterInfos = Mema::PluginParameterInfo::parametersToInfos(pluginParameters);
 	for (auto& pluginCommander : m_pluginCommanders)
-		pluginCommander->setPluginParameterInfos(pluginParameterInfos, pluginName.toStdString());
+		pluginCommander->setPluginParameterInfos(pluginParameterInfos, pluginName.toStdString(), m_pluginEnabled, m_pluginPost);
 }
 
 void MemaProcessor::initializeCtrlValuesToUnity(int inputCount, int outputCount)

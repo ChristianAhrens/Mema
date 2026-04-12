@@ -244,5 +244,16 @@ void MemaPluginCommander::pluginParameterValuePoll(std::uint16_t index, std::str
 		onPluginParameterValuePollCallback(sender, index, id);
 }
 
+void MemaPluginCommander::setPluginProcessingStateChangeCallback(const std::function<void(MemaPluginCommander* sender, bool, bool)>& callback)
+{
+	onPluginProcessingStateChangeCallback = callback;
+}
+
+void MemaPluginCommander::pluginProcessingStateChange(bool enabled, bool post, MemaPluginCommander* sender)
+{
+	if (onPluginProcessingStateChangeCallback)
+		onPluginProcessingStateChangeCallback(sender, enabled, post);
+}
+
 
 } // namespace Mema

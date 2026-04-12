@@ -93,6 +93,7 @@ MemaProcessorEditor::MemaProcessorEditor(AudioProcessor& processor)
         {
             for (auto& info : paramInfos)
                 memaProc->setPluginParameterRemoteControlInfos(info.second.index, info.second.isRemoteControllable, info.second.type, info.second.stepCount);
+            memaProc->setPluginParameterDisplayOrder(m_pluginControl->getParameterDisplayOrder());
         }
     };
     addAndMakeVisible(m_pluginControl.get());
@@ -129,12 +130,26 @@ MemaProcessorEditor::MemaProcessorEditor(AudioProcessor& processor)
         memaProc->addOutputCommander(m_outputCtrl.get());
 
         memaProc->onPluginSet = [=](const juce::PluginDescription& pluginDescription) { if (m_pluginControl) m_pluginControl->setSelectedPlugin(pluginDescription); };
-        memaProc->onPluginParameterInfosChanged = [=]() { if (m_pluginControl) m_pluginControl->setParameterInfos(memaProc->getPluginParameterInfos()); };
+        memaProc->onPluginParameterInfosChanged = [=]() {
+            if (m_pluginControl)
+            {
+                m_pluginControl->setParameterInfos(memaProc->getPluginParameterInfos());
+                m_pluginControl->setParameterDisplayOrder(memaProc->getPluginParameterDisplayOrder());
+            }
+        };
+        memaProc->onPluginProcessingStateChanged = [=](bool enabled, bool post) {
+            if (m_pluginControl)
+            {
+                m_pluginControl->setPluginEnabled(enabled);
+                m_pluginControl->setPluginPrePost(post);
+            }
+        };
 
         m_pluginControl->setPluginEnabled(memaProc->isPluginEnabled());
         m_pluginControl->setPluginPrePost(memaProc->isPluginPost());
         m_pluginControl->setSelectedPlugin(memaProc->getPluginDescription());
         m_pluginControl->setParameterInfos(memaProc->getPluginParameterInfos());
+        m_pluginControl->setParameterDisplayOrder(memaProc->getPluginParameterDisplayOrder());
     }
 
     m_gridLayout.items = { juce::GridItem(*m_ioLabel), juce::GridItem(*m_inputCtrl), juce::GridItem(*m_outputCtrl), juce::GridItem(*m_crosspointCtrl) };

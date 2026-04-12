@@ -80,6 +80,7 @@ public:
         METERINGCOLOR,  ///< Metering bar colour.
         IDX,            ///< Channel or parameter index.
         CONTROLLABLE,   ///< Whether a plugin parameter is remotely controllable.
+        PARAMORDER,     ///< Comma-separated list of parameter indices defining the display order.
     };
     static juce::String getAttributeName(AttributeID ID)
     {
@@ -97,6 +98,8 @@ public:
             return "IDX";
         case CONTROLLABLE:
             return "CONTROLLABLE";
+        case PARAMORDER:
+            return "PARAMORDER";
         default:
             return "-";
         }
