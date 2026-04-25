@@ -175,13 +175,24 @@ void HeadlessCLIMenu::runMainMenu()
             if (m_processor.getOutputMuteState(static_cast<std::uint16_t>(ch)))
                 ++mutedOut;
 
+        // Build a compact plugin description string.
+        auto pluginDesc = m_processor.getPluginDescription();
+        juce::String pluginLine;
+        if (pluginDesc.name.isNotEmpty())
+            pluginLine = pluginDesc.name
+                + "  " + (m_processor.isPluginEnabled() ? "enabled" : "disabled")
+                + "  " + (m_processor.isPluginPost() ? "post" : "pre") + "-matrix";
+        else
+            pluginLine = "none";
+
         printHeader("Configuration");
         std::cout << "  1  Input mutes     [" << numIn  << " ch, " << mutedIn  << " muted]\n";
         std::cout << "  2  Output mutes    [" << numOut << " ch, " << mutedOut << " muted]\n";
         std::cout << "  3  Matrix gains    [" << numIn  << " x "  << numOut   << "]\n";
         std::cout << "  4  Audio device    [" << deviceLine << "]\n";
-        std::cout << "  5  Load config\n";
-        std::cout << "  6  Save config\n";
+        std::cout << "  5  Plugin          [" << pluginLine << "]\n";
+        std::cout << "  6  Load config\n";
+        std::cout << "  7  Save config\n";
         std::cout << "  q  Quit\n";
 
         printPrompt();
@@ -192,8 +203,9 @@ void HeadlessCLIMenu::runMainMenu()
         else if (input == "2") runOutputMutesMenu();
         else if (input == "3") runMatrixMenu();
         else if (input == "4") runAudioDeviceMenu();
-        else if (input == "5") doLoadConfig();
-        else if (input == "6") doSaveConfig();
+        else if (input == "5") runPluginMenu();
+        else if (input == "6") doLoadConfig();
+        else if (input == "7") doSaveConfig();
         else if (input == "q")
         {
             m_quit = true;
@@ -672,6 +684,226 @@ void HeadlessCLIMenu::runAudioDeviceMenu()
         }
         else
             std::cout << "  Unknown option.\n";
+    }
+}
+
+//==============================================================================
+// Plugin menu
+//==============================================================================
+
+void HeadlessCLIMenu::runPluginMenu()
+{
+    while (!threadShouldExit() && !m_quit)
+    {
+        auto desc   = m_processor.getPluginDescription();
+        bool loaded = desc.name.isNotEmpty();
+
+        printHeader("Plugin");
+        std::cout << "  Plugin:  " << (loaded ? desc.name : juce::String("none")) << "\n";
+
+        if (loaded)
+        {
+            bool enabled = m_processor.isPluginEnabled();
+            bool post    = m_processor.isPluginPost();
+
+            std::cout << "\n";
+            std::cout << "  1  Toggle processing   [" << (enabled ? "enabled " : "disabled") << "]\n";
+            std::cout << "  2  Toggle pre/post     [" << (post ? "post" : "pre ") << "-matrix]\n";
+            std::cout << "  3  Parameter remote control\n";
+        }
+        else
+        {
+            std::cout << "\n  No plugin loaded.  Load a configuration file that includes a plugin.\n";
+        }
+
+        std::cout << "\n  b  Back\n";
+
+        printPrompt();
+        auto input = readLine().toLowerCase();
+        if (m_quit) break;
+        if (input == "b" || input == "q") break;
+
+        if (!loaded)
+            continue;
+
+        bool enabled = m_processor.isPluginEnabled();
+        bool post    = m_processor.isPluginPost();
+
+        if (input == "1")
+        {
+            callOnMessageThread([this, enabled]()
+            {
+                m_processor.setPluginEnabledState(!enabled);
+            });
+            std::cout << "  Plugin processing " << (enabled ? "disabled.\n" : "enabled.\n");
+        }
+        else if (input == "2")
+        {
+            callOnMessageThread([this, post]()
+            {
+                m_processor.setPluginPrePostState(!post);
+            });
+            std::cout << "  Plugin insertion set to " << (post ? "pre-matrix.\n" : "post-matrix.\n");
+        }
+        else if (input == "3")
+        {
+            runPluginParametersMenu();
+        }
+        else
+            std::cout << "  Unknown option.\n";
+    }
+}
+
+void HeadlessCLIMenu::runPluginParametersMenu()
+{
+    while (!threadShouldExit() && !m_quit)
+    {
+        auto& params = m_processor.getPluginParameterInfos();
+
+        printHeader("Plugin Parameters - Remote Control");
+
+        if (params.empty())
+        {
+            std::cout << "  No parameters available.\n";
+            std::cout << "\n  b  Back\n";
+            printPrompt();
+            auto in = readLine().toLowerCase();
+            if (m_quit || in == "b" || in == "q") break;
+            continue;
+        }
+
+        for (int i = 0; i < static_cast<int>(params.size()); ++i)
+        {
+            const auto& p = params[i];
+            juce::String typeStr;
+            switch (p.type)
+            {
+                case ParameterControlType::Toggle:     typeStr = "Toggle    "; break;
+                case ParameterControlType::Discrete:   typeStr = "Discrete  "; break;
+                case ParameterControlType::Continuous: typeStr = "Continuous"; break;
+                default:                               typeStr = "Continuous"; break;
+            }
+            std::cout << "  " << std::setw(3) << (i + 1)
+                      << "  " << p.name.paddedRight(' ', 24)
+                      << "  [" << (p.isRemoteControllable ? "remote: yes" : "remote: no ") << "]"
+                      << "  " << typeStr << "\n";
+        }
+
+        std::cout << "\n  b  Back\n";
+        std::cout << "\n  Enter parameter number to configure, or 'b' to go back.\n";
+
+        printPrompt();
+        auto input = readLine().toLowerCase();
+        if (m_quit) break;
+        if (input == "b" || input == "q") break;
+
+        int idx = input.getIntValue() - 1;
+        if (idx < 0 || idx >= static_cast<int>(params.size()))
+        {
+            std::cout << "  Invalid parameter number.\n";
+            continue;
+        }
+
+        // Per-parameter sub-edit loop.
+        while (!threadShouldExit() && !m_quit)
+        {
+            auto& params2 = m_processor.getPluginParameterInfos();
+            if (idx >= static_cast<int>(params2.size())) break;
+            const auto& p = params2[idx];
+
+            juce::String typeStr;
+            switch (p.type)
+            {
+                case ParameterControlType::Toggle:     typeStr = "Toggle";     break;
+                case ParameterControlType::Discrete:   typeStr = "Discrete";   break;
+                case ParameterControlType::Continuous: typeStr = "Continuous"; break;
+                default:                               typeStr = "Continuous"; break;
+            }
+
+            printHeader("Parameter: " + p.name);
+            std::cout << "  Name:    " << p.name << "\n";
+            std::cout << "  Index:   " << p.index << "\n";
+            std::cout << "  Value:   " << juce::String(p.currentValue, 3)
+                      << (p.label.isNotEmpty() ? "  " + p.label : juce::String()) << "\n";
+            std::cout << "\n";
+            std::cout << "  1  Toggle remote-controllable  [" << (p.isRemoteControllable ? "yes" : "no ") << "]\n";
+            if (p.isRemoteControllable)
+                std::cout << "  2  Set control type            [" << typeStr << "]\n";
+            std::cout << "\n  b  Back\n";
+
+            printPrompt();
+            auto cpInput = readLine().toLowerCase();
+            if (m_quit) break;
+            if (cpInput == "b" || cpInput == "q") break;
+
+            if (cpInput == "1")
+            {
+                bool nowRemote           = p.isRemoteControllable;
+                ParameterControlType curType = p.type;
+                int  curSteps            = p.stepCount;
+                int  capturedIdx         = idx;
+                callOnMessageThread([this, capturedIdx, nowRemote, curType, curSteps]()
+                {
+                    m_processor.setPluginParameterRemoteControlInfos(capturedIdx, !nowRemote, curType, curSteps);
+                });
+                std::cout << "  Remote-controllable " << (nowRemote ? "disabled.\n" : "enabled.\n");
+            }
+            else if (cpInput == "2" && p.isRemoteControllable)
+            {
+                printHeader("Control Type: " + p.name);
+                std::cout << "  1  Continuous  (slider / fader)\n";
+                std::cout << "  2  Discrete    (combo box, requires step count >= 2)\n";
+                std::cout << "  3  Toggle      (on/off button, 2 steps)\n";
+                std::cout << "\n  b  Back\n";
+
+                printPrompt();
+                auto typeInput = readLine().toLowerCase();
+                if (m_quit) break;
+                if (typeInput == "b") continue;
+
+                ParameterControlType newType = p.type;
+                int newSteps = p.stepCount;
+                bool validChoice = true;
+
+                if (typeInput == "1")
+                {
+                    newType  = ParameterControlType::Continuous;
+                    newSteps = 0;
+                }
+                else if (typeInput == "2")
+                {
+                    std::cout << "  Enter number of steps (>= 2, current: "
+                              << (p.stepCount >= 2 ? p.stepCount : 2) << "): " << std::flush;
+                    auto stepsInput = readLine();
+                    if (m_quit) break;
+                    int enteredSteps = stepsInput.getIntValue();
+                    newType  = ParameterControlType::Discrete;
+                    newSteps = juce::jmax(2, enteredSteps);
+                }
+                else if (typeInput == "3")
+                {
+                    newType  = ParameterControlType::Toggle;
+                    newSteps = 2;
+                }
+                else
+                {
+                    std::cout << "  Invalid selection.\n";
+                    validChoice = false;
+                }
+
+                if (validChoice)
+                {
+                    int capturedIdx2 = idx;
+                    callOnMessageThread([this, capturedIdx2, newType, newSteps]()
+                    {
+                        m_processor.setPluginParameterRemoteControlInfos(capturedIdx2, true, newType, newSteps);
+                    });
+                    std::cout << "  Control type updated.\n";
+                }
+            }
+            else
+                std::cout << "  Unknown option.\n";
+        }
     }
 }
 
