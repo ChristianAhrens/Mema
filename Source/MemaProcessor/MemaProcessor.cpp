@@ -402,17 +402,18 @@ bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
 		auto result = m_deviceManager->initialise(s_maxChannelCount, s_maxChannelCount, deviceSetupXml, true, {}, &audioDeviceSetup);
         if (result.isNotEmpty())
         {
+            // The saved audio device is unavailable; the device manager has already fallen back
+            // to the system default via initialiseWithDefaultDevices above.  Warn the user but
+            // continue restoring plugin and routing state from the config — those are independent
+            // of which audio device is active and must not be discarded just because the
+            // preferred interface is currently unplugged.
             juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::WarningIcon, juce::JUCEApplication::getInstance()->getApplicationName() + " device init failed", result);
-            return false;
         }
-        else
-        {
 #if JUCE_IOS
-            if (audioDeviceSetup.bufferSize < 512)
-                audioDeviceSetup.bufferSize = 512; // temp. workaround for iOS where buffersizes <512 lead to no sample data being delivered?
-			m_deviceManager->setAudioDeviceSetup(audioDeviceSetup, true);
+        if (audioDeviceSetup.bufferSize < 512)
+            audioDeviceSetup.bufferSize = 512; // temp. workaround for iOS where buffersizes <512 lead to no sample data being delivered?
+        m_deviceManager->setAudioDeviceSetup(audioDeviceSetup, true);
 #endif
-        }
 	}
 	else
 		return false;
