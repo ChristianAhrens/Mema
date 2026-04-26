@@ -1,0 +1,7 @@
+<map id="Mema::ReinitIOCountMessage" name="Mema::ReinitIOCountMessage">
+<area shape="rect" id="Node000001" title="Instructs clients to tear down and rebuild their UI for a new channel count." alt="" coords="5,152,224,177"/>
+<area shape="rect" id="Node000002" href="$classMema_1_1SerializableMessage.html" title="Base class for all messages exchanged between Mema, Mema.Mo, and Mema.Re over TCP." alt="" coords="12,79,217,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="117,118,117,152,112,152,112,118"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="57,5,172,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="117,44,117,79,112,79,112,44"/>
+</map>

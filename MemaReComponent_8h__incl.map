@@ -1,0 +1,23 @@
+<map id="MemaRe/MemaReComponent.h" name="MemaRe/MemaReComponent.h">
+<area shape="rect" id="Node000001" title=" " alt="" coords="284,5,513,31"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="324,255,431,280"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="284,24,207,30,130,40,66,57,42,68,26,80,14,98,9,115,10,131,16,145,28,159,45,172,88,196,142,216,201,232,311,254,310,259,200,237,141,221,86,201,42,177,24,163,12,148,5,132,3,115,9,96,22,77,39,63,64,52,129,35,206,25,284,19"/>
+<area shape="rect" id="Node000003" href="$FaderbankControlComponent_8h.html" title=" " alt="" coords="37,79,267,119"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="364,33,225,77,224,72,362,28"/>
+<area shape="rect" id="Node000005" href="$PanningControlComponent_8h.html" title=" " alt="" coords="291,79,506,119"/>
+<area shape="poly" id="edge6_Node000001_Node000005" title=" " alt="" coords="401,31,401,65,396,65,396,31"/>
+<area shape="rect" id="Node000006" href="$MemaClientCommon_2PluginControlComponent_8h.html" title=" " alt="" coords="531,79,781,119"/>
+<area shape="poly" id="edge9_Node000001_Node000006" title=" " alt="" coords="437,28,582,72,580,77,435,33"/>
+<area shape="rect" id="Node000007" href="$MemaPluginParameterInfo_8h.html" title=" " alt="" coords="551,167,761,207"/>
+<area shape="poly" id="edge14_Node000001_Node000007" title=" " alt="" coords="514,18,596,23,679,33,750,50,777,62,795,77,803,90,804,103,799,116,790,127,762,147,727,164,725,159,759,143,786,123,795,113,799,103,798,92,791,80,774,67,748,55,678,38,596,28,513,23"/>
+<area shape="poly" id="edge3_Node000003_Node000002" title=" " alt="" coords="155,118,161,162,169,185,183,205,211,227,244,242,278,253,311,259,310,265,277,258,242,247,208,231,179,208,165,187,156,163,149,119"/>
+<area shape="rect" id="Node000004" href="$MemaClientControlComponentBase_8h.html" title=" " alt="" coords="193,167,415,207"/>
+<area shape="poly" id="edge4_Node000003_Node000004" title=" " alt="" coords="187,116,260,158,258,162,184,121"/>
+<area shape="poly" id="edge5_Node000004_Node000002" title=" " alt="" coords="324,205,359,243,355,246,320,209"/>
+<area shape="poly" id="edge7_Node000005_Node000002" title=" " alt="" coords="413,118,431,159,434,183,431,208,419,229,403,247,399,244,414,226,425,206,429,183,426,160,408,120"/>
+<area shape="poly" id="edge8_Node000005_Node000004" title=" " alt="" coords="379,121,337,159,333,155,376,117"/>
+<area shape="poly" id="edge10_Node000006_Node000002" title=" " alt="" coords="623,121,540,169,409,249,406,245,537,164,621,117"/>
+<area shape="poly" id="edge11_Node000006_Node000004" title=" " alt="" coords="579,121,395,166,393,161,578,116"/>
+<area shape="poly" id="edge12_Node000006_Node000007" title=" " alt="" coords="659,119,659,153,653,153,653,119"/>
+<area shape="poly" id="edge13_Node000007_Node000002" title=" " alt="" coords="590,209,432,253,431,248,589,204"/>
+</map>

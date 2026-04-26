@@ -1,0 +1,11 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" href="$classMema_1_1AbstractProcessorData.html" title="Base class for all data objects exchanged between the audio processor and its analyzers/visualisers." alt="" coords="5,55,224,80"/>
+<area shape="rect" id="Node000001" href="$classMema_1_1ProcessorAudioSignalData.html" title=" " alt="" coords="272,5,515,31"/>
+<area shape="poly" id="edge102_Node000000_Node000001" title=" " alt="" coords="200,50,320,28,321,33,201,55"/>
+<area shape="rect" id="Node000003" href="$classMema_1_1ProcessorLevelData.html" title=" " alt="" coords="293,55,493,80"/>
+<area shape="poly" id="edge103_Node000000_Node000003" title=" " alt="" coords="238,65,293,65,293,70,238,70"/>
+<area shape="rect" id="Node000004" href="$classMema_1_1ProcessorSpectrumData.html" title=" " alt="" coords="280,104,507,129"/>
+<area shape="poly" id="edge104_Node000000_Node000004" title=" " alt="" coords="201,80,321,101,320,107,200,85"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="48,5,181,31"/>
+<area shape="poly" id="edge105_Node000002_Node000001" title=" " alt="" coords="195,15,272,15,272,21,195,21"/>
+</map>
