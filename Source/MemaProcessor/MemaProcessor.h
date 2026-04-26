@@ -602,6 +602,9 @@ private:
     std::vector<int>                                                m_pluginParameterDisplayOrder; ///< User-defined display order: each element is a parameter index. Empty = natural order.
 
     //==============================================================================
+    std::unique_ptr<juce::XmlElement> m_lastAppliedDeviceConfigXml; ///< Snapshot of the DEVCONFIG XML from the most recent successful audio device initialisation. Used to suppress redundant re-inits when only non-audio settings change.
+
+    //==============================================================================
     std::unique_ptr<JUCEAppBasics::ServiceTopologyManager>  m_serviceTopologyManager; ///< Manages multicast service announcements so Mema.Mo/Re can discover this instance.
     std::shared_ptr<InterprocessConnectionServerImpl> m_networkServer; ///< TCP server listening on port 55668 for Mema.Mo and Mema.Re connections.
     std::unique_ptr<MemaNetworkClientCommanderWrapper> m_networkCommanderWrapper; ///< Bridges inbound ControlParametersMessage data into the commander pattern.

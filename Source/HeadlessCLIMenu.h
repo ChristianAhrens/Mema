@@ -41,8 +41,9 @@ class MemaProcessor;
  * ├── 2  Output mutes     toggle per-channel mute state
  * ├── 3  Matrix gains     enable/disable crosspoints, set gain in dB
  * ├── 4  Audio device     select device, sample rate, buffer size
- * ├── 5  Load config      prompt for a file path; no GUI file chooser
- * ├── 6  Save config      prompt for a file path; no GUI file chooser
+ * ├── 5  Plugin           enable/disable processing, pre/post, parameter remote control
+ * ├── 6  Load config      prompt for a file path; no GUI file chooser
+ * ├── 7  Save config      prompt for a file path; no GUI file chooser
  * └── q  Quit             requests application shutdown
  * ```
  *
@@ -203,6 +204,27 @@ private:
      *          the message thread.
      */
     void runAudioDeviceMenu();
+
+    /**
+     * @brief Runs the plug-in configuration menu.
+     * @details Shows the currently loaded plug-in name, its processing enabled state, and
+     *          its pre/post matrix insertion state.  Sub-options allow toggling the enabled
+     *          state, toggling pre/post, and entering the parameter remote-control sub-menu.
+     *          If no plug-in is loaded (e.g. the configuration has no plug-in section) the
+     *          menu shows an informational message and offers only 'Back'.
+     */
+    void runPluginMenu();
+
+    /**
+     * @brief Runs the plug-in parameter remote-control configuration menu.
+     * @details Lists every parameter of the loaded plug-in, showing its name, current
+     *          normalised value, remote-controllable flag, and control widget type.  The user
+     *          selects a parameter by number to enter a per-parameter sub-loop where they can:
+     *          - Toggle the remote-controllable flag (exposed in Mema.Re or local-only).
+     *          - Change the control widget type (Continuous slider, Discrete combo box, Toggle
+     *            button) when the parameter is remote-controllable.
+     */
+    void runPluginParametersMenu();
 
     ///@}
 

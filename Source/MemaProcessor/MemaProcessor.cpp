@@ -390,28 +390,43 @@ bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
     
 	if (m_deviceManager)
 	{
-        // Hacky bit of device manager initialization:
-        // We first intialize it to be able to get a valid device setup,
-        // then initialize with a dummy xml config to trigger the internal xml structure being reset
-        // and finally apply the original initialized device setup again to have the audio running correctly.
-        // If we did not do so, either the internal xml would not be present as long as the first configuration change was made
-        // and therefor no valid config file could be written by the application or the audio would not be running
-        // on first start and manual config would be required.
-        m_deviceManager->initialiseWithDefaultDevices(s_maxChannelCount, s_maxChannelCount);
-        auto audioDeviceSetup = m_deviceManager->getAudioDeviceSetup();
-		auto result = m_deviceManager->initialise(s_maxChannelCount, s_maxChannelCount, deviceSetupXml, true, {}, &audioDeviceSetup);
-        if (result.isNotEmpty())
+        // Skip the (expensive, audio-interrupting) device manager re-initialisation when the
+        // DEVCONFIG section of the config is identical to the one that was last successfully
+        // applied.  This prevents audio dropouts caused by non-audio config changes (e.g.
+        // UI colour / LookAndFeel) that trigger a full config dump+reload cycle.
+        bool deviceConfigChanged = true;
+        if (m_lastAppliedDeviceConfigXml && devConfElm)
+            deviceConfigChanged = !devConfElm->isEquivalentTo(m_lastAppliedDeviceConfigXml.get(), true);
+        else if (!m_lastAppliedDeviceConfigXml && !devConfElm)
+            deviceConfigChanged = false; // both absent — nothing to change
+
+        if (deviceConfigChanged)
         {
-            juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::WarningIcon, juce::JUCEApplication::getInstance()->getApplicationName() + " device init failed", result);
-            return false;
-        }
-        else
-        {
+            // Hacky bit of device manager initialization:
+            // We first intialize it to be able to get a valid device setup,
+            // then initialize with a dummy xml config to trigger the internal xml structure being reset
+            // and finally apply the original initialized device setup again to have the audio running correctly.
+            // If we did not do so, either the internal xml would not be present as long as the first configuration change was made
+            // and therefor no valid config file could be written by the application or the audio would not be running
+            // on first start and manual config would be required.
+            m_deviceManager->initialiseWithDefaultDevices(s_maxChannelCount, s_maxChannelCount);
+            auto audioDeviceSetup = m_deviceManager->getAudioDeviceSetup();
+            auto result = m_deviceManager->initialise(s_maxChannelCount, s_maxChannelCount, deviceSetupXml, true, {}, &audioDeviceSetup);
+            if (result.isNotEmpty())
+            {
+                // The saved audio device is unavailable; the device manager has already fallen back
+                // to the system default via initialiseWithDefaultDevices above.  Warn the user but
+                // continue restoring plugin and routing state from the config — those are independent
+                // of which audio device is active and must not be discarded just because the
+                // preferred interface is currently unplugged.
+                juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::WarningIcon, juce::JUCEApplication::getInstance()->getApplicationName() + " device init failed", result);
+            }
 #if JUCE_IOS
             if (audioDeviceSetup.bufferSize < 512)
                 audioDeviceSetup.bufferSize = 512; // temp. workaround for iOS where buffersizes <512 lead to no sample data being delivered?
-			m_deviceManager->setAudioDeviceSetup(audioDeviceSetup, true);
+            m_deviceManager->setAudioDeviceSetup(audioDeviceSetup, true);
 #endif
+            m_lastAppliedDeviceConfigXml = devConfElm ? std::make_unique<juce::XmlElement>(*devConfElm) : nullptr;
         }
 	}
 	else
