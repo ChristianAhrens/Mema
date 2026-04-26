@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+## [0.10.5] 2026-04-26
+### Added
+- Added Mema plug-in config (enabled, pre/post, remote control params) to CLI interface
+
+### Changed
+
+### Fixed
+- Fixed Mema losing the entire audio config (incl. plug-in setup) in case of only the chosen audio device being temporarily unavailable
+- Fixed audio interruption when changing ui settings
+
 ## [0.10.4] 2026-04-12
 ### Added
 - Added Mema plug-in post+enable state remote control possibility and added support for this to Mema.Re
