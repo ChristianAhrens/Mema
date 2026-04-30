@@ -703,13 +703,17 @@ void HeadlessCLIMenu::runPluginMenu()
 
         if (loaded)
         {
-            bool enabled = m_processor.isPluginEnabled();
-            bool post    = m_processor.isPluginPost();
+            bool enabled   = m_processor.isPluginEnabled();
+            bool post      = m_processor.isPluginPost();
+            bool editorOpen = m_processor.isPluginEditorOpen();
 
             std::cout << "\n";
             std::cout << "  1  Toggle processing   [" << (enabled ? "enabled " : "disabled") << "]\n";
             std::cout << "  2  Toggle pre/post     [" << (post ? "post" : "pre ") << "-matrix]\n";
             std::cout << "  3  Parameter remote control\n";
+            std::cout << "  4  " << (editorOpen ? "Close" : "Open ") << " editor window"
+                      << (editorOpen ? "" : "  (requires a display — may fail in a headless environment)")
+                      << "\n";
         }
         else
         {
@@ -726,8 +730,9 @@ void HeadlessCLIMenu::runPluginMenu()
         if (!loaded)
             continue;
 
-        bool enabled = m_processor.isPluginEnabled();
-        bool post    = m_processor.isPluginPost();
+        bool enabled    = m_processor.isPluginEnabled();
+        bool post       = m_processor.isPluginPost();
+        bool editorOpen = m_processor.isPluginEditorOpen();
 
         if (input == "1")
         {
@@ -748,6 +753,25 @@ void HeadlessCLIMenu::runPluginMenu()
         else if (input == "3")
         {
             runPluginParametersMenu();
+        }
+        else if (input == "4")
+        {
+            if (editorOpen)
+            {
+                callOnMessageThread([this]() { m_processor.closePluginEditor(); });
+                std::cout << "  Plugin editor closed.\n";
+            }
+            else
+            {
+                std::cout << "  Attempting to open plugin editor window...\n";
+                callOnMessageThread([this]() { m_processor.openPluginEditor(); });
+                // Give the message loop a moment to process, then report outcome.
+                juce::Thread::sleep(200);
+                if (m_processor.isPluginEditorOpen())
+                    std::cout << "  Plugin editor opened successfully.\n";
+                else
+                    std::cout << "  Plugin editor could not be opened (no display, or plugin has no editor).\n";
+            }
         }
         else
             std::cout << "  Unknown option.\n";

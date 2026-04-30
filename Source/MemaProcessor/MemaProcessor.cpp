@@ -1230,6 +1230,11 @@ void MemaProcessor::closePluginEditor(bool deleteEditorWindow)
 		m_pluginEditorWindow.reset();
 }
 
+bool MemaProcessor::isPluginEditorOpen() const
+{
+    return m_pluginEditorWindow != nullptr;
+}
+
 std::vector<PluginParameterInfo>& MemaProcessor::getPluginParameterInfos()
 {
 	return m_pluginParameterInfos;

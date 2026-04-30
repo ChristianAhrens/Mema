@@ -349,6 +349,8 @@ public:
     void openPluginEditor();
     /** @brief Closes the plugin editor window. @param deleteEditorWindow If `true`, also deletes the window object; pass `false` when the window is closing itself. */
     void closePluginEditor(bool deleteEditorWindow = true);
+    /** @brief Returns `true` when the plugin editor window is currently open. */
+    bool isPluginEditorOpen() const;
     std::function<void(const juce::PluginDescription&)> onPluginSet; ///< Invoked on the message thread after a new plugin has been successfully loaded.
     // Parameter management
     /** @brief Returns a mutable reference to the loaded plugin's parameter descriptor list. @return An empty vector if no plugin is loaded. */
