@@ -1795,13 +1795,12 @@ void MemaProcessor::audioDeviceIOCallbackWithContext(const float* const* inputCh
     
 	const juce::ScopedLock sl(m_audioDeviceIOCallbackLock);
 
-	if (m_inputChannelCount != numInputChannels || m_outputChannelCount != numOutputChannels)
-	{
-		m_inputChannelCount = numInputChannels;
-		m_outputChannelCount = numOutputChannels;
-		postMessage(std::make_unique<ReinitIOCountMessage>(m_inputChannelCount, m_outputChannelCount).release());
-	}
-
+	// On Linux/ALSA, USB class-compliant devices (e.g. RME DigiFace Dante) may be forced open at
+	// their full hardware channel count even when fewer channels are active in the JUCE setup.
+	// In that case numInputChannels/numOutputChannels reflects the ALSA hardware width, while
+	// m_inputChannelCount/m_outputChannelCount reflects the user-selected active count set in
+	// audioDeviceAboutToStart. Do NOT let the raw hardware width overwrite the active count here;
+	// only reinit when the counts genuinely disagree with what audioDeviceAboutToStart established.
 	auto maxActiveChannels = std::max(numInputChannels, numOutputChannels);
 
 	if (s_maxChannelCount < maxActiveChannels)
@@ -1810,10 +1809,22 @@ void MemaProcessor::audioDeviceIOCallbackWithContext(const float* const* inputCh
 		return;
 	}
 
-	// copy incoming data to processing data buffer
+	if (m_inputChannelCount > numInputChannels || m_outputChannelCount > numOutputChannels)
+	{
+		// Active channel count exceeds what the device actually delivered — adopt the device width.
+		m_inputChannelCount  = static_cast<std::uint16_t>(numInputChannels);
+		m_outputChannelCount = static_cast<std::uint16_t>(numOutputChannels);
+		postMessage(std::make_unique<ReinitIOCountMessage>(m_inputChannelCount, m_outputChannelCount).release());
+	}
+
+	// Copy incoming data to processing buffer. On Linux/ALSA inactive channels may have a null
+	// pointer; zero the corresponding slot instead of blindly dereferencing it.
 	for (auto i = 0; i < numInputChannels && i < maxActiveChannels; i++)
 	{
-		memcpy(m_processorChannels[i], inputChannelData[i], (size_t)numSamples * sizeof(float));
+		if (inputChannelData[i] != nullptr)
+			memcpy(m_processorChannels[i], inputChannelData[i], (size_t)numSamples * sizeof(float));
+		else
+			memset(m_processorChannels[i], 0, (size_t)numSamples * sizeof(float));
 	}
 
 	// from juce doxygen: buffer must be the size of max(inCh, outCh) and feeds the input data into the method and is returned with output data
@@ -1821,14 +1832,15 @@ void MemaProcessor::audioDeviceIOCallbackWithContext(const float* const* inputCh
     juce::MidiBuffer midiBufferToProcess;
 	processBlock(audioBufferToProcess, midiBufferToProcess);
 
-	// copy the processed data buffer data to outgoing data
+	// Copy processed data to output. Guard against null pointers for inactive channels.
 	auto processedChannelCount = audioBufferToProcess.getNumChannels();
 	auto processedSampleCount = audioBufferToProcess.getNumSamples();
 	auto processedData = audioBufferToProcess.getArrayOfReadPointers();
 	jassert(processedSampleCount == numSamples);
 	for (auto i = 0; i < numOutputChannels && i < processedChannelCount; i++)
 	{
-		memcpy(outputChannelData[i], processedData[i], (size_t)processedSampleCount * sizeof(float));
+		if (outputChannelData[i] != nullptr)
+			memcpy(outputChannelData[i], processedData[i], (size_t)processedSampleCount * sizeof(float));
 	}
 
 }
@@ -1838,9 +1850,11 @@ void MemaProcessor::audioDeviceAboutToStart(AudioIODevice* device)
 	if (device)
     {
         auto activeInputs = device->getActiveInputChannels();
-        auto inputChannelCnt  = std::uint16_t(activeInputs.getHighestBit() + 1); // from JUCE documentation
+        // countNumberOfSetBits() gives the actual number of user-selected active channels,
+        // regardless of whether ALSA opens the hardware at a wider channel count.
+        auto inputChannelCnt  = std::uint16_t(activeInputs.countNumberOfSetBits());
         auto activeOutputs = device->getActiveOutputChannels();
-        auto outputChannelCnt = std::uint16_t(activeOutputs.getHighestBit() + 1); // from JUCE documentation
+        auto outputChannelCnt = std::uint16_t(activeOutputs.countNumberOfSetBits());
         auto sampleRate = device->getCurrentSampleRate();
         auto bufferSize = device->getCurrentBufferSizeSamples();
         //auto bitDepth = device->getCurrentBitDepth();
