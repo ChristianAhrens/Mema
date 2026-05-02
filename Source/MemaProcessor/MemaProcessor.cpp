@@ -993,15 +993,20 @@ void MemaProcessor::setOutputMuteState(std::uint16_t outputChannelNumber, bool m
 
 void MemaProcessor::setChannelCounts(std::uint16_t inputChannelCount, std::uint16_t outputChannelCount)
 {
+    // Guard against zero counts from devices that ALSA reports as having no active channels
+    // during device switching (e.g. virtual/altmode USB CC devices on Linux).
+    auto effectiveInputCount  = static_cast<std::uint16_t>(std::max((int)inputChannelCount,  s_minInputsCount));
+    auto effectiveOutputCount = static_cast<std::uint16_t>(std::max((int)outputChannelCount, s_minOutputsCount));
+
     auto reinitRequired = false;
-    if (m_inputChannelCount != inputChannelCount)
+    if (m_inputChannelCount != effectiveInputCount)
     {
-        m_inputChannelCount = inputChannelCount;
+        m_inputChannelCount = effectiveInputCount;
         reinitRequired = true;
     }
-    if (m_outputChannelCount != outputChannelCount)
+    if (m_outputChannelCount != effectiveOutputCount)
     {
-        m_outputChannelCount = outputChannelCount;
+        m_outputChannelCount = effectiveOutputCount;
         reinitRequired = true;
     }
     if (reinitRequired)
@@ -1817,8 +1822,10 @@ void MemaProcessor::audioDeviceIOCallbackWithContext(const float* const* inputCh
 	if (m_inputChannelCount > numInputChannels || m_outputChannelCount > numOutputChannels)
 	{
 		// Active channel count exceeds what the device actually delivered — adopt the device width.
-		m_inputChannelCount  = static_cast<std::uint16_t>(numInputChannels);
-		m_outputChannelCount = static_cast<std::uint16_t>(numOutputChannels);
+		// Clamp to s_min* so a transient zero count (e.g. during ALSA device switching on Linux)
+		// never propagates into processBlock and trips its channel-count assertions.
+		m_inputChannelCount  = static_cast<std::uint16_t>(std::max(numInputChannels,  s_minInputsCount));
+		m_outputChannelCount = static_cast<std::uint16_t>(std::max(numOutputChannels, s_minOutputsCount));
 		postMessage(std::make_unique<ReinitIOCountMessage>(m_inputChannelCount, m_outputChannelCount).release());
 	}
 
