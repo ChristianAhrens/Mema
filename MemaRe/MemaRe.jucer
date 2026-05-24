@@ -69,7 +69,8 @@
               file="../submodules/JUCE-AppBasics/Resources/Images/link_off_24dp.svg"/>
         <FILE id="SM2kRq" name="Mema.png" compile="0" resource="1" file="../Resources/Images/Mema.png"/>
         <FILE id="h4L3Zp" name="MemaRe.png" compile="0" resource="1" file="../Resources/Images/MemaRe.png"/>
-        <FILE id="FTnVHP" name="MemaReRect.png" compile="0" resource="1" file="../Resources/Images/MemaReRect.png"/>
+        <FILE id="FTnVHP" name="MemaReRect.png" compile="0" resource="1" file="../Resources/Images/MemaReRect.png"
+              xcodeResource="1"/>
         <FILE id="pWsRtX" name="power_settings_24dp.svg" compile="0" resource="1"
               file="../submodules/JUCE-AppBasics/Resources/Images/power_settings_24dp.svg"/>
         <FILE id="D3JJ8C" name="question_mark_24dp.svg" compile="0" resource="1"
