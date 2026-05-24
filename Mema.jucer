@@ -40,6 +40,22 @@
     </GROUP>
     <GROUP id="{72AB56DC-8637-938F-3846-2BD91435687D}" name="Resources">
       <GROUP id="{5418C8BA-AFDC-83EF-A716-D3FB9CE9A772}" name="Images">
+        <GROUP id="{20DFD3E7-76CA-A989-EA00-F0B15B3D34F0}" name="Mema.icon">
+          <GROUP id="{9896EA18-C290-6905-8BBA-C3B596E83AD8}" name="Assets">
+            <FILE id="MVL3Qj" name="Bars_Bars.svg" compile="0" resource="0" file="Resources/Images/Mema.icon/Assets/Bars_Bars.svg"/>
+            <FILE id="evflGH" name="Black circle_Black circle.svg" compile="0"
+                  resource="0" file="Resources/Images/Mema.icon/Assets/Black circle_Black circle.svg"/>
+            <FILE id="ezpjrg" name="Grid_Grid.svg" compile="0" resource="0" file="Resources/Images/Mema.icon/Assets/Grid_Grid.svg"/>
+            <FILE id="EMJis6" name="Inner grey circle_Inner grey circle.svg" compile="0"
+                  resource="0" file="Resources/Images/Mema.icon/Assets/Inner grey circle_Inner grey circle.svg"/>
+            <FILE id="M9BCy9" name="Outer grey circle_Outer grey circle.svg" compile="0"
+                  resource="0" file="Resources/Images/Mema.icon/Assets/Outer grey circle_Outer grey circle.svg"/>
+            <FILE id="ZHttNC" name="Tune_Tune.svg" compile="0" resource="0" file="Resources/Images/Mema.icon/Assets/Tune_Tune.svg"/>
+            <FILE id="S9l8fR" name="White circle_White circle.svg" compile="0"
+                  resource="0" file="Resources/Images/Mema.icon/Assets/White circle_White circle.svg"/>
+          </GROUP>
+          <FILE id="DxotDY" name="icon.json" compile="0" resource="0" file="Resources/Images/Mema.icon/icon.json"/>
+        </GROUP>
         <FILE id="CR0ajf" name="close_24dp.svg" compile="0" resource="1" file="submodules/JUCE-AppBasics/Resources/Images/close_24dp.svg"/>
         <FILE id="l2RF9e" name="delete_forever_24dp.svg" compile="0" resource="1"
               file="submodules/JUCE-AppBasics/Resources/Images/delete_forever_24dp.svg"/>
@@ -187,13 +203,12 @@
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_PLUGINHOST_VST3="1" JUCE_PLUGINHOST_AU="1"
                JUCE_PLUGINHOST_LADSPA="1" JUCE_PLUGINHOST_LV2="1"/>
   <EXPORTFORMATS>
-    <XCODE_MAC targetFolder="Builds/MacOSX" smallIcon="ItJQfF" bigIcon="ItJQfF"
-               customPList="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#10;&#10;&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;&#10;&lt;plist&gt;&#10;  &lt;dict&gt;&#10;    &lt;key&gt;NSLocalNetworkUsageDescription&lt;/key&gt;&#10;    &lt;string&gt;Mema uses multicast to anounce its service to Mema.Mo instances on the network.&lt;/string&gt;&#10;    &lt;!-- New Xcode .icon integration --&gt;&#10;    &lt;key&gt;CFBundleIconName&lt;/key&gt;&#10;    &lt;string&gt;Mema&lt;/string&gt;&#10;  &lt;/dict&gt;&#10;&lt;/plist&gt;"
+    <XCODE_MAC targetFolder="Builds/MacOSX" customPList="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#10;&#10;&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;&#10;&lt;plist&gt;&#10;  &lt;dict&gt;&#10;    &lt;key&gt;NSLocalNetworkUsageDescription&lt;/key&gt;&#10;    &lt;string&gt;Mema uses multicast to anounce its service to Mema.Mo instances on the network.&lt;/string&gt;&#10;    &lt;!-- New Xcode .icon integration --&gt;&#10;    &lt;key&gt;CFBundleIconName&lt;/key&gt;&#10;    &lt;string&gt;Mema&lt;/string&gt;&#10;  &lt;/dict&gt;&#10;&lt;/plist&gt;"
                applicationCategory="public.app-category.utilities" hardenedRuntime="1"
                hardenedRuntimeOptions="com.apple.security.cs.disable-library-validation,com.apple.security.device.audio-input"
                microphonePermissionNeeded="1" networkingMulticast="1" microphonePermissionsText="MenuBarMatrix uses audio input to route it via matrix settings to audio output."
                appSandboxOptions="com.apple.security.device.microphone,com.apple.security.files.user-selected.read-write,com.apple.security.network.client,com.apple.security.network.server,com.apple.security.temporary-exception.audio-unit-host"
-               iosDevelopmentTeamID="SB7Q3PP4FQ">
+               iosDevelopmentTeamID="SB7Q3PP4FQ" iconComposerIcon="DxotDY">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug"/>
         <CONFIGURATION isDebug="0" name="Release" customXcodeFlags="OTHER_CODE_SIGN_FLAGS = $(inherited) --timestamp -s 'Developer ID Application: Christian Ahrens', CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO"

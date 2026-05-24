@@ -47,6 +47,22 @@
     </GROUP>
     <GROUP id="{72AB56DC-8637-938F-3846-2BD91435687D}" name="Resources">
       <GROUP id="{5418C8BA-AFDC-83EF-A716-D3FB9CE9A772}" name="Images">
+        <GROUP id="{9A0F851D-0127-5346-A13C-67559129F2DF}" name="MemaRe.icon">
+          <GROUP id="{3D315467-9AB1-B210-EAAF-7B9CE070E5BA}" name="Assets">
+            <FILE id="gxTyxh" name="Bars_Bars.svg" compile="0" resource="0" file="../Resources/Images/MemaRe.icon/Assets/Bars_Bars.svg"/>
+            <FILE id="qvPxoP" name="Black circle_Black circle.svg" compile="0"
+                  resource="0" file="../Resources/Images/MemaRe.icon/Assets/Black circle_Black circle.svg"/>
+            <FILE id="UvkdEA" name="Grid_Grid.svg" compile="0" resource="0" file="../Resources/Images/MemaRe.icon/Assets/Grid_Grid.svg"/>
+            <FILE id="CziB5k" name="Inner grey circle_Inner grey circle.svg" compile="0"
+                  resource="0" file="../Resources/Images/MemaRe.icon/Assets/Inner grey circle_Inner grey circle.svg"/>
+            <FILE id="KniwZX" name="Outer grey circle_Outer grey circle.svg" compile="0"
+                  resource="0" file="../Resources/Images/MemaRe.icon/Assets/Outer grey circle_Outer grey circle.svg"/>
+            <FILE id="GaI4Ec" name="Tune_Tune.svg" compile="0" resource="0" file="../Resources/Images/MemaRe.icon/Assets/Tune_Tune.svg"/>
+            <FILE id="zNMrSV" name="White circle_White circle.svg" compile="0"
+                  resource="0" file="../Resources/Images/MemaRe.icon/Assets/White circle_White circle.svg"/>
+          </GROUP>
+          <FILE id="CCfJ0K" name="icon.json" compile="0" resource="0" file="../Resources/Images/MemaRe.icon/icon.json"/>
+        </GROUP>
         <FILE id="hHtooO" name="grid_4x4_24dp.svg" compile="0" resource="1"
               file="../submodules/JUCE-AppBasics/Resources/Images/grid_4x4_24dp.svg"/>
         <FILE id="LsoMoI" name="link_off_24dp.svg" compile="0" resource="1"
@@ -148,11 +164,11 @@
   </MODULES>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
   <EXPORTFORMATS>
-    <XCODE_MAC targetFolder="Builds/MacOSX" smallIcon="FTnVHP" bigIcon="FTnVHP"
-               iosDevelopmentTeamID="SB7Q3PP4FQ" hardenedRuntime="1" customPList="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#10;&#10;&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;&#10;&lt;plist&gt;&#10;  &lt;dict&gt;&#10;    &lt;key&gt;NSLocalNetworkUsageDescription&lt;/key&gt;&#10;    &lt;string&gt;Mema.Re uses multicast to discover IP Addresses of Mema instances on the network.&lt;/string&gt;&#10;    &lt;!-- New Xcode .icon integration --&gt;&#10;    &lt;key&gt;CFBundleIconName&lt;/key&gt;&#10;    &lt;string&gt;MemaRe&lt;/string&gt;&#10;  &lt;/dict&gt;&#10;&lt;/plist&gt;"
+    <XCODE_MAC targetFolder="Builds/MacOSX" iosDevelopmentTeamID="SB7Q3PP4FQ"
+               hardenedRuntime="1" customPList="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#10;&#10;&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;&#10;&lt;plist&gt;&#10;  &lt;dict&gt;&#10;    &lt;key&gt;NSLocalNetworkUsageDescription&lt;/key&gt;&#10;    &lt;string&gt;Mema.Re uses multicast to discover IP Addresses of Mema instances on the network.&lt;/string&gt;&#10;    &lt;!-- New Xcode .icon integration --&gt;&#10;    &lt;key&gt;CFBundleIconName&lt;/key&gt;&#10;    &lt;string&gt;MemaRe&lt;/string&gt;&#10;  &lt;/dict&gt;&#10;&lt;/plist&gt;"
                applicationCategory="public.app-category.utilities" appSandbox="1"
                appSandboxOptions="com.apple.security.network.client,com.apple.security.network.server"
-               networkingMulticast="1" customXcodeResourceFolders="../Resources/Images/MemaRe.icon">
+               networkingMulticast="1" iconComposerIcon="CCfJ0K">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" targetName="MemaRe"/>
         <CONFIGURATION isDebug="0" name="Release" customXcodeFlags="OTHER_CODE_SIGN_FLAGS = $(inherited) --timestamp -s 'Developer ID Application: Christian Ahrens', CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO"
@@ -220,13 +236,12 @@
         <MODULEPATH id="juce_audio_processors_headless" path="../submodules/JUCE/modules"/>
       </MODULEPATHS>
     </LINUX_MAKE>
-    <XCODE_IPHONE targetFolder="Builds/iOS" smallIcon="FTnVHP" bigIcon="FTnVHP"
-                  customLaunchStoryboard="../Resources/Deployment/iOS/Launchscreen-MemaRe.storyboard"
+    <XCODE_IPHONE targetFolder="Builds/iOS" customLaunchStoryboard="../Resources/Deployment/iOS/Launchscreen-MemaRe.storyboard"
                   iosScreenOrientation="UIInterfaceOrientationLandscapeRight,UIInterfaceOrientationPortrait"
                   iPadScreenOrientation="UIInterfaceOrientationLandscapeLeft,UIInterfaceOrientationLandscapeRight,UIInterfaceOrientationPortrait,UIInterfaceOrientationPortraitUpsideDown"
                   UIStatusBarHidden="1" networkingMulticast="1" iosDevelopmentTeamID="SB7Q3PP4FQ"
                   UIRequiresFullScreen="0" customPList="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#10;&#10;&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;&#10;&lt;plist&gt;&#10;  &lt;dict&gt;&#10;    &lt;key&gt;NSLocalNetworkUsageDescription&lt;/key&gt;&#10;    &lt;string&gt;Mema.Mo uses multicast to discover IP Addresses of Mema instances on the network.&lt;/string&gt;&#10;    &#9;&lt;key&gt;UIBackgroundModes&lt;/key&gt;&#10;    &#9;&lt;array&gt;&#10;&#9;      &#9;&lt;string&gt;processing&lt;/string&gt;&#10;    &#9;&lt;/array&gt;&#10;    &lt;key&gt;BGTaskSchedulerPermittedIdentifiers&lt;/key&gt;&#10;    &lt;array&gt;&#10;      &lt;string&gt;com.ChristianAhrens.MemaMo&lt;/string&gt;&#10;    &lt;/array&gt;&#10;    &lt;!-- New Xcode .icon integration --&gt;&#10;    &lt;key&gt;CFBundleIconName&lt;/key&gt;&#10;    &lt;string&gt;MemaRe&lt;/string&gt;&#10;&lt;/dict&gt;&#10;&lt;/plist&gt;"
-                  customXcodeResourceFolders="../Resources/Images/MemaRe.icon">
+                  iconComposerIcon="CCfJ0K">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" iosDeploymentTarget="15" iosCompatibility="15"
                        targetName="MemaRe"/>
