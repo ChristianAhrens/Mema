@@ -23,15 +23,8 @@
 #include "MemaClientControlComponentBase.h"
 
 #include <MemaProcessor/MemaPluginParameterInfo.h>
+#include <ParameterControlComponent.h>
 
-
-/**
- * Fwd. Decls.
- */
-namespace JUCEAppBasics
-{
-    class ToggleStateSlider;
-}
 
 namespace Mema
 {
@@ -51,7 +44,7 @@ public:
 
     //==============================================================================
     void resetCtrl() override;
-    
+
     //==============================================================================
     void setControlsSize(const ControlsSize& ctrlsSize) override;
 
@@ -72,22 +65,13 @@ public:
     std::function<void(bool)> onPluginEnabledChanged;
     std::function<void(bool)> onPluginPrePostChanged;
 
-protected:
-    //==============================================================================
-    void rebuildControls();
-    void rebuildLayout();
-
 private:
     //==============================================================================
-    std::unique_ptr<juce::Grid> m_parameterControlsGrid;
+    std::unique_ptr<juce::DrawableButton>  m_enableButton;
+    std::unique_ptr<juce::TextButton>      m_prePostButton;
+    std::unique_ptr<juce::Label>           m_pluginNameLabel;
 
-    std::unique_ptr<juce::DrawableButton>                                        m_enableButton;
-    std::unique_ptr<juce::TextButton>                                            m_prePostButton;
-    std::unique_ptr<juce::Label>                                                m_pluginNameLabel;
-    std::map<std::uint16_t, std::unique_ptr<juce::Label>>                       m_parameterNameLabels;
-    std::map<std::uint16_t, std::unique_ptr<juce::TextButton>>                  m_parameterValueButtons;
-    std::map<std::uint16_t, std::unique_ptr<JUCEAppBasics::ToggleStateSlider>>  m_parameterValueSliders;
-    std::map<std::uint16_t, std::unique_ptr<juce::ComboBox>>                    m_parameterValueComboBoxes;
+    std::unique_ptr<JUCEAppBasics::ParameterControlComponent> m_paramCtrl;
 
     std::string                             m_pluginName;
     std::vector<Mema::PluginParameterInfo>  m_pluginParameterInfos;

@@ -35,6 +35,10 @@
               file="../submodules/JUCE-AppBasics/Source/ToggleStateSlider.cpp"/>
         <FILE id="AxVeiO" name="ToggleStateSlider.h" compile="0" resource="0"
               file="../submodules/JUCE-AppBasics/Source/ToggleStateSlider.h"/>
+        <FILE id="pC1Jae" name="ParameterControlComponent.cpp" compile="1" resource="0"
+              file="../submodules/JUCE-AppBasics/Source/ParameterControlComponent.cpp"/>
+        <FILE id="pC1Kbf" name="ParameterControlComponent.h" compile="0" resource="0"
+              file="../submodules/JUCE-AppBasics/Source/ParameterControlComponent.h"/>
         <FILE id="iFIFTc" name="iOS_utils.cpp" compile="1" resource="0" file="../submodules/JUCE-AppBasics/Source/iOS_utils.cpp"/>
         <FILE id="u9384n" name="iOS_utils.h" compile="0" resource="0" file="../submodules/JUCE-AppBasics/Source/iOS_utils.h"/>
         <FILE id="Nm3rKq" name="iOS_utils_native.mm" compile="1" resource="0"
