@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+## [0.10.6] 2026-05-30
+### Added
+- Added option to show plug-in UI when using Mema in CLI mode (--headless)
+
+### Changed
+- Changed github pages deployment to dedicated product page and deploy doxygen to subdirectory
+- Changed submodule JUCE to tag 8.0.13
+
+### Fixed
+- Fixed Mema.Mo and Mema.Re iOS launchscreen icons
+- Fixed macOS/iOS app liquid-glass icons to comply with macOS/iOS/iPadOS 26 mask (finally make use of .icon assets supported by JUCE 8.0.13)
+- Fixed Mema segfault on Linux (ALSA) when using device channel configs with disabled indices or with class complient mode usb interfaces and low channel counts
+
 ## [0.10.5] 2026-04-26
 ### Added
 - Added Mema plug-in config (enabled, pre/post, remote control params) to CLI interface
