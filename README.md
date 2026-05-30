@@ -1,10 +1,8 @@
 <center>
 <img src="Resources/Documentation/Showreel/Showreel.001.png" alt="Mema Headline Icons" width="100%">
-<img src="Resources/Documentation/Showreel/Showreel.002.png" alt="Mema.Mo Headline Icons" width="100%">
-<img src="Resources/Documentation/Showreel/Showreel.003.png" alt="Mema.Re Headline Icons" width="100%">
 </center>
 
-Full code documentation available at [![Documentation](https://img.shields.io/badge/docs-doxygen-blue)](https://ChristianAhrens.github.io/Mema/)
+Full code documentation available at [![Documentation](https://img.shields.io/badge/docs-doxygen-blue)](https://ChristianAhrens.github.io/Mema/doxygen/)
 
 See [LATEST RELEASE](https://github.com/ChristianAhrens/Mema/releases/latest) for available binary packages or join iOS TestFlight Betas:
 
@@ -79,17 +77,17 @@ Use what is provided here at your own risk!
 
 ### Mema, Mema.Mo and Mema.Re
 
-![Showreel.004.png](Resources/Documentation/Showreel/Showreel.004.png "Mema and -Monitor in action")
+![Showreel.005.png](Resources/Documentation/Showreel/Showreel.005.png "Mema and -Monitor in action")
 
 <a name="MemaUI" />
 
 ### Mema UI details
 
-![Showreel.005.png](Resources/Documentation/Showreel/Showreel.005.png "Mema UI")
+![Showreel.006.png](Resources/Documentation/Showreel/Showreel.006.png "Mema UI")
 
 #### Mema UI plug-in handling details
 
-![Showreel.006.png](Resources/Documentation/Showreel/Showreel.006.png "Mema UI plug-in handling")
+![Showreel.007.png](Resources/Documentation/Showreel/Showreel.007.png "Mema UI plug-in handling")
 
 <a name="MemaPluginSignalChain" />
 
@@ -151,29 +149,29 @@ A typical use-case for **Post** is bus processing or upmixing (e.g. stereo → i
 
 ### Mema.Mo UI details
 
-![Showreel.007.png](Resources/Documentation/Showreel/Showreel.007.png "Mema.Mo UI")
+![Showreel.008.png](Resources/Documentation/Showreel/Showreel.008.png "Mema.Mo UI")
 
 #### Mema.Mo UI output format visualization details
 
-![Showreel.008.png](Resources/Documentation/Showreel/Showreel.008.png "Mema.Mo UI output formats")
+![Showreel.009.png](Resources/Documentation/Showreel/Showreel.009.png "Mema.Mo UI output formats")
 
 #### Mema.Mo UI waveforms visualization details
 
-![Showreel.009.png](Resources/Documentation/Showreel/Showreel.009.png "Mema.Mo UI waveforms visualization")
+![Showreel.010.png](Resources/Documentation/Showreel/Showreel.010.png "Mema.Mo UI waveforms visualization")
 
 #### Supported UI coloring
 
-![Showreel.010.png](Resources/Documentation/Showreel/Showreel.010.png "UI colouring options")
+![Showreel.011.png](Resources/Documentation/Showreel/Showreel.011.png "UI colouring options")
 
 <a name="MemaReUI" />
 
 ### Mema.Re UI details
 
-![Showreel.011.png](Resources/Documentation/Showreel/Showreel.011.png "Mema.Re UI")
+![Showreel.012.png](Resources/Documentation/Showreel/Showreel.012.png "Mema.Re UI")
 
 ### Mema.Re UI 2D sound field panning details
 
-![Showreel.012.png](Resources/Documentation/Showreel/Showreel.012.png "Mema.Re output panning")
+![Showreel.013.png](Resources/Documentation/Showreel/Showreel.013.png "Mema.Re output panning")
 
 <a name="MemaReADMOSC" />
 
@@ -183,7 +181,7 @@ ADM-OSC external control is affecting the 2D soundfield panning function in Mema
 
 _Currently only the cartesian coordinate control parameters are supported for panning control._
 
-![Showreel.013.png](Resources/Documentation/Showreel/Showreel.013.png "Mema.Re ADM-OSC support")
+![Showreel.014.png](Resources/Documentation/Showreel/Showreel.014.png "Mema.Re ADM-OSC support")
 
 | Supported ADM-OSC parameter | address         | type  | range          | Info |
 |:----------------------------|:----------------|:------|:---------------|:-----|
@@ -335,9 +333,9 @@ ___This does only work when using X server as graphics backend. Using Wayland re
 
 ## Usecase: Studio rack monitoring
 
-![Showreel.014.png](Resources/Documentation/Showreel/Showreel.014.png "Homestudio setup")
+![Showreel.015.png](Resources/Documentation/Showreel/Showreel.015.png "Homestudio setup")
 
-![Showreel.015.png](Resources/Documentation/Showreel/Showreel.015.png "RaspberryPi rack DIY device")
+![Showreel.016.png](Resources/Documentation/Showreel/Showreel.016.png "RaspberryPi rack DIY device")
 
 ![Studio_rack_monitoring_usecase.png](Resources/Documentation/Studio_rack_monitoring_usecase.png "Homestudio setup signalflow schematic")
 
@@ -353,7 +351,7 @@ ___This does only work when using X server as graphics backend. Using Wayland re
 
 ## Usecase: Mobile recording monitoring
 
-![Showreel.016.png](Resources/Documentation/Showreel/Showreel.016.png "Mobile rig")
+![Showreel.017.png](Resources/Documentation/Showreel/Showreel.017.png "Mobile rig")
 
 * Mema on macOS
   * BlackHole 16ch used to route signal from LogicPro, Apple Music, etc. to Mema
