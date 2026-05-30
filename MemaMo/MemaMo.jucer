@@ -43,11 +43,28 @@
     </GROUP>
     <GROUP id="{72AB56DC-8637-938F-3846-2BD91435687D}" name="Resources">
       <GROUP id="{5418C8BA-AFDC-83EF-A716-D3FB9CE9A772}" name="Images">
+        <GROUP id="{B1C1B99B-64C0-2974-1286-01FF9588C035}" name="MemaMo.icon">
+          <GROUP id="{6A6A6F48-3F20-9498-437A-BD656DFC103D}" name="Assets">
+            <FILE id="xHz3Ik" name="Bars_Bars.svg" compile="0" resource="0" file="../Resources/Images/MemaMo.icon/Assets/Bars_Bars.svg"/>
+            <FILE id="CcPgTo" name="Black circle_Black circle.svg" compile="0"
+                  resource="0" file="../Resources/Images/MemaMo.icon/Assets/Black circle_Black circle.svg"/>
+            <FILE id="ARZWwG" name="Grid_Grid.svg" compile="0" resource="0" file="../Resources/Images/MemaMo.icon/Assets/Grid_Grid.svg"/>
+            <FILE id="qA99hG" name="Inner grey circle_Inner grey circle.svg" compile="0"
+                  resource="0" file="../Resources/Images/MemaMo.icon/Assets/Inner grey circle_Inner grey circle.svg"/>
+            <FILE id="C7dpO1" name="Outer grey circle_Outer grey circle.svg" compile="0"
+                  resource="0" file="../Resources/Images/MemaMo.icon/Assets/Outer grey circle_Outer grey circle.svg"/>
+            <FILE id="RVl56m" name="Tune_Tune.svg" compile="0" resource="0" file="../Resources/Images/MemaMo.icon/Assets/Tune_Tune.svg"/>
+            <FILE id="RRslqQ" name="White circle_White circle.svg" compile="0"
+                  resource="0" file="../Resources/Images/MemaMo.icon/Assets/White circle_White circle.svg"/>
+          </GROUP>
+          <FILE id="AGkI2B" name="icon.json" compile="0" resource="0" file="../Resources/Images/MemaMo.icon/icon.json"/>
+        </GROUP>
         <FILE id="LsoMoI" name="link_off_24dp.svg" compile="0" resource="1"
               file="../submodules/JUCE-AppBasics/Resources/Images/link_off_24dp.svg"/>
         <FILE id="SM2kRq" name="Mema.png" compile="0" resource="1" file="../Resources/Images/Mema.png"/>
         <FILE id="FTY1kZ" name="MemaMo.png" compile="0" resource="1" file="../Resources/Images/MemaMo.png"/>
-        <FILE id="P02GhK" name="MemaMoRect.png" compile="0" resource="1" file="../Resources/Images/MemaMoRect.png"/>
+        <FILE id="P02GhK" name="MemaMoRect.png" compile="0" resource="1" file="../Resources/Images/MemaMoRect.png"
+              xcodeResource="1"/>
         <FILE id="D3JJ8C" name="question_mark_24dp.svg" compile="0" resource="1"
               file="../submodules/JUCE-AppBasics/Resources/Images/question_mark_24dp.svg"/>
         <FILE id="PU3KWa" name="settings_24dp.svg" compile="0" resource="1"
@@ -149,11 +166,11 @@
   </MODULES>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
   <EXPORTFORMATS>
-    <XCODE_MAC targetFolder="Builds/MacOSX" smallIcon="P02GhK" bigIcon="P02GhK"
-               iosDevelopmentTeamID="SB7Q3PP4FQ" hardenedRuntime="1" customPList="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#10;&#10;&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;&#10;&lt;plist&gt;&#10;  &lt;dict&gt;&#10;    &lt;key&gt;NSLocalNetworkUsageDescription&lt;/key&gt;&#10;    &lt;string&gt;Mema.Mo uses multicast to discover IP Addresses of Mema instances on the network.&lt;/string&gt;&#10;    &lt;!-- New Xcode .icon integration --&gt;&#10;    &lt;key&gt;CFBundleIconName&lt;/key&gt;&#10;    &lt;string&gt;MemaMo&lt;/string&gt;&#10;  &lt;/dict&gt;&#10;&lt;/plist&gt;"
+    <XCODE_MAC targetFolder="Builds/MacOSX" iosDevelopmentTeamID="SB7Q3PP4FQ"
+               hardenedRuntime="1" customPList="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#10;&#10;&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;&#10;&lt;plist&gt;&#10;  &lt;dict&gt;&#10;    &lt;key&gt;NSLocalNetworkUsageDescription&lt;/key&gt;&#10;    &lt;string&gt;Mema.Mo uses multicast to discover IP Addresses of Mema instances on the network.&lt;/string&gt;&#10;    &lt;!-- New Xcode .icon integration --&gt;&#10;    &lt;key&gt;CFBundleIconName&lt;/key&gt;&#10;    &lt;string&gt;MemaMo&lt;/string&gt;&#10;  &lt;/dict&gt;&#10;&lt;/plist&gt;"
                applicationCategory="public.app-category.utilities" appSandbox="1"
                appSandboxOptions="com.apple.security.network.client,com.apple.security.network.server"
-               networkingMulticast="1" customXcodeResourceFolders="../Resources/Images/MemaMo.icon">
+               networkingMulticast="1" iconComposerIcon="AGkI2B">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" targetName="MemaMo"/>
         <CONFIGURATION isDebug="0" name="Release" customXcodeFlags="OTHER_CODE_SIGN_FLAGS = $(inherited) --timestamp -s 'Developer ID Application: Christian Ahrens', CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO"
@@ -218,13 +235,12 @@
         <MODULEPATH id="juce_audio_processors_headless" path="../submodules/JUCE/modules"/>
       </MODULEPATHS>
     </LINUX_MAKE>
-    <XCODE_IPHONE targetFolder="Builds/iOS" smallIcon="P02GhK" bigIcon="P02GhK"
-                  customLaunchStoryboard="../Resources/Deployment/iOS/Launchscreen-MemaMo.storyboard"
+    <XCODE_IPHONE targetFolder="Builds/iOS" customLaunchStoryboard="../Resources/Deployment/iOS/Launchscreen-MemaMo.storyboard"
                   iosScreenOrientation="UIInterfaceOrientationLandscapeRight,UIInterfaceOrientationPortrait"
                   iPadScreenOrientation="UIInterfaceOrientationLandscapeLeft,UIInterfaceOrientationLandscapeRight,UIInterfaceOrientationPortrait,UIInterfaceOrientationPortraitUpsideDown"
                   UIStatusBarHidden="1" networkingMulticast="1" iosDevelopmentTeamID="SB7Q3PP4FQ"
                   UIRequiresFullScreen="0" customPList="&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;&#10;&#10;&lt;!DOCTYPE plist PUBLIC &quot;-//Apple//DTD PLIST 1.0//EN&quot; &quot;http://www.apple.com/DTDs/PropertyList-1.0.dtd&quot;&gt;&#10;&lt;plist&gt;&#10;  &lt;dict&gt;&#10;    &lt;key&gt;NSLocalNetworkUsageDescription&lt;/key&gt;&#10;    &lt;string&gt;Mema.Mo uses multicast to discover IP Addresses of Mema instances on the network.&lt;/string&gt;&#10;    &#9;&lt;key&gt;UIBackgroundModes&lt;/key&gt;&#10;    &#9;&lt;array&gt;&#10;&#9;      &#9;&lt;string&gt;processing&lt;/string&gt;&#10;    &#9;&lt;/array&gt;&#10;    &lt;key&gt;BGTaskSchedulerPermittedIdentifiers&lt;/key&gt;&#10;    &lt;array&gt;&#10;      &lt;string&gt;com.ChristianAhrens.MemaMo&lt;/string&gt;&#10;    &lt;/array&gt;&#10;    &lt;!-- New Xcode .icon integration --&gt;&#10;    &lt;key&gt;CFBundleIconName&lt;/key&gt;&#10;    &lt;string&gt;MemaMo&lt;/string&gt;&#10;&lt;/dict&gt;&#10;&lt;/plist&gt;"
-                  customXcodeResourceFolders="../Resources/Images/MemaMo.icon">
+                  iconComposerIcon="AGkI2B" smallIcon="P02GhK" bigIcon="P02GhK">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" iosDeploymentTarget="15" iosCompatibility="15"
                        targetName="MemaMo"/>

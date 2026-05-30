@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="$description$">
+  <meta property="og:title" content="$title$">
+  <meta property="og:description" content="$description$">
+  <meta property="og:type" content="website">
+  <title>$title$</title>
+  <style>
+    :root {
+      --bg:          #0d1117;
+      --surface:     #161b22;
+      --surface-2:   #21262d;
+      --border:      #30363d;
+      --text:        #e6edf3;
+      --text-muted:  #848d97;
+      --accent:      #58a6ff;
+      --accent-dim:  #1f3a5f;
+      --accent-hover:#79b8ff;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Navigation ── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(13, 17, 23, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    nav {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      height: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+      text-decoration: none;
+      letter-spacing: -0.01em;
+    }
+
+    .nav-brand img {
+      height: 28px;
+      width: auto;
+      border: none;
+      border-radius: 6px;
+      margin: 0;
+      display: block;
+    }
+
+    .hero-icon {
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-icon img {
+      height: 96px;
+      width: auto;
+      border: none;
+      border-radius: 16px;
+      margin: 0;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
+    .nav-links a {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-links .btn-docs {
+      color: var(--accent);
+      border: 1px solid var(--accent-dim);
+      padding: 0.3rem 0.75rem;
+      border-radius: 6px;
+      font-weight: 600;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .nav-links .btn-docs:hover {
+      background: var(--accent-dim);
+      color: var(--text);
+    }
+
+    /* ── Main content ── */
+    main {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 3.5rem 1.5rem 5rem;
+    }
+
+    /* ── Headings ── */
+    h1 {
+      font-size: 2.75rem;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.75rem;
+      background: linear-gradient(135deg, var(--text) 55%, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    h2 {
+      font-size: 1.45rem;
+      font-weight: 700;
+      margin-top: 3.25rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border);
+      letter-spacing: -0.01em;
+    }
+
+    h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-top: 2rem;
+      margin-bottom: 0.6rem;
+    }
+
+    h4 {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-muted);
+      margin-top: 1.5rem;
+      margin-bottom: 0.4rem;
+    }
+
+    /* ── Body text ── */
+    p { margin-bottom: 1rem; }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    strong { color: var(--text); font-weight: 600; }
+
+    /* ── CTA button row ── */
+    .cta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin: 1.5rem 0 2rem;
+    }
+
+    .cta p { margin: 0; }
+
+    .cta p a {
+      display: inline-block;
+      padding: 0.55rem 1.3rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.925rem;
+      text-decoration: none;
+      transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+    }
+
+    .cta p:first-child a {
+      background: var(--accent);
+      color: #0d1117;
+    }
+
+    .cta p:first-child a:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .cta p:not(:first-child) a {
+      background: var(--surface-2);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .cta p:not(:first-child) a:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      transform: translateY(-1px);
+    }
+
+    /* ── Lists ── */
+    ul, ol {
+      margin: 0.5rem 0 1.25rem 1.4rem;
+    }
+
+    li { margin-bottom: 0.45rem; }
+    li p { margin-bottom: 0.25rem; }
+
+    /* ── Tables ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.25rem 0;
+      font-size: 0.9rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th {
+      background: var(--surface-2);
+      padding: 0.65rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.85rem;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: rgba(88, 166, 255, 0.04); }
+
+    /* ── Code ── */
+    code {
+      font-family: "SFMono-Regular", "Cascadia Code", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.875em;
+      background: var(--surface-2);
+      color: #e06c75;
+      padding: 0.15em 0.45em;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    pre {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      overflow-x: auto;
+      margin: 1.25rem 0;
+    }
+
+    pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      color: var(--text);
+      font-size: 0.875rem;
+    }
+
+    /* ── Images ── */
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 10px;
+      margin: 1.25rem 0;
+      display: block;
+      border: 1px solid var(--border);
+    }
+
+    img[src*="shields.io"],
+    img[src*="img.shields.io"],
+    img[src*="ci.appveyor.com"] {
+      display: inline;
+      margin: 0 0.2rem 0 0;
+      border: none;
+      border-radius: 3px;
+      vertical-align: middle;
+    }
+
+    /* ── Blockquote ── */
+    blockquote {
+      border-left: 3px solid var(--accent);
+      margin: 1.25rem 0;
+      padding: 0.75rem 1.25rem;
+      background: var(--surface);
+      border-radius: 0 8px 8px 0;
+      color: var(--text-muted);
+    }
+
+    blockquote p { margin-bottom: 0; }
+
+    /* ── Horizontal rule ── */
+    hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 3rem 0;
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .footer-inner {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.75rem;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .footer-links a:hover { color: var(--text); }
+
+    /* ── Responsive ── */
+    @media (max-width: 680px) {
+      h1 { font-size: 2rem; }
+      h2 { font-size: 1.25rem; margin-top: 2.5rem; }
+      main { padding: 2rem 1rem 3.5rem; }
+      nav { padding: 0 1rem; }
+      .nav-links { gap: 0.75rem; }
+      table { font-size: 0.82rem; }
+      th, td { padding: 0.5rem 0.6rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <nav>
+    <a class="nav-brand" href="#">$if(icon)$<img src="$icon$" alt="">$endif$$title$</a>
+    <div class="nav-links">
+      <a href="$github_url$">GitHub</a>
+      <a href="doxygen/" class="btn-docs">API Docs</a>
+    </div>
+  </nav>
+</header>
+
+<main>
+$if(icon)$<div class="hero-icon"><img src="$icon$" alt="$title$ icon"></div>$endif$
+$body$
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-links">
+      <a href="$github_url$">GitHub Repository</a>
+      <a href="doxygen/">API Documentation</a>
+      <a href="$github_url$/blob/main/README.md">Full README</a>
+    </div>
+    <p>Open source &mdash; use what is provided here at your own risk.</p>
+  </div>
+</footer>
+
+</body>
+</html>

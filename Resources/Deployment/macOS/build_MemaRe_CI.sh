@@ -15,4 +15,4 @@ xcodebuild -project "$ProjucerPath"/Projucer.xcodeproj -configuration Release -j
 "$ProjucerBinPath" --resave "$JucerProjectPath" --fix-missing-dependencies
 
 # start building the project. The provisioning profile specification refers to a profile manually created and physically present on the build machine...
-xcodebuild -project "$XCodeProjectPath" -configuration Release -jobs 8 CODE_SIGNING_ALLOWED=NO
+xcodebuild -project "$XCodeProjectPath" -configuration Release -jobs 8 CODE_SIGNING_ALLOWED=NO CODE_SIGN_IDENTITY="-"
