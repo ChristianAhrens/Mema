@@ -290,9 +290,9 @@ void PluginControlComponent::showPluginsList(juce::Point<int> showPosition)
 	auto const display = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay();
 	if (nullptr != display && nullptr != m_pluginSelectionComponent)
 	{
-		if (display->totalArea.getHeight() < showPosition.getY() + m_pluginSelectionComponent->getHeight())
+		if (display->logicalBounds.getHeight() < showPosition.getY() + m_pluginSelectionComponent->getHeight())
 			showPosition.setY(showPosition.getY() - m_pluginSelectionComponent->getHeight() - 30);
-		if (display->totalArea.getWidth() < showPosition.getX() + m_pluginSelectionComponent->getWidth())
+		if (display->logicalBounds.getWidth() < showPosition.getX() + m_pluginSelectionComponent->getWidth())
 			showPosition.setX(showPosition.getX() - m_pluginSelectionComponent->getWidth() - 30);
 	}
 	m_pluginSelectionComponent->setTopLeftPosition(showPosition);

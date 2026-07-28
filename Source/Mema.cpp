@@ -108,7 +108,7 @@ juce::Component* Mema::getMemaProcessorEditor()
     if (m_MemaProcessor)
     {
         if (nullptr == m_MemaProcessor->getActiveEditor())
-            m_MemaProcessor->createEditorIfNeeded();
+            m_MemaProcessor->createEditorAndMakeActive();
 
         if (auto editor = dynamic_cast<MemaProcessorEditor*>(m_MemaProcessor->getActiveEditor()))
         {

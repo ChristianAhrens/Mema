@@ -1215,7 +1215,7 @@ void MemaProcessor::openPluginEditor()
 {
 	if (m_pluginInstance)
 	{
-		auto pluginEditorInstance = m_pluginInstance->createEditorIfNeeded();
+		auto pluginEditorInstance = m_pluginInstance->createEditorAndMakeActive();
 		if (pluginEditorInstance && !m_pluginEditorWindow)
 		{
 			m_pluginEditorWindow = std::make_unique<ResizeableWindowWithTitleBarAndCloseCallback>(juce::JUCEApplication::getInstance()->getApplicationName() + " : " + m_pluginInstance->getName(), true);
