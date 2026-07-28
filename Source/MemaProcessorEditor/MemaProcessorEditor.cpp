@@ -197,7 +197,7 @@ void MemaProcessorEditor::resized()
 
 void MemaProcessorEditor::lookAndFeelChanged()
 {
-    auto resetToUnityDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::replay_24dp_svg).get());
+    auto resetToUnityDrawable = juce::Drawable::createFromSVGString(BinaryData::replay_24dp_svg);
     resetToUnityDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
     m_resetToUnityButton->setImages(resetToUnityDrawable.get());
 

@@ -149,7 +149,7 @@ void WaveformAudioComponent::lookAndFeelChanged()
             getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId),
             getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::MeteringRmsColourId));
 
-    auto chNumSelButtonDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::waves24px_svg).get());
+    auto chNumSelButtonDrawable = juce::Drawable::createFromSVGString(BinaryData::waves24px_svg);
     chNumSelButtonDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
     m_chNumSelButton->setImages(chNumSelButtonDrawable.get());
 }

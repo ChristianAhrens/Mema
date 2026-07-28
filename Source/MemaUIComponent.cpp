@@ -208,10 +208,10 @@ MemaUIComponent::MemaUIComponent()
         settingsMenu.addSubMenu("LookAndFeel", lookAndFeelSubMenu);
         settingsMenu.addSubMenu("Metering colour", meteringColourSubMenu);
         settingsMenu.addSeparator();
-        auto loadDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::folder_open24px_svg).get());
+        auto loadDrawable = juce::Drawable::createFromSVGString(BinaryData::folder_open24px_svg);
         loadDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
         settingsMenu.addItem(MemaSettingsOption::LoadConfig, "Load config...", true, false, std::move(loadDrawable));
-        auto saveDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::save24px_svg).get());
+        auto saveDrawable = juce::Drawable::createFromSVGString(BinaryData::save24px_svg);
         saveDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
         settingsMenu.addItem(MemaSettingsOption::SaveConfig, "Save config...", true, false, std::move(saveDrawable));
         settingsMenu.showMenuAsync(juce::PopupMenu::Options(), [=](int selectedId) { handleSettingsMenuResult(selectedId); });
@@ -404,23 +404,23 @@ void MemaUIComponent::applyPaletteStyle(const JUCEAppBasics::CustomLookAndFeel::
 
 void MemaUIComponent::lookAndFeelChanged()
 {
-    auto powerDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::power_settings_24dp_svg).get());
+    auto powerDrawable = juce::Drawable::createFromSVGString(BinaryData::power_settings_24dp_svg);
     powerDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
     m_powerButton->setImages(powerDrawable.get());
 
-    auto appSettingsButtonDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::settings_24dp_svg).get());
+    auto appSettingsButtonDrawable = juce::Drawable::createFromSVGString(BinaryData::settings_24dp_svg);
     appSettingsButtonDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
     m_appSettingsButton->setImages(appSettingsButtonDrawable.get());
 
-    auto audioSetupButtonDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::tune_24dp_svg).get());
+    auto audioSetupButtonDrawable = juce::Drawable::createFromSVGString(BinaryData::tune_24dp_svg);
     audioSetupButtonDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
     m_audioSetupButton->setImages(audioSetupButtonDrawable.get());
 
-    auto aboutButtonDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::question_mark_24dp_svg).get());
+    auto aboutButtonDrawable = juce::Drawable::createFromSVGString(BinaryData::question_mark_24dp_svg);
     aboutButtonDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
     m_aboutButton->setImages(aboutButtonDrawable.get());
 
-    auto standaloneWindowDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse((isStandaloneWindow() ? BinaryData::open_in_new_down_24dp_svg : BinaryData::open_in_new24px_svg)).get());
+    auto standaloneWindowDrawable = juce::Drawable::createFromSVGString((isStandaloneWindow() ? BinaryData::open_in_new_down_24dp_svg : BinaryData::open_in_new24px_svg));
     standaloneWindowDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
     m_toggleStandaloneWindowButton->setImages(standaloneWindowDrawable.get());
     

@@ -191,7 +191,7 @@ void PluginControlComponent::lookAndFeelChanged()
 
     if (m_enableButton)
     {
-        auto drawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::power_settings_24dp_svg).get());
+        auto drawable = juce::Drawable::createFromSVGString(BinaryData::power_settings_24dp_svg);
         drawable->replaceColour(juce::Colours::black, textColour);
         m_enableButton->setImages(drawable.get(), nullptr, nullptr, nullptr, drawable.get());
     }
