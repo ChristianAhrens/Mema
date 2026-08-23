@@ -439,7 +439,12 @@ void PanningControlComponent::changeInputPosition(std::uint16_t channel, std::op
     {
         m_positionMapper->setOutputIncludePositions(m_multiSlider->getOutputsInLayer(TwoDFieldMultisliderComponent::ChannelLayer(layerVal)));
         m_positionMapper->setOutputIgnorePositions(m_multiSlider->getDirectiveOutputsNotInLayer(TwoDFieldMultisliderComponent::ChannelLayer(layerVal)));
-        m_positionMapper->mapInputPosition(channel, { -xVal, yVal }, sharpnessVal);
+        // TwoDMultisliderValue's y axis is "logically up positive" (the knob is drawn with its y offset
+        // negated, see TwoDFieldMultisliderComponent::paintSliderKnob), while InputPositionMapper's output
+        // positions are plain (sin, -cos) screen-space points with no such flip - negate y here, not x, so
+        // the position handed to the mapper lands in the same coordinate space as the output positions it
+        // is compared against.
+        m_positionMapper->mapInputPosition(channel, { xVal, -yVal }, sharpnessVal);
 
         if (juce::NotificationType::dontSendNotification != notification)
         {

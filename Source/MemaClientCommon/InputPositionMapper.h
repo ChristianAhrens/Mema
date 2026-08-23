@@ -25,7 +25,7 @@ namespace Mema
 {
 
 
-/** @class InputPositionMapper @brief Maps input-channel 2-D positions to distances from configured output speaker positions. */
+/** @class InputPositionMapper @brief Maps input-channel 2-D positions to per-output level (gain) values, based on proximity to configured output speaker positions. */
 class InputPositionMapper
 {
 public:
@@ -50,8 +50,14 @@ public:
         if (onInputPositionMapped && getAngleForChannelType) // no need to do any processing if the mandatory access hooks are not set
         {
             std::map<juce::AudioChannelSet::ChannelType, juce::Point<float>> outputsMaxPoints;
+            std::map<juce::AudioChannelSet::ChannelType, float> channelToOutputsProximity;
             std::map<juce::AudioChannelSet::ChannelType, float> channelToOutputsDists;
 
+            // first pass: determine each active output's fixed position on the panning circle and its
+            // proximity to the current input position (1 = input sits exactly on the output, 0 = input
+            // sits at the diametrically opposite point of the circle), and track the single nearest output.
+            auto nearestChannelType = juce::AudioChannelSet::ChannelType::unknown;
+            auto nearestProximity = -1.0f;
             for (auto const& channelType : m_outputIncludePositions)
             {
                 auto angleRad = juce::degreesToRadians(getAngleForChannelType(channelType));
@@ -59,19 +65,36 @@ public:
                 auto yLength = cosf(angleRad);
                 outputsMaxPoints[channelType] = juce::Point<float>(xLength, -yLength);
 
-                // this is the actual primitive sourceposition-to-output level calculation algorithm
                 auto outputMaxPoint = outputsMaxPoints[channelType];
                 auto distance = outputMaxPoint.getDistanceFrom(inputPosition);
-                auto base = 0.5f * distance;
-                auto exp = jmap(sharpness, 1.0f, 5.0f);
-                channelToOutputsDists[channelType] = powf(base, exp);
+                auto proximity = 1.0f - jlimit(0.0f, 1.0f, 0.5f * distance);
+                channelToOutputsProximity[channelType] = proximity;
+
+                if (proximity > nearestProximity)
+                {
+                    nearestProximity = proximity;
+                    nearestChannelType = channelType;
+                }
+            }
+
+            // second pass: this is the actual primitive sourceposition-to-output level calculation algorithm.
+            // at maximum sharpness, route exclusively to the single nearest output - no finite exponent of
+            // the smooth falloff curve below can reach an exact zero for the remaining outputs.
+            auto exp = jmap(sharpness, 1.0f, 5.0f);
+            auto isHardPanned = sharpness >= 1.0f;
+            for (auto const& channelType : m_outputIncludePositions)
+            {
+                if (isHardPanned)
+                    channelToOutputsDists[channelType] = (channelType == nearestChannelType) ? 1.0f : 0.0f;
+                else
+                    channelToOutputsDists[channelType] = powf(channelToOutputsProximity[channelType], exp);
 
                 //DBG(juce::String(__FUNCTION__) << " incl. " << juce::AudioChannelSet::getAbbreviatedChannelTypeName(channelType) << ": " << channelToOutputsDists[channelType]);
             }
             for (auto const& channelType : m_outputIgnorePositions)
             {
                 channelToOutputsDists[channelType] = 0.0f;
-                
+
                 //DBG(juce::String(__FUNCTION__) << " excl. " << juce::AudioChannelSet::getAbbreviatedChannelTypeName(channelType) << ": " << channelToOutputsDists[channelType]);
             }
 
