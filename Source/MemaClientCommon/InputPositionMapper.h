@@ -78,16 +78,22 @@ public:
             }
 
             // second pass: this is the actual primitive sourceposition-to-output level calculation algorithm.
-            // at maximum sharpness, route exclusively to the single nearest output - no finite exponent of
-            // the smooth falloff curve below can reach an exact zero for the remaining outputs.
+            // sharpness blends between the smooth falloff curve and a hard "nearest output only" cutoff,
+            // with the crossfade confined to the top s_hardPanBlendRange of the sharpness scale so that
+            // dragging sharpness up to its maximum does not produce an audible jump. That blend is further
+            // gated by how far out the input position sits (radius 0 = field centre, 1 = the circle's
+            // outer edge): single-output isolation is only ever reached exactly on the edge - moving the
+            // position back towards the centre feeds neighbouring outputs increasingly again, even at
+            // maximum sharpness. sharpness == 1.0 at radius == 1.0 still guarantees an exact single-output
+            // result, since no finite exponent of the smooth curve alone can reach an exact zero.
             auto exp = jmap(sharpness, 1.0f, 5.0f);
-            auto isHardPanned = sharpness >= 1.0f;
+            auto radius = jlimit(0.0f, 1.0f, inputPosition.getDistanceFromOrigin());
+            auto hardPanBlend = jlimit(0.0f, 1.0f, (sharpness - (1.0f - s_hardPanBlendRange)) / s_hardPanBlendRange) * radius;
             for (auto const& channelType : m_outputIncludePositions)
             {
-                if (isHardPanned)
-                    channelToOutputsDists[channelType] = (channelType == nearestChannelType) ? 1.0f : 0.0f;
-                else
-                    channelToOutputsDists[channelType] = powf(channelToOutputsProximity[channelType], exp);
+                auto smoothLevel = powf(channelToOutputsProximity[channelType], exp);
+                auto hardLevel = (channelType == nearestChannelType) ? 1.0f : 0.0f;
+                channelToOutputsDists[channelType] = jmap(hardPanBlend, smoothLevel, hardLevel);
 
                 //DBG(juce::String(__FUNCTION__) << " incl. " << juce::AudioChannelSet::getAbbreviatedChannelTypeName(channelType) << ": " << channelToOutputsDists[channelType]);
             }
@@ -110,6 +116,10 @@ protected:
 
 private:
     //==============================================================================
+    // portion of the sharpness range (immediately below its maximum of 1.0) over which
+    // mapInputPosition crossfades from the smooth falloff curve to the hard single-output cutoff,
+    // once the input position is also out at the panning circle's edge (see mapInputPosition).
+    static constexpr float s_hardPanBlendRange = 0.1f;
 
     //==============================================================================
     juce::Array<juce::AudioChannelSet::ChannelType> m_outputIncludePositions;
