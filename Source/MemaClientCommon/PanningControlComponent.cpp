@@ -375,6 +375,11 @@ void PanningControlComponent::setCrosspointStates(const std::map<std::uint16_t, 
 
     if (m_multiSlider)
         m_multiSlider->setInputToOutputStates(crosspointStates);
+
+    // reflect a routing matrix that was set on Mema itself (e.g. through another remote control
+    // instance, or directly on the Mema server) back into this input's visualized panning position.
+    for (auto const& iKV : crosspointStates)
+        syncInputPositionFromRouting(iKV.first);
 }
 
 void PanningControlComponent::setCrosspointValues(const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues)
@@ -439,7 +444,12 @@ void PanningControlComponent::changeInputPosition(std::uint16_t channel, std::op
     {
         m_positionMapper->setOutputIncludePositions(m_multiSlider->getOutputsInLayer(TwoDFieldMultisliderComponent::ChannelLayer(layerVal)));
         m_positionMapper->setOutputIgnorePositions(m_multiSlider->getDirectiveOutputsNotInLayer(TwoDFieldMultisliderComponent::ChannelLayer(layerVal)));
-        m_positionMapper->mapInputPosition(channel, { -xVal, yVal }, sharpnessVal);
+        // TwoDMultisliderValue's y axis is "logically up positive" (the knob is drawn with its y offset
+        // negated, see TwoDFieldMultisliderComponent::paintSliderKnob), while InputPositionMapper's output
+        // positions are plain (sin, -cos) screen-space points with no such flip - negate y here, not x, so
+        // the position handed to the mapper lands in the same coordinate space as the output positions it
+        // is compared against.
+        m_positionMapper->mapInputPosition(channel, { xVal, -yVal }, sharpnessVal);
 
         if (juce::NotificationType::dontSendNotification != notification)
         {
@@ -466,6 +476,55 @@ void PanningControlComponent::changeInputPosition(std::uint16_t channel, std::op
         if (sharpnessOpt.has_value())
             m_admOsController->setParameter(channel, ADMOSController::ADMOSCParameterWidth(1.0f - sharpnessVal), admTarget);
     }
+}
+
+void PanningControlComponent::syncInputPositionFromRouting(std::uint16_t channel)
+{
+    if (!m_multiSlider)
+        return;
+
+    // Only reflect the routing matrix back into the panning position for the clean-cut case of a
+    // single directional output being active for this input - an arbitrary multi-output routing has
+    // no unique (x, y, sharpness) inverse, so anything less clear-cut is deliberately left untouched
+    // to avoid fighting the user's (or another controller's) last explicit panning input.
+    auto const& crosspointStates = getCrosspointStates();
+    auto inputStatesIter = crosspointStates.find(channel);
+    if (inputStatesIter == crosspointStates.end())
+        return;
+
+    auto directionalOutputs = m_multiSlider->getOutputsInLayer(TwoDFieldMultisliderComponent::ChannelLayer::Positioned);
+    directionalOutputs.addArray(m_multiSlider->getOutputsInLayer(TwoDFieldMultisliderComponent::ChannelLayer::PositionedHeight));
+
+    auto activeChannelType = juce::AudioChannelSet::ChannelType::unknown;
+    auto activeCount = 0;
+    for (auto const& oKV : inputStatesIter->second)
+    {
+        if (!oKV.second)
+            continue;
+
+        auto channelType = m_multiSlider->getChannelTypeForChannelNumberInCurrentConfiguration(oKV.first);
+        if (!directionalOutputs.contains(channelType))
+            continue; // ignore directionless (e.g. LFE) crosspoints - they are not part of the panning circle
+
+        activeChannelType = channelType;
+        activeCount++;
+    }
+
+    if (1 != activeCount || juce::AudioChannelSet::ChannelType::unknown == activeChannelType)
+        return; // not a clean single-output route - leave the current panning position as-is
+
+    auto layer = m_multiSlider->getOutputsInLayer(TwoDFieldMultisliderComponent::ChannelLayer::PositionedHeight).contains(activeChannelType)
+        ? TwoDFieldMultisliderComponent::ChannelLayer::PositionedHeight
+        : TwoDFieldMultisliderComponent::ChannelLayer::Positioned;
+
+    // place the knob exactly on the active output's own position on the panning circle, at maximum
+    // sharpness - the mirror image of InputPositionMapper::mapInputPosition's hard-pan calculation.
+    // (relXPos, relYPos) = (sin, cos) reproduces that output's own drawn position: the knob's y offset
+    // is negated at paint time (see paintSliderKnob), matching the mapper's (sin, -cos) output points.
+    auto angleRad = juce::degreesToRadians(m_multiSlider->getAngleForChannelTypeInCurrentConfiguration(activeChannelType));
+    auto position = TwoDFieldMultisliderComponent::TwoDMultisliderValue(sinf(angleRad), cosf(angleRad));
+
+    m_multiSlider->setInputPosition(channel, position, 1.0f, layer, juce::dontSendNotification);
 }
 
 void PanningControlComponent::processOutputDistances(std::uint16_t channel, const std::map<juce::AudioChannelSet::ChannelType, float>& channelToOutputsDists)
