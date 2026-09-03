@@ -4,12 +4,15 @@ All notable changes to Mema will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.11.0] 2026-09-03
 ### Added
 
 ### Changed
+- Changed submodule JUCE to new major release 9
+- Changed submodule NanoOcp to latest JUCEless release
 
 ### Fixed
+- Fixed Mema.Re panning sharpness to allow input to single output panning (Github issue #6)
 
 ## [0.10.6] 2026-05-30
 ### Added
