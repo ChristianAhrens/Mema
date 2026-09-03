@@ -1,0 +1,7 @@
+<map id="Mema::FaderbankControlComponent" name="Mema::FaderbankControlComponent">
+<area shape="rect" id="Node000001" title="Fader&#45;bank remote control — presents input×output crosspoint sliders and mute buttons." alt="" coords="27,152,287,177"/>
+<area shape="rect" id="Node000002" href="$classMema_1_1MemaClientControlComponentBase.html" title="Abstract base for all Mema.Re client control panels." alt="" coords="5,79,309,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="160,118,160,152,155,152,155,118"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="91,5,223,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="160,44,160,79,155,79,155,44"/>
+</map>

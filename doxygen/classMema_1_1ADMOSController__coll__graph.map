@@ -1,0 +1,7 @@
+<map id="Mema::ADMOSController" name="Mema::ADMOSController">
+<area shape="rect" id="Node000001" title="Receives ADM&#45;OSC UDP packets and translates them into panning position and mute updates." alt="" coords="261,52,445,77"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,5,213,60"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="227,45,262,50,261,55,227,51"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="26,84,193,109"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="206,81,261,74,261,79,207,87"/>
+</map>

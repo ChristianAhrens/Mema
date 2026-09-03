@@ -1,0 +1,5 @@
+<map id="Mema::PluginParameterInfosChangedMessage" name="Mema::PluginParameterInfosChangedMessage">
+<area shape="rect" id="Node000001" title="Internal JUCE message posted to the message thread when plugin parameter descriptors change." alt="" coords="5,79,216,119"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="53,5,168,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="113,44,113,79,108,79,108,44"/>
+</map>

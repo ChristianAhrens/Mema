@@ -1,0 +1,5 @@
+<map id="Mema::InterprocessConnectionImpl" name="Mema::InterprocessConnectionImpl">
+<area shape="rect" id="Node000001" title="Client&#45;side TCP connection wrapper that forwards JUCE IPC events to std::function callbacks." alt="" coords="5,79,259,104"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="27,5,237,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="135,44,135,79,129,79,129,44"/>
+</map>

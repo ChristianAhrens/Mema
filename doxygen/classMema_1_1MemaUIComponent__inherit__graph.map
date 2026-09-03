@@ -1,0 +1,9 @@
+<map id="Mema::MemaUIComponent" name="Mema::MemaUIComponent">
+<area shape="rect" id="Node000001" title="Main UI shell for the Mema application — composes the processor editor, toolbar, load bars,..." alt="" coords="293,55,495,80"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="59,5,191,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="205,30,324,52,323,57,204,35"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="14,55,237,80"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="250,65,293,65,293,70,250,70"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="5,105,245,145"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="232,99,333,77,334,83,233,104"/>
+</map>
