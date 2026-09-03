@@ -290,9 +290,9 @@ void PluginControlComponent::showPluginsList(juce::Point<int> showPosition)
 	auto const display = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay();
 	if (nullptr != display && nullptr != m_pluginSelectionComponent)
 	{
-		if (display->totalArea.getHeight() < showPosition.getY() + m_pluginSelectionComponent->getHeight())
+		if (display->logicalBounds.getHeight() < showPosition.getY() + m_pluginSelectionComponent->getHeight())
 			showPosition.setY(showPosition.getY() - m_pluginSelectionComponent->getHeight() - 30);
-		if (display->totalArea.getWidth() < showPosition.getX() + m_pluginSelectionComponent->getWidth())
+		if (display->logicalBounds.getWidth() < showPosition.getX() + m_pluginSelectionComponent->getWidth())
 			showPosition.setX(showPosition.getX() - m_pluginSelectionComponent->getWidth() - 30);
 	}
 	m_pluginSelectionComponent->setTopLeftPosition(showPosition);
@@ -528,19 +528,19 @@ void PluginControlComponent::paint(Graphics& g)
 
 void PluginControlComponent::lookAndFeelChanged()
 {
-	auto enableDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::power_settings_24dp_svg).get());
+	auto enableDrawable = juce::Drawable::createFromSVGString(BinaryData::power_settings_24dp_svg);
 	enableDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
 	m_enableButton->setImages(enableDrawable.get());
 
-	auto triggerSelectDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::stat_minus_1_24dp_svg).get());
+	auto triggerSelectDrawable = juce::Drawable::createFromSVGString(BinaryData::stat_minus_1_24dp_svg);
 	triggerSelectDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
 	m_triggerSelectButton->setImages(triggerSelectDrawable.get());
 
-	auto parameterConfigButtonDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::settings_24dp_svg).get());
+	auto parameterConfigButtonDrawable = juce::Drawable::createFromSVGString(BinaryData::settings_24dp_svg);
 	parameterConfigButtonDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
 	m_parameterConfigButton->setImages(parameterConfigButtonDrawable.get());
 
-	auto clearButtonDrawable = juce::Drawable::createFromSVG(*juce::XmlDocument::parse(BinaryData::replay_24dp_svg).get());
+	auto clearButtonDrawable = juce::Drawable::createFromSVGString(BinaryData::replay_24dp_svg);
 	clearButtonDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
 	m_clearButton->setImages(clearButtonDrawable.get());
 

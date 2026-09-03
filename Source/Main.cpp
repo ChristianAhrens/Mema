@@ -317,7 +317,7 @@ public:
 
         auto const display = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay();
         jassert(display);
-        auto position = display->userArea.getConstrainedPoint(positionToPointTo);
+        auto position = display->userBounds.getConstrainedPoint(positionToPointTo.toFloat()).toInt();
         
         // On OSX, there can be problems launching a menu when we're not the foreground
         // process, so just in case, we'll first make our process active,
@@ -338,9 +338,9 @@ public:
         auto const display = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay();
         if (nullptr != display && nullptr != m_memaUIComponent)
         {
-            if (display->userArea.getHeight() < showPosition.getY() + m_memaUIComponent->getHeight())
+            if (display->userBounds.getHeight() < showPosition.getY() + m_memaUIComponent->getHeight())
                 showPosition.setY(showPosition.getY() - m_memaUIComponent->getHeight() - 30);
-            if (display->userArea.getWidth() < showPosition.getX() + m_memaUIComponent->getWidth())
+            if (display->userBounds.getWidth() < showPosition.getX() + m_memaUIComponent->getWidth())
                 showPosition.setX(showPosition.getX() - m_memaUIComponent->getWidth() - 30);
         }
         m_memaUIComponent->setTopLeftPosition(showPosition);

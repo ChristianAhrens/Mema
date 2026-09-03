@@ -28,4 +28,5 @@ echo Export Projucer Project
 # start building the project
 echo Build the project
 cd "$ProjectMakefilePath"
+make "CONFIG=Release" clean
 make -j "$Cores" "LDFLAGS=-latomic" "CONFIG=Release"
