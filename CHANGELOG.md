@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+## [0.11.0] 2026-09-03
+### Added
+
+### Changed
+- Changed submodule JUCE to new major release 9
+- Changed submodule NanoOcp to latest JUCEless release
+
+### Fixed
+- Fixed Mema.Re panning sharpness to allow input to single output panning (Github issue #6)
+
 ## [0.10.6] 2026-05-30
 ### Added
 - Added option to show plug-in UI when using Mema in CLI mode (--headless)
