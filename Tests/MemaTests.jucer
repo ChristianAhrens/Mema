@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="mt01te" name="MemaTests" projectType="consoleapp" useAppConfig="0"
+              jucerFormatVersion="1" version="1.0.0" bundleIdentifier="com.ChristianAhrens.MemaTests"
+              companyName="ChristianAhrens" companyCopyright="Copyright (c) 2024 Christian Ahrens.">
+  <MAINGROUP id="mt02mg" name="MemaTests">
+    <GROUP id="{9E9E9E9E-0001-0001-0001-000000000001}" name="Source">
+      <FILE id="mt03s1" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
+      <FILE id="mt04s2" name="SanityTest.cpp" compile="1" resource="0" file="Source/SanityTest.cpp"/>
+    </GROUP>
+  </MAINGROUP>
+  <MODULES>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+  </MODULES>
+  <EXPORTFORMATS>
+    <LINUX_MAKE targetFolder="Builds/LinuxMakefile">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="0" name="Release"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_core" path="../submodules/JUCE/modules"/>
+      </MODULEPATHS>
+    </LINUX_MAKE>
+  </EXPORTFORMATS>
+  <JUCEOPTIONS/>
+</JUCERPROJECT>

@@ -17,6 +17,8 @@ See [LATEST RELEASE](https://github.com/ChristianAhrens/Mema/releases/latest) fo
 |Windows Visual Studio| [![Build status](https://github.com/ChristianAhrens/Mema/actions/workflows/ci-mema-windows.yml/badge.svg?branch=main)](https://github.com/ChristianAhrens/Mema/actions/workflows/ci-mema-windows.yml) | [![Build status](https://github.com/ChristianAhrens/Mema/actions/workflows/ci-mema-mo-windows.yml/badge.svg?branch=main)](https://github.com/ChristianAhrens/Mema/actions/workflows/ci-mema-mo-windows.yml) | [![Build status](https://github.com/ChristianAhrens/Mema/actions/workflows/ci-mema-re-windows.yml/badge.svg?branch=main)](https://github.com/ChristianAhrens/Mema/actions/workflows/ci-mema-re-windows.yml) |
 |Linux makefile| [![Build status](https://github.com/ChristianAhrens/Mema/actions/workflows/ci-mema-linux.yml/badge.svg?branch=main)](https://github.com/ChristianAhrens/Mema/actions/workflows/ci-mema-linux.yml) | [![Build status](https://github.com/ChristianAhrens/Mema/actions/workflows/ci-mema-mo-linux.yml/badge.svg?branch=main)](https://github.com/ChristianAhrens/Mema/actions/workflows/ci-mema-mo-linux.yml) | [![Build status](https://github.com/ChristianAhrens/Mema/actions/workflows/ci-mema-re-linux.yml/badge.svg?branch=main)](https://github.com/ChristianAhrens/Mema/actions/workflows/ci-mema-re-linux.yml) |
 
+**Unit Tests:** [![Unit Tests](https://github.com/ChristianAhrens/Mema/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/ChristianAhrens/Mema/actions/workflows/tests.yml)
+
 
 <a name="toc" />
 

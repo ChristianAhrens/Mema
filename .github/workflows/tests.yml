@@ -1,0 +1,62 @@
+name: Unit Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            git build-essential \
+            g++-11 gcc-11 make \
+            libcurl4-openssl-dev \
+            libfreetype6-dev libfontconfig1-dev \
+            libasound2-dev libjack-jackd2-dev \
+            ladspa-sdk \
+            libx11-dev libxcomposite-dev libxcursor-dev libxext-dev libxinerama-dev \
+            libxrandr-dev libxrender-dev libwebkit2gtk-4.1-dev \
+            libglu1-mesa-dev mesa-common-dev
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 \
+            --slave /usr/bin/g++ g++ /usr/bin/g++-11 \
+            --slave /usr/bin/gcov gcov /usr/bin/gcov-11
+
+      - name: Build Projucer
+        run: |
+          cd submodules/JUCE/extras/Projucer/Builds/LinuxMakefile
+          make -j"$(nproc)" LDFLAGS=-latomic CONFIG=Release
+
+      - name: Build and run Mema unit tests
+        run: |
+          PROJUCER=$GITHUB_WORKSPACE/submodules/JUCE/extras/Projucer/Builds/LinuxMakefile/build/Projucer
+          "$PROJUCER" --resave Tests/MemaTests.jucer --fix-missing-dependencies
+          cd Tests/Builds/LinuxMakefile
+          make -j"$(nproc)" LDFLAGS=-latomic CONFIG=Release
+          ./build/MemaTests
+
+      - name: Build and run Mema.Mo unit tests
+        run: |
+          PROJUCER=$GITHUB_WORKSPACE/submodules/JUCE/extras/Projucer/Builds/LinuxMakefile/build/Projucer
+          "$PROJUCER" --resave MemaMo/Tests/MemaMoTests.jucer --fix-missing-dependencies
+          cd MemaMo/Tests/Builds/LinuxMakefile
+          make -j"$(nproc)" LDFLAGS=-latomic CONFIG=Release
+          ./build/MemaMoTests
+
+      - name: Build and run Mema.Re unit tests
+        run: |
+          PROJUCER=$GITHUB_WORKSPACE/submodules/JUCE/extras/Projucer/Builds/LinuxMakefile/build/Projucer
+          "$PROJUCER" --resave MemaRe/Tests/MemaReTests.jucer --fix-missing-dependencies
+          cd MemaRe/Tests/Builds/LinuxMakefile
+          make -j"$(nproc)" LDFLAGS=-latomic CONFIG=Release
+          ./build/MemaReTests
