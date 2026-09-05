@@ -2,15 +2,40 @@
 
 <JUCERPROJECT id="mrt1te" name="MemaReTests" projectType="consoleapp" useAppConfig="0"
               jucerFormatVersion="1" version="1.0.0" bundleIdentifier="com.ChristianAhrens.MemaReTests"
+              headerPath="../../../../submodules/JUCE-AppBasics/Source&#10;../../../../Source"
               companyName="ChristianAhrens" companyCopyright="Copyright (c) 2024 Christian Ahrens.">
   <MAINGROUP id="mrt2mg" name="MemaReTests">
     <GROUP id="{9E9E9E9E-0003-0003-0003-000000000001}" name="Source">
       <FILE id="mrt3s1" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
       <FILE id="mrt4s2" name="SanityTest.cpp" compile="1" resource="0" file="Source/SanityTest.cpp"/>
+      <FILE id="mrt5s3" name="InputPositionMapperTest.cpp" compile="1" resource="0" file="Source/InputPositionMapperTest.cpp"/>
+      <FILE id="mrt6s4" name="ADMOSControllerTest.cpp" compile="1" resource="0" file="Source/ADMOSControllerTest.cpp"/>
+      <FILE id="mrt7s5" name="MemaReAppConfigurationTest.cpp" compile="1" resource="0" file="Source/MemaReAppConfigurationTest.cpp"/>
+    </GROUP>
+    <GROUP id="{9E9E9E9E-0003-0003-0003-000000000002}" name="ProductionSourcesUnderTest">
+      <FILE id="mrt8p1" name="ADMOSController.cpp" compile="1" resource="0" file="../../Source/MemaClientCommon/ADMOSController.cpp"/>
+      <FILE id="mrt9p2" name="MemaReAppConfiguration.cpp" compile="1" resource="0" file="../MemaReAppConfiguration.cpp"/>
+      <FILE id="mrt10p3" name="AppConfigurationBase.cpp" compile="1" resource="0" file="../../submodules/JUCE-AppBasics/Source/AppConfigurationBase.cpp"/>
+      <!-- Embedded so MemaReAppConfiguration.cpp's ResetToDefault() resolves
+           BinaryData::MemaReDefault_config, exactly like MemaRe.jucer itself does. -->
+      <FILE id="mrt11p4" name="MemaReDefault.config" compile="0" resource="1" file="../../Resources/MemaReDefault.config"/>
     </GROUP>
   </MAINGROUP>
   <MODULES>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_audio_processors_headless" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
     <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_dsp" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_osc" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
   </MODULES>
   <EXPORTFORMATS>
     <LINUX_MAKE targetFolder="Builds/LinuxMakefile">
@@ -18,7 +43,20 @@
         <CONFIGURATION isDebug="0" name="Release"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors_headless" path="../../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../../submodules/JUCE/modules"/>
         <MODULEPATH id="juce_core" path="../../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_osc" path="../../submodules/JUCE/modules"/>
       </MODULEPATHS>
     </LINUX_MAKE>
   </EXPORTFORMATS>
