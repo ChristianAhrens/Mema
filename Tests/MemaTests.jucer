@@ -2,15 +2,48 @@
 
 <JUCERPROJECT id="mt01te" name="MemaTests" projectType="consoleapp" useAppConfig="0"
               jucerFormatVersion="1" version="1.0.0" bundleIdentifier="com.ChristianAhrens.MemaTests"
+              headerPath="../../../submodules/JUCE-AppBasics/Source&#10;../../../Source"
               companyName="ChristianAhrens" companyCopyright="Copyright (c) 2024 Christian Ahrens.">
   <MAINGROUP id="mt02mg" name="MemaTests">
     <GROUP id="{9E9E9E9E-0001-0001-0001-000000000001}" name="Source">
       <FILE id="mt03s1" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
       <FILE id="mt04s2" name="SanityTest.cpp" compile="1" resource="0" file="Source/SanityTest.cpp"/>
+      <FILE id="mt05s3" name="ControlParametersMessageTest.cpp" compile="1" resource="0" file="Source/ControlParametersMessageTest.cpp"/>
+      <FILE id="mt06s4" name="SimpleMessagesTest.cpp" compile="1" resource="0" file="Source/SimpleMessagesTest.cpp"/>
+      <FILE id="mt07s5" name="RemainingMessagesTest.cpp" compile="1" resource="0" file="Source/RemainingMessagesTest.cpp"/>
+      <FILE id="mt08s6" name="PluginParameterInfoTest.cpp" compile="1" resource="0" file="Source/PluginParameterInfoTest.cpp"/>
+      <FILE id="mt09s7" name="ProcessorDataTest.cpp" compile="1" resource="0" file="Source/ProcessorDataTest.cpp"/>
+      <FILE id="mt10s8" name="MemaCommandersTest.cpp" compile="1" resource="0" file="Source/MemaCommandersTest.cpp"/>
+      <FILE id="mt11s9" name="MemaAppConfigurationTest.cpp" compile="1" resource="0" file="Source/MemaAppConfigurationTest.cpp"/>
+    </GROUP>
+    <GROUP id="{9E9E9E9E-0001-0001-0001-000000000002}" name="ProductionSourcesUnderTest">
+      <FILE id="mt12p1" name="AbstractProcessorData.cpp" compile="1" resource="0" file="../Source/MemaProcessor/AbstractProcessorData.cpp"/>
+      <FILE id="mt13p2" name="ProcessorLevelData.cpp" compile="1" resource="0" file="../Source/MemaProcessor/ProcessorLevelData.cpp"/>
+      <FILE id="mt14p3" name="ProcessorSpectrumData.cpp" compile="1" resource="0" file="../Source/MemaProcessor/ProcessorSpectrumData.cpp"/>
+      <FILE id="mt15p4" name="ProcessorAudioSignalData.cpp" compile="1" resource="0" file="../Source/MemaProcessor/ProcessorAudioSignalData.cpp"/>
+      <FILE id="mt16p5" name="MemaCommanders.cpp" compile="1" resource="0" file="../Source/MemaProcessor/MemaCommanders.cpp"/>
+      <FILE id="mt17p6" name="MemaAppConfiguration.cpp" compile="1" resource="0" file="../Source/MemaAppConfiguration.cpp"/>
+      <FILE id="mt18p7" name="AppConfigurationBase.cpp" compile="1" resource="0" file="../submodules/JUCE-AppBasics/Source/AppConfigurationBase.cpp"/>
+      <!-- Embedded so MemaAppConfiguration.cpp's ResetToDefault() resolves BinaryData::MemaDefault_config,
+           exactly like Mema.jucer itself does; without this, compiling MemaAppConfiguration.cpp would
+           fail outright (the symbol wouldn't exist in this project's generated BinaryData.h). -->
+      <FILE id="mt19p8" name="MemaDefault.config" compile="0" resource="1" file="../Resources/MemaDefault.config"/>
     </GROUP>
   </MAINGROUP>
   <MODULES>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_audio_processors_headless" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
     <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_dsp" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
   </MODULES>
   <EXPORTFORMATS>
     <LINUX_MAKE targetFolder="Builds/LinuxMakefile">
@@ -18,7 +51,19 @@
         <CONFIGURATION isDebug="0" name="Release"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors_headless" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../submodules/JUCE/modules"/>
         <MODULEPATH id="juce_core" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../submodules/JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../submodules/JUCE/modules"/>
       </MODULEPATHS>
     </LINUX_MAKE>
   </EXPORTFORMATS>
