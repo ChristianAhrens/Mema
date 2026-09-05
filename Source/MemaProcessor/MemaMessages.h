@@ -622,10 +622,16 @@ private:
  * (echo-suppression via `m_userId`).
  *
  * **Wire payload:**
- * - uint16 inputMuteCount + (uint16 channel + bool muted) × N
- * - uint16 outputMuteCount + (uint16 channel + bool muted) × M
- * - uint16 crosspointStateCount + (uint16 in + uint16 out + bool enabled) × (N×M)
- * - uint16 crosspointValueCount + (uint16 in + uint16 out + float gain) × (N×M)
+ * - uint16 inputMuteCount + (uint16 channel + bool muted) × inputMuteCount
+ * - uint16 outputMuteCount + (uint16 channel + bool muted) × outputMuteCount
+ * - uint16 crosspointStateCount + (uint16 in + uint16 out + bool enabled) × crosspointStateCount
+ * - uint16 crosspointValueCount + (uint16 in + uint16 out + float gain) × crosspointValueCount
+ *
+ * @note The crosspoint sections are a flattened list of (in, out, ...) triples, not
+ *       necessarily a full N×M matrix -- a message may carry a full dense snapshot (Mema's
+ *       on-connect sync) or a sparse update touching only some inputs/outputs (e.g. a single
+ *       crosspoint change, or Mema.Re's panning mode updating one input's several outputs at
+ *       once). Each count above is always the exact number of triples that follow it.
  *
  * @note Channel indices are 1-based and match the indices used by `MemaInputCommander` /
  *       `MemaOutputCommander` / `MemaCrosspointCommander`.
@@ -636,32 +642,18 @@ class ControlParametersMessage : public SerializableMessage
 {
 public:
     ControlParametersMessage() = default;
-    ControlParametersMessage(const std::map<std::uint16_t, bool>& inputMuteStates, const std::map<std::uint16_t, bool>& outputMuteStates, 
+    ControlParametersMessage(const std::map<std::uint16_t, bool>& inputMuteStates, const std::map<std::uint16_t, bool>& outputMuteStates,
         const std::map<std::uint16_t, std::map<std::uint16_t, bool>>& crosspointStates, const std::map<std::uint16_t, std::map<std::uint16_t, float>>& crosspointValues)
     {
-#ifdef DEBUG
-        // sanity check symmetry of crosspoint states
-        auto crosspointStateOutCount = size_t(0);
-        if (0 != crosspointStates.size())
-        {
-            crosspointStateOutCount = crosspointStates.begin()->second.size();
-            for (auto const& cpStatKV : crosspointStates)
-            {
-                jassert(crosspointStateOutCount == cpStatKV.second.size());
-            }
-        }
-
-        // sanity check symmetry of crosspoint values
-        auto crosspointValOutCount = size_t(0);
-        if (0 != crosspointValues.size())
-        {
-            crosspointValOutCount = crosspointValues.begin()->second.size();
-            for (auto const& cpValKV : crosspointValues)
-            {
-                jassert(crosspointValOutCount == cpValKV.second.size());
-            }
-        }
-#endif
+        // NOTE: crosspointStates/crosspointValues are intentionally allowed to be "ragged"
+        // (different inputs may have different numbers of entries) -- e.g. a single-crosspoint
+        // change, or Mema.Re's panning mode updating one input's several outputs at once, both
+        // produce a map with just one input key. createSerializedContent() below sums each
+        // input's actual entry count rather than assuming uniformity, so this is safe to
+        // serialise as-is. (An earlier version of this constructor asserted that all inputs had
+        // the same entry count; that assumption was never actually true in general and matched
+        // a since-fixed bug in createSerializedContent() that silently corrupted the wire frame
+        // for non-uniform maps.)
 
         m_type = SerializableMessageType::ControlParameters;
         m_inputMuteStates = inputMuteStates;
@@ -771,9 +763,14 @@ protected:
             blob.append(&outputMuteStateKV.second, sizeof(outputMuteStateKV.second));
         }
 
+        // NOTE: the element count must be the sum of each input's actual inner-map size, not
+        // (number of inputs * first input's inner-map size) -- the latter silently produces a
+        // wrong count (and thus a corrupted, desynchronised frame for every field read after
+        // this section) as soon as inputs have differing numbers of entries, e.g. a per-input
+        // partial update rather than a full dense matrix snapshot.
         auto crosspointStatesCount = std::uint16_t(0);
-        if (0 < m_crosspointStates.size())
-            crosspointStatesCount = std::uint16_t(m_crosspointStates.size() * m_crosspointStates.begin()->second.size());
+        for (auto& crosspointStatesFirstDKV : m_crosspointStates)
+            crosspointStatesCount = std::uint16_t(crosspointStatesCount + crosspointStatesFirstDKV.second.size());
         blob.append(&crosspointStatesCount, sizeof(crosspointStatesCount));
         auto crosspointStatesCountRef = std::uint16_t(0);
         for (auto& crosspointStatesFirstDKV : m_crosspointStates)
@@ -791,9 +788,10 @@ protected:
         }
         jassert(crosspointStatesCount == crosspointStatesCountRef);
 
+        // See the matching note above crosspointStatesCount -- same fix, same reasoning.
         auto crosspointValuesCount = std::uint16_t(0);
-        if (0 < m_crosspointValues.size())
-            crosspointValuesCount = std::uint16_t(m_crosspointValues.size() * m_crosspointValues.begin()->second.size());
+        for (auto& crosspointValuesFirstDKV : m_crosspointValues)
+            crosspointValuesCount = std::uint16_t(crosspointValuesCount + crosspointValuesFirstDKV.second.size());
         blob.append(&crosspointValuesCount, sizeof(crosspointValuesCount));
         auto crosspointValuesCountRef = std::uint16_t(0);
         for (auto& crosspointValuesFirstDKV : m_crosspointValues)

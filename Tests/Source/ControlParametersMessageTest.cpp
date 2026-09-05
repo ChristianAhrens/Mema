@@ -23,21 +23,20 @@
 // ::initFromMemoryBlock()), for the message shapes that Mema and Mema.Re actually
 // construct: empty (mute-only updates), a single changed crosspoint (Mema's
 // per-change echo), a single input with several changed outputs at once (Mema.Re's
-// panning-mode update, see PanningControlComponent::processOutputDistances()), and
-// a full dense N x M matrix snapshot (Mema's on-connect sync).
+// panning-mode update, see PanningControlComponent::processOutputDistances()), a
+// full dense N x M matrix snapshot (Mema's on-connect sync), and a "ragged" map
+// with several inputs each carrying a different number of outputs.
 //
-// NOTE: ControlParametersMessage::createSerializedContent() computes the wire
-// element counts for the crosspoint sections as
+// The ragged-map case is a regression test: createSerializedContent() used to
+// compute the crosspoint sections' wire element counts as
 // `m_crosspointStates.size() * m_crosspointStates.begin()->second.size()`
-// (and the equivalent for crosspointValues) rather than summing each input's
-// actual inner-map size. That is only correct when every input has the same
-// number of entries -- true for every shape covered below, so these tests pass
-// today. It is NOT true in general: a "ragged" map (inputs with differing
-// output counts) would make the written count disagree with the number of
-// (in, out, value) triples actually written, desynchronising every field read
-// after it on the receiving end. See the accompanying report for a suggested
-// fix; no call site in the current codebase constructs a ragged map, so no
-// regression test for it is included here yet.
+// (and the equivalent for crosspointValues) instead of summing each input's
+// actual inner-map size. That was only correct when every input had the same
+// number of entries, which happened to be true for every shape any current call
+// site constructs -- but a genuinely ragged map made the written count disagree
+// with the number of (in, out, value) triples actually written, desynchronising
+// every field read after it on the receiving end. Fixed in createSerializedContent()
+// to sum actual per-input sizes; this test guards against a regression.
 
 #include <JuceHeader.h>
 #include <MemaProcessor/MemaMessages.h>
@@ -112,6 +111,33 @@ public:
                     crosspointValues[in][out] = (in == out) ? 1.0f : 0.0f;
                 }
             }
+
+            roundTripAndCompare (inputMuteStates, outputMuteStates, crosspointStates, crosspointValues);
+        }
+
+        beginTest ("Ragged map (inputs with differing output counts) round-trips [regression]");
+        {
+            // Regression test for the fixed createSerializedContent() count computation: three
+            // inputs, each with a different number of outputs. The old
+            // `size() * begin()->second.size()` formula would compute 3 * 1 = 3 for
+            // crosspointValuesCount here, even though 6 (in, out, value) triples are actually
+            // written -- desynchronising every field parsed after this section on receipt.
+            std::map<std::uint16_t, bool> inputMuteStates;
+            std::map<std::uint16_t, bool> outputMuteStates;
+            std::map<std::uint16_t, std::map<std::uint16_t, bool>> crosspointStates;
+            std::map<std::uint16_t, std::map<std::uint16_t, float>> crosspointValues;
+            crosspointStates[1][1] = true;
+            crosspointStates[2][1] = true;
+            crosspointStates[2][2] = false;
+            crosspointStates[3][1] = true;
+            crosspointStates[3][2] = true;
+            crosspointStates[3][3] = true;
+            crosspointValues[1][1] = 1.0f;
+            crosspointValues[2][1] = 0.5f;
+            crosspointValues[2][2] = 0.25f;
+            crosspointValues[3][1] = 0.1f;
+            crosspointValues[3][2] = 0.2f;
+            crosspointValues[3][3] = 0.3f;
 
             roundTripAndCompare (inputMuteStates, outputMuteStates, crosspointStates, crosspointValues);
         }
