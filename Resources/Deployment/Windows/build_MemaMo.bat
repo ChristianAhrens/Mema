@@ -16,6 +16,27 @@ if "%VSVER%"=="VS2022" (
     set BUILDSLN=%WORKSPACE%\MemaMo\Builds\VisualStudio2026\Mema.sln
 )
 
+rem Auto-detect the actual VS install via vswhere and override VSDIR if found.
+rem The hardcoded path above matches a typical developer machine, but not
+rem GitHub-hosted runners (different edition/path) -- vswhere.exe is present
+rem on both, so this keeps local/manual usage unchanged while fixing CI.
+rem NOTE: deliberately avoids nested ( ... ) blocks here -- %ProgramFiles(x86)%
+rem and paths derived from it contain literal parentheses, which confuse cmd's
+rem block parser when expanded inside an if/for block body; goto/call sidesteps
+rem that entirely.
+set VSWHERE=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe
+if not exist "%VSWHERE%" goto :vswhere_done
+echo Found vswhere at %VSWHERE%, detecting VS install...
+for /f "usebackq tokens=*" %%i in (`"%VSWHERE%" -latest -products * -requires Microsoft.Component.MSBuild -property installationPath`) do call :use_vswhere_path "%%i"
+goto :vswhere_done
+
+:use_vswhere_path
+echo vswhere reports installation at: %~1
+if exist "%~1\Common7\IDE\devenv.com" set VSDIR=%~1\Common7\IDE
+goto :eof
+
+:vswhere_done
+
 echo.
 echo Using variables:
 echo VSVER         = %VSVER%
