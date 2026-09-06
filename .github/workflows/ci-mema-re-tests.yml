@@ -1,4 +1,4 @@
-name: Unit Tests
+name: CI Mema.Re Tests
 
 on:
   push:
@@ -36,22 +36,6 @@ jobs:
         run: |
           cd submodules/JUCE/extras/Projucer/Builds/LinuxMakefile
           make -j"$(nproc)" LDFLAGS=-latomic CONFIG=Release
-
-      - name: Build and run Mema unit tests
-        run: |
-          PROJUCER=$GITHUB_WORKSPACE/submodules/JUCE/extras/Projucer/Builds/LinuxMakefile/build/Projucer
-          "$PROJUCER" --resave Tests/MemaTests.jucer --fix-missing-dependencies
-          cd Tests/Builds/LinuxMakefile
-          make -j"$(nproc)" LDFLAGS=-latomic CONFIG=Release
-          ./build/MemaTests
-
-      - name: Build and run Mema.Mo unit tests
-        run: |
-          PROJUCER=$GITHUB_WORKSPACE/submodules/JUCE/extras/Projucer/Builds/LinuxMakefile/build/Projucer
-          "$PROJUCER" --resave MemaMo/Tests/MemaMoTests.jucer --fix-missing-dependencies
-          cd MemaMo/Tests/Builds/LinuxMakefile
-          make -j"$(nproc)" LDFLAGS=-latomic CONFIG=Release
-          ./build/MemaMoTests
 
       - name: Build and run Mema.Re unit tests
         run: |
