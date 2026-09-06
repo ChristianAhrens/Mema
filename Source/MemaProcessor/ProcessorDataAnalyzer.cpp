@@ -60,9 +60,17 @@ bool ProcessorDataAnalyzer::isSepctrumProcessingUsed()
 void ProcessorDataAnalyzer::initializeParameters(double sampleRate, int bufferSize)
 {
 	m_sampleRate = static_cast<unsigned long>(sampleRate);
-	m_samplesPerCentiSecond = static_cast<int>(sampleRate * 0.01f);
+	// NOTE: this used to be `static_cast<int>(sampleRate * 0.01f)` -- the 0.01f *single*-
+	// precision literal loses just enough accuracy that e.g. 48000.0 * 0.01f evaluates to
+	// 479.99998927..., and truncating (not rounding) that gives 479 instead of the intended
+	// 480. That one-sample shortfall then persists every centisecond cycle: analyzeData()
+	// processes 479 samples, carries the 1 leftover into the next call's buffer position 0,
+	// and that stale carried-over sample corrupts the level/spectrum computed on the next
+	// call. Using a double-precision literal and rounding (rather than truncating) removes
+	// the error for realistic sample rates and guards against any residual imprecision.
+	m_samplesPerCentiSecond = static_cast<int>(std::round(sampleRate * 0.01));
 	m_bufferSize = bufferSize;
-	m_missingSamplesForCentiSecond = static_cast<int>(m_samplesPerCentiSecond + 0.5f);
+	m_missingSamplesForCentiSecond = m_samplesPerCentiSecond;
 	m_centiSecondBuffer.setSize(2, m_missingSamplesForCentiSecond, false, true, false);
 }
 
