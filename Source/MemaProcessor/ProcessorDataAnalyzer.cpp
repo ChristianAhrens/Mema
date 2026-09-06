@@ -124,11 +124,16 @@ void ProcessorDataAnalyzer::analyzeData(const juce::AudioBuffer<float>& buffer)
 
         for (int i = 0; i < numChannels; ++i)
         {
-            if (isBufferProcessingUsed())
-            {
-                // Generate signal buffer data
-                m_centiSecondBuffer.copyFrom(i, writePos, buffer.getReadPointer(i) + readPos, m_missingSamplesForCentiSecond);
-            }
+            // Level and spectrum computation below both read their input from
+            // m_centiSecondBuffer, so it must always be kept current -- regardless of
+            // whether the raw buffer itself is also wanted downstream (that's a separate
+            // concern, gated below on isBufferProcessingUsed() at the BroadcastData() call).
+            // This used to be conditional on isBufferProcessingUsed() too, which meant level/
+            // spectrum silently computed from stale/uninitialised buffer content whenever
+            // only level or only spectrum processing was enabled without buffer processing --
+            // exactly the configuration MemaProcessor uses for its own input/output level
+            // meters (setUseProcessingTypes(true, false, false)).
+            m_centiSecondBuffer.copyFrom(i, writePos, buffer.getReadPointer(i) + readPos, m_missingSamplesForCentiSecond);
 
             if (isLevelProcessingUsed())
             {
