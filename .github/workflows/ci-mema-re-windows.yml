@@ -1,0 +1,22 @@
+name: CI Mema.Re Windows
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    runs-on: windows-2025-vs2026
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build Mema.Re
+        shell: cmd
+        run: |
+          cd Resources\Deployment\Windows
+          build_MemaRe.bat VS2026

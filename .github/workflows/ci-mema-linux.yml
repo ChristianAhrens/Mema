@@ -1,0 +1,39 @@
+name: CI Mema Linux
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install JUCE build dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            git build-essential \
+            g++-11 gcc-11 make \
+            libcurl4-openssl-dev \
+            libfreetype6-dev libfontconfig1-dev \
+            libasound2-dev libjack-jackd2-dev \
+            ladspa-sdk \
+            libx11-dev libxcomposite-dev libxcursor-dev libxext-dev libxinerama-dev \
+            libxrandr-dev libxrender-dev libwebkit2gtk-4.1-dev \
+            libglu1-mesa-dev mesa-common-dev
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 \
+            --slave /usr/bin/g++ g++ /usr/bin/g++-11 \
+            --slave /usr/bin/gcov gcov /usr/bin/gcov-11
+
+      - name: Build Mema
+        run: |
+          cd Resources/Deployment/Linux
+          chmod +x build_Mema.sh
+          ./build_Mema.sh
