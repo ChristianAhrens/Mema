@@ -11,7 +11,7 @@ See [LATEST RELEASE](https://github.com/ChristianAhrens/Mema/releases/latest) fo
 | <img src="Resources/AppStore/MemaMoTestFlightQRCode.png" alt="Mema.Mo TestFlight QR Code" width="40%"> | <img src="Resources/AppStore/MemaReTestFlightQRCode.png" alt="Mema.Re TestFlight QR Code" width="40%"> |
 
 
-|GitHub Actions CI build status|Mema|Mema.Mo|Mema.Re|
+|Platform|Mema status|Mema.Mo status|Mema.Re status|
 |:----------------|:-----|:-----|:-----|
 |macOS Xcode| [![Build status](https://github.com/ChristianAhrens/Mema/actions/workflows/ci-mema-macos.yml/badge.svg?branch=main)](https://github.com/ChristianAhrens/Mema/actions/workflows/ci-mema-macos.yml) | [![Build status](https://github.com/ChristianAhrens/Mema/actions/workflows/ci-mema-mo-macos.yml/badge.svg?branch=main)](https://github.com/ChristianAhrens/Mema/actions/workflows/ci-mema-mo-macos.yml) | [![Build status](https://github.com/ChristianAhrens/Mema/actions/workflows/ci-mema-re-macos.yml/badge.svg?branch=main)](https://github.com/ChristianAhrens/Mema/actions/workflows/ci-mema-re-macos.yml) |
 |Windows Visual Studio| [![Build status](https://github.com/ChristianAhrens/Mema/actions/workflows/ci-mema-windows.yml/badge.svg?branch=main)](https://github.com/ChristianAhrens/Mema/actions/workflows/ci-mema-windows.yml) | [![Build status](https://github.com/ChristianAhrens/Mema/actions/workflows/ci-mema-mo-windows.yml/badge.svg?branch=main)](https://github.com/ChristianAhrens/Mema/actions/workflows/ci-mema-mo-windows.yml) | [![Build status](https://github.com/ChristianAhrens/Mema/actions/workflows/ci-mema-re-windows.yml/badge.svg?branch=main)](https://github.com/ChristianAhrens/Mema/actions/workflows/ci-mema-re-windows.yml) |
