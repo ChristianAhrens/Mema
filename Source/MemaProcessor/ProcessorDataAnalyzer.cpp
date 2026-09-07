@@ -60,9 +60,17 @@ bool ProcessorDataAnalyzer::isSepctrumProcessingUsed()
 void ProcessorDataAnalyzer::initializeParameters(double sampleRate, int bufferSize)
 {
 	m_sampleRate = static_cast<unsigned long>(sampleRate);
-	m_samplesPerCentiSecond = static_cast<int>(sampleRate * 0.01f);
+	// NOTE: this used to be `static_cast<int>(sampleRate * 0.01f)` -- the 0.01f *single*-
+	// precision literal loses just enough accuracy that e.g. 48000.0 * 0.01f evaluates to
+	// 479.99998927..., and truncating (not rounding) that gives 479 instead of the intended
+	// 480. That one-sample shortfall then persists every centisecond cycle: analyzeData()
+	// processes 479 samples, carries the 1 leftover into the next call's buffer position 0,
+	// and that stale carried-over sample corrupts the level/spectrum computed on the next
+	// call. Using a double-precision literal and rounding (rather than truncating) removes
+	// the error for realistic sample rates and guards against any residual imprecision.
+	m_samplesPerCentiSecond = static_cast<int>(std::round(sampleRate * 0.01));
 	m_bufferSize = bufferSize;
-	m_missingSamplesForCentiSecond = static_cast<int>(m_samplesPerCentiSecond + 0.5f);
+	m_missingSamplesForCentiSecond = m_samplesPerCentiSecond;
 	m_centiSecondBuffer.setSize(2, m_missingSamplesForCentiSecond, false, true, false);
 }
 
@@ -124,11 +132,16 @@ void ProcessorDataAnalyzer::analyzeData(const juce::AudioBuffer<float>& buffer)
 
         for (int i = 0; i < numChannels; ++i)
         {
-            if (isBufferProcessingUsed())
-            {
-                // Generate signal buffer data
-                m_centiSecondBuffer.copyFrom(i, writePos, buffer.getReadPointer(i) + readPos, m_missingSamplesForCentiSecond);
-            }
+            // Level and spectrum computation below both read their input from
+            // m_centiSecondBuffer, so it must always be kept current -- regardless of
+            // whether the raw buffer itself is also wanted downstream (that's a separate
+            // concern, gated below on isBufferProcessingUsed() at the BroadcastData() call).
+            // This used to be conditional on isBufferProcessingUsed() too, which meant level/
+            // spectrum silently computed from stale/uninitialised buffer content whenever
+            // only level or only spectrum processing was enabled without buffer processing --
+            // exactly the configuration MemaProcessor uses for its own input/output level
+            // meters (setUseProcessingTypes(true, false, false)).
+            m_centiSecondBuffer.copyFrom(i, writePos, buffer.getReadPointer(i) + readPos, m_missingSamplesForCentiSecond);
 
             if (isLevelProcessingUsed())
             {
