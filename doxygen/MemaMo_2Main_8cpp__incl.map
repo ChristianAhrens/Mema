@@ -1,0 +1,17 @@
+<map id="MemaMo/Main.cpp" name="MemaMo/Main.cpp">
+<area shape="rect" id="Node000001" title=" " alt="" coords="97,5,244,31"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,225,112,251"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="147,33,117,52,90,80,75,113,66,149,60,212,55,212,60,148,70,111,86,77,113,48,144,28"/>
+<area shape="rect" id="Node000003" href="$MemaMo_2MainComponent_8h.html" title=" " alt="" coords="100,79,241,104"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="173,31,173,65,168,65,168,31"/>
+<area shape="rect" id="Node000007" title=" " alt="" coords="266,79,433,104"/>
+<area shape="poly" id="edge8_Node000001_Node000007" title=" " alt="" coords="200,28,309,71,307,76,198,33"/>
+<area shape="poly" id="edge3_Node000003_Node000002" title=" " alt="" coords="154,106,127,127,101,154,82,183,69,213,65,211,78,181,97,150,124,123,151,102"/>
+<area shape="rect" id="Node000004" href="$MemaMoAppConfiguration_8h.html" title=" " alt="" coords="110,152,317,177"/>
+<area shape="poly" id="edge4_Node000003_Node000004" title=" " alt="" coords="180,103,202,139,197,142,175,106"/>
+<area shape="rect" id="Node000006" title=" " alt="" coords="341,152,537,177"/>
+<area shape="poly" id="edge7_Node000003_Node000006" title=" " alt="" coords="214,101,383,146,382,151,213,107"/>
+<area shape="poly" id="edge5_Node000004_Node000002" title=" " alt="" coords="190,180,97,222,95,217,187,175"/>
+<area shape="rect" id="Node000005" title=" " alt="" coords="136,225,315,251"/>
+<area shape="poly" id="edge6_Node000004_Node000005" title=" " alt="" coords="218,177,224,211,218,212,213,178"/>
+</map>

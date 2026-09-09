@@ -1,0 +1,5 @@
+<map id="Mema::ResizeableWindowWithTitleBarAndCloseCallback" name="Mema::ResizeableWindowWithTitleBarAndCloseCallback">
+<area shape="rect" id="Node000001" title="A resizable JUCE window with a title bar and close button that fires a callback on close." alt="" coords="5,79,229,119"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="31,5,203,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="120,44,120,79,115,79,115,44"/>
+</map>

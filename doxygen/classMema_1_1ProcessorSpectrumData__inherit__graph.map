@@ -1,0 +1,5 @@
+<map id="Mema::ProcessorSpectrumData" name="Mema::ProcessorSpectrumData">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,79,232,104"/>
+<area shape="rect" id="Node000002" href="$classMema_1_1AbstractProcessorData.html" title="Base class for all data objects exchanged between the audio processor and its analyzers/visualisers." alt="" coords="9,5,228,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="121,44,121,79,116,79,116,44"/>
+</map>

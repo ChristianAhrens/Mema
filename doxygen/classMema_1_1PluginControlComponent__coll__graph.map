@@ -1,0 +1,8 @@
+<map id="Mema::PluginControlComponent" name="Mema::PluginControlComponent">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,152,239,177"/>
+<area shape="rect" id="Node000002" href="$classMema_1_1MemaClientControlComponentBase.html" title="Abstract base for all Mema.Re client control panels." alt="" coords="65,79,369,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="192,114,139,154,136,150,189,110"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="56,5,188,31"/>
+<area shape="poly" id="edge3_Node000001_Node000003" title=" " alt="" coords="91,40,71,58,55,80,52,90,53,100,64,119,82,136,102,150,99,154,79,140,60,122,48,101,47,90,50,78,67,54,87,36"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="150,37,203,76,200,81,147,41"/>
+</map>

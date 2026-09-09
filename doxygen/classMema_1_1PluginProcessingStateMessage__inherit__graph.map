@@ -1,0 +1,7 @@
+<map id="Mema::PluginProcessingStateMessage" name="Mema::PluginProcessingStateMessage">
+<area shape="rect" id="Node000001" title="Carries the plugin enabled and pre/post insertion state between Mema and Mema.Re." alt="" coords="5,152,220,192"/>
+<area shape="rect" id="Node000002" href="$classMema_1_1SerializableMessage.html" title="Base class for all messages exchanged between Mema, Mema.Mo, and Mema.Re over TCP." alt="" coords="10,79,215,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="115,118,115,152,110,152,110,118"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="55,5,170,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="115,44,115,79,110,79,110,44"/>
+</map>

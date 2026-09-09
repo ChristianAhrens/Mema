@@ -1,0 +1,6 @@
+<map id="SanityTest" name="SanityTest">
+<area shape="rect" id="Node000001" title=" " alt="" coords="16,79,105,104"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,5,116,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="55,44,56,78,51,79,49,45"/>
+<area shape="poly" id="edge2_Node000001_Node000002" title=" " alt="" coords="72,45,70,79,65,78,67,44"/>
+</map>
