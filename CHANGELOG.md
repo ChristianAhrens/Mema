@@ -11,6 +11,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+## [0.11.1] 2026-09-09
+### Added
+- Added unit testing infrastructure, incl. basic Mema, Mema.Mo and Mema.Re unittest coverage
+
+### Changed
+- Changed CI from AppVeyor to Github Workflows
+- Changed submodule JUCE to tag 9.0.2
+
+### Fixed
+- Fixed Mema.Re remote control networking
+- Fixed ProcessorDataAnalyzer level/spectrum reading stale buffer data
+
 ## [0.11.0] 2026-09-03
 ### Added
 
