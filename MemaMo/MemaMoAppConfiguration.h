@@ -76,8 +76,9 @@ public:
     /** @brief XML attribute identifiers used alongside TagID elements. */
     enum AttributeID
     {
-        ENABLED,    ///< Boolean flag indicating whether a feature or connection is active.
-        COUNT,      ///< Integer storing a channel or item count.
+        ENABLED,        ///< Boolean flag indicating whether a feature or connection is active.
+        COUNT,          ///< Integer storing a channel or item count.
+        PAIRINGTOKEN,   ///< Pairing token sent to Mema in this client's HelloMessage (empty = none configured).
     };
     static juce::String getAttributeName(AttributeID ID)
     {
@@ -87,6 +88,8 @@ public:
             return "ENABLED";
         case COUNT:
             return "COUNT";
+        case PAIRINGTOKEN:
+            return "PAIRINGTOKEN";
         default:
             return "-";
         }

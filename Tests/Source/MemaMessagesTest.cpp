@@ -27,6 +27,294 @@
 using namespace Mema;
 
 //==============================================================================
+// Header mechanics shared by every message type: the fixed {protocolVersion, messageType}
+// wire header (SerializableMessage::getWireHeaderSize()/peekType()), and initFromMemoryBlock()'s
+// rejection of a version mismatch or a too-short frame. The per-message tests below already
+// exercise this header implicitly on every round-trip; this test targets the header mechanics
+// directly and in isolation.
+class SerializableMessageHeaderTest : public juce::UnitTest
+{
+public:
+    SerializableMessageHeaderTest() : juce::UnitTest ("SerializableMessage header mechanics", "Mema") {}
+
+    void runTest() override
+    {
+        beginTest ("getWireHeaderSize() is exactly two uint16_t fields");
+        expectEquals ((int) SerializableMessage::getWireHeaderSize(), 4);
+
+        beginTest ("Serialised frame starts with the current protocol version, then the correct type");
+        {
+            ReinitIOCountMessage original (3, 12);
+            auto blob = original.getSerializedMessage();
+
+            expect (blob.getSize() >= SerializableMessage::getWireHeaderSize());
+
+            std::uint16_t version = 0;
+            blob.copyTo (&version, 0, sizeof (std::uint16_t));
+            expectEquals ((int) version, (int) SerializableMessage::s_protocolVersion);
+
+            expect (SerializableMessage::ReinitIOCount == SerializableMessage::peekType (blob),
+                    "peekType() should read the type from offset 2, not offset 0");
+        }
+
+        beginTest ("A frame with a mismatched protocol version is rejected, not parsed");
+        {
+            ReinitIOCountMessage original (3, 12);
+            auto blob = original.getSerializedMessage();
+
+            std::uint16_t wrongVersion = (std::uint16_t) (SerializableMessage::s_protocolVersion + 1);
+            blob.copyFrom (&wrongVersion, 0, sizeof (std::uint16_t));
+
+            auto* deserialized = SerializableMessage::initFromMemoryBlock (blob);
+            expect (deserialized == nullptr, "a version mismatch must yield nullptr, not a misparsed message");
+            SerializableMessage::freeMessageData (deserialized);
+        }
+
+        beginTest ("A frame shorter than the header is rejected, not parsed");
+        {
+            juce::MemoryBlock tooShort;
+            std::uint16_t version = SerializableMessage::s_protocolVersion;
+            tooShort.append (&version, sizeof (std::uint16_t)); // header is 4 bytes; this is only 2
+
+            auto* deserialized = SerializableMessage::initFromMemoryBlock (tooShort);
+            expect (deserialized == nullptr, "a frame shorter than getWireHeaderSize() must yield nullptr");
+            SerializableMessage::freeMessageData (deserialized);
+
+            auto* fromEmpty = SerializableMessage::initFromMemoryBlock (juce::MemoryBlock());
+            expect (fromEmpty == nullptr, "an empty frame must yield nullptr");
+            SerializableMessage::freeMessageData (fromEmpty);
+        }
+
+        beginTest ("Every message type's serialised header matches its own type enum value");
+        {
+            juce::AudioBuffer<float> emptyBuffer (1, 1);
+
+            expectHeaderType (EnvironmentParametersMessage (JUCEAppBasics::CustomLookAndFeel::PaletteStyle::PS_Dark),
+                               SerializableMessage::EnvironmentParameters);
+            expectHeaderType (AnalyzerParametersMessage (48000, 512), SerializableMessage::AnalyzerParameters);
+            expectHeaderType (ReinitIOCountMessage (2, 2), SerializableMessage::ReinitIOCount);
+            expectHeaderType (AudioInputBufferMessage (emptyBuffer), SerializableMessage::AudioInputBuffer);
+            expectHeaderType (AudioOutputBufferMessage (emptyBuffer), SerializableMessage::AudioOutputBuffer);
+
+            // Named, not a bare {} literal: DataTrafficTypeSelectionMessage's (const
+            // std::vector<...>&) and (const juce::MemoryBlock&) constructors are both
+            // viable from a braced-init-list argument (juce::MemoryBlock has a (size_t,
+            // bool) constructor reachable via implicit enum conversions), so passing {}
+            // directly is ambiguous -- a compile error, not a runtime concern.
+            std::vector<SerializableMessage::SerializableMessageType> noTrafficTypes;
+            expectHeaderType (DataTrafficTypeSelectionMessage (noTrafficTypes), SerializableMessage::DataTrafficTypeSelection);
+            expectHeaderType (ControlParametersMessage ({}, {}, {}, {}), SerializableMessage::ControlParameters);
+            expectHeaderType (PluginParameterInfosMessage ("", false, false, {}), SerializableMessage::PluginParameterInfos);
+            expectHeaderType (PluginParameterValueMessage (0, "x", 0.0f), SerializableMessage::PluginParameterValue);
+            expectHeaderType (PluginProcessingStateMessage (true, false), SerializableMessage::PluginProcessingState);
+            expectHeaderType (HelloMessage ("x"), SerializableMessage::Hello);
+            expectHeaderType (HelloAckMessage(), SerializableMessage::HelloAck);
+            expectHeaderType (HelloRejectMessage ("reason"), SerializableMessage::HelloReject);
+        }
+    }
+
+private:
+    template <typename MessageType>
+    void expectHeaderType (const MessageType& message, SerializableMessage::SerializableMessageType expectedType)
+    {
+        auto blob = message.getSerializedMessage();
+        expect (expectedType == SerializableMessage::peekType (blob));
+    }
+};
+
+static SerializableMessageHeaderTest serializableMessageHeaderTest;
+
+//==============================================================================
+// Malformed/truncated-frame rejection, for every message type: a frame that fails to parse
+// must yield nullptr from initFromMemoryBlock() -- never a crash, and never a half-parsed
+// object -- whether the frame is too short (no payload at all, or one byte short of complete)
+// or one of its own length-prefixed counts claims more data than was actually sent. Every
+// constructor's payload parsing goes through FrameReader (see MemaMessages.h); this is the
+// test suite for the guarantee that migration was meant to provide.
+class MalformedFrameRejectionTest : public juce::UnitTest
+{
+public:
+    MalformedFrameRejectionTest() : juce::UnitTest ("Malformed/truncated frame rejection", "Mema") {}
+
+    void runTest() override
+    {
+        juce::AudioBuffer<float> buffer (2, 4);
+        for (int ch = 0; ch < 2; ++ch)
+            for (int s = 0; s < 4; ++s)
+                buffer.setSample (ch, s, 1.0f);
+
+        PluginParameterInfo oneParamInfo;
+        oneParamInfo.index = 0;
+        oneParamInfo.id = "x";
+        oneParamInfo.name = "X";
+        oneParamInfo.label = "";
+        oneParamInfo.category = juce::AudioProcessorParameter::genericParameter;
+        oneParamInfo.type = ParameterControlType::Continuous;
+        std::vector<PluginParameterInfo> oneParam { oneParamInfo };
+
+        beginTest ("Header-only and one-byte-short truncations are rejected for every message type");
+        {
+            expectTruncationsRejected (EnvironmentParametersMessage (JUCEAppBasics::CustomLookAndFeel::PaletteStyle::PS_Dark));
+            expectTruncationsRejected (AnalyzerParametersMessage (48000, 512));
+            expectTruncationsRejected (ReinitIOCountMessage (2, 2));
+            expectTruncationsRejected (AudioInputBufferMessage (buffer));
+            expectTruncationsRejected (AudioOutputBufferMessage (buffer));
+            std::vector<SerializableMessage::SerializableMessageType> someTrafficTypes {
+                SerializableMessage::ControlParameters, SerializableMessage::AudioOutputBuffer };
+            expectTruncationsRejected (DataTrafficTypeSelectionMessage (someTrafficTypes));
+
+            std::map<std::uint16_t, bool> oneMuteState { { 1, true } };
+            expectTruncationsRejected (ControlParametersMessage (
+                oneMuteState, std::map<std::uint16_t, bool>(),
+                std::map<std::uint16_t, std::map<std::uint16_t, bool>>(),
+                std::map<std::uint16_t, std::map<std::uint16_t, float>>()));
+
+            expectTruncationsRejected (PluginParameterInfosMessage ("P", true, false, oneParam));
+            expectTruncationsRejected (PluginParameterValueMessage (0, "x", 0.5f));
+            expectTruncationsRejected (PluginProcessingStateMessage (true, false));
+            expectTruncationsRejected (HelloMessage ("some-token"));
+            expectTruncationsRejected (HelloRejectMessage ("some reason"));
+            // HelloAckMessage is deliberately not exercised here: its payload is empty, so
+            // "header only" IS its complete, valid frame -- there's nothing to truncate, and
+            // the generic "frame shorter than the header" case is already covered by
+            // SerializableMessageHeaderTest.
+        }
+
+        beginTest ("A count field claiming more entries than were actually sent is rejected, not read out of bounds");
+        {
+            // Build a well-formed PluginParameterInfosMessage (one parameter), then overwrite
+            // its paramCount field with a value far larger than what was actually serialised.
+            // Wire layout after the header: pluginNameLength(2) + "P"(1) + enabled(1) + post(1)
+            // + paramCount(2) + ... -- see PluginParameterInfosMessage::createSerializedContent().
+            PluginParameterInfosMessage original ("P", true, false, oneParam);
+            auto blob = original.getSerializedMessage();
+
+            auto paramCountOffset = SerializableMessage::getWireHeaderSize()
+                + sizeof (std::uint16_t) /* pluginNameLength field */
+                + 1 /* "P" */ + 1 /* enabled */ + 1 /* post */;
+            std::uint16_t bogusCount = 60000;
+            blob.copyFrom (&bogusCount, (int) paramCountOffset, sizeof (std::uint16_t));
+
+            auto* deserialized = SerializableMessage::initFromMemoryBlock (blob);
+            expect (deserialized == nullptr, "a paramCount far exceeding the actual payload must be rejected, not crash");
+            SerializableMessage::freeMessageData (deserialized);
+        }
+
+        beginTest ("Channel/sample counts large enough to overflow a 32-bit size_t multiplication are still rejected safely");
+        {
+            // Regression test for the uint64_t-explicit size calculation in
+            // AudioInputBufferMessage/AudioOutputBufferMessage's MemoryBlock constructor: two
+            // wire-supplied uint16_t counts multiplied as a 32-bit size_t (this project ships
+            // 32-bit RaspberryPiOS builds) can wrap around to a small value and defeat the
+            // bounds check it was meant to enforce.
+            juce::AudioBuffer<float> smallBuffer (1, 1);
+            smallBuffer.setSample (0, 0, 1.0f);
+            AudioInputBufferMessage original (smallBuffer);
+            auto blob = original.getSerializedMessage();
+
+            auto numChannelsOffset = SerializableMessage::getWireHeaderSize() + sizeof (AudioBufferMessage::FlowDirection);
+            std::uint16_t hugeCount = 60000; // 60000 * 60000 * 4 bytes ~= 14.4 GB
+            blob.copyFrom (&hugeCount, (int) numChannelsOffset, sizeof (std::uint16_t));
+            blob.copyFrom (&hugeCount, (int) (numChannelsOffset + sizeof (std::uint16_t)), sizeof (std::uint16_t));
+
+            auto* deserialized = SerializableMessage::initFromMemoryBlock (blob);
+            expect (deserialized == nullptr, "a channel/sample count claiming far more data than was sent must be rejected, not wrap around and read out of bounds");
+            SerializableMessage::freeMessageData (deserialized);
+        }
+    }
+
+private:
+    template <typename MessageType>
+    void expectTruncationsRejected (const MessageType& message)
+    {
+        auto blob = message.getSerializedMessage();
+        auto headerSize = SerializableMessage::getWireHeaderSize();
+
+        {
+            juce::MemoryBlock headerOnly (blob.getData(), headerSize);
+            auto* deserialized = SerializableMessage::initFromMemoryBlock (headerOnly);
+            expect (deserialized == nullptr, "a header-only frame (no payload at all) must be rejected");
+            SerializableMessage::freeMessageData (deserialized);
+        }
+
+        if (blob.getSize() > headerSize)
+        {
+            juce::MemoryBlock almostComplete (blob.getData(), blob.getSize() - 1);
+            auto* deserialized = SerializableMessage::initFromMemoryBlock (almostComplete);
+            expect (deserialized == nullptr, "a frame one byte short of complete must be rejected");
+            SerializableMessage::freeMessageData (deserialized);
+        }
+    }
+};
+
+static MalformedFrameRejectionTest malformedFrameRejectionTest;
+
+//==============================================================================
+class HandshakeMessagesTest : public juce::UnitTest
+{
+public:
+    HandshakeMessagesTest() : juce::UnitTest ("Hello/HelloAck/HelloReject round-trip", "Mema") {}
+
+    void runTest() override
+    {
+        beginTest ("HelloMessage round-trips a non-empty pairing token");
+        {
+            HelloMessage original ("my-token");
+            auto blob = original.getSerializedMessage();
+
+            auto* deserialized = SerializableMessage::initFromMemoryBlock (blob);
+            auto* hello = dynamic_cast<HelloMessage*> (deserialized);
+            expect (hello != nullptr);
+            if (hello != nullptr)
+                expectEquals (hello->getPairingToken(), juce::String ("my-token"));
+
+            SerializableMessage::freeMessageData (deserialized);
+        }
+
+        beginTest ("HelloMessage round-trips an empty pairing token (client has none configured)");
+        {
+            HelloMessage original ("");
+            auto blob = original.getSerializedMessage();
+
+            auto* deserialized = SerializableMessage::initFromMemoryBlock (blob);
+            auto* hello = dynamic_cast<HelloMessage*> (deserialized);
+            expect (hello != nullptr);
+            if (hello != nullptr)
+                expect (hello->getPairingToken().isEmpty());
+
+            SerializableMessage::freeMessageData (deserialized);
+        }
+
+        beginTest ("HelloAckMessage round-trips with an empty payload (just the header)");
+        {
+            HelloAckMessage original;
+            auto blob = original.getSerializedMessage();
+            expectEquals ((int) blob.getSize(), (int) SerializableMessage::getWireHeaderSize());
+
+            auto* deserialized = SerializableMessage::initFromMemoryBlock (blob);
+            expect (dynamic_cast<HelloAckMessage*> (deserialized) != nullptr);
+            SerializableMessage::freeMessageData (deserialized);
+        }
+
+        beginTest ("HelloRejectMessage round-trips its reason string");
+        {
+            HelloRejectMessage original ("Pairing token mismatch");
+            auto blob = original.getSerializedMessage();
+
+            auto* deserialized = SerializableMessage::initFromMemoryBlock (blob);
+            auto* reject = dynamic_cast<HelloRejectMessage*> (deserialized);
+            expect (reject != nullptr);
+            if (reject != nullptr)
+                expectEquals (reject->getReason(), juce::String ("Pairing token mismatch"));
+
+            SerializableMessage::freeMessageData (deserialized);
+        }
+    }
+};
+
+static HandshakeMessagesTest handshakeMessagesTest;
+
+//==============================================================================
 class EnvironmentParametersMessageTest : public juce::UnitTest
 {
 public:

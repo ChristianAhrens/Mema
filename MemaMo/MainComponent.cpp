@@ -50,15 +50,10 @@ MainComponent::MainComponent()
     m_networkConnection->onConnectionMade = [=]() {
         DBG(__FUNCTION__);
 
-        std::vector<Mema::SerializableMessage::SerializableMessageType> desiredTrafficTypes = {
-            Mema::SerializableMessage::EnvironmentParameters, 
-            Mema::SerializableMessage::ReinitIOCount, 
-            Mema::SerializableMessage::AnalyzerParameters, 
-            Mema::SerializableMessage::AudioInputBuffer, 
-            Mema::SerializableMessage::AudioOutputBuffer };
-        m_networkConnection->sendMessage(std::make_unique<Mema::DataTrafficTypeSelectionMessage>(desiredTrafficTypes)->getSerializedMessage());
-
-        setStatus(Status::Monitoring);
+        // Hello is the first thing sent on every connection, and gates everything else --
+        // see MemaProcessor::onMessageReceived. The traffic-type subscription and the move
+        // out of "connecting" status both wait for HelloAck, below.
+        m_networkConnection->sendMessage(std::make_unique<Mema::HelloMessage>(m_pairingToken)->getSerializedMessage());
     };
     m_networkConnection->onConnectionLost = [=]() {
         DBG(__FUNCTION__);
@@ -69,7 +64,45 @@ MainComponent::MainComponent()
     };
     m_networkConnection->onMessageReceived = [=](const juce::MemoryBlock& message) {
         auto knownMessage = Mema::SerializableMessage::initFromMemoryBlock(message);
-        if (auto const epm = dynamic_cast<const Mema::EnvironmentParametersMessage*>(knownMessage))
+        if (nullptr == knownMessage)
+        {
+            // Unknown type, version mismatch, or a truncated/malformed payload (see
+            // FrameReader in MemaMessages.h) -- either a build mismatch or a desynced byte
+            // stream, with no safe way to resynchronise mid-stream. Drop the connection;
+            // onConnectionLost already triggers a clean reconnect attempt.
+            DBG(juce::String(__FUNCTION__) << " disconnecting after an unrecognised/malformed frame");
+            if (m_networkConnection)
+                m_networkConnection->disconnect();
+            return;
+        }
+
+        if (auto const helloAck = dynamic_cast<const Mema::HelloAckMessage*>(knownMessage))
+        {
+            juce::ignoreUnused(helloAck);
+            std::vector<Mema::SerializableMessage::SerializableMessageType> desiredTrafficTypes = {
+                Mema::SerializableMessage::EnvironmentParameters,
+                Mema::SerializableMessage::ReinitIOCount,
+                Mema::SerializableMessage::AnalyzerParameters,
+                Mema::SerializableMessage::AudioInputBuffer,
+                Mema::SerializableMessage::AudioOutputBuffer };
+            m_networkConnection->sendMessage(std::make_unique<Mema::DataTrafficTypeSelectionMessage>(desiredTrafficTypes)->getSerializedMessage());
+
+            setStatus(Status::Monitoring);
+        }
+        else if (auto const helloReject = dynamic_cast<const Mema::HelloRejectMessage*>(knownMessage))
+        {
+            // Mema deliberately leaves the socket open rather than disconnecting itself right
+            // after queuing this (that would race its own per-connection send thread and could
+            // close the connection before the reject was actually written) -- so it's this side
+            // that closes the connection, now that the reject has definitely been received in
+            // full. onConnectionLost will fire and retry, which loops back into the same
+            // rejection for as long as the mismatch persists -- showing the reason at least
+            // means that's visible rather than a silent retry loop.
+            juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::WarningIcon, "Connection rejected", helloReject->getReason());
+            if (m_networkConnection)
+                m_networkConnection->disconnect();
+        }
+        else if (auto const epm = dynamic_cast<const Mema::EnvironmentParametersMessage*>(knownMessage))
         {
             m_settingsHostLookAndFeelId = epm->getPaletteStyle();
             jassert(m_settingsHostLookAndFeelId >= JUCEAppBasics::CustomLookAndFeel::PS_Dark && m_settingsHostLookAndFeelId <= JUCEAppBasics::CustomLookAndFeel::PS_Light);
@@ -80,7 +113,7 @@ MainComponent::MainComponent()
                 onPaletteStyleChange(m_settingsHostLookAndFeelId, false/*do not follow local style any more if a message was received via net once*/);
             }
         }
-        else if (m_monitorComponent && nullptr != knownMessage && Status::Monitoring == m_currentStatus)
+        else if (m_monitorComponent && Status::Monitoring == m_currentStatus)
         {
             m_monitorComponent->handleMessage(*knownMessage);
         }
@@ -180,6 +213,8 @@ MainComponent::MainComponent()
         settingsMenu.addSeparator();
         settingsMenu.addItem(MemaMoSettingsOption::FullscreenWindowMode, m_settingsItems[MemaMoSettingsOption::FullscreenWindowMode].first, true, false);
 #endif
+        settingsMenu.addSeparator();
+        settingsMenu.addItem(MemaMoSettingsOption::PairingToken, "Pairing token...", true, false);
         settingsMenu.showMenuAsync(juce::PopupMenu::Options(), [=](int selectedId) {
             handleSettingsMenuResult(selectedId);
             if (m_config)
@@ -339,6 +374,8 @@ void MainComponent::handleSettingsMenuResult(int selectedId)
         handleSettingsMeteringColourMenuResult(selectedId);
     else if (MemaMoSettingsOption::FullscreenWindowMode == selectedId)
         handleSettingsFullscreenModeToggleResult();
+    else if (MemaMoSettingsOption::PairingToken == selectedId)
+        showPairingTokenDialog();
     else
         jassertfalse; // unhandled menu entry!?
 }
@@ -519,6 +556,25 @@ void MainComponent::toggleFullscreenMode()
         onSetFullscreenWindow(!enabled);
 }
 
+void MainComponent::showPairingTokenDialog()
+{
+    auto* aw = new juce::AlertWindow("Pairing token",
+        "If the Mema instance you connect to requires a pairing token, enter it here. Leave empty if it doesn't.",
+        juce::MessageBoxIconType::NoIcon);
+    aw->addTextEditor("token", m_pairingToken, "Token:");
+    aw->addButton("Set", 1, juce::KeyPress(juce::KeyPress::returnKey));
+    aw->addButton("Cancel", 0, juce::KeyPress(juce::KeyPress::escapeKey));
+
+    aw->enterModalState(true, juce::ModalCallbackFunction::create([this, aw](int result) {
+        if (1 == result)
+        {
+            m_pairingToken = aw->getTextEditorContents("token");
+            if (m_config)
+                m_config->triggerConfigurationDump();
+        }
+    }), true);
+}
+
 void MainComponent::setMeteringColour(const juce::Colour& meteringColour)
 {
     m_meteringColour = meteringColour;
@@ -633,6 +689,8 @@ void MainComponent::performConfigurationDump()
         serviceDescriptionXmlElmement->addTextElement(m_selectedService.description);
         connectionConfigXmlElement->addChildElement(serviceDescriptionXmlElmement.release());
 
+        connectionConfigXmlElement->setAttribute(MemaMoAppConfiguration::getAttributeName(MemaMoAppConfiguration::AttributeID::PAIRINGTOKEN), m_pairingToken);
+
         m_config->setConfigState(std::move(connectionConfigXmlElement), MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::CONNECTIONCONFIG));
 
         // visu config
@@ -688,6 +746,9 @@ void MainComponent::onConfigUpdated()
                 connectToMema();
             }
         }
+
+        // Defaults to empty (no token configured) for a config written before this attribute existed.
+        m_pairingToken = connectionConfigState->getStringAttribute(MemaMoAppConfiguration::getAttributeName(MemaMoAppConfiguration::AttributeID::PAIRINGTOKEN));
     }
 
     auto visuConfigState = m_config->getConfigState(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::VISUCONFIG));

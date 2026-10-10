@@ -102,6 +102,7 @@ public:
         MeteringColour_Laser,                       ///< High-visibility laser-green metering bars.
         MeteringColour_Last = MeteringColour_Laser,
         FullscreenWindowMode,                       ///< Toggle between popup and fullscreen window mode.
+        PairingToken,                                ///< Set/clear the pairing token sent to Mema in this client's Hello.
     };
 
 public:
@@ -193,6 +194,7 @@ private:
     void handleSettingsOutputVisuTypeMenuResult(int selectedId);
     void handleSettingsMeteringColourMenuResult(int selectedId);
     void handleSettingsFullscreenModeToggleResult();
+    void showPairingTokenDialog();
 
     void setMeteringColour(const juce::Colour& meteringColour);
     void applyMeteringColour();
@@ -217,6 +219,7 @@ private:
     std::unique_ptr<juce::DrawableButton>           m_settingsButton;           ///< Gear icon that opens the settings popup menu.
     std::map<int, std::pair<std::string, int>>      m_settingsItems;            ///< Mapping from menu item ID to {label, MemaMoSettingsOption}.
     int                                             m_settingsHostLookAndFeelId = -1; ///< Menu ID assigned to the "Follow host" look-and-feel entry.
+    juce::String                                    m_pairingToken;             ///< Token sent to Mema in this client's HelloMessage (empty = none configured).
 
     std::unique_ptr<juce::DrawableButton>           m_disconnectButton;         ///< Button to drop the current TCP connection and return to Discovering.
 

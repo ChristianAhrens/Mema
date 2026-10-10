@@ -81,6 +81,7 @@ public:
         IDX,            ///< Channel or parameter index.
         CONTROLLABLE,   ///< Whether a plugin parameter is remotely controllable.
         PARAMORDER,     ///< Comma-separated list of parameter indices defining the display order.
+        PAIRINGTOKEN,   ///< Pairing token new clients must present in their HelloMessage (empty = disabled).
     };
     static juce::String getAttributeName(AttributeID ID)
     {
@@ -100,6 +101,8 @@ public:
             return "CONTROLLABLE";
         case PARAMORDER:
             return "PARAMORDER";
+        case PAIRINGTOKEN:
+            return "PAIRINGTOKEN";
         default:
             return "-";
         }

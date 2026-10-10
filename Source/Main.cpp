@@ -22,6 +22,7 @@
 #include "MemaUIComponent.h"
 #include "CustomPopupMenuComponent.h"
 #include "HeadlessCLIMenu.h"
+#include "MemaProcessor/MemaProcessor.h"
 
 #include <AppConfigurationBase.h>
 
@@ -286,6 +287,15 @@ public:
         };
         memaUIComponent->onSaveConfig = [=]() {
             Mema::Mema::getInstance()->triggerPromptSaveConfig();
+        };
+        memaUIComponent->onGetPairingToken = [=]() -> juce::String {
+            auto& processor = Mema::Mema::getInstance()->getMemaProcessor();
+            return processor ? processor->getPairingToken() : juce::String();
+        };
+        memaUIComponent->onPairingTokenChanged = [=](const juce::String& token) {
+            auto& processor = Mema::Mema::getInstance()->getMemaProcessor();
+            if (processor)
+                processor->setPairingToken(token);
         };
 
         memaUIComponent->handleEditorSizeChangeRequest(m_lastRequestedEditorSize);

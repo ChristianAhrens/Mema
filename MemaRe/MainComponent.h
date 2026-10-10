@@ -111,6 +111,7 @@ public:
         ControlsSize_Last = ControlsSize_L,
         ExternalControl,                            ///< Opens the ADM-OSC external-control settings dialog.
         FullscreenWindowMode,                       ///< Toggle between popup and fullscreen window mode.
+        PairingToken,                               ///< Set/clear the pairing token sent to Mema in this client's Hello.
     };
 
 public:
@@ -204,6 +205,7 @@ private:
     void handleSettingsControlsSizeMenuResult(int selectedId);
     void handleSettingsFullscreenModeToggleResult();
     void showExternalControlSettings();
+    void showPairingTokenDialog();
 
     void setControlColour(const juce::Colour& meteringColour);
     void applyControlColour();
@@ -228,6 +230,7 @@ private:
     std::unique_ptr<juce::DrawableButton>           m_settingsButton;           ///< Gear icon that opens the settings popup menu.
     std::map<int, std::pair<std::string, int>>      m_settingsItems;            ///< Mapping from menu item ID to {label, MemaReSettingsOption}.
     int                                             m_settingsHostLookAndFeelId = -1; ///< Menu ID assigned to the "Follow host" look-and-feel entry.
+    juce::String                                    m_pairingToken;             ///< Token sent to Mema in this client's HelloMessage (empty = none configured).
 
     std::unique_ptr<juce::DrawableButton>           m_disconnectButton;         ///< Button to drop the current TCP connection and return to Discovering.
 

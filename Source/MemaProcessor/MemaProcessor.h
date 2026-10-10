@@ -20,6 +20,8 @@
 
 #include <JuceHeader.h>
 
+#include <set>
+
 #include "MemaMessages.h"
 #include "ProcessorDataAnalyzer.h"
 #include "MemaPluginParameterInfo.h"
@@ -128,7 +130,15 @@ public:
  * so that the update is echoed to all *other* clients but not reflected back to the originator.
  *
  * ## Network server
- * `InterprocessConnectionServerImpl` listens on port 55668.  On connect, MemaProcessor sends:
+ * `InterprocessConnectionServerImpl` listens on port 55668.  A connecting client must first send
+ * a `HelloMessage`; `ProtocolHandshake::evaluate()` checks its pairing token (if one is configured
+ * via `setPairingToken()`) and either sends `HelloAckMessage` and proceeds, or sends
+ * `HelloRejectMessage` and leaves the connection open without completing the handshake --
+ * deliberately not disconnecting itself, since that would race the connection's own send thread
+ * and could close the socket before the reject was actually written; the client disconnects
+ * once it has received the reject in full.  Any other message received before the handshake
+ * completes is treated as a protocol violation and disconnects the connection.  Once accepted,
+ * `sendInitialStateSync()` sends:
  * 1. `EnvironmentParametersMessage` — current palette style.
  * 2. `AnalyzerParametersMessage` — current sample rate and block size.
  * 3. `ReinitIOCountMessage` — current input/output channel counts.
@@ -385,6 +395,21 @@ public:
 
     //==============================================================================
     /**
+     * @brief Returns the pairing token new clients must present in their `HelloMessage`.
+     * @return The configured token, or an empty string if pairing is disabled (the default --
+     *         any client is accepted as long as it completes the Hello/HelloAck handshake).
+     */
+    const juce::String& getPairingToken() const { return m_pairingToken; };
+    /**
+     * @brief Sets the pairing token new clients must present in their `HelloMessage`, and
+     *        persists it (see `createStateXml()`/`setStateXml()`).
+     * @param token The token to require, or an empty string to disable pairing entirely.
+     * @note Does not affect already-connected clients, only connections made from this point on.
+     */
+    void setPairingToken(const juce::String& token) { m_pairingToken = token; triggerConfigurationUpdate(false); };
+
+    //==============================================================================
+    /**
      * @brief Returns per-client network health metrics.
      * @return A map of {connectionId → {bytesPerSecond, isConnected}} for all currently connected TCP clients.
      *         Used by `MemaUIComponent` to update the network health bar.
@@ -549,6 +574,16 @@ private:
 
     //==============================================================================
     /**
+     * @brief Sends the full on-connect state sync (device parameters, palette, routing state,
+     *        plugin descriptors) to one client.
+     * @details Extracted so it can be called once a client's `HelloMessage` has been accepted,
+     *          rather than unconditionally as soon as the TCP connection is made.
+     * @param connectionId The connection to send to.
+     */
+    void sendInitialStateSync(int connectionId);
+
+    //==============================================================================
+    /**
      * @brief Reconfigures the loaded plugin's channel layout and calls prepareToPlay for the current pre/post position.
      * @details Pre-matrix: plugin is sized to inputChannelCount × inputChannelCount so the routing matrix
      *          can widen or narrow to the output count afterwards.
@@ -611,6 +646,8 @@ private:
     std::shared_ptr<InterprocessConnectionServerImpl> m_networkServer; ///< TCP server listening on port 55668 for Mema.Mo and Mema.Re connections.
     std::unique_ptr<MemaNetworkClientCommanderWrapper> m_networkCommanderWrapper; ///< Bridges inbound ControlParametersMessage data into the commander pattern.
     std::map<int, std::vector<SerializableMessage::SerializableMessageType>> m_trafficTypesPerConnection; ///< Per-client subscription map: connectionId → list of subscribed SerializableMessageType values.
+    std::set<int> m_handshakeCompletedConnections; ///< ConnectionIds that have completed the Hello/HelloAck handshake; everything else is disconnected if it sends anything but a Hello.
+    juce::String m_pairingToken; ///< Pairing token new clients must present in their HelloMessage. Empty = pairing disabled (default).
 
     std::unique_ptr<juce::TimedCallback>   m_timedConfigurationDumper; ///< Periodic callback that flushes pending XML configuration dumps to disk.
     bool    m_timedConfigurationDumpPending = false; ///< True when a configuration dump has been scheduled but not yet written.

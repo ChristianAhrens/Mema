@@ -89,9 +89,10 @@ public:
     /** @brief XML attribute identifiers used alongside TagID elements. */
     enum AttributeID
     {
-        ENABLED,    ///< Boolean flag indicating whether a feature or connection is active.
-        IP,         ///< IP address string (used for ADM-OSC remote client address).
-        PORT,       ///< UDP/TCP port number.
+        ENABLED,        ///< Boolean flag indicating whether a feature or connection is active.
+        IP,             ///< IP address string (used for ADM-OSC remote client address).
+        PORT,           ///< UDP/TCP port number.
+        PAIRINGTOKEN,   ///< Pairing token sent to Mema in this client's HelloMessage (empty = none configured).
     };
     static juce::String getAttributeName(AttributeID ID)
     {
@@ -103,6 +104,8 @@ public:
             return "IP";
         case PORT:
             return "PORT";
+        case PAIRINGTOKEN:
+            return "PAIRINGTOKEN";
         default:
             return "-";
         }

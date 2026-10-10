@@ -21,6 +21,7 @@
 #include "InterprocessConnection.h"
 #include "MemaCommanders.h"
 #include "MemaServiceData.h"
+#include "ProtocolHandshake.h"
 #include "../MemaAppConfiguration.h"
 
 #include <CustomLookAndFeel.h>
@@ -204,59 +205,66 @@ MemaProcessor::MemaProcessor(XmlElement* stateXml) :
         {
 			connection->onConnectionLost = [=](int connectionId) { DBG(juce::String(__FUNCTION__) << " connection " << connectionId << " lost");
 				m_trafficTypesPerConnection.erase(connectionId);
+				m_handshakeCompletedConnections.erase(connectionId);
 			};
-			connection->onConnectionMade = [=](int connectionId ) { DBG(juce::String(__FUNCTION__) << " connection " << connectionId << " made");
+			connection->onConnectionMade = [=](int connectionId ) { DBG(juce::String(__FUNCTION__) << " connection " << connectionId << " made, awaiting Hello");
 				m_trafficTypesPerConnection[connectionId].clear();
-				if (m_networkServer && m_networkServer->hasActiveConnection(connectionId))
-				{
-					auto paletteStyle = JUCEAppBasics::CustomLookAndFeel::PaletteStyle::PS_Dark;
-					if (getActiveEditor())
-						if (auto claf = dynamic_cast<JUCEAppBasics::CustomLookAndFeel*>(&getActiveEditor()->getLookAndFeel()))
-							paletteStyle = claf->getPaletteStyle();
-
-					std::map<std::uint16_t, bool> inputMuteStates;
-					std::map<std::uint16_t, bool> outputMuteStates;
-					std::map<std::uint16_t, std::map<std::uint16_t, bool>> matrixCrosspointStates;
-					std::map<std::uint16_t, std::map<std::uint16_t, float>> matrixCrosspointValues;
-					{
-						const ScopedLock sl(m_audioDeviceIOCallbackLock);
-						inputMuteStates = m_inputMuteStates;
-						outputMuteStates = m_outputMuteStates;
-						matrixCrosspointStates = m_matrixCrosspointStates;
-						matrixCrosspointValues = m_matrixCrosspointValues;
-					}
-
-					auto sendIds = std::vector<int>{ connectionId };
-					auto success = true;
-					success = success && m_networkServer->enqueueMessage(std::make_unique<AnalyzerParametersMessage>(int(getSampleRate()), getBlockSize())->getSerializedMessage(), sendIds);
-					success = success && m_networkServer->enqueueMessage(std::make_unique<ReinitIOCountMessage>(m_inputChannelCount, m_outputChannelCount)->getSerializedMessage(), sendIds);
-					success = success && m_networkServer->enqueueMessage(std::make_unique<EnvironmentParametersMessage>(paletteStyle)->getSerializedMessage(), sendIds);
-					success = success && m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, matrixCrosspointStates, matrixCrosspointValues)->getSerializedMessage(), sendIds);
-					{
-						auto orderedParams = m_pluginParameterInfos;
-						if (!m_pluginParameterDisplayOrder.empty() && m_pluginParameterDisplayOrder.size() == m_pluginParameterInfos.size())
-						{
-							orderedParams.clear();
-							for (int idx : m_pluginParameterDisplayOrder)
-								if (idx >= 0 && idx < static_cast<int>(m_pluginParameterInfos.size()))
-									orderedParams.push_back(m_pluginParameterInfos[idx]);
-							if (orderedParams.size() != m_pluginParameterInfos.size())
-								orderedParams = m_pluginParameterInfos;
-						}
-						success = success && m_networkServer->enqueueMessage(std::make_unique<PluginParameterInfosMessage>(m_pluginInstance ? m_pluginInstance->getName().toStdString() : "", m_pluginEnabled, m_pluginPost, orderedParams)->getSerializedMessage(), sendIds);
-					}
-					if (!success)
-						m_networkServer->cleanupDeadConnections();
-				}
+				// The initial state sync (AnalyzerParameters, ReinitIOCount, EnvironmentParameters,
+				// ControlParameters, PluginParameterInfos) no longer fires here -- it's deferred to
+				// sendInitialStateSync(), called only once this connection's Hello has been accepted.
 			};
 			connection->onMessageReceived = [=](int connectionId, const juce::MemoryBlock& message) {
-				if (auto knownMessage = Mema::SerializableMessage::initFromMemoryBlock(message))
+				auto knownMessage = Mema::SerializableMessage::initFromMemoryBlock(message);
+				if (nullptr == knownMessage)
 				{
-					knownMessage->setId(connectionId);
-					postMessage(knownMessage);
+					// A frame that fails to parse (unknown type, version mismatch, or a
+					// truncated/malformed payload caught by FrameReader -- see MemaMessages.h)
+					// means either a build mismatch or a desynced/hostile byte stream. Either
+					// way there is no safe way to resynchronise mid-stream, so the connection
+					// is dropped rather than risking further misparsed frames.
+					DBG(juce::String(__FUNCTION__) << " disconnecting connection " << connectionId << " after an unrecognised/malformed frame");
+					connection->disconnect();
+					return;
 				}
-				else
-					DBG(juce::String(__FUNCTION__) + " ignoring unknown message");
+
+				if (auto const hello = dynamic_cast<const Mema::HelloMessage*>(knownMessage))
+				{
+					auto result = Mema::ProtocolHandshake::evaluate(m_pairingToken, hello->getPairingToken());
+					if (Mema::ProtocolHandshake::Result::Accept == result)
+					{
+						DBG(juce::String(__FUNCTION__) << " connection " << connectionId << " Hello accepted");
+						m_handshakeCompletedConnections.insert(connectionId);
+						m_networkServer->enqueueMessage(std::make_unique<HelloAckMessage>()->getSerializedMessage(), std::vector<int>{ connectionId });
+						sendInitialStateSync(connectionId);
+					}
+					else
+					{
+						DBG(juce::String(__FUNCTION__) << " connection " << connectionId << " Hello rejected: pairing token mismatch");
+						// Deliberately not disconnecting here: enqueueMessage() only queues the
+						// reject for the connection's dedicated send thread (see
+						// InterprocessConnectionServerImpl) -- disconnecting immediately would
+						// race that thread and could close the socket before the reject was
+						// actually written. The client disconnects itself once it has fully
+						// received and parsed the reject; this connection stays open but
+						// permanently excluded from the handshake (and thus from all normal
+						// message handling) until then.
+						m_networkServer->enqueueMessage(std::make_unique<HelloRejectMessage>(juce::String("Pairing token mismatch"))->getSerializedMessage(), std::vector<int>{ connectionId });
+					}
+					Mema::SerializableMessage::freeMessageData(knownMessage);
+					return;
+				}
+
+				if (m_handshakeCompletedConnections.count(connectionId) == 0)
+				{
+					// Hello is the only message type accepted before the handshake completes.
+					DBG(juce::String(__FUNCTION__) << " disconnecting connection " << connectionId << ": message received before Hello/HelloAck handshake completed");
+					Mema::SerializableMessage::freeMessageData(knownMessage);
+					connection->disconnect();
+					return;
+				}
+
+				knownMessage->setId(connectionId);
+				postMessage(knownMessage);
 			};
         }
     };
@@ -277,6 +285,51 @@ MemaProcessor::MemaProcessor(XmlElement* stateXml) :
 		}
 	});
 	m_timedConfigurationDumper->startTimer(100);
+}
+
+void MemaProcessor::sendInitialStateSync(int connectionId)
+{
+	if (!m_networkServer || !m_networkServer->hasActiveConnection(connectionId))
+		return;
+
+	auto paletteStyle = JUCEAppBasics::CustomLookAndFeel::PaletteStyle::PS_Dark;
+	if (getActiveEditor())
+		if (auto claf = dynamic_cast<JUCEAppBasics::CustomLookAndFeel*>(&getActiveEditor()->getLookAndFeel()))
+			paletteStyle = claf->getPaletteStyle();
+
+	std::map<std::uint16_t, bool> inputMuteStates;
+	std::map<std::uint16_t, bool> outputMuteStates;
+	std::map<std::uint16_t, std::map<std::uint16_t, bool>> matrixCrosspointStates;
+	std::map<std::uint16_t, std::map<std::uint16_t, float>> matrixCrosspointValues;
+	{
+		const ScopedLock sl(m_audioDeviceIOCallbackLock);
+		inputMuteStates = m_inputMuteStates;
+		outputMuteStates = m_outputMuteStates;
+		matrixCrosspointStates = m_matrixCrosspointStates;
+		matrixCrosspointValues = m_matrixCrosspointValues;
+	}
+
+	auto sendIds = std::vector<int>{ connectionId };
+	auto success = true;
+	success = success && m_networkServer->enqueueMessage(std::make_unique<AnalyzerParametersMessage>(int(getSampleRate()), getBlockSize())->getSerializedMessage(), sendIds);
+	success = success && m_networkServer->enqueueMessage(std::make_unique<ReinitIOCountMessage>(m_inputChannelCount, m_outputChannelCount)->getSerializedMessage(), sendIds);
+	success = success && m_networkServer->enqueueMessage(std::make_unique<EnvironmentParametersMessage>(paletteStyle)->getSerializedMessage(), sendIds);
+	success = success && m_networkServer->enqueueMessage(std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, matrixCrosspointStates, matrixCrosspointValues)->getSerializedMessage(), sendIds);
+	{
+		auto orderedParams = m_pluginParameterInfos;
+		if (!m_pluginParameterDisplayOrder.empty() && m_pluginParameterDisplayOrder.size() == m_pluginParameterInfos.size())
+		{
+			orderedParams.clear();
+			for (int idx : m_pluginParameterDisplayOrder)
+				if (idx >= 0 && idx < static_cast<int>(m_pluginParameterInfos.size()))
+					orderedParams.push_back(m_pluginParameterInfos[idx]);
+			if (orderedParams.size() != m_pluginParameterInfos.size())
+				orderedParams = m_pluginParameterInfos;
+		}
+		success = success && m_networkServer->enqueueMessage(std::make_unique<PluginParameterInfosMessage>(m_pluginInstance ? m_pluginInstance->getName().toStdString() : "", m_pluginEnabled, m_pluginPost, orderedParams)->getSerializedMessage(), sendIds);
+	}
+	if (!success)
+		m_networkServer->cleanupDeadConnections();
 }
 
 MemaProcessor::~MemaProcessor()
@@ -303,6 +356,7 @@ MemaProcessor::~MemaProcessor()
 std::unique_ptr<juce::XmlElement> MemaProcessor::createStateXml()
 {
 	auto stateXml = std::make_unique<juce::XmlElement>(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::PROCESSORCONFIG));
+	stateXml->setAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::PAIRINGTOKEN), m_pairingToken);
 
 	auto devConfElm = std::make_unique<juce::XmlElement>(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::DEVCONFIG));
 	if (m_deviceManager)
@@ -382,6 +436,9 @@ bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
 		jassertfalse;
 		return false;
 	}
+
+	// Defaults to empty (pairing disabled) for a config written before this attribute existed.
+	m_pairingToken = stateXml->getStringAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::PAIRINGTOKEN));
 
     juce::XmlElement* deviceSetupXml = nullptr;
     auto devConfElm = stateXml->getChildByName(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::DEVCONFIG));
