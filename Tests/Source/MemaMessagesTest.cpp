@@ -27,6 +27,101 @@
 using namespace Mema;
 
 //==============================================================================
+// Header mechanics shared by every message type: the fixed {protocolVersion, messageType}
+// wire header (SerializableMessage::getWireHeaderSize()/peekType()), and initFromMemoryBlock()'s
+// rejection of a version mismatch or a too-short frame. The per-message tests below already
+// exercise this header implicitly on every round-trip; this test targets the header mechanics
+// directly and in isolation.
+class SerializableMessageHeaderTest : public juce::UnitTest
+{
+public:
+    SerializableMessageHeaderTest() : juce::UnitTest ("SerializableMessage header mechanics", "Mema") {}
+
+    void runTest() override
+    {
+        beginTest ("getWireHeaderSize() is exactly two uint16_t fields");
+        expectEquals ((int) SerializableMessage::getWireHeaderSize(), 4);
+
+        beginTest ("Serialised frame starts with the current protocol version, then the correct type");
+        {
+            ReinitIOCountMessage original (3, 12);
+            auto blob = original.getSerializedMessage();
+
+            expect (blob.getSize() >= SerializableMessage::getWireHeaderSize());
+
+            std::uint16_t version = 0;
+            blob.copyTo (&version, 0, sizeof (std::uint16_t));
+            expectEquals ((int) version, (int) SerializableMessage::s_protocolVersion);
+
+            expect (SerializableMessage::ReinitIOCount == SerializableMessage::peekType (blob),
+                    "peekType() should read the type from offset 2, not offset 0");
+        }
+
+        beginTest ("A frame with a mismatched protocol version is rejected, not parsed");
+        {
+            ReinitIOCountMessage original (3, 12);
+            auto blob = original.getSerializedMessage();
+
+            std::uint16_t wrongVersion = (std::uint16_t) (SerializableMessage::s_protocolVersion + 1);
+            blob.copyFrom (&wrongVersion, 0, sizeof (std::uint16_t));
+
+            auto* deserialized = SerializableMessage::initFromMemoryBlock (blob);
+            expect (deserialized == nullptr, "a version mismatch must yield nullptr, not a misparsed message");
+            SerializableMessage::freeMessageData (deserialized);
+        }
+
+        beginTest ("A frame shorter than the header is rejected, not parsed");
+        {
+            juce::MemoryBlock tooShort;
+            std::uint16_t version = SerializableMessage::s_protocolVersion;
+            tooShort.append (&version, sizeof (std::uint16_t)); // header is 4 bytes; this is only 2
+
+            auto* deserialized = SerializableMessage::initFromMemoryBlock (tooShort);
+            expect (deserialized == nullptr, "a frame shorter than getWireHeaderSize() must yield nullptr");
+            SerializableMessage::freeMessageData (deserialized);
+
+            auto* fromEmpty = SerializableMessage::initFromMemoryBlock (juce::MemoryBlock());
+            expect (fromEmpty == nullptr, "an empty frame must yield nullptr");
+            SerializableMessage::freeMessageData (fromEmpty);
+        }
+
+        beginTest ("Every message type's serialised header matches its own type enum value");
+        {
+            juce::AudioBuffer<float> emptyBuffer (1, 1);
+
+            expectHeaderType (EnvironmentParametersMessage (JUCEAppBasics::CustomLookAndFeel::PaletteStyle::PS_Dark),
+                               SerializableMessage::EnvironmentParameters);
+            expectHeaderType (AnalyzerParametersMessage (48000, 512), SerializableMessage::AnalyzerParameters);
+            expectHeaderType (ReinitIOCountMessage (2, 2), SerializableMessage::ReinitIOCount);
+            expectHeaderType (AudioInputBufferMessage (emptyBuffer), SerializableMessage::AudioInputBuffer);
+            expectHeaderType (AudioOutputBufferMessage (emptyBuffer), SerializableMessage::AudioOutputBuffer);
+
+            // Named, not a bare {} literal: DataTrafficTypeSelectionMessage's (const
+            // std::vector<...>&) and (const juce::MemoryBlock&) constructors are both
+            // viable from a braced-init-list argument (juce::MemoryBlock has a (size_t,
+            // bool) constructor reachable via implicit enum conversions), so passing {}
+            // directly is ambiguous -- a compile error, not a runtime concern.
+            std::vector<SerializableMessage::SerializableMessageType> noTrafficTypes;
+            expectHeaderType (DataTrafficTypeSelectionMessage (noTrafficTypes), SerializableMessage::DataTrafficTypeSelection);
+            expectHeaderType (ControlParametersMessage ({}, {}, {}, {}), SerializableMessage::ControlParameters);
+            expectHeaderType (PluginParameterInfosMessage ("", false, false, {}), SerializableMessage::PluginParameterInfos);
+            expectHeaderType (PluginParameterValueMessage (0, "x", 0.0f), SerializableMessage::PluginParameterValue);
+            expectHeaderType (PluginProcessingStateMessage (true, false), SerializableMessage::PluginProcessingState);
+        }
+    }
+
+private:
+    template <typename MessageType>
+    void expectHeaderType (const MessageType& message, SerializableMessage::SerializableMessageType expectedType)
+    {
+        auto blob = message.getSerializedMessage();
+        expect (expectedType == SerializableMessage::peekType (blob));
+    }
+};
+
+static SerializableMessageHeaderTest serializableMessageHeaderTest;
+
+//==============================================================================
 class EnvironmentParametersMessageTest : public juce::UnitTest
 {
 public:

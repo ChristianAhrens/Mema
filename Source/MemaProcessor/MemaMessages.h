@@ -53,16 +53,21 @@ class PluginProcessingStateMessage;
  *
  * | Offset | Size | Content |
  * |--------|------|---------|
- * | 0      | 4 B  | `SerializableMessageType` enum value (little-endian uint32) |
+ * | 0      | 2 B  | Protocol version, explicit uint16_t (see `s_protocolVersion`) |
+ * | 2      | 2 B  | `SerializableMessageType`, explicit uint16_t (see `peekType()`) — never the enum's raw in-memory bytes, whose width is compiler/platform-defined |
  * | 4      | N B  | Payload produced by `createSerializedContent()` |
  *
  * **Sending** — call `getSerializedMessage()` to obtain the complete framed `MemoryBlock`,
  * then pass it to `InterprocessConnection::sendMessage()`.
  *
  * **Receiving** — pass the raw `MemoryBlock` received from the socket to the static
- * `initFromMemoryBlock()` factory, which reads the type byte and constructs the correct
- * concrete subclass.  The caller owns the returned pointer and must call `freeMessageData()`
- * to properly destroy it via the correct subclass destructor.
+ * `initFromMemoryBlock()` factory, which checks the frame is at least `getWireHeaderSize()`
+ * bytes, rejects a protocol-version mismatch, and constructs the correct concrete subclass
+ * from the type field.  A short or version-mismatched frame yields `nullptr` rather than
+ * asserting — treated as a normal runtime occurrence (a different build on the other end, a
+ * truncated or hostile frame), not a programmer error.  The caller owns a non-null returned
+ * pointer and must call `freeMessageData()` to properly destroy it via the correct subclass
+ * destructor.
  *
  * **Echo suppression** — the optional user-id (`m_userId`) is set by `MemaProcessor` when
  * it forwards an inbound `ControlParametersMessage` back out to all other connected clients.
@@ -92,6 +97,26 @@ public:
     };
 
 public:
+    /** @brief Current wire protocol version. Bump whenever a breaking payload-shape change is made. */
+    static constexpr std::uint16_t s_protocolVersion = 1;
+
+    /** @brief Size in bytes of the fixed wire header (protocolVersion + messageType), both explicit uint16_t fields. */
+    static constexpr size_t getWireHeaderSize() { return sizeof(std::uint16_t) * 2; };
+
+    /**
+     * @brief Reads just the message-type field out of a raw frame, without constructing anything.
+     * @details Used by `initFromMemoryBlock()` for dispatch and by each subclass's defensive
+     *          `jassert` in its `MemoryBlock` constructor. Caller must have already checked
+     *          `blob.getSize() >= getWireHeaderSize()`.
+     */
+    static SerializableMessageType peekType(const juce::MemoryBlock& blob)
+    {
+        std::uint16_t typeValue = 0;
+        blob.copyTo(&typeValue, sizeof(std::uint16_t), sizeof(std::uint16_t));
+        return static_cast<SerializableMessageType>(typeValue);
+    };
+
+public:
     SerializableMessage() = default;
     virtual ~SerializableMessage() = default;
 
@@ -107,35 +132,52 @@ public:
 
     /**
      * @brief Serialises the message to a `MemoryBlock` ready to send over the socket.
-     * @details Prepends the `SerializableMessageType` enum value (4 bytes) followed by the
-     *          payload produced by the subclass `createSerializedContent()` implementation.
+     * @details Prepends the fixed wire header -- protocolVersion (uint16_t) followed by
+     *          messageType (uint16_t), both written as explicit fixed-width integers rather
+     *          than the enum's raw in-memory bytes -- then the payload produced by the
+     *          subclass `createSerializedContent()` implementation.
      * @return A heap-allocated `MemoryBlock` containing the complete framed message.
      */
     juce::MemoryBlock getSerializedMessage() const
     {
         size_t contentSize = 0;
         juce::MemoryBlock blob;
-        blob.append(&m_type, sizeof(SerializableMessageType));
+        std::uint16_t version = s_protocolVersion;
+        std::uint16_t typeValue = static_cast<std::uint16_t>(m_type);
+        blob.append(&version, sizeof(std::uint16_t));
+        blob.append(&typeValue, sizeof(std::uint16_t));
         auto sc = createSerializedContent(contentSize);
         blob.append(sc.getData(), contentSize);
         return blob;
     };
     /**
      * @brief Deserialises a raw TCP frame into the correct concrete `SerializableMessage` subclass.
-     * @details Reads the first 4 bytes as a `SerializableMessageType` enum and constructs the
-     *          matching subclass using its `MemoryBlock`-taking constructor.  The caller takes
-     *          ownership of the returned pointer and must call `freeMessageData()` to destroy it.
+     * @details Reads the fixed wire header (protocolVersion, then messageType -- see
+     *          `getWireHeaderSize()`/`peekType()`) and constructs the matching subclass using its
+     *          `MemoryBlock`-taking constructor. A protocol-version mismatch or a short/malformed
+     *          frame is treated as a normal runtime occurrence (a different build on the other
+     *          end, a truncated or hostile frame) rather than a programmer error, and yields
+     *          `nullptr` rather than asserting. The caller takes ownership of the returned pointer
+     *          and must call `freeMessageData()` to destroy it.
      * @param blob The raw frame received from `InterprocessConnection::messageReceived()`.
-     * @return Heap-allocated concrete message, or `nullptr` if the type is `None` or unknown.
+     * @return Heap-allocated concrete message, or `nullptr` if the frame is too short, the
+     *         protocol version doesn't match, or the type is `None`/unknown.
      */
     static SerializableMessage* initFromMemoryBlock(const juce::MemoryBlock& blob)
     {
-        auto minSize = sizeof(SerializableMessageType);
-        jassert(blob.getSize() >= minSize);
+        auto minSize = getWireHeaderSize();
         if (blob.getSize() < minSize)
             return nullptr;
 
-        auto type = static_cast<SerializableMessageType>(blob[0]);
+        std::uint16_t version = 0;
+        blob.copyTo(&version, 0, sizeof(std::uint16_t));
+        if (version != s_protocolVersion)
+        {
+            DBG(juce::String(__FUNCTION__) << " rejecting frame with protocol version " << int(version) << " (expected " << int(s_protocolVersion) << ")");
+            return nullptr;
+        }
+
+        auto type = peekType(blob);
         switch (type)
         {
         case EnvironmentParameters:
@@ -276,10 +318,10 @@ public:
     EnvironmentParametersMessage(JUCEAppBasics::CustomLookAndFeel::PaletteStyle paletteStyle) { m_type = SerializableMessageType::EnvironmentParameters; m_paletteStyle = paletteStyle; };
     EnvironmentParametersMessage(const juce::MemoryBlock& blob)
     {
-        jassert(SerializableMessageType::EnvironmentParameters == static_cast<SerializableMessageType>(blob[0]));
+        jassert(SerializableMessageType::EnvironmentParameters == SerializableMessage::peekType(blob));
 
         m_type = SerializableMessageType::EnvironmentParameters;
-        blob.copyTo(&m_paletteStyle, sizeof(SerializableMessageType), sizeof(JUCEAppBasics::CustomLookAndFeel::PaletteStyle));
+        blob.copyTo(&m_paletteStyle, getWireHeaderSize(), sizeof(JUCEAppBasics::CustomLookAndFeel::PaletteStyle));
 
     };
     ~EnvironmentParametersMessage() = default;
@@ -319,11 +361,11 @@ public:
     AnalyzerParametersMessage(int sampleRate, int maximumExpectedSamplesPerBlock) { m_type = SerializableMessageType::AnalyzerParameters; m_sampleRate = std::uint16_t(sampleRate); m_maximumExpectedSamplesPerBlock = std::uint16_t(maximumExpectedSamplesPerBlock); };
     AnalyzerParametersMessage(const juce::MemoryBlock& blob)
     {
-        jassert(SerializableMessageType::AnalyzerParameters == static_cast<SerializableMessageType>(blob[0]));
+        jassert(SerializableMessageType::AnalyzerParameters == SerializableMessage::peekType(blob));
 
         m_type = SerializableMessageType::AnalyzerParameters;
-        blob.copyTo(&m_sampleRate, sizeof(SerializableMessageType), sizeof(std::uint16_t));
-        blob.copyTo(&m_maximumExpectedSamplesPerBlock, sizeof(SerializableMessageType) + sizeof(std::uint16_t), sizeof(std::uint16_t));
+        blob.copyTo(&m_sampleRate, getWireHeaderSize(), sizeof(std::uint16_t));
+        blob.copyTo(&m_maximumExpectedSamplesPerBlock, getWireHeaderSize() + sizeof(std::uint16_t), sizeof(std::uint16_t));
 
     };
     ~AnalyzerParametersMessage() = default;
@@ -367,11 +409,11 @@ public:
     ReinitIOCountMessage(int inputs, int outputs) { m_type = SerializableMessageType::ReinitIOCount; m_inputCount = std::uint16_t(inputs); m_outputCount = std::uint16_t(outputs); };
     ReinitIOCountMessage(const juce::MemoryBlock& blob)
     {
-        jassert(SerializableMessageType::ReinitIOCount == static_cast<SerializableMessageType>(blob[0]));
+        jassert(SerializableMessageType::ReinitIOCount == SerializableMessage::peekType(blob));
 
         m_type = SerializableMessageType::ReinitIOCount;
-        blob.copyTo(&m_inputCount, sizeof(SerializableMessageType), sizeof(std::uint16_t));
-        blob.copyTo(&m_outputCount, sizeof(SerializableMessageType) + sizeof(std::uint16_t), sizeof(std::uint16_t));
+        blob.copyTo(&m_inputCount, getWireHeaderSize(), sizeof(std::uint16_t));
+        blob.copyTo(&m_outputCount, getWireHeaderSize() + sizeof(std::uint16_t), sizeof(std::uint16_t));
 
     };
     ~ReinitIOCountMessage() = default;
@@ -470,11 +512,11 @@ public:
     AudioInputBufferMessage(juce::AudioBuffer<float>& buffer) : AudioBufferMessage(buffer) { m_type = SerializableMessageType::AudioInputBuffer; m_direction = FlowDirection::Input; };
     AudioInputBufferMessage(const juce::MemoryBlock& blob)
     {
-        jassert(SerializableMessageType::AudioInputBuffer == static_cast<SerializableMessageType>(blob[0]));
+        jassert(SerializableMessageType::AudioInputBuffer == SerializableMessage::peekType(blob));
 
         m_type = SerializableMessageType::AudioInputBuffer;
 
-        auto readPos = int(sizeof(SerializableMessageType));
+        auto readPos = int(getWireHeaderSize());
 
         blob.copyTo(&m_direction, readPos, sizeof(FlowDirection));
         jassert(FlowDirection::Input == m_direction);
@@ -515,9 +557,11 @@ public:
     AudioOutputBufferMessage(juce::AudioBuffer<float>& buffer) : AudioBufferMessage(buffer) { m_type = SerializableMessageType::AudioOutputBuffer; m_direction = FlowDirection::Output; };
     AudioOutputBufferMessage(const juce::MemoryBlock& blob)
     {
+        jassert(SerializableMessageType::AudioOutputBuffer == SerializableMessage::peekType(blob));
+
         m_type = SerializableMessageType::AudioOutputBuffer;
 
-        auto readPos = int(sizeof(SerializableMessageType));
+        auto readPos = int(getWireHeaderSize());
 
         blob.copyTo(&m_direction, readPos, sizeof(FlowDirection));
         jassert(FlowDirection::Output == m_direction);
@@ -556,7 +600,7 @@ public:
  * - **Mema.Re** subscribes to `ControlParameters` and `PluginParameterInfos` only — it
  *   never requests audio buffers.
  *
- * **Wire payload:** uint16 typesCount + typesCount × `SerializableMessageType` (4 B each).
+ * **Wire payload:** uint16 typesCount + typesCount × `SerializableMessageType` encoded as uint16_t (2 B each).
  */
 class DataTrafficTypeSelectionMessage : public SerializableMessage
 {
@@ -565,11 +609,11 @@ public:
     DataTrafficTypeSelectionMessage(const std::vector<SerializableMessageType>& trafficTypes) { m_type = SerializableMessageType::DataTrafficTypeSelection; m_trafficTypes = trafficTypes; };
     DataTrafficTypeSelectionMessage(const juce::MemoryBlock& blob)
     {
-        jassert(SerializableMessageType::DataTrafficTypeSelection == static_cast<SerializableMessageType>(blob[0]));
+        jassert(SerializableMessageType::DataTrafficTypeSelection == SerializableMessage::peekType(blob));
 
         m_type = SerializableMessageType::DataTrafficTypeSelection;
 
-        auto readPos = int(sizeof(SerializableMessageType));
+        auto readPos = int(getWireHeaderSize());
 
         std::uint16_t typesCount;
         blob.copyTo(&typesCount, readPos, sizeof(std::uint16_t));
@@ -577,8 +621,10 @@ public:
         m_trafficTypes.resize(typesCount);
         for (int i = 0; i < typesCount; i++)
         {
-            blob.copyTo(&m_trafficTypes[i], readPos, sizeof(SerializableMessageType));
-            readPos += sizeof(SerializableMessageType);
+            std::uint16_t trafficTypeValue = 0;
+            blob.copyTo(&trafficTypeValue, readPos, sizeof(std::uint16_t));
+            m_trafficTypes[i] = static_cast<SerializableMessageType>(trafficTypeValue);
+            readPos += sizeof(std::uint16_t);
         }
 
     };
@@ -594,7 +640,10 @@ protected:
         auto typesCount = std::uint16_t(m_trafficTypes.size());
         blob.append(&typesCount, sizeof(std::uint16_t));
         for (auto& trafficType : m_trafficTypes)
-            blob.append(&trafficType, sizeof(SerializableMessageType));
+        {
+            auto trafficTypeValue = static_cast<std::uint16_t>(trafficType);
+            blob.append(&trafficTypeValue, sizeof(std::uint16_t));
+        }
         contentSize = blob.getSize();
         return blob;
     };
@@ -663,11 +712,11 @@ public:
     };
     ControlParametersMessage(const juce::MemoryBlock& blob)
     {
-        jassert(SerializableMessageType::ControlParameters == static_cast<SerializableMessageType>(blob[0]));
+        jassert(SerializableMessageType::ControlParameters == SerializableMessage::peekType(blob));
 
         m_type = SerializableMessageType::ControlParameters;
 
-        auto readPos = int(sizeof(SerializableMessageType));
+        auto readPos = int(getWireHeaderSize());
 
         std::uint16_t inputMuteStatesCount;
         blob.copyTo(&inputMuteStatesCount, readPos, sizeof(std::uint16_t));
@@ -854,11 +903,11 @@ public:
 
     PluginParameterInfosMessage(const juce::MemoryBlock& blob)
     {
-        jassert(SerializableMessageType::PluginParameterInfos == static_cast<SerializableMessageType>(blob[0]));
+        jassert(SerializableMessageType::PluginParameterInfos == SerializableMessage::peekType(blob));
 
         m_type = SerializableMessageType::PluginParameterInfos;
 
-        auto readPos = int(sizeof(SerializableMessageType));
+        auto readPos = int(getWireHeaderSize());
 
         // Read plugin string length and string
         std::uint16_t pluginNameLength;
@@ -1093,11 +1142,11 @@ public:
 
     PluginParameterValueMessage(const juce::MemoryBlock& blob)
     {
-        jassert(SerializableMessageType::PluginParameterValue == static_cast<SerializableMessageType>(blob[0]));
+        jassert(SerializableMessageType::PluginParameterValue == SerializableMessage::peekType(blob));
 
         m_type = SerializableMessageType::PluginParameterValue;
 
-        auto readPos = int(sizeof(SerializableMessageType));
+        auto readPos = int(getWireHeaderSize());
 
         // Read index
         blob.copyTo(&m_parameterIndex, readPos, sizeof(std::uint16_t));
@@ -1175,11 +1224,11 @@ public:
 
     PluginProcessingStateMessage(const juce::MemoryBlock& blob)
     {
-        jassert(SerializableMessageType::PluginProcessingState == static_cast<SerializableMessageType>(blob[0]));
+        jassert(SerializableMessageType::PluginProcessingState == SerializableMessage::peekType(blob));
 
         m_type = SerializableMessageType::PluginProcessingState;
 
-        auto readPos = int(sizeof(SerializableMessageType));
+        auto readPos = int(getWireHeaderSize());
 
         blob.copyTo(&m_enabled, readPos, sizeof(bool));
         readPos += sizeof(bool);
@@ -1208,147 +1257,5 @@ private:
     bool m_enabled = false; ///< Whether plugin processing is enabled.
     bool m_post = false; ///< Whether the plugin is inserted post-matrix.
 };
-
-
-#ifdef NIX // DEBUG
-#define RUN_MESSAGE_TESTS
-#endif
-#ifdef RUN_MESSAGE_TESTS
-static void runTests()
-{
-    auto inputs = 11;
-    auto outputs = 12;
-    auto buffer = juce::AudioBuffer<float>();
-    auto refSample = 11.11f;
-    auto sr = 48000;
-    auto mespb = 256;
-
-    // test AnalyzerParametersMessage
-    auto apm = std::make_unique<AnalyzerParametersMessage>(sr, mespb);
-    auto apmb = apm->getSerializedMessage();
-    auto apmcpy = AnalyzerParametersMessage(apmb);
-    auto test5 = apmcpy.getSampleRate();
-    auto test6 = apmcpy.getMaximumExpectedSamplesPerBlock();
-    jassert(test5 == sr);
-    jassert(test6 == mespb);
-
-    // test ReinitIOCountMessage
-    auto rcm = std::make_unique<ReinitIOCountMessage>(inputs, outputs);
-    auto rcmb = rcm->getSerializedMessage();
-    auto rcmcpy = ReinitIOCountMessage(rcmb);
-    auto test7 = rcmcpy.getInputCount();
-    auto test8 = rcmcpy.getOutputCount();
-    jassert(test7 == inputs);
-    jassert(test8 == outputs);
-
-    // test AudioInputBufferMessage
-    auto channelCount = 2;
-    auto sampleCount = 6;
-    buffer.setSize(channelCount, sampleCount, false, true, false);
-    for (int i = 0; i < channelCount; i++)
-    {
-        for (int j = 0; j < sampleCount; j++)
-        {
-            buffer.setSample(i, j, ++refSample);
-        }
-    }
-    auto rrefSample1 = refSample;
-    auto aibm1 = std::make_unique<AudioInputBufferMessage>(buffer);
-    for (int i = channelCount - 1; i >= 0; i--)
-    {
-        for (int j = sampleCount - 1; j >= 0; j--)
-        {
-            auto test1 = aibm1->getAudioBuffer().getSample(i, j);
-            jassert(int(test1) == int(refSample));
-            refSample--;
-        }
-    }
-    auto aibmb1 = aibm1->getSerializedMessage();
-    auto aibmcpy1 = AudioInputBufferMessage(aibmb1);
-    for (int i = channelCount - 1; i >= 0; i--)
-    {
-        for (int j = sampleCount - 1; j >= 0; j--)
-        {
-            auto test1 = aibmcpy1.getAudioBuffer().getSample(i, j);
-            jassert(int(test1) == int(rrefSample1));
-            rrefSample1--;
-        }
-    }
-
-    // test AudioOutputBufferMessage
-    buffer.setSize(channelCount, sampleCount, false, true, false);
-    for (int i = 0; i < channelCount; i++)
-    {
-        for (int j = 0; j < sampleCount; j++)
-        {
-            buffer.setSample(i, j, ++refSample);
-        }
-    }
-    auto rrefSample2 = refSample;
-    auto aibm2 = std::make_unique<AudioOutputBufferMessage>(buffer);
-    for (int i = channelCount - 1; i >= 0; i--)
-    {
-        for (int j = sampleCount - 1; j >= 0; j--)
-        {
-            auto test2 = aibm2->getAudioBuffer().getSample(i, j);
-            jassert(int(test2) == int(rrefSample2));
-            rrefSample2--;
-        }
-    }
-    auto aibmb2 = aibm2->getSerializedMessage();
-    auto aibmcpy2 = AudioOutputBufferMessage(aibmb2);
-    for (int i = channelCount - 1; i >= 0; i--)
-    {
-        for (int j = sampleCount - 1; j >= 0; j--)
-        {
-            auto test2 = aibmcpy2.getAudioBuffer().getSample(i, j);
-            jassert(int(test2) == int(refSample));
-            refSample--;
-        }
-    }
-
-    // test EnvironmentParametersMessage
-    auto paletteStyle = JUCEAppBasics::CustomLookAndFeel::PaletteStyle::PS_Light;
-    auto epm = std::make_unique<EnvironmentParametersMessage>(paletteStyle);
-    auto epmb = epm->getSerializedMessage();
-    auto epmcpy = EnvironmentParametersMessage(epmb);
-    auto test9 = epmcpy.getPaletteStyle();
-    jassert(test9 == paletteStyle);
-
-    // test DataTrafficTypeSelectionMessage
-    auto trafficTypes = std::vector<SerializableMessage::SerializableMessageType>({ SerializableMessage::ControlParameters, SerializableMessage::AnalyzerParameters });
-    auto dttm = std::make_unique<DataTrafficTypeSelectionMessage>(trafficTypes);
-    auto dttmb = dttm->getSerializedMessage();
-    auto dttmcpy = DataTrafficTypeSelectionMessage(dttmb);
-    auto test10 = dttmcpy.getTrafficTypes();
-    jassert(test10 == trafficTypes);
-
-    // test ControlParametersMessage
-    auto inputMuteStates = std::map<std::uint16_t, bool>{ { std::uint16_t(1), true}, { std::uint16_t(2), false}, { std::uint16_t(3), true} };
-    auto outputMuteStates = std::map<std::uint16_t, bool>{ { std::uint16_t(4), false}, { std::uint16_t(5), true}, { std::uint16_t(6), false} };
-    auto crosspointStates = std::map<std::uint16_t, std::map<std::uint16_t, bool>>();
-    auto crosspointValues = std::map<std::uint16_t, std::map<std::uint16_t, float>>();
-    crosspointStates[1][1] = false;
-    crosspointStates[1][2] = true;
-    crosspointStates[2][1] = true;
-    crosspointStates[2][2] = true;
-    crosspointValues[1][1] = 0.0f;
-    crosspointValues[1][2] = 1.0f;
-    crosspointValues[2][1] = 0.5f;
-    crosspointValues[2][2] = 0.7f;
-    auto cpm = std::make_unique<ControlParametersMessage>(inputMuteStates, outputMuteStates, crosspointStates, crosspointValues);
-    auto cpmb = cpm->getSerializedMessage();
-    auto cpmcpy = ControlParametersMessage(cpmb);
-    auto test11 = cpmcpy.getInputMuteStates();
-    auto test12 = cpmcpy.getOutputMuteStates();
-    auto test13 = cpmcpy.getCrosspointStates();
-    auto test14 = cpmcpy.getCrosspointValues();
-    jassert(test11 == inputMuteStates);
-    jassert(test12 == outputMuteStates);
-    jassert(test13 == crosspointStates);
-    jassert(test14 == crosspointValues);
-}
-#endif
-
 
 };
