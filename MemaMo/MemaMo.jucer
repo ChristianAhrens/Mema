@@ -172,8 +172,8 @@
                appSandboxOptions="com.apple.security.network.client,com.apple.security.network.server"
                networkingMulticast="1" iconComposerIcon="AGkI2B">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="MemaMo"/>
-        <CONFIGURATION isDebug="0" name="Release" customXcodeFlags="OTHER_CODE_SIGN_FLAGS = $(inherited) --timestamp -s 'Developer ID Application: Christian Ahrens', CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO"
+        <CONFIGURATION isDebug="1" name="Debug" targetName="MemaMo" macOSDeploymentTarget="12.0"/>
+        <CONFIGURATION isDebug="0" name="Release" macOSDeploymentTarget="12.0" customXcodeFlags="OTHER_CODE_SIGN_FLAGS = $(inherited) --timestamp -s 'Developer ID Application: Christian Ahrens', CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO"
                        codeSigningIdentity="Developer ID Application: Christian Ahrens"
                        targetName="MemaMo"/>
       </CONFIGURATIONS>
