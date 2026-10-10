@@ -214,6 +214,8 @@ MemaUIComponent::MemaUIComponent()
         auto saveDrawable = juce::Drawable::createFromSVGString(BinaryData::save24px_svg);
         saveDrawable->replaceColour(juce::Colours::black, getLookAndFeel().findColour(juce::TextButton::ColourIds::textColourOnId));
         settingsMenu.addItem(MemaSettingsOption::SaveConfig, "Save config...", true, false, std::move(saveDrawable));
+        settingsMenu.addSeparator();
+        settingsMenu.addItem(MemaSettingsOption::PairingToken, "Pairing token...", true, false);
         settingsMenu.showMenuAsync(juce::PopupMenu::Options(), [=](int selectedId) { handleSettingsMenuResult(selectedId); });
     };
     addAndMakeVisible(m_appSettingsButton.get());
@@ -494,6 +496,10 @@ void MemaUIComponent::handleSettingsMenuResult(int selectedId)
     {
         if (onSaveConfig) onSaveConfig();
     }
+    else if (MemaSettingsOption::PairingToken == selectedId)
+    {
+        showPairingTokenDialog();
+    }
     else
         jassertfalse; // unhandled menu entry!?
 
@@ -569,6 +575,23 @@ void MemaUIComponent::handleSettingsMeteringColourMenuResult(int selectedId)
     default:
         break;
     }
+}
+
+void MemaUIComponent::showPairingTokenDialog()
+{
+    auto currentToken = onGetPairingToken ? onGetPairingToken() : juce::String();
+
+    auto* aw = new juce::AlertWindow("Pairing token",
+        "Network clients (Mema.Mo, Mema.Re) must present this token to connect. Leave empty to allow any client (default).",
+        juce::MessageBoxIconType::NoIcon);
+    aw->addTextEditor("token", currentToken, "Token:");
+    aw->addButton("Set", 1, juce::KeyPress(juce::KeyPress::returnKey));
+    aw->addButton("Cancel", 0, juce::KeyPress(juce::KeyPress::escapeKey));
+
+    aw->enterModalState(true, juce::ModalCallbackFunction::create([this, aw](int result) {
+        if (1 == result && onPairingTokenChanged)
+            onPairingTokenChanged(aw->getTextEditorContents("token"));
+    }), true);
 }
 
 void MemaUIComponent::setMeteringColour(const juce::Colour& meteringColour)

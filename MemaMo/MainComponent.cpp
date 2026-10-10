@@ -53,7 +53,7 @@ MainComponent::MainComponent()
         // Hello is the first thing sent on every connection, and gates everything else --
         // see MemaProcessor::onMessageReceived. The traffic-type subscription and the move
         // out of "connecting" status both wait for HelloAck, below.
-        m_networkConnection->sendMessage(std::make_unique<Mema::HelloMessage>(juce::String())->getSerializedMessage());
+        m_networkConnection->sendMessage(std::make_unique<Mema::HelloMessage>(m_pairingToken)->getSerializedMessage());
     };
     m_networkConnection->onConnectionLost = [=]() {
         DBG(__FUNCTION__);
@@ -213,6 +213,8 @@ MainComponent::MainComponent()
         settingsMenu.addSeparator();
         settingsMenu.addItem(MemaMoSettingsOption::FullscreenWindowMode, m_settingsItems[MemaMoSettingsOption::FullscreenWindowMode].first, true, false);
 #endif
+        settingsMenu.addSeparator();
+        settingsMenu.addItem(MemaMoSettingsOption::PairingToken, "Pairing token...", true, false);
         settingsMenu.showMenuAsync(juce::PopupMenu::Options(), [=](int selectedId) {
             handleSettingsMenuResult(selectedId);
             if (m_config)
@@ -372,6 +374,8 @@ void MainComponent::handleSettingsMenuResult(int selectedId)
         handleSettingsMeteringColourMenuResult(selectedId);
     else if (MemaMoSettingsOption::FullscreenWindowMode == selectedId)
         handleSettingsFullscreenModeToggleResult();
+    else if (MemaMoSettingsOption::PairingToken == selectedId)
+        showPairingTokenDialog();
     else
         jassertfalse; // unhandled menu entry!?
 }
@@ -552,6 +556,25 @@ void MainComponent::toggleFullscreenMode()
         onSetFullscreenWindow(!enabled);
 }
 
+void MainComponent::showPairingTokenDialog()
+{
+    auto* aw = new juce::AlertWindow("Pairing token",
+        "If the Mema instance you connect to requires a pairing token, enter it here. Leave empty if it doesn't.",
+        juce::MessageBoxIconType::NoIcon);
+    aw->addTextEditor("token", m_pairingToken, "Token:");
+    aw->addButton("Set", 1, juce::KeyPress(juce::KeyPress::returnKey));
+    aw->addButton("Cancel", 0, juce::KeyPress(juce::KeyPress::escapeKey));
+
+    aw->enterModalState(true, juce::ModalCallbackFunction::create([this, aw](int result) {
+        if (1 == result)
+        {
+            m_pairingToken = aw->getTextEditorContents("token");
+            if (m_config)
+                m_config->triggerConfigurationDump();
+        }
+    }), true);
+}
+
 void MainComponent::setMeteringColour(const juce::Colour& meteringColour)
 {
     m_meteringColour = meteringColour;
@@ -666,6 +689,8 @@ void MainComponent::performConfigurationDump()
         serviceDescriptionXmlElmement->addTextElement(m_selectedService.description);
         connectionConfigXmlElement->addChildElement(serviceDescriptionXmlElmement.release());
 
+        connectionConfigXmlElement->setAttribute(MemaMoAppConfiguration::getAttributeName(MemaMoAppConfiguration::AttributeID::PAIRINGTOKEN), m_pairingToken);
+
         m_config->setConfigState(std::move(connectionConfigXmlElement), MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::CONNECTIONCONFIG));
 
         // visu config
@@ -721,6 +746,9 @@ void MainComponent::onConfigUpdated()
                 connectToMema();
             }
         }
+
+        // Defaults to empty (no token configured) for a config written before this attribute existed.
+        m_pairingToken = connectionConfigState->getStringAttribute(MemaMoAppConfiguration::getAttributeName(MemaMoAppConfiguration::AttributeID::PAIRINGTOKEN));
     }
 
     auto visuConfigState = m_config->getConfigState(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::VISUCONFIG));

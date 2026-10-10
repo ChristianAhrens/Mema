@@ -84,8 +84,9 @@ public:
         MeteringColour_Pink,                         ///< Pink metering bars.
         MeteringColour_Laser,                        ///< High-visibility laser-green metering bars.
         MeteringColour_Last = MeteringColour_Laser,
-        LoadConfig,  ///< Load configuration from file.
-        SaveConfig   ///< Save configuration to file.
+        LoadConfig,    ///< Load configuration from file.
+        SaveConfig,    ///< Save configuration to file.
+        PairingToken   ///< Set/clear the pairing token new network clients must present.
     };
 
 public:
@@ -188,6 +189,8 @@ public:
     std::function<void(const JUCEAppBasics::CustomLookAndFeel::PaletteStyle&)>  onPaletteStyleChange; ///< Called when palette style changes.
     std::function<void()>       onLoadConfig;              ///< Called when the user selects Load Config.
     std::function<void()>       onSaveConfig;              ///< Called when the user selects Save Config.
+    std::function<juce::String()>              onGetPairingToken;    ///< Called to fetch the currently configured pairing token when the dialog opens.
+    std::function<void(const juce::String&)>   onPairingTokenChanged; ///< Called with the new token when the user confirms the pairing token dialog.
 
 private:
     //========================================================================*
@@ -197,6 +200,8 @@ private:
     void handleSettingsLookAndFeelMenuResult(int selectedId);
     /** @brief Applies a metering colour change selected from the settings submenu. @param selectedId The menu item ID corresponding to a `MemaSettingsOption` metering colour value. */
     void handleSettingsMeteringColourMenuResult(int selectedId);
+    /** @brief Shows a text-entry dialog to view/set/clear the pairing token, firing `onPairingTokenChanged` on confirm. */
+    void showPairingTokenDialog();
 
     //========================================================================*
     /** @brief Stores a new metering colour and triggers `applyMeteringColour()`. @param meteringColour The new colour to use for metering bars. */

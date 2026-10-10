@@ -401,11 +401,12 @@ public:
      */
     const juce::String& getPairingToken() const { return m_pairingToken; };
     /**
-     * @brief Sets the pairing token new clients must present in their `HelloMessage`.
+     * @brief Sets the pairing token new clients must present in their `HelloMessage`, and
+     *        persists it (see `createStateXml()`/`setStateXml()`).
      * @param token The token to require, or an empty string to disable pairing entirely.
      * @note Does not affect already-connected clients, only connections made from this point on.
      */
-    void setPairingToken(const juce::String& token) { m_pairingToken = token; };
+    void setPairingToken(const juce::String& token) { m_pairingToken = token; triggerConfigurationUpdate(false); };
 
     //==============================================================================
     /**

@@ -356,6 +356,7 @@ MemaProcessor::~MemaProcessor()
 std::unique_ptr<juce::XmlElement> MemaProcessor::createStateXml()
 {
 	auto stateXml = std::make_unique<juce::XmlElement>(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::PROCESSORCONFIG));
+	stateXml->setAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::PAIRINGTOKEN), m_pairingToken);
 
 	auto devConfElm = std::make_unique<juce::XmlElement>(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::DEVCONFIG));
 	if (m_deviceManager)
@@ -435,6 +436,9 @@ bool MemaProcessor::setStateXml(juce::XmlElement* stateXml)
 		jassertfalse;
 		return false;
 	}
+
+	// Defaults to empty (pairing disabled) for a config written before this attribute existed.
+	m_pairingToken = stateXml->getStringAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::PAIRINGTOKEN));
 
     juce::XmlElement* deviceSetupXml = nullptr;
     auto devConfElm = stateXml->getChildByName(MemaAppConfiguration::getTagName(MemaAppConfiguration::TagID::DEVCONFIG));
