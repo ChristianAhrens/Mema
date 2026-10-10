@@ -32,6 +32,9 @@ namespace Mema
 /*
  * Forward declarations of SerializableMessage-derived specializations
  */
+class HelloMessage;
+class HelloAckMessage;
+class HelloRejectMessage;
 class EnvironmentParametersMessage;
 class AnalyzerParametersMessage;
 class ReinitIOCountMessage;
@@ -179,6 +182,9 @@ public:
     enum SerializableMessageType
     {
         None = 0,                    ///< Sentinel / uninitialised type.
+        Hello,                       ///< First message sent by a client after connecting; carries the pairing token. Gates every other message.
+        HelloAck,                    ///< Sent by Mema after accepting a client's Hello; unlocks the normal message flow.
+        HelloReject,                 ///< Sent by Mema instead of HelloAck when a client's Hello is rejected (pairing-token mismatch).
         EnvironmentParameters,       ///< Look-and-feel palette sent by Mema to clients on connect.
         AnalyzerParameters,          ///< Audio device sample rate and block size; lets clients initialise their local ProcessorDataAnalyzer.
         ReinitIOCount,               ///< New input/output channel count; clients must rebuild their UI accordingly.
@@ -280,6 +286,15 @@ public:
         SerializableMessage* message = nullptr;
         switch (type)
         {
+        case Hello:
+            message = reinterpret_cast<SerializableMessage*>(std::make_unique<HelloMessage>(blob).release());
+            break;
+        case HelloAck:
+            message = reinterpret_cast<SerializableMessage*>(std::make_unique<HelloAckMessage>(blob).release());
+            break;
+        case HelloReject:
+            message = reinterpret_cast<SerializableMessage*>(std::make_unique<HelloRejectMessage>(blob).release());
+            break;
         case EnvironmentParameters:
             message = reinterpret_cast<SerializableMessage*>(std::make_unique<EnvironmentParametersMessage>(blob).release());
             break;
@@ -336,6 +351,21 @@ public:
         {
             switch (message->getType())
             {
+            case Hello:
+                {
+                    auto hm = std::unique_ptr<HelloMessage>(reinterpret_cast<HelloMessage*>(message));
+                }
+                break;
+            case HelloAck:
+                {
+                    auto ham = std::unique_ptr<HelloAckMessage>(reinterpret_cast<HelloAckMessage*>(message));
+                }
+                break;
+            case HelloReject:
+                {
+                    auto hrm = std::unique_ptr<HelloRejectMessage>(reinterpret_cast<HelloRejectMessage*>(message));
+                }
+                break;
             case AnalyzerParameters:
                 {
                     auto apm = std::unique_ptr<AnalyzerParametersMessage>(reinterpret_cast<AnalyzerParametersMessage*>(message));
@@ -401,6 +431,132 @@ protected:
     SerializableMessageType m_type = SerializableMessageType::None; ///< Type discriminator stored in the first 4 bytes of every serialised frame.
     int m_userId = -1; ///< Optional connection-id tag for echo-suppression (-1 = not set).
     bool m_valid = true; ///< Set to `false` by a `MemoryBlock`-taking constructor that hit a truncated/malformed payload via `FrameReader`; checked by `initFromMemoryBlock()`.
+};
+
+//==============================================================================
+/**
+ * @class HelloMessage
+ * @brief First message sent by a client immediately after connecting; carries the pairing token.
+ *
+ * @details Gates every other message: `MemaProcessor` defers its entire on-connect state sync
+ * until a `HelloMessage` has been evaluated by `ProtocolHandshake::evaluate()` and accepted, and
+ * disconnects a connection that sends anything else first. The wire protocol version itself is
+ * not repeated here -- it already travels in every message's header (see `SerializableMessage`)
+ * and is checked before this message is even constructed, so this payload only carries what the
+ * header doesn't: the pairing token, checked against whatever token (if any) the server has
+ * configured.
+ *
+ * **Wire payload:** pairingToken (uint16 len + UTF-8).
+ */
+class HelloMessage : public SerializableMessage
+{
+public:
+    HelloMessage() = default;
+    HelloMessage(const juce::String& pairingToken) { m_type = SerializableMessageType::Hello; m_pairingToken = pairingToken; };
+    HelloMessage(const juce::MemoryBlock& blob)
+    {
+        jassert(SerializableMessageType::Hello == SerializableMessage::peekType(blob));
+
+        m_type = SerializableMessageType::Hello;
+
+        FrameReader reader(blob, getWireHeaderSize());
+        reader.readString(m_pairingToken);
+        m_valid = reader.isValid();
+    };
+    ~HelloMessage() = default;
+
+    /** @brief Returns the pairing token this client declared (empty if it has none configured). */
+    const juce::String& getPairingToken() const { return m_pairingToken; };
+
+protected:
+    juce::MemoryBlock createSerializedContent(size_t& contentSize) const override
+    {
+        juce::MemoryBlock blob;
+        auto tokenUtf8 = m_pairingToken.toUTF8();
+        std::uint16_t tokenLength = std::uint16_t(strlen(tokenUtf8));
+        blob.append(&tokenLength, sizeof(std::uint16_t));
+        blob.append(tokenUtf8, tokenLength);
+        contentSize = blob.getSize();
+        return blob;
+    };
+
+private:
+    juce::String m_pairingToken; ///< The token this client was configured with, or empty if none.
+};
+
+/**
+ * @class HelloAckMessage
+ * @brief Sent by Mema after accepting a client's Hello; unlocks the normal message flow.
+ *
+ * @details Receipt of this message is what a client's connection logic waits for before sending
+ * its `DataTrafficTypeSelectionMessage` subscription and leaving its "connecting" UI state.
+ *
+ * **Wire payload:** none.
+ */
+class HelloAckMessage : public SerializableMessage
+{
+public:
+    HelloAckMessage() { m_type = SerializableMessageType::HelloAck; };
+    HelloAckMessage(const juce::MemoryBlock& blob)
+    {
+        jassert(SerializableMessageType::HelloAck == SerializableMessage::peekType(blob));
+
+        m_type = SerializableMessageType::HelloAck;
+        m_valid = (blob.getSize() >= getWireHeaderSize());
+    };
+    ~HelloAckMessage() = default;
+
+protected:
+    juce::MemoryBlock createSerializedContent(size_t& contentSize) const override
+    {
+        contentSize = 0;
+        return juce::MemoryBlock();
+    };
+};
+
+/**
+ * @class HelloRejectMessage
+ * @brief Sent by Mema instead of HelloAck when a client's Hello is rejected (pairing-token mismatch).
+ *
+ * @details A client shows `getReason()` to the user instead of silently retrying, since Mema
+ * closes the connection immediately after sending this.
+ *
+ * **Wire payload:** reason (uint16 len + UTF-8).
+ */
+class HelloRejectMessage : public SerializableMessage
+{
+public:
+    HelloRejectMessage() = default;
+    HelloRejectMessage(const juce::String& reason) { m_type = SerializableMessageType::HelloReject; m_reason = reason; };
+    HelloRejectMessage(const juce::MemoryBlock& blob)
+    {
+        jassert(SerializableMessageType::HelloReject == SerializableMessage::peekType(blob));
+
+        m_type = SerializableMessageType::HelloReject;
+
+        FrameReader reader(blob, getWireHeaderSize());
+        reader.readString(m_reason);
+        m_valid = reader.isValid();
+    };
+    ~HelloRejectMessage() = default;
+
+    /** @brief Returns the human-readable reason the handshake was rejected. */
+    const juce::String& getReason() const { return m_reason; };
+
+protected:
+    juce::MemoryBlock createSerializedContent(size_t& contentSize) const override
+    {
+        juce::MemoryBlock blob;
+        auto reasonUtf8 = m_reason.toUTF8();
+        std::uint16_t reasonLength = std::uint16_t(strlen(reasonUtf8));
+        blob.append(&reasonLength, sizeof(std::uint16_t));
+        blob.append(reasonUtf8, reasonLength);
+        contentSize = blob.getSize();
+        return blob;
+    };
+
+private:
+    juce::String m_reason; ///< Human-readable rejection reason shown to the user.
 };
 
 //==============================================================================

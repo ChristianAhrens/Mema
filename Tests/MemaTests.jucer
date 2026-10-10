@@ -9,6 +9,7 @@
       <FILE id="mt03s1" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
       <FILE id="mt04s2" name="SanityTest.cpp" compile="1" resource="0" file="Source/SanityTest.cpp"/>
       <FILE id="mt07s5" name="MemaMessagesTest.cpp" compile="1" resource="0" file="Source/MemaMessagesTest.cpp"/>
+      <FILE id="mt22ph" name="ProtocolHandshakeTest.cpp" compile="1" resource="0" file="Source/ProtocolHandshakeTest.cpp"/>
       <FILE id="mt08s6" name="PluginParameterInfoTest.cpp" compile="1" resource="0" file="Source/PluginParameterInfoTest.cpp"/>
       <FILE id="mt09s7" name="ProcessorDataTest.cpp" compile="1" resource="0" file="Source/ProcessorDataTest.cpp"/>
       <FILE id="mt20s10" name="ProcessorDataAnalyzerTest.cpp" compile="1" resource="0" file="Source/ProcessorDataAnalyzerTest.cpp"/>

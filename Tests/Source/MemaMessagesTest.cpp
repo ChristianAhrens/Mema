@@ -107,6 +107,9 @@ public:
             expectHeaderType (PluginParameterInfosMessage ("", false, false, {}), SerializableMessage::PluginParameterInfos);
             expectHeaderType (PluginParameterValueMessage (0, "x", 0.0f), SerializableMessage::PluginParameterValue);
             expectHeaderType (PluginProcessingStateMessage (true, false), SerializableMessage::PluginProcessingState);
+            expectHeaderType (HelloMessage ("x"), SerializableMessage::Hello);
+            expectHeaderType (HelloAckMessage(), SerializableMessage::HelloAck);
+            expectHeaderType (HelloRejectMessage ("reason"), SerializableMessage::HelloReject);
         }
     }
 
@@ -169,6 +172,12 @@ public:
             expectTruncationsRejected (PluginParameterInfosMessage ("P", true, false, oneParam));
             expectTruncationsRejected (PluginParameterValueMessage (0, "x", 0.5f));
             expectTruncationsRejected (PluginProcessingStateMessage (true, false));
+            expectTruncationsRejected (HelloMessage ("some-token"));
+            expectTruncationsRejected (HelloRejectMessage ("some reason"));
+            // HelloAckMessage is deliberately not exercised here: its payload is empty, so
+            // "header only" IS its complete, valid frame -- there's nothing to truncate, and
+            // the generic "frame shorter than the header" case is already covered by
+            // SerializableMessageHeaderTest.
         }
 
         beginTest ("A count field claiming more entries than were actually sent is rejected, not read out of bounds");
@@ -239,6 +248,71 @@ private:
 };
 
 static MalformedFrameRejectionTest malformedFrameRejectionTest;
+
+//==============================================================================
+class HandshakeMessagesTest : public juce::UnitTest
+{
+public:
+    HandshakeMessagesTest() : juce::UnitTest ("Hello/HelloAck/HelloReject round-trip", "Mema") {}
+
+    void runTest() override
+    {
+        beginTest ("HelloMessage round-trips a non-empty pairing token");
+        {
+            HelloMessage original ("my-token");
+            auto blob = original.getSerializedMessage();
+
+            auto* deserialized = SerializableMessage::initFromMemoryBlock (blob);
+            auto* hello = dynamic_cast<HelloMessage*> (deserialized);
+            expect (hello != nullptr);
+            if (hello != nullptr)
+                expectEquals (hello->getPairingToken(), juce::String ("my-token"));
+
+            SerializableMessage::freeMessageData (deserialized);
+        }
+
+        beginTest ("HelloMessage round-trips an empty pairing token (client has none configured)");
+        {
+            HelloMessage original ("");
+            auto blob = original.getSerializedMessage();
+
+            auto* deserialized = SerializableMessage::initFromMemoryBlock (blob);
+            auto* hello = dynamic_cast<HelloMessage*> (deserialized);
+            expect (hello != nullptr);
+            if (hello != nullptr)
+                expect (hello->getPairingToken().isEmpty());
+
+            SerializableMessage::freeMessageData (deserialized);
+        }
+
+        beginTest ("HelloAckMessage round-trips with an empty payload (just the header)");
+        {
+            HelloAckMessage original;
+            auto blob = original.getSerializedMessage();
+            expectEquals ((int) blob.getSize(), (int) SerializableMessage::getWireHeaderSize());
+
+            auto* deserialized = SerializableMessage::initFromMemoryBlock (blob);
+            expect (dynamic_cast<HelloAckMessage*> (deserialized) != nullptr);
+            SerializableMessage::freeMessageData (deserialized);
+        }
+
+        beginTest ("HelloRejectMessage round-trips its reason string");
+        {
+            HelloRejectMessage original ("Pairing token mismatch");
+            auto blob = original.getSerializedMessage();
+
+            auto* deserialized = SerializableMessage::initFromMemoryBlock (blob);
+            auto* reject = dynamic_cast<HelloRejectMessage*> (deserialized);
+            expect (reject != nullptr);
+            if (reject != nullptr)
+                expectEquals (reject->getReason(), juce::String ("Pairing token mismatch"));
+
+            SerializableMessage::freeMessageData (deserialized);
+        }
+    }
+};
+
+static HandshakeMessagesTest handshakeMessagesTest;
 
 //==============================================================================
 class EnvironmentParametersMessageTest : public juce::UnitTest

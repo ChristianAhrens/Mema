@@ -50,15 +50,10 @@ MainComponent::MainComponent()
     m_networkConnection->onConnectionMade = [=]() {
         DBG(__FUNCTION__);
 
-        std::vector<Mema::SerializableMessage::SerializableMessageType> desiredTrafficTypes = {
-            Mema::SerializableMessage::EnvironmentParameters, 
-            Mema::SerializableMessage::ReinitIOCount, 
-            Mema::SerializableMessage::AnalyzerParameters, 
-            Mema::SerializableMessage::AudioInputBuffer, 
-            Mema::SerializableMessage::AudioOutputBuffer };
-        m_networkConnection->sendMessage(std::make_unique<Mema::DataTrafficTypeSelectionMessage>(desiredTrafficTypes)->getSerializedMessage());
-
-        setStatus(Status::Monitoring);
+        // Hello is the first thing sent on every connection, and gates everything else --
+        // see MemaProcessor::onMessageReceived. The traffic-type subscription and the move
+        // out of "connecting" status both wait for HelloAck, below.
+        m_networkConnection->sendMessage(std::make_unique<Mema::HelloMessage>(juce::String())->getSerializedMessage());
     };
     m_networkConnection->onConnectionLost = [=]() {
         DBG(__FUNCTION__);
@@ -81,7 +76,33 @@ MainComponent::MainComponent()
             return;
         }
 
-        if (auto const epm = dynamic_cast<const Mema::EnvironmentParametersMessage*>(knownMessage))
+        if (auto const helloAck = dynamic_cast<const Mema::HelloAckMessage*>(knownMessage))
+        {
+            juce::ignoreUnused(helloAck);
+            std::vector<Mema::SerializableMessage::SerializableMessageType> desiredTrafficTypes = {
+                Mema::SerializableMessage::EnvironmentParameters,
+                Mema::SerializableMessage::ReinitIOCount,
+                Mema::SerializableMessage::AnalyzerParameters,
+                Mema::SerializableMessage::AudioInputBuffer,
+                Mema::SerializableMessage::AudioOutputBuffer };
+            m_networkConnection->sendMessage(std::make_unique<Mema::DataTrafficTypeSelectionMessage>(desiredTrafficTypes)->getSerializedMessage());
+
+            setStatus(Status::Monitoring);
+        }
+        else if (auto const helloReject = dynamic_cast<const Mema::HelloRejectMessage*>(knownMessage))
+        {
+            // Mema deliberately leaves the socket open rather than disconnecting itself right
+            // after queuing this (that would race its own per-connection send thread and could
+            // close the connection before the reject was actually written) -- so it's this side
+            // that closes the connection, now that the reject has definitely been received in
+            // full. onConnectionLost will fire and retry, which loops back into the same
+            // rejection for as long as the mismatch persists -- showing the reason at least
+            // means that's visible rather than a silent retry loop.
+            juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::WarningIcon, "Connection rejected", helloReject->getReason());
+            if (m_networkConnection)
+                m_networkConnection->disconnect();
+        }
+        else if (auto const epm = dynamic_cast<const Mema::EnvironmentParametersMessage*>(knownMessage))
         {
             m_settingsHostLookAndFeelId = epm->getPaletteStyle();
             jassert(m_settingsHostLookAndFeelId >= JUCEAppBasics::CustomLookAndFeel::PS_Dark && m_settingsHostLookAndFeelId <= JUCEAppBasics::CustomLookAndFeel::PS_Light);
