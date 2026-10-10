@@ -256,7 +256,15 @@ MemaProcessor::MemaProcessor(XmlElement* stateXml) :
 					postMessage(knownMessage);
 				}
 				else
-					DBG(juce::String(__FUNCTION__) + " ignoring unknown message");
+				{
+					// A frame that fails to parse (unknown type, version mismatch, or a
+					// truncated/malformed payload caught by FrameReader -- see MemaMessages.h)
+					// means either a build mismatch or a desynced/hostile byte stream. Either
+					// way there is no safe way to resynchronise mid-stream, so the connection
+					// is dropped rather than risking further misparsed frames.
+					DBG(juce::String(__FUNCTION__) << " disconnecting connection " << connectionId << " after an unrecognised/malformed frame");
+					connection->disconnect();
+				}
 			};
         }
     };

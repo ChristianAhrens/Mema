@@ -73,6 +73,18 @@ MainComponent::MainComponent()
     };
     m_networkConnection->onMessageReceived = [=](const juce::MemoryBlock& message) {
         auto knownMessage = Mema::SerializableMessage::initFromMemoryBlock(message);
+        if (nullptr == knownMessage)
+        {
+            // Unknown type, version mismatch, or a truncated/malformed payload (see
+            // FrameReader in MemaMessages.h) -- either a build mismatch or a desynced byte
+            // stream, with no safe way to resynchronise mid-stream. Drop the connection;
+            // onConnectionLost already triggers a clean reconnect attempt.
+            DBG(juce::String(__FUNCTION__) << " disconnecting after an unrecognised/malformed frame");
+            if (m_networkConnection)
+                m_networkConnection->disconnect();
+            return;
+        }
+
         if (auto const epm = dynamic_cast<const Mema::EnvironmentParametersMessage*>(knownMessage))
         {
             m_settingsHostLookAndFeelId = epm->getPaletteStyle();
@@ -84,7 +96,7 @@ MainComponent::MainComponent()
                 onPaletteStyleChange(m_settingsHostLookAndFeelId, false/*do not follow local style any more if a message was received via net once*/);
             }
         }
-        else if (m_remoteComponent && nullptr != knownMessage && Status::Monitoring == m_currentStatus)
+        else if (m_remoteComponent && Status::Monitoring == m_currentStatus)
         {
             m_remoteComponent->handleMessage(*knownMessage);
         }
