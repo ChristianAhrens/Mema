@@ -287,7 +287,13 @@ void PanningControlComponent::handleExternalControlParameter(int objNum, std::ui
             auto mParam = m_admOsController->getParameter(objNum, ADMOSController::ADMOSCParameterType::Mute);
             auto muteVal = ADMOSController::ADMOSCParameterMute(mParam).getParameterVal();
 
-            setInputMuteStates({ std::make_pair(static_cast<std::uint16_t>(objNum), muteVal) });
+            // handle like a mute button click: update the local state and button, and report the change onwards to Mema
+            auto in = static_cast<std::uint16_t>(objNum);
+            auto allInputMuteStates = getInputMuteStates(); // only update the changed entry, keep the others
+            allInputMuteStates[in] = muteVal;
+            setInputMuteStates(allInputMuteStates);
+            if (onInputMutesChanged)
+                onInputMutesChanged({ std::make_pair(in, static_cast<bool>(muteVal)) });
         }
         break;
     case ADMOSController::ADMOSCParameterType::Empty:
