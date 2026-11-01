@@ -246,9 +246,13 @@ MainComponent::MainComponent()
         settingsMenu.addSeparator();
         settingsMenu.addItem(MemaReSettingsOption::PairingToken, "Pairing token...", true, false);
         settingsMenu.showMenuAsync(juce::PopupMenu::Options(), [=](int selectedId) {
+            if (0 == selectedId)
+                return; // menu was closed without a selection
+
+            // the selected setting is applied right here; the configuration is only persisted, not applied a second time via the watcher update
             handleSettingsMenuResult(selectedId);
             if (m_config)
-                m_config->triggerConfigurationDump();
+                m_config->triggerConfigurationDump(false);
         });
     };
     m_settingsButton->setAlwaysOnTop(true);
@@ -655,7 +659,7 @@ void MainComponent::showExternalControlSettings()
                 m_remoteComponent->setExternalAdmOscSettings(ADMOSCport, ADMOSCremoteIP, ADMOSCremotePort);
 
                 if (m_config)
-                    m_config->triggerConfigurationDump();
+                    m_config->triggerConfigurationDump(false);
             }
         }
 
@@ -677,7 +681,7 @@ void MainComponent::showPairingTokenDialog()
         {
             m_pairingToken = m_messageBox->getTextEditorContents("token");
             if (m_config)
-                m_config->triggerConfigurationDump();
+                m_config->triggerConfigurationDump(false);
         }
 
         m_messageBox.reset();
