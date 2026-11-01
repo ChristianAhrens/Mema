@@ -287,6 +287,11 @@ void MemaUIComponent::setStandaloneWindow(bool standalone)
         int styleFlags = juce::ComponentPeer::windowHasDropShadow
             | juce::ComponentPeer::windowAppearsOnTaskbar
             | juce::ComponentPeer::windowHasTitleBar;
+#if JUCE_LINUX
+        // On Linux the standalone window is the primary way to use Mema (a tray icon is not reliably usable, depending on
+        // distribution and window manager), so it needs a close button, which quits the application (see userTriedToCloseWindow).
+        styleFlags |= juce::ComponentPeer::windowHasCloseButton;
+#endif
 
         setVisible(true);
         addToDesktop(styleFlags);
@@ -298,6 +303,14 @@ void MemaUIComponent::setStandaloneWindow(bool standalone)
         removeFromDesktop();
         setVisible(false);
     }
+}
+
+void MemaUIComponent::userTriedToCloseWindow()
+{
+#if JUCE_LINUX
+    // close button of the standalone window (or close request of the window manager): quit the application like the power button does
+    juce::JUCEApplication::getInstance()->systemRequestedQuit();
+#endif
 }
 
 bool MemaUIComponent::isStandaloneWindow()

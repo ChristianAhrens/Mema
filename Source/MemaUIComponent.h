@@ -166,6 +166,7 @@ public:
     //========================================================================*
     /** @brief Propagates a look-and-feel change to all child buttons and bars. */
     void lookAndFeelChanged() override;
+    void userTriedToCloseWindow() override;
 
     //==========================================================================
     /**
