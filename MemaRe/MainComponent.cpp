@@ -197,7 +197,7 @@ MainComponent::MainComponent()
     m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_7point1point4] = std::make_pair(juce::AudioChannelSet::create7point1point4().getDescription().toStdString(), 0);
     m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_9point1point6] = std::make_pair(juce::AudioChannelSet::create9point1point6().getDescription().toStdString(), 0);
     m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_Quadrophonic] = std::make_pair(juce::AudioChannelSet::quadraphonic().getDescription().toStdString(), 0);
-    m_settingsItems[MemaReSettingsOption::ControlFormat_PluginParameterControl] = std::make_pair("Plug-in parameter control", 1);
+    m_settingsItems[MemaReSettingsOption::ControlFormat_PluginParameterControl] = std::make_pair("Plug-in parameter control", 0);
     // default panning colour is green
     m_settingsItems[MemaReSettingsOption::ControlColour_Green] = std::make_pair("Green", 1);
     m_settingsItems[MemaReSettingsOption::ControlColour_Red] = std::make_pair("Red", 0);
