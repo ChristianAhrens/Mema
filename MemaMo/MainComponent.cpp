@@ -57,7 +57,14 @@ MainComponent::MainComponent()
     };
     m_networkConnection->onConnectionLost = [=]() {
         DBG(__FUNCTION__);
-        
+
+        if (m_connectionRejected)
+        {
+            // Mema rejected this client (see HelloReject below): do not retry, wait for the user to join a session again.
+            returnToDiscover();
+            return;
+        }
+
         connectToMema();
 
         setStatus(Status::Connecting);
@@ -95,12 +102,15 @@ MainComponent::MainComponent()
             // after queuing this (that would race its own per-connection send thread and could
             // close the connection before the reject was actually written) -- so it's this side
             // that closes the connection, now that the reject has definitely been received in
-            // full. onConnectionLost will fire and retry, which loops back into the same
-            // rejection for as long as the mismatch persists -- showing the reason at least
-            // means that's visible rather than a silent retry loop.
+            // full. onConnectionLost will fire; m_connectionRejected makes it return to the discover
+            // state instead of retrying, which would loop back into the same rejection.
+            // An explicit disconnect() does not necessarily deliver onConnectionLost, and the 5s connection
+            // timer would reconnect for as long as the status is Connecting -- so return to discover here as well.
+            m_connectionRejected = true;
             juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::WarningIcon, "Connection rejected", helloReject->getReason());
             if (m_networkConnection)
                 m_networkConnection->disconnect();
+            returnToDiscover();
         }
         else if (auto const epm = dynamic_cast<const Mema::EnvironmentParametersMessage*>(knownMessage))
         {
@@ -629,8 +639,23 @@ const MainComponent::Status MainComponent::getStatus()
     return m_currentStatus;
 }
 
+void MainComponent::returnToDiscover()
+{
+    m_connectionRejected = false;
+    m_selectedService = {};
+    if (m_discoverComponent)
+        m_discoverComponent->resetServices();
+
+    if (m_config)
+        m_config->triggerConfigurationDump();
+
+    setStatus(Status::Discovering);
+}
+
 void MainComponent::connectToMema()
 {
+    m_connectionRejected = false; // a new connection attempt supersedes a pending rejection
+
     if (m_connectingComponent)
         m_connectingComponent->setMasterServiceDescription(m_selectedService.description);
     if (m_discoverComponent)

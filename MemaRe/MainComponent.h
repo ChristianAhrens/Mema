@@ -218,6 +218,7 @@ private:
     const Status getStatus();
 
     void connectToMema();
+    void returnToDiscover();
 
     //==============================================================================
     JUCEAppBasics::SessionMasterAwareService        m_selectedService;          ///< Multicast service descriptor of the Mema instance chosen by the user.
@@ -231,6 +232,7 @@ private:
     std::map<int, std::pair<std::string, int>>      m_settingsItems;            ///< Mapping from menu item ID to {label, MemaReSettingsOption}.
     int                                             m_settingsHostLookAndFeelId = -1; ///< Menu ID assigned to the "Follow host" look-and-feel entry.
     juce::String                                    m_pairingToken;             ///< Token sent to Mema in this client's HelloMessage (empty = none configured).
+    bool                                            m_connectionRejected = false; ///< Set when Mema answered with HelloReject; the following connection loss returns to discover instead of reconnecting.
 
     std::unique_ptr<juce::DrawableButton>           m_disconnectButton;         ///< Button to drop the current TCP connection and return to Discovering.
 
