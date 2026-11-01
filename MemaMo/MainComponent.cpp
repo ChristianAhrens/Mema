@@ -75,11 +75,13 @@ MainComponent::MainComponent()
         {
             // Unknown type, version mismatch, or a truncated/malformed payload (see
             // FrameReader in MemaMessages.h) -- either a build mismatch or a desynced byte
-            // stream, with no safe way to resynchronise mid-stream. Drop the connection;
-            // onConnectionLost already triggers a clean reconnect attempt.
+            // stream, with no safe way to resynchronise mid-stream. Drop the connection. An explicit
+            // disconnect() does not deliver onConnectionLost, so report once and return to discover here.
             DBG(juce::String(__FUNCTION__) << " disconnecting after an unrecognised/malformed frame");
             if (m_networkConnection)
                 m_networkConnection->disconnect();
+            juce::AlertWindow::showMessageBoxAsync(juce::MessageBoxIconType::WarningIcon, "Connection closed", "Received invalid data from Mema (version mismatch or corrupted data stream). The connection was closed.");
+            returnToDiscover();
             return;
         }
 
