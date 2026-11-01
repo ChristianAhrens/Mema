@@ -136,6 +136,24 @@ public:
         m_alerts[id] = alert;
         repaint();
     };
+    /** Drops all loads/alerts whose id is not in the given list, e.g. of connections that are gone. */
+    void retainLoads(const std::vector<int>& ids)
+    {
+        auto removed = false;
+        for (auto iter = m_loadsPercent.begin(); iter != m_loadsPercent.end();)
+        {
+            if (std::find(ids.begin(), ids.end(), iter->first) == ids.end())
+            {
+                m_alerts.erase(iter->first);
+                iter = m_loadsPercent.erase(iter);
+                removed = true;
+            }
+            else
+                ++iter;
+        }
+        if (removed)
+            repaint();
+    };
 
 private:
     std::map<int, int> m_loadsPercent;
@@ -318,11 +336,14 @@ void MemaUIComponent::updateNetworkUsage(const std::map<int, std::pair<double, b
 {
     if (m_netHealthBar)
     {
+        std::vector<int> ids;
         for (auto const& netLoad : netLoads)
         {
+            ids.push_back(netLoad.first);
             m_netHealthBar->setLoadPercent(int(netLoad.second.first * 100.0), netLoad.first);
             m_netHealthBar->setAlert(netLoad.second.second, netLoad.first);
         }
+        m_netHealthBar->retainLoads(ids); // bars of clients that disconnected since the last update disappear
     }
 }
 
