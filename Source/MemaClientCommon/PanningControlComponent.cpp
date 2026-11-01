@@ -49,6 +49,7 @@ PanningControlComponent::PanningControlComponent()
     m_multiSlider->onInputSelected = [=](std::uint16_t channel) {
         selectInputChannel(channel);
     };
+    m_multiSlider->setControlsSize(m_controlsSize); // the field's own size is 0 until set -- apply the (default or configured) size right away
     addAndMakeVisible(m_multiSlider.get());
 
     m_positionMapper = std::make_unique<InputPositionMapper>();
