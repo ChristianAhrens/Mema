@@ -132,7 +132,7 @@ public:
     /** @brief Periodic callback used to retry TCP connections and poll status. */
     void timerCallback() override;
 
-    /** @brief Handles keyboard shortcuts (e.g. Escape to disconnect). */
+    /** @brief Handles keyboard shortcuts (toggle fullscreen mode; there is no Escape-to-disconnect). */
     bool keyPressed(const juce::KeyPress& key) override;
 
     //==============================================================================

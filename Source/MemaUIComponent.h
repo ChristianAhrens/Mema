@@ -47,7 +47,7 @@ namespace Mema
  *   are updated from the `Mema` singleton's timer callback via `updateCpuUsageBar()` and
  *   `updateNetworkUsage()`.
  * - Exposes a settings popup menu (gear icon) for look-and-feel, metering colour, load/save config.
- * - Persists its own state (standalone mode, palette, metering colour) via `XmlConfigurableElement`
+ * - Persists its own state (palette, metering colour; the standalone window mode is not persisted) via `XmlConfigurableElement`
  *   within the main `MemaAppConfiguration` XML under `<UICONFIG>`.
  * - Reacts to OS dark-mode changes via `juce::DarkModeSettingListener` when "Automatic" palette is selected.
  *
@@ -124,7 +124,7 @@ public:
 
     /**
      * @brief Updates the CPU-load progress bar to reflect the current audio processing load.
-     * @details Called from the `Mema` singleton's `juce::Timer` callback (~1 Hz) after querying
+     * @details Called from the `Mema` singleton's `juce::Timer` callback (2 Hz) after querying
      *          `AudioDeviceManager::getCpuUsage()`.
      * @param loadPercent CPU load as a percentage in [0, 100].
      */
