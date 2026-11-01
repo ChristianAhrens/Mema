@@ -17,6 +17,7 @@
       <FILE id="mt10s8" name="MemaCommandersTest.cpp" compile="1" resource="0" file="Source/MemaCommandersTest.cpp"/>
       <FILE id="mt11s9" name="MemaAppConfigurationTest.cpp" compile="1" resource="0" file="Source/MemaAppConfigurationTest.cpp"/>
       <FILE id="mt23s11" name="TwoDFieldMultisliderTest.cpp" compile="1" resource="0" file="Source/TwoDFieldMultisliderTest.cpp"/>
+      <FILE id="mt29s12" name="ToggleStateSliderTest.cpp" compile="1" resource="0" file="Source/ToggleStateSliderTest.cpp"/>
     </GROUP>
     <GROUP id="{9E9E9E9E-0001-0001-0001-000000000002}" name="ProductionSourcesUnderTest">
       <FILE id="mt12p1" name="AbstractProcessorData.cpp" compile="1" resource="0" file="../Source/MemaProcessor/AbstractProcessorData.cpp"/>
