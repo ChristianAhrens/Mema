@@ -158,6 +158,13 @@ void FaderbankControlComponent::resized()
 void FaderbankControlComponent::lookAndFeelChanged()
 {
     auto ioCount = getIOCount();
+    if (ControlDirection::None == m_currentIOChannel.first)
+    {
+        // matrix view: one rotary per crosspoint
+        for (auto const& crosspointGainSlider : m_crosspointGainSliders)
+            if (nullptr != crosspointGainSlider)
+                crosspointGainSlider->setColour(juce::Slider::ColourIds::trackColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId));
+    }
     for (auto in = 0; in < ioCount.first; in++)
     {
         if (nullptr != m_inputSelectButtons.at(in))
