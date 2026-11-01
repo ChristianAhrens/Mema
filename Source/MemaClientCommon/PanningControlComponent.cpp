@@ -344,7 +344,9 @@ void PanningControlComponent::rebuildInputControls(bool force)
                 auto inputMuteStates = std::map<std::uint16_t, bool>();
                 auto in = std::uint16_t(i + 1);
                 inputMuteStates[in] = m_inputMuteButtons.at(i)->getToggleState();
-                MemaClientControlComponentBase::setInputMuteStates(inputMuteStates);
+                auto allInputMuteStates = getInputMuteStates(); // only update the changed entry, keep the others
+                allInputMuteStates[in] = inputMuteStates[in];
+                MemaClientControlComponentBase::setInputMuteStates(allInputMuteStates);
                 if (onInputMutesChanged)
                     onInputMutesChanged(inputMuteStates);
                 if (m_admOsController)

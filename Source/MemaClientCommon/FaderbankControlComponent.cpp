@@ -259,7 +259,9 @@ void FaderbankControlComponent::rebuildInputControls(bool force)
                 auto inputMuteStates = std::map<std::uint16_t, bool>();
                 auto in = std::uint16_t(i + 1);
                 inputMuteStates[in] = m_inputMuteButtons.at(i)->getToggleState();
-                MemaClientControlComponentBase::setInputMuteStates(inputMuteStates);
+                auto allInputMuteStates = getInputMuteStates(); // only update the changed entry, keep the others
+                allInputMuteStates[in] = inputMuteStates[in];
+                MemaClientControlComponentBase::setInputMuteStates(allInputMuteStates);
                 if (onInputMutesChanged)
                     onInputMutesChanged(inputMuteStates);
                 };
@@ -320,7 +322,9 @@ void FaderbankControlComponent::rebuildOutputControls(bool force)
                 auto outputMuteStates = std::map<std::uint16_t, bool>();
                 auto out = std::uint16_t(o + 1);
                 outputMuteStates[out] = m_outputMuteButtons.at(o)->getToggleState();
-                MemaClientControlComponentBase::setOutputMuteStates(outputMuteStates);
+                auto allOutputMuteStates = getOutputMuteStates(); // only update the changed entry, keep the others
+                allOutputMuteStates[out] = outputMuteStates[out];
+                MemaClientControlComponentBase::setOutputMuteStates(allOutputMuteStates);
                 if (onOutputMutesChanged)
                     onOutputMutesChanged(outputMuteStates);
                 };
