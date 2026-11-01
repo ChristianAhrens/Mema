@@ -791,6 +791,9 @@ bool MainComponent::isFullscreenEnabled()
 
     jassertfalse;
     return false;
+#else
+    // iOS, Android and Linux always run fullscreen/kiosk (see MainWindow in Main.cpp)
+    return true;
 #endif
 }
 
