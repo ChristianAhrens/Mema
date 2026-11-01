@@ -275,7 +275,9 @@ public:
             if (memaUIComponent && Mema::Mema::getInstanceWithoutCreating())
             {
                 Mema::Mema::getInstance()->setUIConfigState(memaUIComponent->createStateXml());
-                JUCEAppBasics::AppConfigurationBase::getInstance()->triggerConfigurationDump();
+                // UI settings are applied by the UI itself already -- only persist them. A watcher update would re-apply the processor state
+                // (including reloading the plug-in) on every UI setting change.
+                JUCEAppBasics::AppConfigurationBase::getInstance()->triggerConfigurationDump(false);
             }
         };
         memaUIComponent->onPaletteStyleChange = [=](const JUCEAppBasics::CustomLookAndFeel::PaletteStyle& paletteStyle) {
