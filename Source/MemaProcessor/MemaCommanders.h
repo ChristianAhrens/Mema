@@ -180,4 +180,23 @@ private:
 };
 
 
+/**
+ * @brief Echo suppression policy for changes that are distributed to all registered commanders.
+ *
+ * The commander that originated a change (the sender) already has the new state and must not be notified again -- otherwise
+ * UI controls that are currently dragged jump back to a stale value. The one exception is the network wrapper commander:
+ * it represents all network clients at once and has to relay changes of one client to the others (the originating client
+ * is excluded there by its user id).
+ *
+ * @param commander         The commander that is about to be notified.
+ * @param sender            The commander the change originates from (nullptr if it originates inside the processor).
+ * @param networkWrapper    The network wrapper commander (nullptr if there is none).
+ * @return True if @p commander shall be notified.
+ */
+template <typename CommanderType>
+inline bool shouldNotifyCommander(const CommanderType* commander, const CommanderType* sender, const CommanderType* networkWrapper)
+{
+    return commander != sender || (nullptr != networkWrapper && commander == networkWrapper);
+}
+
 } // namespace Mema

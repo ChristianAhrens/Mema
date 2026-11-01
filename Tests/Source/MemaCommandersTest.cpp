@@ -257,3 +257,45 @@ public:
 };
 
 static MemaPluginCommanderTest memaPluginCommanderTest;
+
+//==============================================================================
+// Echo suppression policy used by MemaProcessor::setInputMuteState()/setOutputMuteState()/setMatrixCrosspoint*()/setPluginParameterValue():
+// the originating commander is not notified again, except for the network wrapper which relays to the other network clients.
+class ShouldNotifyCommanderTest : public juce::UnitTest
+{
+public:
+    ShouldNotifyCommanderTest() : juce::UnitTest ("shouldNotifyCommander() echo suppression", "Mema") {}
+
+    void runTest() override
+    {
+        StubInputCommander ui, otherUi, networkWrapper;
+
+        beginTest ("A change from the UI commander is not echoed to the UI commander, but reaches the other UI commander and the network wrapper");
+        {
+            expect (! shouldNotifyCommander<MemaInputCommander> (&ui, &ui, &networkWrapper));
+            expect (shouldNotifyCommander<MemaInputCommander> (&otherUi, &ui, &networkWrapper));
+            expect (shouldNotifyCommander<MemaInputCommander> (&networkWrapper, &ui, &networkWrapper));
+        }
+
+        beginTest ("A change from the network wrapper still reaches the network wrapper (it relays to the other clients) and all UI commanders");
+        {
+            expect (shouldNotifyCommander<MemaInputCommander> (&networkWrapper, &networkWrapper, &networkWrapper));
+            expect (shouldNotifyCommander<MemaInputCommander> (&ui, &networkWrapper, &networkWrapper));
+            expect (shouldNotifyCommander<MemaInputCommander> (&otherUi, &networkWrapper, &networkWrapper));
+        }
+
+        beginTest ("A change without sender (originating inside the processor) reaches everybody");
+        {
+            expect (shouldNotifyCommander<MemaInputCommander> (&ui, nullptr, &networkWrapper));
+            expect (shouldNotifyCommander<MemaInputCommander> (&networkWrapper, nullptr, &networkWrapper));
+        }
+
+        beginTest ("Without a network wrapper only the sender is skipped");
+        {
+            expect (! shouldNotifyCommander<MemaInputCommander> (&ui, &ui, nullptr));
+            expect (shouldNotifyCommander<MemaInputCommander> (&otherUi, &ui, nullptr));
+        }
+    }
+};
+
+static ShouldNotifyCommanderTest shouldNotifyCommanderTest;
