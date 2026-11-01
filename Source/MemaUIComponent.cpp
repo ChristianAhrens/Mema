@@ -318,10 +318,19 @@ void MemaUIComponent::setEditorComponent(juce::Component* editorComponent)
 void MemaUIComponent::handleEditorSizeChangeRequest(const juce::Rectangle<int>& requestedSize)
 {
     auto width = requestedSize.getWidth();
-    auto height = requestedSize.getHeight() + sc_buttonSize;
+    // toolbar row plus its 1 px gap to the editor (see resized()); without the gap the editor is 1 px short and its matrix scrolls needlessly
+    auto height = requestedSize.getHeight() + sc_buttonSize + 1;
 
     if (width < (2 * sc_loadNetWidth + 5 * sc_buttonSize))
         width = 2 * sc_loadNetWidth + 5 * sc_buttonSize;
+
+    // Limit the size to the usable area of the screen (minus room for the callout border and arrow or the window frame).
+    // What does not fit is scrolled within the editor.
+    if (auto const display = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay())
+    {
+        width = std::min(width, display->userArea.getWidth() - sc_screenMarginWidth);
+        height = std::min(height, display->userArea.getHeight() - sc_screenMarginHeight);
+    }
 
     setSize(width, height);
 }

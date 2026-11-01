@@ -91,6 +91,58 @@ private:
     Direction m_direction{ IO };
 };
 
+//==============================================================================
+/** @brief Sizes of the scrollable crosspoint matrix area inside the editor. */
+struct MatrixScrollLayout
+{
+    int visibleWidth = 0;   ///< Width of the visible part (matrix area minus a vertical scrollbar if one is needed).
+    int visibleHeight = 0;  ///< Height of the visible part (matrix area minus a horizontal scrollbar if one is needed).
+    int contentWidth = 0;   ///< Width of the matrix content: at least what the channel counts require, at least the visible width.
+    int contentHeight = 0;  ///< Height of the matrix content: at least what the channel counts require, at least the visible height.
+    bool scrollsHorizontally() const { return contentWidth > visibleWidth; }
+    bool scrollsVertically() const { return contentHeight > visibleHeight; }
+
+    /**
+     * @brief Calculates the matrix layout.
+     * @param requiredSize          Size the matrix needs to show all channels.
+     * @param availableArea         Area the matrix viewport occupies.
+     * @param scrollBarThickness    Thickness of the viewport scrollbars (they take space from the visible area when shown).
+     */
+    static MatrixScrollLayout calculate(const juce::Rectangle<int>& requiredSize, const juce::Rectangle<int>& availableArea, int scrollBarThickness)
+    {
+        auto needsVerticalScrollBar = requiredSize.getHeight() > availableArea.getHeight();
+        auto needsHorizontalScrollBar = requiredSize.getWidth() > availableArea.getWidth();
+        // a scrollbar takes space from the other direction, which can make the other one necessary as well
+        if (needsVerticalScrollBar && !needsHorizontalScrollBar)
+            needsHorizontalScrollBar = requiredSize.getWidth() > availableArea.getWidth() - scrollBarThickness;
+        else if (needsHorizontalScrollBar && !needsVerticalScrollBar)
+            needsVerticalScrollBar = requiredSize.getHeight() > availableArea.getHeight() - scrollBarThickness;
+
+        MatrixScrollLayout layout;
+        layout.visibleWidth = availableArea.getWidth() - (needsVerticalScrollBar ? scrollBarThickness : 0);
+        layout.visibleHeight = availableArea.getHeight() - (needsHorizontalScrollBar ? scrollBarThickness : 0);
+        layout.contentWidth = std::max(requiredSize.getWidth(), layout.visibleWidth);
+        layout.contentHeight = std::max(requiredSize.getHeight(), layout.visibleHeight);
+        return layout;
+    }
+};
+
+/** @class MatrixViewport
+ *  @brief juce::Viewport that reports changes of its visible area, used to keep the fixed input/output headers in sync with the scrolled crosspoint matrix.
+ */
+class MatrixViewport : public juce::Viewport
+{
+public:
+    void visibleAreaChanged(const juce::Rectangle<int>& newVisibleArea) override
+    {
+        juce::Viewport::visibleAreaChanged(newVisibleArea);
+        if (onVisibleAreaChanged)
+            onVisibleAreaChanged(newVisibleArea);
+    }
+
+    std::function<void(const juce::Rectangle<int>&)> onVisibleAreaChanged;
+};
+
 /** @class MemaProcessorEditor
  *  @brief Top-level editor component for the Mema processor — composes the input, crosspoint, output, and plugin control strips.
  */
@@ -123,7 +175,11 @@ private:
     std::unique_ptr<CrosspointsControlComponent>    m_crosspointCtrl;
     std::unique_ptr<OutputControlComponent>         m_outputCtrl;
 
-    juce::Grid  m_gridLayout;
+    // If the editor is smaller than the channel counts require (e.g. limited to the screen size), the crosspoint matrix scrolls in
+    // both directions while the input header (top) and output column (left) stay visible and follow the scroll position.
+    std::unique_ptr<juce::Component>                m_inputClip;
+    std::unique_ptr<juce::Component>                m_outputClip;
+    std::unique_ptr<MatrixViewport>                 m_crosspointViewport;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MemaProcessorEditor)
 };

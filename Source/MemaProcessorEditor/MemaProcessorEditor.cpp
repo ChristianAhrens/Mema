@@ -108,15 +108,31 @@ MemaProcessorEditor::MemaProcessorEditor(AudioProcessor& processor)
 
     m_inputCtrl = std::make_unique<InputControlComponent>();
     m_inputCtrl->onBoundsRequirementChange = boundsRequirementChange;
-    addAndMakeVisible(m_inputCtrl.get());
+    m_inputClip = std::make_unique<juce::Component>();
+    m_inputClip->setInterceptsMouseClicks(false, true);
+    m_inputClip->addAndMakeVisible(m_inputCtrl.get());
+    addAndMakeVisible(m_inputClip.get());
 
     m_crosspointCtrl = std::make_unique<CrosspointsControlComponent>();
     m_crosspointCtrl->onBoundsRequirementChange = boundsRequirementChange;
-    addAndMakeVisible(m_crosspointCtrl.get());
+    m_crosspointViewport = std::make_unique<MatrixViewport>();
+    m_crosspointViewport->setViewedComponent(m_crosspointCtrl.get(), false);
+    m_crosspointViewport->setScrollBarsShown(true, true);
+    m_crosspointViewport->onVisibleAreaChanged = [this](const juce::Rectangle<int>& visibleArea) {
+        // keep the fixed input header and output column aligned with the scrolled matrix
+        if (m_inputCtrl)
+            m_inputCtrl->setTopLeftPosition(-visibleArea.getX(), 0);
+        if (m_outputCtrl)
+            m_outputCtrl->setTopLeftPosition(0, -visibleArea.getY());
+    };
+    addAndMakeVisible(m_crosspointViewport.get());
 
     m_outputCtrl = std::make_unique<OutputControlComponent>();
     m_outputCtrl->onBoundsRequirementChange = boundsRequirementChange;
-    addAndMakeVisible(m_outputCtrl.get());
+    m_outputClip = std::make_unique<juce::Component>();
+    m_outputClip->setInterceptsMouseClicks(false, true);
+    m_outputClip->addAndMakeVisible(m_outputCtrl.get());
+    addAndMakeVisible(m_outputClip.get());
 
     auto memaProc = dynamic_cast<MemaProcessor*>(&processor);
     if (memaProc)
@@ -152,10 +168,6 @@ MemaProcessorEditor::MemaProcessorEditor(AudioProcessor& processor)
         m_pluginControl->setParameterDisplayOrder(memaProc->getPluginParameterDisplayOrder());
     }
 
-    m_gridLayout.items = { juce::GridItem(*m_ioLabel), juce::GridItem(*m_inputCtrl), juce::GridItem(*m_outputCtrl), juce::GridItem(*m_crosspointCtrl) };
-    m_gridLayout.rowGap.pixels = 1.0;
-    m_gridLayout.columnGap.pixels = 1.0;
-
     setSize(800, 800);
 }
 
@@ -182,10 +194,27 @@ void MemaProcessorEditor::resized()
 
     auto requiredInputsHeight = m_inputCtrl->getRequiredSize().getHeight();
     auto requiredOutputsWidth = m_outputCtrl->getRequiredSize().getWidth();
-    
-    m_gridLayout.templateRows = { juce::Grid::TrackInfo(juce::Grid::Px(requiredInputsHeight)), juce::Grid::TrackInfo(juce::Grid::Fr(1)) };
-    m_gridLayout.templateColumns = { juce::Grid::TrackInfo(juce::Grid::Px(requiredOutputsWidth)), juce::Grid::TrackInfo(juce::Grid::Fr(1)) };
-    m_gridLayout.performLayout(bounds);
+
+    // the io label sits in the top left corner, the matrix area is what remains right of the outputs and below the inputs (1 px gaps)
+    m_ioLabel->setBounds(bounds.getX(), bounds.getY(), requiredOutputsWidth, requiredInputsHeight);
+    auto matrixArea = bounds.withTrimmedLeft(requiredOutputsWidth + 1).withTrimmedTop(requiredInputsHeight + 1);
+    m_crosspointViewport->setBounds(matrixArea);
+
+    // size of the matrix content: at least what the channel counts require, and at least the visible area (the content stretches to fill it)
+    auto requiredMatrixSize = m_crosspointCtrl->getRequiredSize();
+    requiredMatrixSize.setWidth(std::max(requiredMatrixSize.getWidth(), m_inputCtrl->getRequiredSize().getWidth()));
+    requiredMatrixSize.setHeight(std::max(requiredMatrixSize.getHeight(), m_outputCtrl->getRequiredSize().getHeight()));
+    auto const layout = MatrixScrollLayout::calculate(requiredMatrixSize, matrixArea, m_crosspointViewport->getScrollBarThickness());
+    auto const visibleWidth = layout.visibleWidth;
+    auto const visibleHeight = layout.visibleHeight;
+    auto const contentWidth = layout.contentWidth;
+    auto const contentHeight = layout.contentHeight;
+
+    m_crosspointCtrl->setSize(contentWidth, contentHeight);
+    m_inputClip->setBounds(matrixArea.getX(), bounds.getY(), visibleWidth, requiredInputsHeight);
+    m_inputCtrl->setBounds(-m_crosspointViewport->getViewPositionX(), 0, contentWidth, requiredInputsHeight);
+    m_outputClip->setBounds(bounds.getX(), matrixArea.getY(), requiredOutputsWidth, visibleHeight);
+    m_outputCtrl->setBounds(0, -m_crosspointViewport->getViewPositionY(), requiredOutputsWidth, contentHeight);
 
     // reset to unity button shall hover centered above iolabel
     auto resetButtonBounds = m_ioLabel->getBounds();
