@@ -133,7 +133,7 @@ void MeterbridgeComponent::paint(Graphics& g)
         g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
         g.drawLine(juce::Line<float>(0.0f, visuAreaOrigY, visuAreaWidth, visuAreaOrigY));
         // draw dBFS
-        g.setFont(12.0f);
+        g.setFont(9.0f);
         g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
         juce::String rangeText;
         if (getUsesValuesInDB())
@@ -195,7 +195,7 @@ void MeterbridgeComponent::paint(Graphics& g)
         g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
         g.drawLine(juce::Line<float>(0.0f, 0.0f, 0.0f, visuAreaHeight));
         // draw dBFS
-        g.setFont(12.0f);
+        g.setFont(9.0f);
         g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
         juce::String rangeText;
         if (getUsesValuesInDB())
@@ -203,9 +203,10 @@ void MeterbridgeComponent::paint(Graphics& g)
         else
             rangeText = "0 ... 1";
 
+        // rotate the text to read bottom-to-top along the right edge (juce::AffineTransform::rotated expects radians)
         g.setOrigin(visuArea.getBottomLeft());
-        g.addTransform(juce::AffineTransform().rotated(90));
-        g.drawText(rangeText, visuArea, juce::Justification::topRight, true);
+        g.addTransform(juce::AffineTransform().rotated(-juce::MathConstants<float>::halfPi));
+        g.drawText(rangeText, juce::Rectangle<int>(0, 0, visuArea.getHeight(), visuArea.getWidth()), juce::Justification::bottomRight, true);
     }
 }
 

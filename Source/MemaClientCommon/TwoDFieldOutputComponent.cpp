@@ -53,7 +53,7 @@ void TwoDFieldOutputComponent::paint (juce::Graphics& g)
         paintLevelMeterIndication(g, m_directionlessChannelsArea, m_directionLessChannelTypes);
 
     // draw dBFS
-    g.setFont(12.0f);
+    g.setFont(9.0f);
     g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
     juce::String rangeText;
     if (getUsesValuesInDB())

@@ -17,6 +17,7 @@
       <FILE id="mt10s8" name="MemaCommandersTest.cpp" compile="1" resource="0" file="Source/MemaCommandersTest.cpp"/>
       <FILE id="mt11s9" name="MemaAppConfigurationTest.cpp" compile="1" resource="0" file="Source/MemaAppConfigurationTest.cpp"/>
       <FILE id="mt23s11" name="TwoDFieldMultisliderTest.cpp" compile="1" resource="0" file="Source/TwoDFieldMultisliderTest.cpp"/>
+      <FILE id="mt33s14" name="MeterbridgeTest.cpp" compile="1" resource="0" file="Source/MeterbridgeTest.cpp"/>
       <FILE id="mt30s13" name="FaderbankControlTest.cpp" compile="1" resource="0" file="Source/FaderbankControlTest.cpp"/>
       <FILE id="mt29s12" name="ToggleStateSliderTest.cpp" compile="1" resource="0" file="Source/ToggleStateSliderTest.cpp"/>
     </GROUP>
@@ -31,6 +32,8 @@
       <FILE id="mt18p7" name="AppConfigurationBase.cpp" compile="1" resource="0" file="../submodules/JUCE-AppBasics/Source/AppConfigurationBase.cpp"/>
       <FILE id="mt31p15" name="MemaClientControlComponentBase.cpp" compile="1" resource="0" file="../Source/MemaClientCommon/MemaClientControlComponentBase.cpp"/>
       <FILE id="mt32p16" name="FaderbankControlComponent.cpp" compile="1" resource="0" file="../Source/MemaClientCommon/FaderbankControlComponent.cpp"/>
+      <FILE id="mt34p17" name="MeterbridgeComponent.cpp" compile="1" resource="0" file="../Source/MemaProcessorEditor/MeterbridgeComponent.cpp"/>
+      <FILE id="mt35p18" name="AbstractAudioVisualizer.cpp" compile="1" resource="0" file="../Source/MemaProcessorEditor/AbstractAudioVisualizer.cpp"/>
       <FILE id="mt24p10" name="TwoDFieldMultisliderComponent.cpp" compile="1" resource="0" file="../Source/MemaClientCommon/TwoDFieldMultisliderComponent.cpp"/>
       <FILE id="mt25p11" name="TwoDFieldBase.cpp" compile="1" resource="0" file="../submodules/JUCE-AppBasics/Source/TwoDFieldBase.cpp"/>
       <FILE id="mt26p12" name="ToggleStateSlider.cpp" compile="1" resource="0" file="../submodules/JUCE-AppBasics/Source/ToggleStateSlider.cpp"/>
