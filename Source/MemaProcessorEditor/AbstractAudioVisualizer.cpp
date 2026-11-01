@@ -18,7 +18,6 @@
 
 #include "AbstractAudioVisualizer.h"
 
-#include <Image_utils.h>
 
 namespace Mema
 {
