@@ -133,9 +133,6 @@ MainComponent::MainComponent()
     };
 
     m_monitorComponent = std::make_unique<MemaMoComponent>();
-    m_monitorComponent->onExitClick = [=]() {
-        setStatus(Status::Discovering);
-    };
     addAndMakeVisible(m_monitorComponent.get());
 
     m_discoverComponent = std::make_unique<MemaClientDiscoverComponent>();

@@ -47,8 +47,7 @@ namespace Mema
  * - **Waveform** — scrolling audio waveform plots per channel.
  * - **Spectrum** — frequency-domain FFT magnitude display per channel.
  *
- * The component communicates back to `MainComponent` via the `onExitClick` callback
- * when the user requests a disconnection.
+ * Disconnecting is handled by `MainComponent` (disconnect button); this component has no callback for it.
  *
  * @see MainComponent  — owns this component and drives the Discovering/Connecting/Monitoring state machine.
  * @see Mema::ProcessorDataAnalyzer  — performs peak/RMS/hold metering and FFT analysis on received buffers.
@@ -93,7 +92,6 @@ public:
     void handleMessage(const Message& message) override;
 
     //==============================================================================
-    std::function<void()>   onExitClick;    ///< Invoked when the user triggers a disconnection.
 
 private:
     //==============================================================================
