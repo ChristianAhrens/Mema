@@ -86,6 +86,8 @@ WaveformAudioComponent::WaveformAudioComponent()
         for (int i = 1; i <= m_numAvailableChannels; i++)
             settingsMenu.addItem(i, juce::String(i));
         settingsMenu.showMenuAsync(juce::PopupMenu::Options(), [=](int selectedId) {
+            if (selectedId < 1)
+                return; // menu was dismissed without a selection, keep the current channel count
             setNumVisibleChannels(selectedId);
             if (JUCEAppBasics::AppConfigurationBase::getInstance())
                 JUCEAppBasics::AppConfigurationBase::getInstance()->triggerConfigurationDump(false);

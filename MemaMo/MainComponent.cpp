@@ -794,7 +794,7 @@ void MainComponent::onConfigUpdated()
             auto outputVisuTypeSettingsOptionId = outputVisuTypeXmlElement->getAllSubText().getIntValue();
             handleSettingsOutputVisuTypeMenuResult(outputVisuTypeSettingsOptionId);
             auto numVisibleChannels = outputVisuTypeXmlElement->getIntAttribute(MemaMoAppConfiguration::getAttributeName(MemaMoAppConfiguration::AttributeID::COUNT), -1);
-            if (m_monitorComponent && -1 < numVisibleChannels)
+            if (m_monitorComponent && 0 < numVisibleChannels) // 0 (written by an older version after a dismissed channel count menu) and -1 (unset) keep the default
                 m_monitorComponent->setNumVisibleChannels(std::uint16_t(numVisibleChannels));
         }
 
