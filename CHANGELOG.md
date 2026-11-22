@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed missing close button of the Mema standalone window on Linux
 - Fixed Mema.Mo losing the channel count when the channel count menu is dismissed and an empty waveform for COUNT=0
 - Fixed Mema.Mo 2D output field geometry not following a channel configuration change
+- Fixed the Mema.Mo spectrum channel count button covering channel number 1
 
 ## [0.11.1] 2026-09-09
 ### Added

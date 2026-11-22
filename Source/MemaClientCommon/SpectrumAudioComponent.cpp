@@ -71,13 +71,14 @@ void SpectrumAudioComponent::paint(juce::Graphics & g)
     auto outerMargin = 6;
     auto channelMargin = outerMargin; // margin between channel plots
     auto channelLabelWidth = 20; // width for channel number area
+    auto buttonStripHeight = 22; // strip above the plots that holds the channel count button, so it does not cover the channel numbers
     auto numVisibleChannels = getNumVisibleChannels();
 
     if (numVisibleChannels == 0)
         return;
 
     auto totalWidth = width - 2 * outerMargin - channelLabelWidth;
-    auto totalHeight = height - 2 * outerMargin - outerMargin; // space for legend at bottom
+    auto totalHeight = height - buttonStripHeight - 2 * outerMargin - outerMargin; // space for button strip at top and legend at bottom
 
     // Calculate height per channel plot including margins
     auto totalChannelMargins = (numVisibleChannels - 1) * channelMargin;
@@ -106,7 +107,7 @@ void SpectrumAudioComponent::paint(juce::Graphics & g)
         auto const& plotPoints = m_plotPoints[channelIdx];
 
         // Calculate this channel's plot area
-        auto visuAreaY = outerMargin + channelIdx * (channelPlotHeight + channelMargin);
+        auto visuAreaY = buttonStripHeight + outerMargin + channelIdx * (channelPlotHeight + channelMargin);
         juce::Rectangle<int> visuArea(outerMargin, visuAreaY, totalWidth, channelPlotHeight);
 
         auto visuAreaOrigX = float(outerMargin);
