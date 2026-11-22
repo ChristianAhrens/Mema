@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Changed submodule JUCE to tag 9.0.6; adapted the code to the changed MessageBoxOptions::withButton signature and the LADSPA plug-in host option, replaced the deprecated AlertWindow::showOkCancelBox by AlertWindow::showAsync
 
 ### Fixed
+- Fixed Mema.Mo and Mema.Re reconnecting in a loop after Mema rejected the connection; the rejection is now reported once and the client returns to service discovery
+- Fixed Mema.Mo and Mema.Re staying connected after a malformed message frame; the connection is now closed, reported and the client returns to service discovery
+- Fixed undefined return value of isFullscreenEnabled() on iOS, Android and Linux
 
 ## [0.11.1] 2026-09-09
 ### Added
