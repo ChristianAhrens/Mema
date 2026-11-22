@@ -20,7 +20,7 @@
 
 
 MemaMoAppConfiguration::MemaMoAppConfiguration(const juce::File& file)
-	: JUCEAppBasics::AppConfigurationBase()
+	: MemaClientAppConfigurationBase()
 {
 	InitializeBase(file, JUCEAppBasics::AppConfigurationBase::Version::FromString(Mema_CONFIG_VERSION));
 }
@@ -29,34 +29,10 @@ MemaMoAppConfiguration::~MemaMoAppConfiguration()
 {
 }
 
-bool MemaMoAppConfiguration::isValid()
-{
-	return isValid(m_xml);
-}
-
 bool MemaMoAppConfiguration::isValid(const std::unique_ptr<juce::XmlElement>& xmlConfig)
 {
-	if (!JUCEAppBasics::AppConfigurationBase::isValid(xmlConfig))
-		return false;
-
-	auto connectionConfigSectionElement = xmlConfig->getChildByName(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::CONNECTIONCONFIG));
-	if (connectionConfigSectionElement)
-	{
-		auto serviceDescriptonXmlElement = connectionConfigSectionElement->getChildByName(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::SERVICEDESCRIPTION));
-		if (serviceDescriptonXmlElement)
-		{
-			//validate
-		}
-		else
-			return false;
-	}
-	else
-		return false;
-
-	auto visuConfigSectionElement = xmlConfig->getChildByName(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::VISUCONFIG));
-	if (visuConfigSectionElement)
-	{
-		auto outputVisuXmlElement = visuConfigSectionElement->getChildByName(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::OUTPUTVISUTYPE));
+	return isValidClientConfiguration(xmlConfig, [](const juce::XmlElement& visuConfig) {
+		auto outputVisuXmlElement = visuConfig.getChildByName(getTagName(TagID::OUTPUTVISUTYPE));
 		if (outputVisuXmlElement)
 		{
 			//validate
@@ -64,7 +40,7 @@ bool MemaMoAppConfiguration::isValid(const std::unique_ptr<juce::XmlElement>& xm
 		else
 			return false;
 
-		auto meteringColourXmlElement = visuConfigSectionElement->getChildByName(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::METERINGCOLOUR));
+		auto meteringColourXmlElement = visuConfig.getChildByName(getTagName(TagID::METERINGCOLOUR));
 		if (meteringColourXmlElement)
 		{
 			// validate
@@ -72,92 +48,11 @@ bool MemaMoAppConfiguration::isValid(const std::unique_ptr<juce::XmlElement>& xm
 		else
 			return false;
 
-		auto lookAndFeelXmlElement = visuConfigSectionElement->getChildByName(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::LOOKANDFEEL));
-		if (lookAndFeelXmlElement)
-		{
-			// validate
-		}
-		else
-			return false;
-	}
-	else
-		return false;
-
-	return true;
-}
-
-bool MemaMoAppConfiguration::ResetToDefault()
-{
-	auto xmlConfig = juce::parseXML(juce::String(BinaryData::MemaMoDefault_config, BinaryData::MemaMoDefault_configSize));
-	if (xmlConfig)
-	{
-
-		if (MemaMoAppConfiguration::isValid(xmlConfig))
-		{
-
-			SetFlushAndUpdateDisabled();
-			if (resetConfigState(std::move(xmlConfig)))
-			{
-				ResetFlushAndUpdateDisabled();
-				return true;
-			}
-			else
-			{
-				jassertfalse; // stop here when debugging, since invalid configurations often lead to endless debugging sessions until this simple explanation was found...
-				ResetFlushAndUpdateDisabled();
-
-				// ...and trigger generation of a valid config if not.
-				triggerConfigurationDump();
-			}
-		}
-		else
-		{
-			jassertfalse; // stop here when debugging, since invalid configurations often lead to endless debugging sessions until this simple explanation was found...
-
-			// ...and trigger generation of a valid config if not.
-			triggerConfigurationDump();
-		}
-	}
-	else
-	{
-		jassertfalse; // stop here when debugging, since invalid configurations often lead to endless debugging sessions until this simple explanation was found...
-
-		// ...and trigger generation of a valid config if not.
-		triggerConfigurationDump();
-	}
-
-	return false;
-}
-
-bool MemaMoAppConfiguration::HandleConfigVersionConflict(const JUCEAppBasics::AppConfigurationBase::Version& configVersionFound)
-{
-	if (configVersionFound != JUCEAppBasics::AppConfigurationBase::Version::FromString(Mema_CONFIG_VERSION))
-	{
-		auto conflictTitle = "Incompatible configuration version";
-		auto conflictInfo = "The configuration file version detected\ncannot be handled by this version of " + juce::JUCEApplication::getInstance()->getApplicationName();
-#ifdef DEBUG
-		conflictInfo << "\n(Found " + configVersionFound.ToString() + ", expected " + Mema_CONFIG_VERSION + ")";
-#endif
-		juce::AlertWindow::showAsync(juce::MessageBoxOptions()
-			.withIconType(juce::MessageBoxIconType::WarningIcon)
-			.withTitle(conflictTitle)
-			.withMessage(conflictInfo)
-			.withButton("Reset to default", 1)
-			.withButton("Quit", 0),
-			[this](int result) {
-				if (1 == result)
-				{
-					ResetToDefault();
-				}
-				else
-				{
-					juce::JUCEApplication::getInstance()->quit();
-				}
-		});
-
-		return false;
-	}
-	else
 		return true;
-}	
+	});
+}
 
+juce::String MemaMoAppConfiguration::getDefaultConfigurationXml()
+{
+	return juce::String(BinaryData::MemaMoDefault_config, BinaryData::MemaMoDefault_configSize);
+}

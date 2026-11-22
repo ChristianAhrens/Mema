@@ -135,6 +135,10 @@
             resource="0" file="../Source/MemaClientCommon/MemaClientMainComponentBase.cpp"/>
       <FILE id="mMcB02" name="MemaClientMainComponentBase.h" compile="0"
             resource="0" file="../Source/MemaClientCommon/MemaClientMainComponentBase.h"/>
+      <FILE id="mMcA01" name="MemaClientAppConfigurationBase.cpp" compile="1"
+            resource="0" file="../Source/MemaClientCommon/MemaClientAppConfigurationBase.cpp"/>
+      <FILE id="mMcA02" name="MemaClientAppConfigurationBase.h" compile="0"
+            resource="0" file="../Source/MemaClientCommon/MemaClientAppConfigurationBase.h"/>
       <FILE id="Lxh6b5" name="MemaClientDiscoverComponent.cpp" compile="1"
             resource="0" file="../Source/MemaClientCommon/MemaClientDiscoverComponent.cpp"/>
       <FILE id="D4YQYR" name="MemaClientDiscoverComponent.h" compile="0"
