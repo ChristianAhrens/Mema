@@ -49,6 +49,7 @@ PanningControlComponent::PanningControlComponent()
     m_multiSlider->onInputSelected = [=](std::uint16_t channel) {
         selectInputChannel(channel);
     };
+    m_multiSlider->setControlsSize(m_controlsSize); // the field's own size is 0 until set -- apply the (default or configured) size right away
     addAndMakeVisible(m_multiSlider.get());
 
     m_positionMapper = std::make_unique<InputPositionMapper>();
@@ -286,7 +287,13 @@ void PanningControlComponent::handleExternalControlParameter(int objNum, std::ui
             auto mParam = m_admOsController->getParameter(objNum, ADMOSController::ADMOSCParameterType::Mute);
             auto muteVal = ADMOSController::ADMOSCParameterMute(mParam).getParameterVal();
 
-            setInputMuteStates({ std::make_pair(static_cast<std::uint16_t>(objNum), muteVal) });
+            // handle like a mute button click: update the local state and button, and report the change onwards to Mema
+            auto in = static_cast<std::uint16_t>(objNum);
+            auto allInputMuteStates = getInputMuteStates(); // only update the changed entry, keep the others
+            allInputMuteStates[in] = muteVal;
+            setInputMuteStates(allInputMuteStates);
+            if (onInputMutesChanged)
+                onInputMutesChanged({ std::make_pair(in, static_cast<bool>(muteVal)) });
         }
         break;
     case ADMOSController::ADMOSCParameterType::Empty:
@@ -343,7 +350,9 @@ void PanningControlComponent::rebuildInputControls(bool force)
                 auto inputMuteStates = std::map<std::uint16_t, bool>();
                 auto in = std::uint16_t(i + 1);
                 inputMuteStates[in] = m_inputMuteButtons.at(i)->getToggleState();
-                MemaClientControlComponentBase::setInputMuteStates(inputMuteStates);
+                auto allInputMuteStates = getInputMuteStates(); // only update the changed entry, keep the others
+                allInputMuteStates[in] = inputMuteStates[in];
+                MemaClientControlComponentBase::setInputMuteStates(allInputMuteStates);
                 if (onInputMutesChanged)
                     onInputMutesChanged(inputMuteStates);
                 if (m_admOsController)

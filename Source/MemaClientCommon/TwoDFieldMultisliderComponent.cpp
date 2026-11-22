@@ -702,7 +702,7 @@ void TwoDFieldMultisliderComponent::selectInput(std::uint16_t channel, bool sele
                         slider.second->setTitle(juce::String(channel));
                         slider.second->setRange(0.0, 1.0, 0.01);
                         slider.second->displayValueConverter = [](double val) { return juce::String(juce::Decibels::gainToDecibels(val, static_cast<double>(ProcessorDataAnalyzer::getGlobalMindB())), 1) + " dB"; };
-                        slider.second->setValue(m_inputToOutputVals.at(channel).at(output).second);
+                        slider.second->setValue(m_inputToOutputVals.at(channel).at(output).second, juce::dontSendNotification);
                         slider.second->setToggleState(m_inputToOutputVals.at(channel).at(output).first, juce::dontSendNotification);
                     }
                 }
@@ -790,7 +790,7 @@ void TwoDFieldMultisliderComponent::setInputToOutputStates(const std::map<std::u
             if (juce::AudioChannelSet::ChannelType::unknown != output)
                 m_inputToOutputVals[iKV.first][output].first = oKV.second;
             if (m_directionLessChannelTypes.contains(output) && m_directionslessChannelSliders.at(output) && m_currentlySelectedInput == iKV.first)
-                m_directionslessChannelSliders.at(output)->setValue(oKV.second, juce::dontSendNotification);
+                m_directionslessChannelSliders.at(output)->setToggleState(oKV.second, juce::dontSendNotification);
         }
     }
 
@@ -909,7 +909,7 @@ void TwoDFieldMultisliderComponent::configureDirectionlessSliderToRelativeCtrl(c
 
     slider.setTitle("");
     slider.setRange(0.0, 1.0, 0.01);
-    slider.setValue(0.5); // relative starting
+    slider.setValue(0.5, juce::dontSendNotification); // relative starting -- reconfiguring must not send a (relative) change
     slider.displayValueConverter = {};
     slider.setToggleState(!anyInputToDirectionLessOff, juce::dontSendNotification);
     m_directionlessSliderRelRef[channelType] = 0.5;

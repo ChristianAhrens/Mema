@@ -197,7 +197,7 @@ MainComponent::MainComponent()
     m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_7point1point4] = std::make_pair(juce::AudioChannelSet::create7point1point4().getDescription().toStdString(), 0);
     m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_9point1point6] = std::make_pair(juce::AudioChannelSet::create9point1point6().getDescription().toStdString(), 0);
     m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_Quadrophonic] = std::make_pair(juce::AudioChannelSet::quadraphonic().getDescription().toStdString(), 0);
-    m_settingsItems[MemaReSettingsOption::ControlFormat_PluginParameterControl] = std::make_pair("Plug-in parameter control", 1);
+    m_settingsItems[MemaReSettingsOption::ControlFormat_PluginParameterControl] = std::make_pair("Plug-in parameter control", 0);
     // default panning colour is green
     m_settingsItems[MemaReSettingsOption::ControlColour_Green] = std::make_pair("Green", 1);
     m_settingsItems[MemaReSettingsOption::ControlColour_Red] = std::make_pair("Red", 0);
@@ -246,9 +246,13 @@ MainComponent::MainComponent()
         settingsMenu.addSeparator();
         settingsMenu.addItem(MemaReSettingsOption::PairingToken, "Pairing token...", true, false);
         settingsMenu.showMenuAsync(juce::PopupMenu::Options(), [=](int selectedId) {
+            if (0 == selectedId)
+                return; // menu was closed without a selection
+
+            // the selected setting is applied right here; the configuration is only persisted, not applied a second time via the watcher update
             handleSettingsMenuResult(selectedId);
             if (m_config)
-                m_config->triggerConfigurationDump();
+                m_config->triggerConfigurationDump(false);
         });
     };
     m_settingsButton->setAlwaysOnTop(true);
@@ -655,7 +659,7 @@ void MainComponent::showExternalControlSettings()
                 m_remoteComponent->setExternalAdmOscSettings(ADMOSCport, ADMOSCremoteIP, ADMOSCremotePort);
 
                 if (m_config)
-                    m_config->triggerConfigurationDump();
+                    m_config->triggerConfigurationDump(false);
             }
         }
 
@@ -677,7 +681,7 @@ void MainComponent::showPairingTokenDialog()
         {
             m_pairingToken = m_messageBox->getTextEditorContents("token");
             if (m_config)
-                m_config->triggerConfigurationDump();
+                m_config->triggerConfigurationDump(false);
         }
 
         m_messageBox.reset();

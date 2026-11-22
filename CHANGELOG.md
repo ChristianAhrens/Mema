@@ -14,6 +14,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed Mema.Mo and Mema.Re reconnecting in a loop after Mema rejected the connection; the rejection is now reported once and the client returns to service discovery
 - Fixed Mema.Mo and Mema.Re staying connected after a malformed message frame; the connection is now closed, reported and the client returns to service discovery
 - Fixed undefined return value of isFullscreenEnabled() on iOS, Android and Linux
+- Fixed Mema.Re replacing the whole local mute map on a mute click instead of changing only its own entry
+- Fixed Mema.Re matrix rotaries not following a changed accent colour
+- Fixed Mema.Re sending values from the 2D panning field without user action when selecting inputs or applying network states
+- Fixed Mema.Re not reporting ADM-OSC mute changes to Mema
+- Fixed Mema.Re settings menu actions being applied twice and closing the menu without selection changing settings
+- Fixed Mema.Re default configuration (control format, controls size, empty entries on first start)
 
 ## [0.11.1] 2026-09-09
 ### Added
