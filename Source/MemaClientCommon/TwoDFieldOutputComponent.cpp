@@ -302,6 +302,20 @@ void TwoDFieldOutputComponent::paintLevelMeterIndication(juce::Graphics& g, cons
     g.drawLine(juce::Line<float>(levelMeterArea.getX(), visuAreaOrigY, levelMeterArea.getX() + visuArea.getWidth(), visuAreaOrigY));
 }
 
+bool TwoDFieldOutputComponent::setChannelConfiguration(const juce::AudioChannelSet& channelLayout)
+{
+    auto wasUpdated = TwoDFieldBase::setChannelConfiguration(channelLayout);
+    if (wasUpdated)
+    {
+        // the areas and speaker positions depend on the channel configuration, but are only calculated in resized(), which is not
+        // triggered by a parent setting unchanged bounds (e.g. a format change with the same aspect ratio, 5.0 -> 7.0)
+        resized();
+        repaint();
+    }
+
+    return wasUpdated;
+}
+
 void TwoDFieldOutputComponent::resized()
 {
     // process areas for level indication painting

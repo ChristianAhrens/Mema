@@ -33,6 +33,8 @@ public:
     TwoDFieldOutputComponent();
     ~TwoDFieldOutputComponent();
 
+    bool setChannelConfiguration(const juce::AudioChannelSet& channelLayout) override;
+
     //==============================================================================
     void paint (Graphics&) override;
     void resized() override;
