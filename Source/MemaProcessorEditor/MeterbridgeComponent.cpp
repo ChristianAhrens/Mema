@@ -93,7 +93,7 @@ void MeterbridgeComponent::paint(Graphics& g)
         auto meterMaxLength = visuArea.getHeight();
         auto meterLeft = 0.5f * meterSpacing;
 
-        g.setFont(14.0f);
+        g.setFont(JUCEAppBasics::Theme::Type::body);
         for (unsigned long i = 1; i <= channelCount; ++i)
         {
             auto level = m_levelData.GetLevel(i);
@@ -133,7 +133,7 @@ void MeterbridgeComponent::paint(Graphics& g)
         g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
         g.drawLine(juce::Line<float>(0.0f, visuAreaOrigY, visuAreaWidth, visuAreaOrigY));
         // draw dBFS
-        g.setFont(9.0f);
+        g.setFont(JUCEAppBasics::Theme::Type::visuCaption);
         g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
         juce::String rangeText;
         if (getUsesValuesInDB())
@@ -155,7 +155,7 @@ void MeterbridgeComponent::paint(Graphics& g)
         auto meterMaxLength = visuArea.getWidth();
         auto meterTop = 0.5f * meterSpacing;
 
-        g.setFont(14.0f);
+        g.setFont(JUCEAppBasics::Theme::Type::body);
         for (unsigned long i = 1; i <= channelCount; ++i)
         {
             auto level = m_levelData.GetLevel(i);
@@ -195,7 +195,7 @@ void MeterbridgeComponent::paint(Graphics& g)
         g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
         g.drawLine(juce::Line<float>(0.0f, 0.0f, 0.0f, visuAreaHeight));
         // draw dBFS
-        g.setFont(9.0f);
+        g.setFont(JUCEAppBasics::Theme::Type::visuCaption);
         g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
         juce::String rangeText;
         if (getUsesValuesInDB())

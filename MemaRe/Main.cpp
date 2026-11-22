@@ -139,8 +139,7 @@ public:
 
         void applyPaletteStyle(JUCEAppBasics::CustomLookAndFeel::PaletteStyle paletteStyle)
         {
-            m_lookAndFeel = std::make_unique<JUCEAppBasics::CustomLookAndFeel>(paletteStyle);
-            juce::Desktop::getInstance().setDefaultLookAndFeel(m_lookAndFeel.get());
+            JUCEAppBasics::CustomLookAndFeel::applyPaletteStyle(m_lookAndFeel, paletteStyle);
         }
 
         void setFullscreenWindow(bool fullscreenWindow)
@@ -164,7 +163,7 @@ public:
         }
 
     private:
-        std::unique_ptr<juce::LookAndFeel>  m_lookAndFeel;
+        std::unique_ptr<JUCEAppBasics::CustomLookAndFeel>  m_lookAndFeel;
         bool m_followLocalStyle = true;
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainWindow)

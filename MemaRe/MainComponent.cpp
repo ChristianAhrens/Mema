@@ -199,11 +199,9 @@ MainComponent::MainComponent()
     m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_Quadrophonic] = std::make_pair(juce::AudioChannelSet::quadraphonic().getDescription().toStdString(), 0);
     m_settingsItems[MemaReSettingsOption::ControlFormat_PluginParameterControl] = std::make_pair("Plug-in parameter control", 0);
     // default panning colour is green
-    m_settingsItems[MemaReSettingsOption::ControlColour_Green] = std::make_pair("Green", 1);
-    m_settingsItems[MemaReSettingsOption::ControlColour_Red] = std::make_pair("Red", 0);
-    m_settingsItems[MemaReSettingsOption::ControlColour_Blue] = std::make_pair("Blue", 0);
-    m_settingsItems[MemaReSettingsOption::ControlColour_Pink] = std::make_pair("Anni Pink", 0);
-    m_settingsItems[MemaReSettingsOption::ControlColour_Laser] = std::make_pair("Laser", 0);
+    // default accent colour is green
+    for (auto i = 0; i < JUCEAppBasics::Theme::numAccentColours; ++i)
+        m_settingsItems[MemaReSettingsOption::ControlColour_First + i] = std::make_pair(JUCEAppBasics::Theme::getAccentMenuName(JUCEAppBasics::Theme::getAccentColourByIndex(i)).toStdString(), 0 == i ? 1 : 0);
     // default controls size is S
     m_settingsItems[MemaReSettingsOption::ControlsSize_S] = std::make_pair("S", 1);
     m_settingsItems[MemaReSettingsOption::ControlsSize_M] = std::make_pair("M", 0);
@@ -367,9 +365,9 @@ void MainComponent::resized()
     {
         auto leftButtons = safeBounds.removeFromLeft(36);
         auto rightButtons = safeBounds.removeFromLeft(36);
-        m_aboutButton->setBounds(leftButtons.removeFromTop(35).removeFromBottom(30));
-        m_settingsButton->setBounds(leftButtons.removeFromTop(35).removeFromBottom(30));
-        m_disconnectButton->setBounds(rightButtons.removeFromTop(35).removeFromBottom(30));
+        m_aboutButton->setBounds(leftButtons.removeFromTop(JUCEAppBasics::Theme::Size::toolbarRow).removeFromBottom(JUCEAppBasics::Theme::Size::toolbarIcon));
+        m_settingsButton->setBounds(leftButtons.removeFromTop(JUCEAppBasics::Theme::Size::toolbarRow).removeFromBottom(JUCEAppBasics::Theme::Size::toolbarIcon));
+        m_disconnectButton->setBounds(rightButtons.removeFromTop(JUCEAppBasics::Theme::Size::toolbarRow).removeFromBottom(JUCEAppBasics::Theme::Size::toolbarIcon));
     }
 }
 
@@ -545,41 +543,17 @@ void MainComponent::handleSettingsControlFormatMenuResult(int selectedId)
 
 void MainComponent::handleSettingsControlColourMenuResult(int selectedId)
 {
-    // helper internal function to avoid code clones
-    std::function<void(int, int, int, int, int)> setSettingsItemsCheckState = [=](int green, int red, int blue, int pink, int laser) {
-        m_settingsItems[MemaReSettingsOption::ControlColour_Green].second = green;
-        m_settingsItems[MemaReSettingsOption::ControlColour_Red].second = red;
-        m_settingsItems[MemaReSettingsOption::ControlColour_Blue].second = blue;
-        m_settingsItems[MemaReSettingsOption::ControlColour_Pink].second = pink;
-        m_settingsItems[MemaReSettingsOption::ControlColour_Laser].second = laser;
-    };
-
-    switch (selectedId)
+    // the settings menu entries are in the order of JUCEAppBasics::Theme::AccentColour
+    const auto index = selectedId - MemaReSettingsOption::ControlColour_First;
+    if (0 > index || JUCEAppBasics::Theme::numAccentColours <= index)
     {
-    case MemaReSettingsOption::ControlColour_Green:
-        setSettingsItemsCheckState(1, 0, 0, 0, 0);
-        setControlColour(juce::Colours::forestgreen);
-        break;
-    case MemaReSettingsOption::ControlColour_Red:
-        setSettingsItemsCheckState(0, 1, 0, 0, 0);
-        setControlColour(juce::Colours::orangered);
-        break;
-    case MemaReSettingsOption::ControlColour_Blue:
-        setSettingsItemsCheckState(0, 0, 1, 0, 0);
-        setControlColour(juce::Colours::dodgerblue);
-        break;
-    case MemaReSettingsOption::ControlColour_Pink:
-        setSettingsItemsCheckState(0, 0, 0, 1, 0);
-        setControlColour(juce::Colours::deeppink);
-        break;
-    case MemaReSettingsOption::ControlColour_Laser:
-        setSettingsItemsCheckState(0, 0, 0, 0, 1);
-        setControlColour(juce::Colour(0xd1, 0xff, 0x4f));
-        break;
-    default:
         jassertfalse; // unknown id fed in unintentionally ?!
-        break;
+        return;
     }
+
+    for (auto i = 0; i < JUCEAppBasics::Theme::numAccentColours; ++i)
+        m_settingsItems[MemaReSettingsOption::ControlColour_First + i].second = (i == index) ? 1 : 0;
+    setControlColour(JUCEAppBasics::Theme::getAccentColour(JUCEAppBasics::Theme::getAccentColourByIndex(index)));
 }
 
 void MainComponent::handleSettingsControlsSizeMenuResult(int selectedId)
@@ -700,22 +674,7 @@ void MainComponent::setControlColour(const juce::Colour& controlColour)
 
 void MainComponent::applyControlColour()
 {
-    auto customLookAndFeel = dynamic_cast<JUCEAppBasics::CustomLookAndFeel*>(&getLookAndFeel());
-    if (customLookAndFeel)
-    {
-        switch (customLookAndFeel->getPaletteStyle())
-        {
-        case JUCEAppBasics::CustomLookAndFeel::PS_Light:
-            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId, m_controlColour.brighter());
-            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId, m_controlColour);
-            break;
-        case JUCEAppBasics::CustomLookAndFeel::PS_Dark:
-        default:
-            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId, m_controlColour.darker());
-            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId, m_controlColour);
-            break;
-        }
-    }
+    JUCEAppBasics::CustomLookAndFeel::applyAccentColour(getLookAndFeel(), m_controlColour);
 }
 
 void MainComponent::setControlsSize(const Mema::MemaClientControlComponentBase::ControlsSize& ctrlsSize)
@@ -843,7 +802,7 @@ void MainComponent::performConfigurationDump()
         for (int i = MemaReSettingsOption::ControlColour_First; i <= MemaReSettingsOption::ControlColour_Last; i++)
         {
             if (m_settingsItems[i].second == 1)
-                panningColourXmlElmement->addTextElement(juce::String(i));
+                panningColourXmlElmement->addTextElement(JUCEAppBasics::Theme::getAccentName(JUCEAppBasics::Theme::getAccentColourByIndex(i - MemaReSettingsOption::ControlColour_First)));
         }
         visuConfigXmlElement->addChildElement(panningColourXmlElmement.release());
 
@@ -922,8 +881,9 @@ void MainComponent::onConfigUpdated()
         auto controlColourXmlElement = visuConfigState->getChildByName(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::CONTROLCOLOUR));
         if (controlColourXmlElement)
         {
-            auto controlColourSettingsOptionId = controlColourXmlElement->getAllSubText().getIntValue();
-            handleSettingsControlColourMenuResult(controlColourSettingsOptionId);
+            // the accent colour is persisted by name; an unknown value (e.g. a value of an older version) falls back to the default
+            const auto accent = JUCEAppBasics::Theme::findAccentByName(controlColourXmlElement->getAllSubText().trim()).value_or(JUCEAppBasics::Theme::AccentColour::Green);
+            handleSettingsControlColourMenuResult(MemaReSettingsOption::ControlColour_First + static_cast<int>(accent));
         }
 
         auto controlsSizeXmlElmement = visuConfigState->getChildByName(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::CONTROLSSIZE));

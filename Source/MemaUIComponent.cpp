@@ -17,6 +17,7 @@
  */
 
 #include "MemaUIComponent.h"
+#include <CustomLookAndFeel.h>
 
 #include "AboutComponent.h"
 #include "CustomPopupMenuComponent.h"
@@ -78,7 +79,7 @@ public:
 
             if (alert)
             {
-                g.setColour(juce::Colour(0xff, 0x30, 0x02).withAlpha(0.8f));
+                g.setColour(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::StateAlertColourId));
                 g.fillRect(individualBarBounds);
             }
             else
@@ -87,12 +88,12 @@ public:
                 g.fillRect(individualBarBounds.removeFromLeft(individualBarBounds.getWidth() * (float(normalPercent) / 100.0f)));
                 if (warningPercent > 0)
                 {
-                    g.setColour(juce::Colour(0xff, 0xe8, 0x00).withAlpha(0.5f));
+                    g.setColour(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::StateWarningColourId));
                     g.fillRect(individualBarBounds.removeFromLeft(individualBarBounds.getWidth() * (float(warningPercent) / 25.0f)));
                 }
                 if (criticalPercent > 0)
                 {
-                    g.setColour(juce::Colour(0xff, 0x40, 0x02).withAlpha(0.5f));
+                    g.setColour(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::StateCriticalColourId));
                     g.fillRect(individualBarBounds.removeFromLeft(individualBarBounds.getWidth() * (float(criticalPercent) / 5.0f)));
                 }
             }
@@ -205,12 +206,9 @@ MemaUIComponent::MemaUIComponent()
     m_settingsItems[MemaSettingsOption::LookAndFeel_Automatic] = std::make_pair("Automatic", 1);
     m_settingsItems[MemaSettingsOption::LookAndFeel_Dark] = std::make_pair("Dark", 0);
     m_settingsItems[MemaSettingsOption::LookAndFeel_Light] = std::make_pair("Light", 0);
-    // default metering colour is green
-    m_settingsItems[MemaSettingsOption::MeteringColour_Green] = std::make_pair("Green", 1);
-    m_settingsItems[MemaSettingsOption::MeteringColour_Red] = std::make_pair("Red", 0);
-    m_settingsItems[MemaSettingsOption::MeteringColour_Blue] = std::make_pair("Blue", 0);
-    m_settingsItems[MemaSettingsOption::MeteringColour_Pink] = std::make_pair("Anni Pink", 0);
-    m_settingsItems[MemaSettingsOption::MeteringColour_Laser] = std::make_pair("Laser", 0);
+    // default accent colour is green
+    for (auto i = 0; i < JUCEAppBasics::Theme::numAccentColours; ++i)
+        m_settingsItems[MemaSettingsOption::MeteringColour_First + i] = std::make_pair(JUCEAppBasics::Theme::getAccentMenuName(JUCEAppBasics::Theme::getAccentColourByIndex(i)).toStdString(), 0 == i ? 1 : 0);
     m_appSettingsButton = std::make_unique<juce::DrawableButton>("Application settings", juce::DrawableButton::ButtonStyle::ImageFitted);
     m_appSettingsButton->setTooltip("Application settings");
     m_appSettingsButton->onClick = [this] {
@@ -377,7 +375,7 @@ void MemaUIComponent::updateSessionServiceTopology(const JUCEAppBasics::SessionS
 
 void MemaUIComponent::paint(Graphics &g)
 {
-    g.fillAll(getLookAndFeel().findColour(juce::LookAndFeel_V4::ColourScheme::defaultFill));
+    g.fillAll(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::SurfaceGapColourId));
 }
 
 void MemaUIComponent::resized()
@@ -486,7 +484,8 @@ std::unique_ptr<XmlElement> MemaUIComponent::createStateXml()
             paletteStyle = customLAF->getPaletteStyle();
     }
     stateXml->setAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::PALETTESTYLE), paletteStyle);
-    stateXml->setAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::METERINGCOLOR), m_meteringColour.toString());
+    stateXml->setAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::METERINGCOLOR),
+        JUCEAppBasics::Theme::getAccentName(JUCEAppBasics::Theme::findAccentByColour(m_meteringColour).value_or(JUCEAppBasics::Theme::AccentColour::Green)));
 
     return stateXml;
 }
@@ -506,13 +505,12 @@ bool MemaUIComponent::setStateXml(XmlElement* stateXml)
     m_settingsItems[MemaSettingsOption::LookAndFeel_Dark] = std::make_pair("Dark", JUCEAppBasics::CustomLookAndFeel::PaletteStyle::PS_Dark == paletteStyle);
     m_settingsItems[MemaSettingsOption::LookAndFeel_Light] = std::make_pair("Light", JUCEAppBasics::CustomLookAndFeel::PaletteStyle::PS_Light == paletteStyle);
 
-    auto meteringColour = juce::Colour::fromString(stateXml->getStringAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::METERINGCOLOR)));
-    setMeteringColour(meteringColour);
-    m_settingsItems[MemaSettingsOption::MeteringColour_Green] = std::make_pair("Green", juce::Colours::forestgreen == meteringColour);
-    m_settingsItems[MemaSettingsOption::MeteringColour_Red] = std::make_pair("Red", juce::Colours::orangered == meteringColour);
-    m_settingsItems[MemaSettingsOption::MeteringColour_Blue] = std::make_pair("Blue", juce::Colours::dodgerblue == meteringColour);
-    m_settingsItems[MemaSettingsOption::MeteringColour_Pink] = std::make_pair("Anni Pink", juce::Colours::deeppink == meteringColour);
-    m_settingsItems[MemaSettingsOption::MeteringColour_Laser] = std::make_pair("Laser", juce::Colour(0xd1, 0xff, 0x4f) == meteringColour);
+    // the accent colour is persisted by name; an unknown value (e.g. a colour string of an older version) falls back to the default
+    const auto accent = JUCEAppBasics::Theme::findAccentByName(stateXml->getStringAttribute(MemaAppConfiguration::getAttributeName(MemaAppConfiguration::AttributeID::METERINGCOLOR)).trim())
+        .value_or(JUCEAppBasics::Theme::AccentColour::Green);
+    setMeteringColour(JUCEAppBasics::Theme::getAccentColour(accent));
+    for (auto i = 0; i < JUCEAppBasics::Theme::numAccentColours; ++i)
+        m_settingsItems[MemaSettingsOption::MeteringColour_First + i] = std::make_pair(JUCEAppBasics::Theme::getAccentMenuName(JUCEAppBasics::Theme::getAccentColourByIndex(i)).toStdString(), i == static_cast<int>(accent) ? 1 : 0);
 
     return true;
 }
@@ -584,40 +582,17 @@ void MemaUIComponent::handleSettingsLookAndFeelMenuResult(int selectedId)
 
 void MemaUIComponent::handleSettingsMeteringColourMenuResult(int selectedId)
 {
-    // helper internal function to avoid code clones
-    std::function<void(int, int, int, int, int)> setSettingsItemsCheckState = [=](int green, int red, int blue, int pink, int laser) {
-        m_settingsItems[MemaSettingsOption::MeteringColour_Green].second = green;
-        m_settingsItems[MemaSettingsOption::MeteringColour_Red].second = red;
-        m_settingsItems[MemaSettingsOption::MeteringColour_Blue].second = blue;
-        m_settingsItems[MemaSettingsOption::MeteringColour_Pink].second = pink;
-        m_settingsItems[MemaSettingsOption::MeteringColour_Laser].second = laser;
-        };
-
-    switch (selectedId)
+    // the settings menu entries are in the order of JUCEAppBasics::Theme::AccentColour
+    const auto index = selectedId - MemaSettingsOption::MeteringColour_First;
+    if (0 > index || JUCEAppBasics::Theme::numAccentColours <= index)
     {
-    case MemaSettingsOption::MeteringColour_Green:
-        setSettingsItemsCheckState(1, 0, 0, 0, 0);
-        setMeteringColour(juce::Colours::forestgreen);
-        break;
-    case MemaSettingsOption::MeteringColour_Red:
-        setSettingsItemsCheckState(0, 1, 0, 0, 0);
-        setMeteringColour(juce::Colours::orangered);
-        break;
-    case MemaSettingsOption::MeteringColour_Blue:
-        setSettingsItemsCheckState(0, 0, 1, 0, 0);
-        setMeteringColour(juce::Colours::dodgerblue);
-        break;
-    case MemaSettingsOption::MeteringColour_Pink:
-        setSettingsItemsCheckState(0, 0, 0, 1, 0);
-        setMeteringColour(juce::Colours::deeppink);
-        break;
-    case MemaSettingsOption::MeteringColour_Laser:
-        setSettingsItemsCheckState(0, 0, 0, 0, 1);
-        setMeteringColour(juce::Colour(0xd1, 0xff, 0x4f));
-        break;
-    default:
-        break;
+        jassertfalse; // unknown id fed in unintentionally ?!
+        return;
     }
+
+    for (auto i = 0; i < JUCEAppBasics::Theme::numAccentColours; ++i)
+        m_settingsItems[MemaSettingsOption::MeteringColour_First + i].second = (i == index) ? 1 : 0;
+    setMeteringColour(JUCEAppBasics::Theme::getAccentColour(JUCEAppBasics::Theme::getAccentColourByIndex(index)));
 }
 
 void MemaUIComponent::showPairingTokenDialog()
@@ -646,22 +621,7 @@ void MemaUIComponent::setMeteringColour(const juce::Colour& meteringColour)
 
 void MemaUIComponent::applyMeteringColour()
 {
-    auto customLookAndFeel = dynamic_cast<JUCEAppBasics::CustomLookAndFeel*>(&getLookAndFeel());
-    if (customLookAndFeel)
-    {
-        switch (customLookAndFeel->getPaletteStyle())
-        {
-        case JUCEAppBasics::CustomLookAndFeel::PS_Light:
-            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId, m_meteringColour.brighter());
-            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId, m_meteringColour);
-            break;
-        case JUCEAppBasics::CustomLookAndFeel::PS_Dark:
-        default:
-            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId, m_meteringColour.darker());
-            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId, m_meteringColour);
-            break;
-        }
-    }
+    JUCEAppBasics::CustomLookAndFeel::applyAccentColour(getLookAndFeel(), m_meteringColour);
 }
 
 } // namespace Mema

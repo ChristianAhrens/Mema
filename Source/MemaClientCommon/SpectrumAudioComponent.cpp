@@ -124,7 +124,7 @@ void SpectrumAudioComponent::paint(juce::Graphics & g)
         g.fillRect(channelLabelArea);
 
         // Draw channel number
-        g.setFont(12.0f);
+        g.setFont(JUCEAppBasics::Theme::Type::visuLegend);
         g.setColour(legendColour);
         g.drawText(juce::String(channelIdx + 1),
             channelLabelArea.toFloat(),
@@ -142,7 +142,7 @@ void SpectrumAudioComponent::paint(juce::Graphics & g)
         }
 
         // Draw dBFS label
-        g.setFont(9.0f);
+        g.setFont(JUCEAppBasics::Theme::Type::visuCaption);
         g.setColour(getLookAndFeel().findColour(juce::LookAndFeel_V4::ColourScheme::menuText));
         g.drawText(juce::String(ProcessorDataAnalyzer::getGlobalMindB()) + " ... " + juce::String(ProcessorDataAnalyzer::getGlobalMaxdB()) + " dBFS",
             juce::Rectangle<float>(visuAreaOrigX + visuAreaWidth - 120.0f, float(visuAreaY), 110.0f, float(outerMargin)),

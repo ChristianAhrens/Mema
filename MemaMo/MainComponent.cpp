@@ -188,12 +188,9 @@ MainComponent::MainComponent()
     m_settingsItems[MemaMoSettingsOption::OutputVisuType_Quadrophonic] = std::make_pair(juce::AudioChannelSet::quadraphonic().getDescription().toStdString(), 0);
     m_settingsItems[MemaMoSettingsOption::OutputVisuType_Waveform] = std::make_pair("Waveform", 0);
     m_settingsItems[MemaMoSettingsOption::OutputVisuType_Spectrum] = std::make_pair("Spectrum", 0);
-    // default metering colour is green
-    m_settingsItems[MemaMoSettingsOption::MeteringColour_Green] = std::make_pair("Green", 1);
-    m_settingsItems[MemaMoSettingsOption::MeteringColour_Red] = std::make_pair("Red", 0);
-    m_settingsItems[MemaMoSettingsOption::MeteringColour_Blue] = std::make_pair("Blue", 0);
-    m_settingsItems[MemaMoSettingsOption::MeteringColour_Pink] = std::make_pair("Anni Pink", 0);
-    m_settingsItems[MemaMoSettingsOption::MeteringColour_Laser] = std::make_pair("Laser", 0);
+    // default accent colour is green
+    for (auto i = 0; i < JUCEAppBasics::Theme::numAccentColours; ++i)
+        m_settingsItems[MemaMoSettingsOption::MeteringColour_First + i] = std::make_pair(JUCEAppBasics::Theme::getAccentMenuName(JUCEAppBasics::Theme::getAccentColourByIndex(i)).toStdString(), 0 == i ? 1 : 0);
 #if JUCE_WINDOWS || JUCE_MAC
     // fullscreen toggling
     m_settingsItems[MemaMoSettingsOption::FullscreenWindowMode] = std::make_pair("Toggle fullscreen mode" + fullscreenShortCutHint, 0);
@@ -337,9 +334,9 @@ void MainComponent::resized()
 
     if (!juce::JUCEApplication::getInstance()->getCommandLineParameters().contains("--noconfigui"))
     {
-        m_aboutButton->setBounds(safeBounds.removeFromTop(35).removeFromLeft(30).removeFromBottom(30));
-        m_settingsButton->setBounds(safeBounds.removeFromTop(35).removeFromLeft(30).removeFromBottom(30));
-        m_disconnectButton->setBounds(safeBounds.removeFromTop(35).removeFromLeft(30).removeFromBottom(30));
+        m_aboutButton->setBounds(safeBounds.removeFromTop(JUCEAppBasics::Theme::Size::toolbarRow).removeFromLeft(JUCEAppBasics::Theme::Size::toolbarIcon).removeFromBottom(JUCEAppBasics::Theme::Size::toolbarIcon));
+        m_settingsButton->setBounds(safeBounds.removeFromTop(JUCEAppBasics::Theme::Size::toolbarRow).removeFromLeft(JUCEAppBasics::Theme::Size::toolbarIcon).removeFromBottom(JUCEAppBasics::Theme::Size::toolbarIcon));
+        m_disconnectButton->setBounds(safeBounds.removeFromTop(JUCEAppBasics::Theme::Size::toolbarRow).removeFromLeft(JUCEAppBasics::Theme::Size::toolbarIcon).removeFromBottom(JUCEAppBasics::Theme::Size::toolbarIcon));
     }
 }
 
@@ -517,40 +514,17 @@ void MainComponent::handleSettingsOutputVisuTypeMenuResult(int selectedId)
 
 void MainComponent::handleSettingsMeteringColourMenuResult(int selectedId)
 {
-    // helper internal function to avoid code clones
-    std::function<void(int, int, int, int, int)> setSettingsItemsCheckState = [=](int green, int red, int blue, int pink, int laser) {
-        m_settingsItems[MemaMoSettingsOption::MeteringColour_Green].second = green;
-        m_settingsItems[MemaMoSettingsOption::MeteringColour_Red].second = red;
-        m_settingsItems[MemaMoSettingsOption::MeteringColour_Blue].second = blue;
-        m_settingsItems[MemaMoSettingsOption::MeteringColour_Pink].second = pink;
-        m_settingsItems[MemaMoSettingsOption::MeteringColour_Laser].second = laser;
-        };
-
-    switch (selectedId)
+    // the settings menu entries are in the order of JUCEAppBasics::Theme::AccentColour
+    const auto index = selectedId - MemaMoSettingsOption::MeteringColour_First;
+    if (0 > index || JUCEAppBasics::Theme::numAccentColours <= index)
     {
-    case MemaMoSettingsOption::MeteringColour_Green:
-        setSettingsItemsCheckState(1, 0, 0, 0, 0);
-        setMeteringColour(juce::Colours::forestgreen);
-        break;
-    case MemaMoSettingsOption::MeteringColour_Red:
-        setSettingsItemsCheckState(0, 1, 0, 0, 0);
-        setMeteringColour(juce::Colours::orangered);
-        break;
-    case MemaMoSettingsOption::MeteringColour_Blue:
-        setSettingsItemsCheckState(0, 0, 1, 0, 0);
-        setMeteringColour(juce::Colours::dodgerblue);
-        break;
-    case MemaMoSettingsOption::MeteringColour_Pink:
-        setSettingsItemsCheckState(0, 0, 0, 1, 0);
-        setMeteringColour(juce::Colours::deeppink);
-        break;
-    case MemaMoSettingsOption::MeteringColour_Laser:
-        setSettingsItemsCheckState(0, 0, 0, 0, 1);
-        setMeteringColour(juce::Colour(0xd1, 0xff, 0x4f));
-        break;
-    default:
-        break;
+        jassertfalse; // unknown id fed in unintentionally ?!
+        return;
     }
+
+    for (auto i = 0; i < JUCEAppBasics::Theme::numAccentColours; ++i)
+        m_settingsItems[MemaMoSettingsOption::MeteringColour_First + i].second = (i == index) ? 1 : 0;
+    setMeteringColour(JUCEAppBasics::Theme::getAccentColour(JUCEAppBasics::Theme::getAccentColourByIndex(index)));
 }
 
 void MainComponent::handleSettingsFullscreenModeToggleResult()
@@ -596,22 +570,7 @@ void MainComponent::setMeteringColour(const juce::Colour& meteringColour)
 
 void MainComponent::applyMeteringColour()
 {
-    auto customLookAndFeel = dynamic_cast<JUCEAppBasics::CustomLookAndFeel*>(&getLookAndFeel());
-    if (customLookAndFeel)
-    {
-        switch (customLookAndFeel->getPaletteStyle())
-        {
-        case JUCEAppBasics::CustomLookAndFeel::PS_Light:
-            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId, m_meteringColour.brighter());
-            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId, m_meteringColour);
-            break;
-        case JUCEAppBasics::CustomLookAndFeel::PS_Dark:
-        default:
-            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId, m_meteringColour.darker());
-            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId, m_meteringColour);
-            break;
-        }
-    }
+    JUCEAppBasics::CustomLookAndFeel::applyAccentColour(getLookAndFeel(), m_meteringColour);
 }
 
 std::optional<int> MainComponent::getNumVisibleChannels()
@@ -742,7 +701,7 @@ void MainComponent::performConfigurationDump()
         for (int i = MemaMoSettingsOption::MeteringColour_First; i <= MemaMoSettingsOption::MeteringColour_Last; i++)
         {
             if (m_settingsItems[i].second == 1)
-                meteringColourXmlElmement->addTextElement(juce::String(i));
+                meteringColourXmlElmement->addTextElement(JUCEAppBasics::Theme::getAccentName(JUCEAppBasics::Theme::getAccentColourByIndex(i - MemaMoSettingsOption::MeteringColour_First)));
         }
         visuConfigXmlElement->addChildElement(meteringColourXmlElmement.release());
 
@@ -798,8 +757,9 @@ void MainComponent::onConfigUpdated()
         auto meteringColourXmlElement = visuConfigState->getChildByName(MemaMoAppConfiguration::getTagName(MemaMoAppConfiguration::TagID::METERINGCOLOUR));
         if (meteringColourXmlElement)
         {
-            auto meteringColourSettingsOptionId = meteringColourXmlElement->getAllSubText().getIntValue();
-            handleSettingsMeteringColourMenuResult(meteringColourSettingsOptionId);
+            // the accent colour is persisted by name; an unknown value (e.g. a value of an older version) falls back to the default
+            const auto accent = JUCEAppBasics::Theme::findAccentByName(meteringColourXmlElement->getAllSubText().trim()).value_or(JUCEAppBasics::Theme::AccentColour::Green);
+            handleSettingsMeteringColourMenuResult(MemaMoSettingsOption::MeteringColour_First + static_cast<int>(accent));
         }
     }
 }

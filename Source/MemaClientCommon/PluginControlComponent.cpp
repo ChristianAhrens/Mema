@@ -106,7 +106,7 @@ PluginControlComponent::PluginControlComponent()
         addAndMakeVisible(m_prePostButton.get());
 
     m_pluginNameLabel = std::make_unique<juce::Label>("pluginName");
-    m_pluginNameLabel->setFont(m_pluginNameLabel->getFont().withHeight(25));
+    m_pluginNameLabel->setFont(m_pluginNameLabel->getFont().withHeight(JUCEAppBasics::Theme::Type::heading));
     m_pluginNameLabel->setJustificationType(juce::Justification::centredLeft);
     addAndMakeVisible(m_pluginNameLabel.get());
 

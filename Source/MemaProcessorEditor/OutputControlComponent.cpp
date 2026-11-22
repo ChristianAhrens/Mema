@@ -17,6 +17,7 @@
  */
 
 #include "OutputControlComponent.h"
+#include <CustomLookAndFeel.h>
 
 #include "AbstractAudioVisualizer.h"
 #include "MeterbridgeComponent.h"
@@ -136,7 +137,7 @@ void OutputControlComponent::setChannelCount(std::uint16_t channelCount)
                 m_outputMutes[channel] =std::make_unique<juce::TextButton>("M", "Mute");
                 m_outputMutes.at(channel)->setClickingTogglesState(true);
                 m_outputMutes.at(channel)->addListener(this);
-                m_outputMutes.at(channel)->setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::red);
+                m_outputMutes.at(channel)->setColour(juce::TextButton::ColourIds::buttonOnColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::StateMuteColourId));
                 addAndMakeVisible(m_outputMutes.at(channel).get());
             }
         }

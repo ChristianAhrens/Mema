@@ -261,7 +261,7 @@ void FaderbankControlComponent::rebuildInputControls(bool force)
             m_inputMuteButtons.at(i) = std::make_unique<juce::TextButton>("M");
             m_inputMuteButtons.at(i)->setClickingTogglesState(true);
             m_inputMuteButtons.at(i)->setToggleState((getInputMuteStates().count(in) != 0 ? getInputMuteStates().at(in) : false), juce::dontSendNotification);
-            m_inputMuteButtons.at(i)->setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::red);
+            m_inputMuteButtons.at(i)->setColour(juce::TextButton::ColourIds::buttonOnColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::StateMuteColourId));
             m_inputMuteButtons.at(i)->onClick = [this, i] {
                 auto inputMuteStates = std::map<std::uint16_t, bool>();
                 auto in = std::uint16_t(i + 1);
@@ -324,7 +324,7 @@ void FaderbankControlComponent::rebuildOutputControls(bool force)
             m_outputMuteButtons.at(o) = std::make_unique<juce::TextButton>("M");
             m_outputMuteButtons.at(o)->setClickingTogglesState(true);
             m_outputMuteButtons.at(o)->setToggleState((getOutputMuteStates().count(out) != 0 ? getOutputMuteStates().at(out) : false), juce::dontSendNotification);
-            m_outputMuteButtons.at(o)->setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::red);
+            m_outputMuteButtons.at(o)->setColour(juce::TextButton::ColourIds::buttonOnColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::StateMuteColourId));
             m_outputMuteButtons.at(o)->onClick = [this, o] {
                 auto outputMuteStates = std::map<std::uint16_t, bool>();
                 auto out = std::uint16_t(o + 1);

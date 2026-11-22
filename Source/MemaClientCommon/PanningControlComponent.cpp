@@ -345,7 +345,7 @@ void PanningControlComponent::rebuildInputControls(bool force)
             m_inputMuteButtons.at(i) = std::make_unique<juce::TextButton>("M");
             m_inputMuteButtons.at(i)->setClickingTogglesState(true);
             m_inputMuteButtons.at(i)->setToggleState((getInputMuteStates().count(in) != 0 ? getInputMuteStates().at(in) : false), juce::dontSendNotification);
-            m_inputMuteButtons.at(i)->setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::red);
+            m_inputMuteButtons.at(i)->setColour(juce::TextButton::ColourIds::buttonOnColourId, getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::StateMuteColourId));
             m_inputMuteButtons.at(i)->onClick = [this, i] {
                 auto inputMuteStates = std::map<std::uint16_t, bool>();
                 auto in = std::uint16_t(i + 1);
