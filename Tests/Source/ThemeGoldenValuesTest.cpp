@@ -75,8 +75,8 @@ public:
         { "juce::PopupMenu::ColourIds::backgroundColourId", static_cast<int>(juce::PopupMenu::ColourIds::backgroundColourId), 0xff3c3c3c, 0xffdfdfdf },
         { "juce::PopupMenu::ColourIds::textColourId", static_cast<int>(juce::PopupMenu::ColourIds::textColourId), 0xffffffff, 0xff000000 },
         { "juce::PopupMenu::ColourIds::headerTextColourId", static_cast<int>(juce::PopupMenu::ColourIds::headerTextColourId), 0xffd3d3d3, 0xff555555 },
-        { "juce::PopupMenu::ColourIds::highlightedBackgroundColourId", static_cast<int>(juce::PopupMenu::ColourIds::highlightedBackgroundColourId), 0xffb6b6b6, 0xff484848 },
-        { "juce::PopupMenu::ColourIds::highlightedTextColourId", static_cast<int>(juce::PopupMenu::ColourIds::highlightedTextColourId), 0xffd3d3d3, 0xff555555 },
+        { "juce::PopupMenu::ColourIds::highlightedBackgroundColourId", static_cast<int>(juce::PopupMenu::ColourIds::highlightedBackgroundColourId), 0x2effffff, 0x2e000000 },
+        { "juce::PopupMenu::ColourIds::highlightedTextColourId", static_cast<int>(juce::PopupMenu::ColourIds::highlightedTextColourId), 0xffffffff, 0xff000000 },
         { "juce::TextButton::ColourIds::buttonColourId", static_cast<int>(juce::TextButton::ColourIds::buttonColourId), 0xff5b5b5b, 0xffa4a4a4 },
         { "juce::TextButton::ColourIds::buttonOnColourId", static_cast<int>(juce::TextButton::ColourIds::buttonOnColourId), 0xff969696, 0xff858585 },
         { "juce::TextButton::ColourIds::textColourOffId", static_cast<int>(juce::TextButton::ColourIds::textColourOffId), 0xffffffff, 0xff000000 },
@@ -201,7 +201,13 @@ public:
             expect (laf.findColour (JUCEAppBasics::CustomLookAndFeel::StateAlertColourId) == juce::Colour (0xff, 0x30, 0x02).withAlpha (0.8f));
             expect (laf.findColour (JUCEAppBasics::CustomLookAndFeel::StateErrorColourId) == juce::Colours::red);
             expect (laf.findColour (JUCEAppBasics::CustomLookAndFeel::OverlayShadowColourId) == juce::Colours::black.withAlpha (0.7f));
-            expect (laf.findColour (JUCEAppBasics::CustomLookAndFeel::OverlayBorderColourId) == juce::Colours::white.withAlpha (0.8f));
+            expect (laf.findColour (JUCEAppBasics::CustomLookAndFeel::OverlayBorderColourId)
+                == (style == JUCEAppBasics::CustomLookAndFeel::PS_Light ? juce::Colours::darkgrey : juce::Colours::white).withAlpha (0.8f));
+            // tooltip and hyperlink follow the palette
+            expect (laf.findColour (juce::TooltipWindow::backgroundColourId) == laf.findColour (juce::ResizableWindow::backgroundColourId));
+            expect (laf.findColour (juce::TooltipWindow::textColourId) == laf.findColour (juce::Label::textColourId));
+            expect (laf.findColour (juce::TooltipWindow::outlineColourId) == laf.findColour (juce::TextEditor::outlineColourId));
+            expect (laf.findColour (juce::HyperlinkButton::textColourId) == laf.findColour (juce::Label::textColourId));
             expect (laf.findColour (JUCEAppBasics::CustomLookAndFeel::SurfaceRecessedDeepColourId) == laf.findColour (juce::ResizableWindow::ColourIds::backgroundColourId).darker());
             expect (laf.findColour (JUCEAppBasics::CustomLookAndFeel::SurfaceGapColourId) == laf.findColour (juce::LookAndFeel_V4::ColourScheme::defaultFill));
         }

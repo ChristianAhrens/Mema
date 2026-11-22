@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Added
+- Added hover, pressed, focus and disabled states to buttons, sliders, combo boxes, tick boxes and scroll bars, identical in all apps
 
 ### Changed
 - Changed submodule JUCE to tag 9.0.6; adapted the code to the changed MessageBoxOptions::withButton signature and the LADSPA plug-in host option, replaced the deprecated AlertWindow::showOkCancelBox by AlertWindow::showAsync
@@ -13,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Changed colours, fonts and sizes of Mema, Mema.Mo and Mema.Re to come from a central theme in JUCE-AppBasics, without visible change
 - Changed the accent colour to be stored by name in the configuration; an accent colour stored by an earlier version resets to green
 - Changed the Mema.Re plug-in parameter controls to start with the small controls size like the other control formats
+- Changed tooltip, hyperlink and call out border colours to follow the palette, and the highlighted popup menu item to stay readable in both palettes
 
 ### Fixed
 - Fixed Mema.Mo and Mema.Re reconnecting in a loop after Mema rejected the connection; the rejection is now reported once and the client returns to service discovery
