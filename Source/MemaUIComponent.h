@@ -166,6 +166,7 @@ public:
     //========================================================================*
     /** @brief Propagates a look-and-feel change to all child buttons and bars. */
     void lookAndFeelChanged() override;
+    void userTriedToCloseWindow() override;
 
     //==========================================================================
     /**
@@ -236,6 +237,8 @@ private:
 
     static constexpr int sc_buttonSize = 26; ///< Fixed width and height of all toolbar icon buttons, in pixels.
     static constexpr int sc_loadNetWidth = 70; ///< Fixed width of the CPU and network load bars, in pixels.
+    static constexpr int sc_screenMarginWidth = 60;  ///< Horizontal room kept free on the screen for the callout border / window frame, in pixels.
+    static constexpr int sc_screenMarginHeight = 100; ///< Vertical room kept free on the screen for the callout border and arrow or the window frame, in pixels.
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MemaUIComponent)
 };

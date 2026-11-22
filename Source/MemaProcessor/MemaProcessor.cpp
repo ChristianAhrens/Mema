@@ -933,7 +933,7 @@ void MemaProcessor::setInputMuteState(std::uint16_t inputChannelNumber, bool mut
 
 	for (auto const& inputCommander : m_inputCommanders)
 	{
-		if (inputCommander != reinterpret_cast<MemaInputCommander*>(sender) || nullptr != reinterpret_cast<MemaNetworkClientCommanderWrapper*>(sender))
+		if (shouldNotifyCommander<MemaInputCommander>(inputCommander, reinterpret_cast<MemaInputCommander*>(sender), static_cast<MemaInputCommander*>(m_networkCommanderWrapper.get())))
 			inputCommander->setInputMute(inputChannelNumber, muted, userId);
 	}
 
@@ -964,7 +964,7 @@ void MemaProcessor::setMatrixCrosspointEnabledValue(std::uint16_t inputNumber, s
 
     for (auto const& crosspointCommander : m_crosspointCommanders)
     {
-        if (crosspointCommander != reinterpret_cast<MemaCrosspointCommander*>(sender) || nullptr != reinterpret_cast<MemaNetworkClientCommanderWrapper*>(sender))
+        if (shouldNotifyCommander<MemaCrosspointCommander>(crosspointCommander, reinterpret_cast<MemaCrosspointCommander*>(sender), static_cast<MemaCrosspointCommander*>(m_networkCommanderWrapper.get())))
             crosspointCommander->setCrosspointEnabledValue(inputNumber, outputNumber, enabled, userId);
     }
 
@@ -1003,7 +1003,7 @@ void MemaProcessor::setMatrixCrosspointFactorValue(std::uint16_t inputNumber, st
 
 	for (auto const& crosspointCommander : m_crosspointCommanders)
 	{
-		if (crosspointCommander != reinterpret_cast<MemaCrosspointCommander*>(sender) || nullptr != reinterpret_cast<MemaNetworkClientCommanderWrapper*>(sender))
+		if (shouldNotifyCommander<MemaCrosspointCommander>(crosspointCommander, reinterpret_cast<MemaCrosspointCommander*>(sender), static_cast<MemaCrosspointCommander*>(m_networkCommanderWrapper.get())))
 			crosspointCommander->setCrosspointFactorValue(inputNumber, outputNumber, factor, userId);
 	}
 
@@ -1036,7 +1036,7 @@ void MemaProcessor::setOutputMuteState(std::uint16_t outputChannelNumber, bool m
 
 	for (auto const& outputCommander : m_outputCommanders)
 	{
-		if (outputCommander != reinterpret_cast<MemaOutputCommander*>(sender) || nullptr != reinterpret_cast<MemaNetworkClientCommanderWrapper*>(sender))
+		if (shouldNotifyCommander<MemaOutputCommander>(outputCommander, reinterpret_cast<MemaOutputCommander*>(sender), static_cast<MemaOutputCommander*>(m_networkCommanderWrapper.get())))
 			outputCommander->setOutputMute(outputChannelNumber, muted, userId);
 	}
 
@@ -1378,7 +1378,7 @@ void MemaProcessor::setPluginParameterValue(std::uint16_t parameterIndex, std::s
 
 	for (auto const& pluginCommander : m_pluginCommanders)
 	{
-		if (pluginCommander != reinterpret_cast<MemaPluginCommander*>(sender) || nullptr != static_cast<MemaNetworkClientCommanderWrapper*>(sender))
+		if (shouldNotifyCommander<MemaPluginCommander>(pluginCommander, sender, static_cast<MemaPluginCommander*>(m_networkCommanderWrapper.get())))
 			pluginCommander->setPluginParameterValue(parameterIndex, id, normalizedValue, userId);
 	}
 
@@ -1629,9 +1629,9 @@ void MemaProcessor::handleMessage(const Message& message)
 	{
 		DBG(juce::String(__FUNCTION__) << " i:" << cpm->getInputMuteStates().size() << " o:" << cpm->getOutputMuteStates().size() << " c:" << cpm->getCrosspointStates().size());
 		for (auto const& inputMuteState : cpm->getInputMuteStates())
-			setInputMuteState(inputMuteState.first, inputMuteState.second, static_cast<MemaInputCommander*>(m_networkCommanderWrapper.get()));
+			setInputMuteState(inputMuteState.first, inputMuteState.second, static_cast<MemaInputCommander*>(m_networkCommanderWrapper.get()), origId);
 		for (auto const& outputMuteState : cpm->getOutputMuteStates())
-			setOutputMuteState(outputMuteState.first, outputMuteState.second, static_cast<MemaOutputCommander*>(m_networkCommanderWrapper.get()));
+			setOutputMuteState(outputMuteState.first, outputMuteState.second, static_cast<MemaOutputCommander*>(m_networkCommanderWrapper.get()), origId);
 		for (auto const& crosspointStateKV : cpm->getCrosspointStates())
 		{
 			auto& inputNumber = crosspointStateKV.first;

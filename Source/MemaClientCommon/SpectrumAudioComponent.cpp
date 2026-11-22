@@ -140,7 +140,7 @@ void SpectrumAudioComponent::paint(juce::Graphics & g)
         }
 
         // Draw dBFS label
-        g.setFont(12.0f);
+        g.setFont(9.0f);
         g.setColour(getLookAndFeel().findColour(juce::LookAndFeel_V4::ColourScheme::menuText));
         g.drawText(juce::String(ProcessorDataAnalyzer::getGlobalMindB()) + " ... " + juce::String(ProcessorDataAnalyzer::getGlobalMaxdB()) + " dBFS",
             juce::Rectangle<float>(visuAreaOrigX + visuAreaWidth - 120.0f, float(visuAreaY), 110.0f, float(outerMargin)),

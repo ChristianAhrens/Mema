@@ -155,10 +155,10 @@ MainComponent::MainComponent()
 
     m_aboutComponent = std::make_unique<AboutComponent>(BinaryData::MemaMoRect_png, BinaryData::MemaMoRect_pngSize);
     m_aboutButton = std::make_unique<juce::DrawableButton>("About", juce::DrawableButton::ButtonStyle::ImageFitted);
-    m_aboutButton->setTooltip(juce::String("About") + juce::JUCEApplication::getInstance()->getApplicationName());
+    m_aboutButton->setTooltip(juce::String("About ") + juce::JUCEApplication::getInstance()->getApplicationName());
     m_aboutButton->onClick = [this] {
         juce::PopupMenu aboutMenu;
-        aboutMenu.addCustomItem(1, std::make_unique<CustomAboutItem>(m_aboutComponent.get(), juce::Rectangle<int>(250, 250)), nullptr, juce::String("Info about") + juce::JUCEApplication::getInstance()->getApplicationName());
+        aboutMenu.addCustomItem(1, std::make_unique<CustomAboutItem>(m_aboutComponent.get(), juce::Rectangle<int>(250, 250)), nullptr, juce::String("Info about ") + juce::JUCEApplication::getInstance()->getApplicationName());
         aboutMenu.showMenuAsync(juce::PopupMenu::Options());
     };
     m_aboutButton->setAlwaysOnTop(true);
@@ -203,7 +203,7 @@ MainComponent::MainComponent()
 #endif
     // Further components
     m_settingsButton = std::make_unique<juce::DrawableButton>("Settings", juce::DrawableButton::ButtonStyle::ImageFitted);
-    m_settingsButton->setTooltip(juce::String("Settings for") + juce::JUCEApplication::getInstance()->getApplicationName());
+    m_settingsButton->setTooltip(juce::String("Settings for ") + juce::JUCEApplication::getInstance()->getApplicationName());
     m_settingsButton->onClick = [this] {
         juce::PopupMenu lookAndFeelSubMenu;
         for (int i = MemaMoSettingsOption::LookAndFeel_First; i <= MemaMoSettingsOption::LookAndFeel_Last; i++)

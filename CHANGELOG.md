@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Changed
 - Changed submodule JUCE to tag 9.0.6; adapted the code to the changed MessageBoxOptions::withButton signature and the LADSPA plug-in host option, replaced the deprecated AlertWindow::showOkCancelBox by AlertWindow::showAsync
+- Changed Mema to a menu bar app without Dock icon on macOS
 
 ### Fixed
 - Fixed Mema.Mo and Mema.Re reconnecting in a loop after Mema rejected the connection; the rejection is now reported once and the client returns to service discovery
@@ -20,6 +21,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fixed Mema.Re not reporting ADM-OSC mute changes to Mema
 - Fixed Mema.Re settings menu actions being applied twice and closing the menu without selection changing settings
 - Fixed Mema.Re default configuration (control format, controls size, empty entries on first start)
+- Fixed Mema echoing a change back to the client it came from (mutes, crosspoints, plug-in parameters)
+- Fixed Mema reloading the plug-in when a UI setting changed
+- Fixed vertical meterbridge range text not being visible
+- Fixed Mema showing NLoad bars of disconnected clients
+- Fixed Mema UI exceeding the usable screen area; the crosspoint matrix now scrolls
+- Fixed missing close button of the Mema standalone window on Linux
 
 ## [0.11.1] 2026-09-09
 ### Added

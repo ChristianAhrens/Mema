@@ -136,6 +136,24 @@ public:
         m_alerts[id] = alert;
         repaint();
     };
+    /** Drops all loads/alerts whose id is not in the given list, e.g. of connections that are gone. */
+    void retainLoads(const std::vector<int>& ids)
+    {
+        auto removed = false;
+        for (auto iter = m_loadsPercent.begin(); iter != m_loadsPercent.end();)
+        {
+            if (std::find(ids.begin(), ids.end(), iter->first) == ids.end())
+            {
+                m_alerts.erase(iter->first);
+                iter = m_loadsPercent.erase(iter);
+                removed = true;
+            }
+            else
+                ++iter;
+        }
+        if (removed)
+            repaint();
+    };
 
 private:
     std::map<int, int> m_loadsPercent;
@@ -222,10 +240,10 @@ MemaUIComponent::MemaUIComponent()
 
     m_aboutComponent = std::make_unique<AboutComponent>(BinaryData::MemaRect_png, BinaryData::MemaRect_pngSize);
     m_aboutButton = std::make_unique<juce::DrawableButton>("About", juce::DrawableButton::ButtonStyle::ImageFitted);
-    m_aboutButton->setTooltip(juce::String("About") + juce::JUCEApplication::getInstance()->getApplicationName());
+    m_aboutButton->setTooltip(juce::String("About ") + juce::JUCEApplication::getInstance()->getApplicationName());
     m_aboutButton->onClick = [this] {
         juce::PopupMenu aboutMenu;
-        aboutMenu.addCustomItem(1, std::make_unique<CustomAboutItem>(m_aboutComponent.get(), juce::Rectangle<int>(250, 250)), nullptr, juce::String("Info about") + juce::JUCEApplication::getInstance()->getApplicationName());
+        aboutMenu.addCustomItem(1, std::make_unique<CustomAboutItem>(m_aboutComponent.get(), juce::Rectangle<int>(250, 250)), nullptr, juce::String("Info about ") + juce::JUCEApplication::getInstance()->getApplicationName());
         aboutMenu.showMenuAsync(juce::PopupMenu::Options());
     };
     addAndMakeVisible(m_aboutButton.get());
@@ -269,6 +287,11 @@ void MemaUIComponent::setStandaloneWindow(bool standalone)
         int styleFlags = juce::ComponentPeer::windowHasDropShadow
             | juce::ComponentPeer::windowAppearsOnTaskbar
             | juce::ComponentPeer::windowHasTitleBar;
+#if JUCE_LINUX
+        // On Linux the standalone window is the primary way to use Mema (a tray icon is not reliably usable, depending on
+        // distribution and window manager), so it needs a close button, which quits the application (see userTriedToCloseWindow).
+        styleFlags |= juce::ComponentPeer::windowHasCloseButton;
+#endif
 
         setVisible(true);
         addToDesktop(styleFlags);
@@ -280,6 +303,14 @@ void MemaUIComponent::setStandaloneWindow(bool standalone)
         removeFromDesktop();
         setVisible(false);
     }
+}
+
+void MemaUIComponent::userTriedToCloseWindow()
+{
+#if JUCE_LINUX
+    // close button of the standalone window (or close request of the window manager): quit the application like the power button does
+    juce::JUCEApplication::getInstance()->systemRequestedQuit();
+#endif
 }
 
 bool MemaUIComponent::isStandaloneWindow()
@@ -300,10 +331,19 @@ void MemaUIComponent::setEditorComponent(juce::Component* editorComponent)
 void MemaUIComponent::handleEditorSizeChangeRequest(const juce::Rectangle<int>& requestedSize)
 {
     auto width = requestedSize.getWidth();
-    auto height = requestedSize.getHeight() + sc_buttonSize;
+    // toolbar row plus its 1 px gap to the editor (see resized()); without the gap the editor is 1 px short and its matrix scrolls needlessly
+    auto height = requestedSize.getHeight() + sc_buttonSize + 1;
 
     if (width < (2 * sc_loadNetWidth + 5 * sc_buttonSize))
         width = 2 * sc_loadNetWidth + 5 * sc_buttonSize;
+
+    // Limit the size to the usable area of the screen (minus room for the callout border and arrow or the window frame).
+    // What does not fit is scrolled within the editor.
+    if (auto const display = juce::Desktop::getInstance().getDisplays().getPrimaryDisplay())
+    {
+        width = std::min(width, display->userArea.getWidth() - sc_screenMarginWidth);
+        height = std::min(height, display->userArea.getHeight() - sc_screenMarginHeight);
+    }
 
     setSize(width, height);
 }
@@ -318,11 +358,14 @@ void MemaUIComponent::updateNetworkUsage(const std::map<int, std::pair<double, b
 {
     if (m_netHealthBar)
     {
+        std::vector<int> ids;
         for (auto const& netLoad : netLoads)
         {
+            ids.push_back(netLoad.first);
             m_netHealthBar->setLoadPercent(int(netLoad.second.first * 100.0), netLoad.first);
             m_netHealthBar->setAlert(netLoad.second.second, netLoad.first);
         }
+        m_netHealthBar->retainLoads(ids); // bars of clients that disconnected since the last update disappear
     }
 }
 
