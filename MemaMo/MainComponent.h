@@ -22,6 +22,8 @@
 
 #include "MemaMoAppConfiguration.h"
 
+#include "MemaClientCommon/MemaClientMainComponentBase.h"
+
 #include <ServiceTopologyManager.h>
 
 
@@ -57,20 +59,11 @@ namespace JUCEAppBasics { class AboutComponent; }
  * @see MemaMoComponent   — the active monitoring panel.
  * @see MemaMoAppConfiguration — XML persistence of settings.
  */
-class MainComponent :   public juce::Component,
-                        public juce::Timer,
+class MainComponent :   public MemaClientMainComponentBase,
                         public MemaMoAppConfiguration::Dumper,
                         public MemaMoAppConfiguration::Watcher
 {
 public:
-    /** @brief Connection/application phase driven by the TCP session lifecycle. */
-    enum Status
-    {
-        Discovering,    ///< Searching for Mema instances via multicast.
-        Connecting,     ///< TCP handshake in progress.
-        Monitoring,     ///< Connected and actively receiving audio data.
-    };
-
     /** @brief Identifiers for all user-configurable settings exposed via the settings popup menu. */
     enum MemaMoSettingsOption
     {
@@ -120,12 +113,6 @@ public:
     /** @brief Propagates a look-and-feel change to all owned child components. */
     void lookAndFeelChanged() override;
 
-    /** @brief Periodic callback used to retry TCP connections and poll network status. */
-    void timerCallback() override;
-
-    /** @brief Handles keyboard shortcuts (toggle fullscreen mode; there is no Escape-to-disconnect). */
-    bool keyPressed(const juce::KeyPress& key) override;
-
     //==============================================================================
     /** @brief Serialises the current configuration to the XML file on disk. */
     void performConfigurationDump() override;
@@ -133,102 +120,30 @@ public:
     void onConfigUpdated() override;
 
     //==============================================================================
-    /** @brief Returns whether the window is currently displayed in fullscreen mode. */
-    bool isFullscreenEnabled();
-
-    //==============================================================================
-    std::function<void(int, bool)> onPaletteStyleChange;    ///< Called when the user changes the look-and-feel or metering colour.
-
-    //==============================================================================
-    std::function<void(bool)> onSetFullscreenWindow;        ///< Called to request a fullscreen/windowed transition from the application shell.
 
 private:
-    /**
-     * @class InterprocessConnectionImpl
-     * @brief Thin wrapper around juce::InterprocessConnection that forwards events via std::function callbacks.
-     *
-     * Encapsulates the TCP client socket used to receive audio buffers from the Mema server.
-     * All three JUCE interprocess events are forwarded to lambdas set by `MainComponent` so that
-     * socket logic stays decoupled from UI state management.
-     */
-    class InterprocessConnectionImpl : public juce::InterprocessConnection
-    {
-    public:
-        InterprocessConnectionImpl() : juce::InterprocessConnection() {};
-        virtual ~InterprocessConnectionImpl() { disconnect(); };
-
-        /** @brief Delegates to onConnectionMade when the TCP handshake completes. */
-        void connectionMade() override { if (onConnectionMade) onConnectionMade(); };
-
-        /** @brief Delegates to onConnectionLost when the TCP connection drops. */
-        void connectionLost() override { if (onConnectionLost) onConnectionLost(); };
-
-        /** @brief Delegates to onMessageReceived when a complete framed message arrives. */
-        void messageReceived(const MemoryBlock& message) override { if (onMessageReceived) onMessageReceived(message); };
-
-        /** @brief Stores the target address and calls connectToSocket with a 3-second timeout. */
-        bool ConnectToSocket(const juce::String& hostName, int portNumber) {
-            m_hostName = hostName;
-            m_portNumber = portNumber;
-            return juce::InterprocessConnection::connectToSocket(hostName, portNumber, 3000);
-        };
-
-        /** @brief Disconnects and immediately retries using the last stored host/port. */
-        bool RetryConnectToSocket() {
-            disconnect();
-            return connectToSocket(m_hostName, m_portNumber, 3000);
-        };
-
-        std::function<void()>                   onConnectionMade;       ///< Fired on the JUCE IPC thread when the TCP session is established.
-        std::function<void()>                   onConnectionLost;       ///< Fired on the JUCE IPC thread when the TCP session is dropped.
-        std::function<void(const MemoryBlock&)> onMessageReceived;      ///< Fired for every complete framed message received from Mema.
-
-    private:
-        juce::String m_hostName;    ///< Hostname or IP address of the last connection target.
-        int m_portNumber = 0;       ///< Port of the last connection target.
-    };
-
     //==============================================================================
     void handleSettingsMenuResult(int selectedId);
-    void handleSettingsLookAndFeelMenuResult(int selectedId);
     void handleSettingsOutputVisuTypeMenuResult(int selectedId);
     void handleSettingsMeteringColourMenuResult(int selectedId);
-    void handleSettingsFullscreenModeToggleResult();
-    void showPairingTokenDialog();
 
     void setMeteringColour(const juce::Colour& meteringColour);
     void applyMeteringColour();
 
-    void toggleFullscreenMode();
-
     std::optional<int>  getNumVisibleChannels();
 
-    void setStatus(const Status& s);
-    const Status getStatus();
-
-    void connectToMema();
     void returnToDiscover();
 
     //==============================================================================
-    JUCEAppBasics::SessionMasterAwareService        m_selectedService;          ///< Multicast service descriptor of the Mema instance chosen by the user.
-    std::unique_ptr<InterprocessConnectionImpl>     m_networkConnection;        ///< Active TCP client socket (null while Discovering).
 
     std::unique_ptr<MemaMoComponent>                m_monitorComponent;         ///< Active monitoring panel (Monitoring phase).
-    std::unique_ptr<MemaClientDiscoverComponent>    m_discoverComponent;        ///< Service-discovery panel (Discovering phase).
-    std::unique_ptr<MemaClientConnectingComponent>  m_connectingComponent;      ///< Connection-progress panel (Connecting phase).
 
     std::unique_ptr<juce::DrawableButton>           m_settingsButton;           ///< Gear icon that opens the settings popup menu.
-    std::map<int, std::pair<std::string, int>>      m_settingsItems;            ///< Mapping from menu item ID to {label, MemaMoSettingsOption}.
-    int                                             m_settingsHostLookAndFeelId = -1; ///< Menu ID assigned to the "Follow host" look-and-feel entry.
-    juce::String                                    m_pairingToken;             ///< Token sent to Mema in this client's HelloMessage (empty = none configured).
-    bool                                            m_connectionRejected = false; ///< Set when Mema answered with HelloReject; the following connection loss returns to discover instead of reconnecting.
 
     std::unique_ptr<juce::DrawableButton>           m_disconnectButton;         ///< Button to drop the current TCP connection and return to Discovering.
 
     std::unique_ptr<juce::DrawableButton>           m_aboutButton;              ///< Button that shows the about popup.
     std::unique_ptr<JUCEAppBasics::AboutComponent>                 m_aboutComponent;           ///< The about popup component.
-
-    Status                                          m_currentStatus = Status::Discovering; ///< Current state-machine phase.
 
     juce::Colour                                    m_meteringColour = juce::Colours::forestgreen; ///< Active metering bar colour.
 

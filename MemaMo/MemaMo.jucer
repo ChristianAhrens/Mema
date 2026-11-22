@@ -97,6 +97,10 @@
             resource="0" file="../Source/MemaClientCommon/MemaClientConnectingComponent.cpp"/>
       <FILE id="tOFlwB" name="MemaClientConnectingComponent.h" compile="0"
             resource="0" file="../Source/MemaClientCommon/MemaClientConnectingComponent.h"/>
+      <FILE id="mMcB01" name="MemaClientMainComponentBase.cpp" compile="1"
+            resource="0" file="../Source/MemaClientCommon/MemaClientMainComponentBase.cpp"/>
+      <FILE id="mMcB02" name="MemaClientMainComponentBase.h" compile="0"
+            resource="0" file="../Source/MemaClientCommon/MemaClientMainComponentBase.h"/>
       <FILE id="Lxh6b5" name="MemaClientDiscoverComponent.cpp" compile="1"
             resource="0" file="../Source/MemaClientCommon/MemaClientDiscoverComponent.cpp"/>
       <FILE id="D4YQYR" name="MemaClientDiscoverComponent.h" compile="0"

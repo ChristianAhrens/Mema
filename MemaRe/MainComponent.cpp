@@ -33,8 +33,14 @@
 #include <iOS_utils.h>
 
 
+// the look-and-feel menu ids are handled by the shared base class
+static_assert(MainComponent::LookAndFeel_FollowHost == MemaClientMainComponentBase::SettingsLookAndFeel_FollowHost
+    && MainComponent::LookAndFeel_Dark == MemaClientMainComponentBase::SettingsLookAndFeel_Dark
+    && MainComponent::LookAndFeel_Light == MemaClientMainComponentBase::SettingsLookAndFeel_Light, "look-and-feel menu ids must match the base class");
+
+
 MainComponent::MainComponent()
-    : juce::Component()
+    : MemaClientMainComponentBase()
 {
     // create the configuration object (is being initialized from disk automatically)
     m_config = std::make_unique<MemaReAppConfiguration>(JUCEAppBasics::AppConfigurationBase::getDefaultConfigFilePath());
@@ -421,38 +427,6 @@ void MainComponent::handleSettingsMenuResult(int selectedId)
         jassertfalse; // unhandled menu entry!?
 }
 
-void MainComponent::handleSettingsLookAndFeelMenuResult(int selectedId)
-{
-    // helper internal function to avoid code clones
-    std::function<void(int, int, int)> setSettingsItemsCheckState = [=](int a, int b, int c) {
-        m_settingsItems[MemaReSettingsOption::LookAndFeel_FollowHost].second = a;
-        m_settingsItems[MemaReSettingsOption::LookAndFeel_Dark].second = b;
-        m_settingsItems[MemaReSettingsOption::LookAndFeel_Light].second = c;
-    };
-
-    switch (selectedId)
-    {
-    case MemaReSettingsOption::LookAndFeel_FollowHost:
-        setSettingsItemsCheckState(1, 0, 0);
-        if (onPaletteStyleChange && m_settingsHostLookAndFeelId != -1)
-            onPaletteStyleChange(m_settingsHostLookAndFeelId, false);
-        break;
-    case MemaReSettingsOption::LookAndFeel_Dark:
-        setSettingsItemsCheckState(0, 1, 0);
-        if (onPaletteStyleChange)
-            onPaletteStyleChange(JUCEAppBasics::CustomLookAndFeel::PS_Dark, false);
-        break;
-    case MemaReSettingsOption::LookAndFeel_Light:
-        setSettingsItemsCheckState(0, 0, 1);
-        if (onPaletteStyleChange)
-            onPaletteStyleChange(JUCEAppBasics::CustomLookAndFeel::PS_Light, false);
-        break;
-    default:
-        jassertfalse; // unknown id fed in unintentionally ?!
-        break;
-    }
-}
-
 void MainComponent::handleSettingsControlFormatMenuResult(int selectedId)
 {
     // helper internal function to avoid code clones
@@ -585,18 +559,6 @@ void MainComponent::handleSettingsControlsSizeMenuResult(int selectedId)
     }
 }
 
-void MainComponent::handleSettingsFullscreenModeToggleResult()
-{
-    toggleFullscreenMode();
-}
-
-void MainComponent::toggleFullscreenMode()
-{
-    auto enabled = isFullscreenEnabled();
-    if (onSetFullscreenWindow)
-        onSetFullscreenWindow(!enabled);
-}
-
 void MainComponent::showExternalControlSettings()
 {
     m_messageBox = std::make_unique<juce::AlertWindow>(
@@ -641,27 +603,6 @@ void MainComponent::showExternalControlSettings()
     }));
 }
 
-void MainComponent::showPairingTokenDialog()
-{
-    m_messageBox = std::make_unique<juce::AlertWindow>(
-        "Pairing token",
-        "If the Mema instance you connect to requires a pairing token, enter it here. Leave empty if it doesn't.",
-        juce::MessageBoxIconType::NoIcon);
-    m_messageBox->addTextEditor("token", m_pairingToken, "Token:");
-    m_messageBox->addButton("Cancel", 0, juce::KeyPress(juce::KeyPress::escapeKey));
-    m_messageBox->addButton("Set", 1, juce::KeyPress(juce::KeyPress::returnKey));
-    m_messageBox->enterModalState(true, juce::ModalCallbackFunction::create([=](int returnValue) {
-        if (returnValue == 1)
-        {
-            m_pairingToken = m_messageBox->getTextEditorContents("token");
-            if (m_config)
-                m_config->triggerConfigurationDump(false);
-        }
-
-        m_messageBox.reset();
-    }));
-}
-
 void MainComponent::setControlColour(const juce::Colour& controlColour)
 {
     m_controlColour = controlColour;
@@ -683,20 +624,6 @@ void MainComponent::setControlsSize(const Mema::MemaClientControlComponentBase::
         m_remoteComponent->setControlsSize(ctrlsSize);
 }
 
-void MainComponent::setStatus(const Status& s)
-{
-    m_currentStatus = s;
-    juce::MessageManager::callAsync([safeThis = juce::Component::SafePointer<MainComponent>(this)]() {
-        if (safeThis)
-            safeThis->resized();
-    });
-}
-
-const MainComponent::Status MainComponent::getStatus()
-{
-    return m_currentStatus;
-}
-
 void MainComponent::returnToDiscover()
 {
     m_connectionRejected = false;
@@ -711,57 +638,6 @@ void MainComponent::returnToDiscover()
         m_config->triggerConfigurationDump();
 
     setStatus(Status::Discovering);
-}
-
-void MainComponent::connectToMema()
-{
-    m_connectionRejected = false; // a new connection attempt supersedes a pending rejection
-
-    if (m_connectingComponent)
-        m_connectingComponent->setMasterServiceDescription(m_selectedService.description);
-    if (m_discoverComponent)
-        m_discoverComponent->setMasterServiceDescription(m_selectedService.description);
-
-    setStatus(Status::Connecting);
-
-    timerCallback(); // avoid codeclones by manually trigger the timed connection attempt once
-
-    // restart connection attempt after 5s, in case something got stuck...
-    startTimer(5000);
-}
-
-void MainComponent::timerCallback()
-{
-    if (Status::Connecting == getStatus())
-    {
-        auto sl = m_discoverComponent->getAvailableServices();
-        auto const& iter = std::find_if(sl.begin(), sl.end(), [=](const auto& service) { return service.description == m_selectedService.description; });
-        if (iter != sl.end())
-        {
-            if ((m_selectedService.address != iter->address && m_selectedService.port != iter->port && m_selectedService.description != iter->description) || !m_networkConnection->isConnected())
-            {
-                m_selectedService = *iter;
-                if (m_networkConnection)
-                    m_networkConnection->ConnectToSocket(m_selectedService.address.toString(), m_selectedService.port);
-            }
-            else if (m_networkConnection && !m_networkConnection->isConnected())
-                m_networkConnection->RetryConnectToSocket();
-        }
-    }
-    else
-        stopTimer();
-}
-
-bool MainComponent::keyPressed(const juce::KeyPress& key)
-{
-    // Ctrl+F11 on Windows/Linux, Cmd+Ctrl+F on macOS
-    if (key == juce::KeyPress(juce::KeyPress::F11Key, juce::ModifierKeys::ctrlModifier, 0) ||
-        key == juce::KeyPress('f', juce::ModifierKeys::commandModifier | juce::ModifierKeys::ctrlModifier, 0))
-    {
-        toggleFullscreenMode();
-        return true;
-    }
-    return false;
 }
 
 void MainComponent::performConfigurationDump()
@@ -915,22 +791,5 @@ void MainComponent::onConfigUpdated()
         if (m_remoteComponent)
             m_remoteComponent->setExternalAdmOscSettings(ADMOSCport, ADMOSCremoteIP, ADMOSCremotePort);
     }
-}
-
-bool MainComponent::isFullscreenEnabled()
-{
-#if JUCE_WINDOWS
-    return juce::Desktop::getInstance().getKioskModeComponent() != nullptr;
-#elif JUCE_MAC
-    if (auto* topLevel = getTopLevelComponent())
-        if (auto* peer = topLevel->getPeer())
-            return peer->isFullScreen();
-
-    jassertfalse;
-    return false;
-#else
-    // iOS, Android and Linux always run fullscreen/kiosk (see MainWindow in Main.cpp)
-    return true;
-#endif
 }
 
