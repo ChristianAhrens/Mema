@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 
 ### Changed
+- Changed submodule JUCE to tag 9.0.6; adapted the code to the changed MessageBoxOptions::withButton signature and the LADSPA plug-in host option, replaced the deprecated AlertWindow::showOkCancelBox by AlertWindow::showAsync
 
 ### Fixed
 

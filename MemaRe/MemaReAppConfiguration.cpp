@@ -138,16 +138,22 @@ bool MemaReAppConfiguration::HandleConfigVersionConflict(const JUCEAppBasics::Ap
 #ifdef DEBUG
 		conflictInfo << "\n(Found " + configVersionFound.ToString() + ", expected " + Mema_CONFIG_VERSION + ")";
 #endif
-		juce::AlertWindow::showOkCancelBox(juce::MessageBoxIconType::WarningIcon, conflictTitle, conflictInfo, "Reset to default", "Quit", nullptr, juce::ModalCallbackFunction::create([this](int result) {
-			if (1 == result)
-			{
-				ResetToDefault();
-			}
-			else
-			{
-				juce::JUCEApplication::getInstance()->quit();
-			}
-		}));
+		juce::AlertWindow::showAsync(juce::MessageBoxOptions()
+			.withIconType(juce::MessageBoxIconType::WarningIcon)
+			.withTitle(conflictTitle)
+			.withMessage(conflictInfo)
+			.withButton("Reset to default", 1)
+			.withButton("Quit", 0),
+			[this](int result) {
+				if (1 == result)
+				{
+					ResetToDefault();
+				}
+				else
+				{
+					juce::JUCEApplication::getInstance()->quit();
+				}
+		});
 
 		return false;
 	}

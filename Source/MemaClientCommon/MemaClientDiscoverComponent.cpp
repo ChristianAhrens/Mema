@@ -108,12 +108,18 @@ void MemaClientDiscoverComponent::setupServiceDiscovery(const juce::String& serv
         {
             auto conflictTitle = "Service discovery error";
             auto conflictInfo = "Unable to discover Mema instances\nas the discovery broadcast port cannot be used.";
-            juce::AlertWindow::showOkCancelBox(juce::MessageBoxIconType::WarningIcon, conflictTitle, conflictInfo, "Retry", "Quit", nullptr, juce::ModalCallbackFunction::create([this, serviceTypeUIDBase, serviceTypeUID](int result) {
-                if (1 == result)
-                    setupServiceDiscovery(serviceTypeUIDBase, serviceTypeUID);
-                else
-                    juce::JUCEApplication::getInstance()->quit();
-            }));
+            juce::AlertWindow::showAsync(juce::MessageBoxOptions()
+                .withIconType(juce::MessageBoxIconType::WarningIcon)
+                .withTitle(conflictTitle)
+                .withMessage(conflictInfo)
+                .withButton("Retry", 1)
+                .withButton("Quit", 0),
+                [this, serviceTypeUIDBase, serviceTypeUID](int result) {
+                    if (1 == result)
+                        setupServiceDiscovery(serviceTypeUIDBase, serviceTypeUID);
+                    else
+                        juce::JUCEApplication::getInstance()->quit();
+            });
         }
     }
 

@@ -218,7 +218,7 @@ void Mema::triggerPromptLoadConfig()
                     .withIconType(juce::MessageBoxIconType::WarningIcon)
                     .withTitle("Loading failed")
                     .withMessage("The file " + sourceFile.getFileName() + " cannot be accessed for reading.")
-                    .withButton("Ok"), nullptr);
+                    .withButton("Ok", 0), nullptr);
                 return false;
             }
 
@@ -229,7 +229,7 @@ void Mema::triggerPromptLoadConfig()
                     .withIconType(juce::MessageBoxIconType::WarningIcon)
                     .withTitle("Loading failed")
                     .withMessage("There was an internal error with the configuration.")
-                    .withButton("Ok"), nullptr);
+                    .withButton("Ok", 0), nullptr);
                 return false;
             }
 
@@ -240,7 +240,7 @@ void Mema::triggerPromptLoadConfig()
                     .withIconType(juce::MessageBoxIconType::WarningIcon)
                     .withTitle("Loading failed")
                     .withMessage("The file " + sourceFile.getFileName() + " has invalid contents.")
-                    .withButton("Ok"), nullptr);
+                    .withButton("Ok", 0), nullptr);
                 return false;
             }
 
@@ -250,7 +250,7 @@ void Mema::triggerPromptLoadConfig()
                     .withIconType(juce::MessageBoxIconType::WarningIcon)
                     .withTitle("Loading failed")
                     .withMessage("The file " + sourceFile.getFileName() + " has invalid contents.")
-                    .withButton("Ok"), nullptr);
+                    .withButton("Ok", 0), nullptr);
                 return false;
             }
 
@@ -261,7 +261,7 @@ void Mema::triggerPromptLoadConfig()
                     .withIconType(juce::MessageBoxIconType::WarningIcon)
                     .withTitle("Loading failed")
                     .withMessage("There was an internal error with applying the configuration.")
-                    .withButton("Ok"), nullptr);
+                    .withButton("Ok", 0), nullptr);
                 config->ResetFlushAndUpdateDisabled();
                 return false;
             }
@@ -294,7 +294,7 @@ void Mema::triggerPromptSaveConfig()
                     .withIconType(juce::MessageBoxIconType::WarningIcon)
                     .withTitle("Saving failed")
                     .withMessage("The file " + targetFile.getFileName() + " cannot be accessed for writing.")
-                    .withButton("Ok"), nullptr);
+                    .withButton("Ok", 0), nullptr);
                 return false;
             }
 
@@ -305,7 +305,7 @@ void Mema::triggerPromptSaveConfig()
                     .withIconType(juce::MessageBoxIconType::WarningIcon)
                     .withTitle("Saving failed")
                     .withMessage("There was an internal error with the configuration (0x0).")
-                    .withButton("Ok"), nullptr);
+                    .withButton("Ok", 0), nullptr);
                 return false;
             }
 
@@ -316,7 +316,7 @@ void Mema::triggerPromptSaveConfig()
                     .withIconType(juce::MessageBoxIconType::WarningIcon)
                     .withTitle("Saving failed")
                     .withMessage("There was an internal error with the configuration (0x1).")
-                    .withButton("Ok"), nullptr);
+                    .withButton("Ok", 0), nullptr);
                 return false;
             }
             else if (!xmlConfig->writeTo(targetFile))
@@ -325,7 +325,7 @@ void Mema::triggerPromptSaveConfig()
                     .withIconType(juce::MessageBoxIconType::WarningIcon)
                     .withTitle("Saving failed")
                     .withMessage("There was an error when writing the configuration to disk.")
-                    .withButton("Ok"), nullptr);
+                    .withButton("Ok", 0), nullptr);
                 return false;
             }
             else
