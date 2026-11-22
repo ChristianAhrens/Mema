@@ -28,7 +28,7 @@
 class MemaMoComponent;
 class MemaClientDiscoverComponent;
 class MemaClientConnectingComponent;
-class AboutComponent;
+namespace JUCEAppBasics { class AboutComponent; }
 
 /**
  * @class MainComponent
@@ -226,7 +226,7 @@ private:
     std::unique_ptr<juce::DrawableButton>           m_disconnectButton;         ///< Button to drop the current TCP connection and return to Discovering.
 
     std::unique_ptr<juce::DrawableButton>           m_aboutButton;              ///< Button that shows the about popup.
-    std::unique_ptr<AboutComponent>                 m_aboutComponent;           ///< The about popup component.
+    std::unique_ptr<JUCEAppBasics::AboutComponent>                 m_aboutComponent;           ///< The about popup component.
 
     Status                                          m_currentStatus = Status::Discovering; ///< Current state-machine phase.
 

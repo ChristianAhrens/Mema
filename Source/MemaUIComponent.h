@@ -28,7 +28,7 @@
 class LoadBar;
 class NetworkHealthBar;
 class EmptySpace;
-class AboutComponent;
+namespace JUCEAppBasics { class AboutComponent; }
 
 namespace Mema
 {
@@ -225,7 +225,7 @@ private:
 
     juce::Component* m_editorComponent = nullptr; ///< Borrowed pointer to the MemaProcessorEditor; not owned by this component.
 
-    std::unique_ptr<AboutComponent>             m_aboutComponent; ///< The about popup component shown when m_aboutButton is clicked.
+    std::unique_ptr<JUCEAppBasics::AboutComponent>             m_aboutComponent; ///< The about popup component shown when m_aboutButton is clicked.
 
     std::map<int, std::pair<std::string, int>>  m_settingsItems; ///< Mapping from settings menu item ID to {display label, MemaSettingsOption value}.
 

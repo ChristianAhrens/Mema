@@ -20,7 +20,7 @@
 
 #include "Mema.h"
 #include "MemaUIComponent.h"
-#include "CustomPopupMenuComponent.h"
+#include <CustomAboutItem.h>
 #include "HeadlessCLIMenu.h"
 #include "MemaProcessor/MemaProcessor.h"
 
@@ -257,7 +257,7 @@ public:
             if (Mema::Mema::getInstanceWithoutCreating())
             {
                 juce::PopupMenu setupMenu;
-                setupMenu.addCustomItem(1, std::make_unique<CustomAboutItem>(Mema::Mema::getInstance()->getDeviceSetupComponent(), juce::Rectangle<int>(300, 350)), nullptr, "Audio Device Setup");
+                setupMenu.addCustomItem(1, std::make_unique<JUCEAppBasics::CustomAboutItem>(Mema::Mema::getInstance()->getDeviceSetupComponent(), juce::Rectangle<int>(300, 350)), nullptr, "Audio Device Setup");
                 setupMenu.showMenuAsync(juce::PopupMenu::Options());
             }
         };

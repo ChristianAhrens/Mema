@@ -19,6 +19,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include <Theme.h>
 
 
 namespace Mema
@@ -41,13 +42,8 @@ public:
         Input,      ///< Strip controls input channels.
         Output      ///< Strip controls output channels.
     };
-    /** @brief Size category for rendered control elements. */
-    enum ControlsSize
-    {
-        S = 35,     ///< Small — suited for desktop with many channels.
-        M = 50,     ///< Medium.
-        L = 65      ///< Large — suited for touch screens.
-    };
+    /** @brief Size category for rendered control elements (shared with the other apps, see JUCEAppBasics::Theme::ControlsSize). */
+    using ControlsSize = JUCEAppBasics::Theme::ControlsSize;
 
     static constexpr int s_gap = 3;
     static constexpr int s_scrollbarsize = 8;

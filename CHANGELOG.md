@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Changed Mema to a menu bar app without Dock icon on macOS
 - Changed colours, fonts and sizes of Mema, Mema.Mo and Mema.Re to come from a central theme in JUCE-AppBasics, without visible change
 - Changed the accent colour to be stored by name in the configuration; an accent colour stored by an earlier version resets to green
+- Changed the Mema.Re plug-in parameter controls to start with the small controls size like the other control formats
 
 ### Fixed
 - Fixed Mema.Mo and Mema.Re reconnecting in a loop after Mema rejected the connection; the rejection is now reported once and the client returns to service discovery

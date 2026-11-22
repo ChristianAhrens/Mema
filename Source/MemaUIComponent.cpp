@@ -19,8 +19,8 @@
 #include "MemaUIComponent.h"
 #include <CustomLookAndFeel.h>
 
-#include "AboutComponent.h"
-#include "CustomPopupMenuComponent.h"
+#include <AboutComponent.h>
+#include <CustomAboutItem.h>
 
 #include <AppConfigurationBase.h>
 
@@ -236,12 +236,12 @@ MemaUIComponent::MemaUIComponent()
     };
     addAndMakeVisible(m_appSettingsButton.get());
 
-    m_aboutComponent = std::make_unique<AboutComponent>(BinaryData::MemaRect_png, BinaryData::MemaRect_pngSize);
+    m_aboutComponent = std::make_unique<JUCEAppBasics::AboutComponent>(BinaryData::MemaRect_png, BinaryData::MemaRect_pngSize, "https://christianahrens.github.io/Mema");
     m_aboutButton = std::make_unique<juce::DrawableButton>("About", juce::DrawableButton::ButtonStyle::ImageFitted);
     m_aboutButton->setTooltip(juce::String("About ") + juce::JUCEApplication::getInstance()->getApplicationName());
     m_aboutButton->onClick = [this] {
         juce::PopupMenu aboutMenu;
-        aboutMenu.addCustomItem(1, std::make_unique<CustomAboutItem>(m_aboutComponent.get(), juce::Rectangle<int>(250, 250)), nullptr, juce::String("Info about ") + juce::JUCEApplication::getInstance()->getApplicationName());
+        aboutMenu.addCustomItem(1, std::make_unique<JUCEAppBasics::CustomAboutItem>(m_aboutComponent.get(), juce::Rectangle<int>(250, 250)), nullptr, juce::String("Info about ") + juce::JUCEApplication::getInstance()->getApplicationName());
         aboutMenu.showMenuAsync(juce::PopupMenu::Options());
     };
     addAndMakeVisible(m_aboutButton.get());

@@ -162,11 +162,11 @@
               file="Source/MemaProcessorEditor/PluginControlComponent.h"/>
       </GROUP>
       <FILE id="M0Uva0" name="AboutComponent.cpp" compile="1" resource="0"
-            file="Source/AboutComponent.cpp"/>
+            file="submodules/JUCE-AppBasics/Source/AboutComponent.cpp"/>
       <FILE id="IZplXz" name="AboutComponent.h" compile="0" resource="0"
-            file="Source/AboutComponent.h"/>
-      <FILE id="Q8jLPX" name="CustomPopupMenuComponent.h" compile="0" resource="0"
-            file="Source/CustomPopupMenuComponent.h"/>
+            file="submodules/JUCE-AppBasics/Source/AboutComponent.h"/>
+      <FILE id="Q8jLPX" name="CustomAboutItem.h" compile="0" resource="0"
+            file="submodules/JUCE-AppBasics/Source/CustomAboutItem.h"/>
       <FILE id="HCLm01" name="HeadlessCLIMenu.cpp" compile="1" resource="0"
             file="Source/HeadlessCLIMenu.cpp"/>
       <FILE id="HCLm02" name="HeadlessCLIMenu.h" compile="0" resource="0"
