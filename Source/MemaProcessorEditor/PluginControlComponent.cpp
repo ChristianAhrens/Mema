@@ -523,7 +523,7 @@ void PluginControlComponent::resized()
 void PluginControlComponent::paint(Graphics& g)
 {
 	// (Our component is opaque, so we must completely fill the background with a solid colour)
-	g.fillAll(getLookAndFeel().findColour(juce::LookAndFeel_V4::ColourScheme::defaultFill));
+	g.fillAll(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::SurfaceGapColourId));
 }
 
 void PluginControlComponent::lookAndFeelChanged()

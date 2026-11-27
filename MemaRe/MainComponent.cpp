@@ -18,7 +18,7 @@
 
 #include "MainComponent.h"
 
-#include "CustomPopupMenuComponent.h"
+#include <CustomAboutItem.h>
 #include "MemaReComponent.h"
 #include "MemaClientCommon/MemaClientDiscoverComponent.h"
 #include "MemaClientCommon/MemaClientConnectingComponent.h"
@@ -33,8 +33,14 @@
 #include <iOS_utils.h>
 
 
+// the look-and-feel menu ids are handled by the shared base class
+static_assert(MainComponent::LookAndFeel_FollowHost == MemaClientMainComponentBase::SettingsLookAndFeel_FollowHost
+    && MainComponent::LookAndFeel_Dark == MemaClientMainComponentBase::SettingsLookAndFeel_Dark
+    && MainComponent::LookAndFeel_Light == MemaClientMainComponentBase::SettingsLookAndFeel_Light, "look-and-feel menu ids must match the base class");
+
+
 MainComponent::MainComponent()
-    : juce::Component()
+    : MemaClientMainComponentBase()
 {
     // create the configuration object (is being initialized from disk automatically)
     m_config = std::make_unique<MemaReAppConfiguration>(JUCEAppBasics::AppConfigurationBase::getDefaultConfigFilePath());
@@ -161,12 +167,12 @@ MainComponent::MainComponent()
     m_connectingComponent = std::make_unique<MemaClientConnectingComponent>();
     addAndMakeVisible(m_connectingComponent.get());
 
-    m_aboutComponent = std::make_unique<AboutComponent>(BinaryData::MemaReRect_png, BinaryData::MemaReRect_pngSize);
+    m_aboutComponent = std::make_unique<JUCEAppBasics::AboutComponent>(BinaryData::MemaReRect_png, BinaryData::MemaReRect_pngSize, "https://christianahrens.github.io/Mema");
     m_aboutButton = std::make_unique<juce::DrawableButton>("About", juce::DrawableButton::ButtonStyle::ImageFitted);
     m_aboutButton->setTooltip(juce::String("About ") + juce::JUCEApplication::getInstance()->getApplicationName());
     m_aboutButton->onClick = [this] {
         juce::PopupMenu aboutMenu;
-        aboutMenu.addCustomItem(1, std::make_unique<CustomAboutItem>(m_aboutComponent.get(), juce::Rectangle<int>(250, 250)), nullptr, juce::String("Info about ") + juce::JUCEApplication::getInstance()->getApplicationName());
+        aboutMenu.addCustomItem(1, std::make_unique<JUCEAppBasics::CustomAboutItem>(m_aboutComponent.get(), juce::Rectangle<int>(250, 250)), nullptr, juce::String("Info about ") + juce::JUCEApplication::getInstance()->getApplicationName());
         aboutMenu.showMenuAsync(juce::PopupMenu::Options());
     };
     m_aboutButton->setAlwaysOnTop(true);
@@ -199,11 +205,9 @@ MainComponent::MainComponent()
     m_settingsItems[MemaReSettingsOption::ControlFormat_PanningType_Quadrophonic] = std::make_pair(juce::AudioChannelSet::quadraphonic().getDescription().toStdString(), 0);
     m_settingsItems[MemaReSettingsOption::ControlFormat_PluginParameterControl] = std::make_pair("Plug-in parameter control", 0);
     // default panning colour is green
-    m_settingsItems[MemaReSettingsOption::ControlColour_Green] = std::make_pair("Green", 1);
-    m_settingsItems[MemaReSettingsOption::ControlColour_Red] = std::make_pair("Red", 0);
-    m_settingsItems[MemaReSettingsOption::ControlColour_Blue] = std::make_pair("Blue", 0);
-    m_settingsItems[MemaReSettingsOption::ControlColour_Pink] = std::make_pair("Anni Pink", 0);
-    m_settingsItems[MemaReSettingsOption::ControlColour_Laser] = std::make_pair("Laser", 0);
+    // default accent colour is green
+    for (auto i = 0; i < JUCEAppBasics::Theme::numAccentColours; ++i)
+        m_settingsItems[MemaReSettingsOption::ControlColour_First + i] = std::make_pair(JUCEAppBasics::Theme::getAccentMenuName(JUCEAppBasics::Theme::getAccentColourByIndex(i)).toStdString(), 0 == i ? 1 : 0);
     // default controls size is S
     m_settingsItems[MemaReSettingsOption::ControlsSize_S] = std::make_pair("S", 1);
     m_settingsItems[MemaReSettingsOption::ControlsSize_M] = std::make_pair("M", 0);
@@ -367,9 +371,9 @@ void MainComponent::resized()
     {
         auto leftButtons = safeBounds.removeFromLeft(36);
         auto rightButtons = safeBounds.removeFromLeft(36);
-        m_aboutButton->setBounds(leftButtons.removeFromTop(35).removeFromBottom(30));
-        m_settingsButton->setBounds(leftButtons.removeFromTop(35).removeFromBottom(30));
-        m_disconnectButton->setBounds(rightButtons.removeFromTop(35).removeFromBottom(30));
+        m_aboutButton->setBounds(leftButtons.removeFromTop(JUCEAppBasics::Theme::Size::toolbarRow).removeFromBottom(JUCEAppBasics::Theme::Size::toolbarIcon));
+        m_settingsButton->setBounds(leftButtons.removeFromTop(JUCEAppBasics::Theme::Size::toolbarRow).removeFromBottom(JUCEAppBasics::Theme::Size::toolbarIcon));
+        m_disconnectButton->setBounds(rightButtons.removeFromTop(JUCEAppBasics::Theme::Size::toolbarRow).removeFromBottom(JUCEAppBasics::Theme::Size::toolbarIcon));
     }
 }
 
@@ -421,38 +425,6 @@ void MainComponent::handleSettingsMenuResult(int selectedId)
         showPairingTokenDialog();
     else
         jassertfalse; // unhandled menu entry!?
-}
-
-void MainComponent::handleSettingsLookAndFeelMenuResult(int selectedId)
-{
-    // helper internal function to avoid code clones
-    std::function<void(int, int, int)> setSettingsItemsCheckState = [=](int a, int b, int c) {
-        m_settingsItems[MemaReSettingsOption::LookAndFeel_FollowHost].second = a;
-        m_settingsItems[MemaReSettingsOption::LookAndFeel_Dark].second = b;
-        m_settingsItems[MemaReSettingsOption::LookAndFeel_Light].second = c;
-    };
-
-    switch (selectedId)
-    {
-    case MemaReSettingsOption::LookAndFeel_FollowHost:
-        setSettingsItemsCheckState(1, 0, 0);
-        if (onPaletteStyleChange && m_settingsHostLookAndFeelId != -1)
-            onPaletteStyleChange(m_settingsHostLookAndFeelId, false);
-        break;
-    case MemaReSettingsOption::LookAndFeel_Dark:
-        setSettingsItemsCheckState(0, 1, 0);
-        if (onPaletteStyleChange)
-            onPaletteStyleChange(JUCEAppBasics::CustomLookAndFeel::PS_Dark, false);
-        break;
-    case MemaReSettingsOption::LookAndFeel_Light:
-        setSettingsItemsCheckState(0, 0, 1);
-        if (onPaletteStyleChange)
-            onPaletteStyleChange(JUCEAppBasics::CustomLookAndFeel::PS_Light, false);
-        break;
-    default:
-        jassertfalse; // unknown id fed in unintentionally ?!
-        break;
-    }
 }
 
 void MainComponent::handleSettingsControlFormatMenuResult(int selectedId)
@@ -545,41 +517,17 @@ void MainComponent::handleSettingsControlFormatMenuResult(int selectedId)
 
 void MainComponent::handleSettingsControlColourMenuResult(int selectedId)
 {
-    // helper internal function to avoid code clones
-    std::function<void(int, int, int, int, int)> setSettingsItemsCheckState = [=](int green, int red, int blue, int pink, int laser) {
-        m_settingsItems[MemaReSettingsOption::ControlColour_Green].second = green;
-        m_settingsItems[MemaReSettingsOption::ControlColour_Red].second = red;
-        m_settingsItems[MemaReSettingsOption::ControlColour_Blue].second = blue;
-        m_settingsItems[MemaReSettingsOption::ControlColour_Pink].second = pink;
-        m_settingsItems[MemaReSettingsOption::ControlColour_Laser].second = laser;
-    };
-
-    switch (selectedId)
+    // the settings menu entries are in the order of JUCEAppBasics::Theme::AccentColour
+    const auto index = selectedId - MemaReSettingsOption::ControlColour_First;
+    if (0 > index || JUCEAppBasics::Theme::numAccentColours <= index)
     {
-    case MemaReSettingsOption::ControlColour_Green:
-        setSettingsItemsCheckState(1, 0, 0, 0, 0);
-        setControlColour(juce::Colours::forestgreen);
-        break;
-    case MemaReSettingsOption::ControlColour_Red:
-        setSettingsItemsCheckState(0, 1, 0, 0, 0);
-        setControlColour(juce::Colours::orangered);
-        break;
-    case MemaReSettingsOption::ControlColour_Blue:
-        setSettingsItemsCheckState(0, 0, 1, 0, 0);
-        setControlColour(juce::Colours::dodgerblue);
-        break;
-    case MemaReSettingsOption::ControlColour_Pink:
-        setSettingsItemsCheckState(0, 0, 0, 1, 0);
-        setControlColour(juce::Colours::deeppink);
-        break;
-    case MemaReSettingsOption::ControlColour_Laser:
-        setSettingsItemsCheckState(0, 0, 0, 0, 1);
-        setControlColour(juce::Colour(0xd1, 0xff, 0x4f));
-        break;
-    default:
         jassertfalse; // unknown id fed in unintentionally ?!
-        break;
+        return;
     }
+
+    for (auto i = 0; i < JUCEAppBasics::Theme::numAccentColours; ++i)
+        m_settingsItems[MemaReSettingsOption::ControlColour_First + i].second = (i == index) ? 1 : 0;
+    setControlColour(JUCEAppBasics::Theme::getAccentColour(JUCEAppBasics::Theme::getAccentColourByIndex(index)));
 }
 
 void MainComponent::handleSettingsControlsSizeMenuResult(int selectedId)
@@ -609,18 +557,6 @@ void MainComponent::handleSettingsControlsSizeMenuResult(int selectedId)
         jassertfalse; // unknown id fed in unintentionally ?!
         break;
     }
-}
-
-void MainComponent::handleSettingsFullscreenModeToggleResult()
-{
-    toggleFullscreenMode();
-}
-
-void MainComponent::toggleFullscreenMode()
-{
-    auto enabled = isFullscreenEnabled();
-    if (onSetFullscreenWindow)
-        onSetFullscreenWindow(!enabled);
 }
 
 void MainComponent::showExternalControlSettings()
@@ -667,27 +603,6 @@ void MainComponent::showExternalControlSettings()
     }));
 }
 
-void MainComponent::showPairingTokenDialog()
-{
-    m_messageBox = std::make_unique<juce::AlertWindow>(
-        "Pairing token",
-        "If the Mema instance you connect to requires a pairing token, enter it here. Leave empty if it doesn't.",
-        juce::MessageBoxIconType::NoIcon);
-    m_messageBox->addTextEditor("token", m_pairingToken, "Token:");
-    m_messageBox->addButton("Cancel", 0, juce::KeyPress(juce::KeyPress::escapeKey));
-    m_messageBox->addButton("Set", 1, juce::KeyPress(juce::KeyPress::returnKey));
-    m_messageBox->enterModalState(true, juce::ModalCallbackFunction::create([=](int returnValue) {
-        if (returnValue == 1)
-        {
-            m_pairingToken = m_messageBox->getTextEditorContents("token");
-            if (m_config)
-                m_config->triggerConfigurationDump(false);
-        }
-
-        m_messageBox.reset();
-    }));
-}
-
 void MainComponent::setControlColour(const juce::Colour& controlColour)
 {
     m_controlColour = controlColour;
@@ -700,42 +615,13 @@ void MainComponent::setControlColour(const juce::Colour& controlColour)
 
 void MainComponent::applyControlColour()
 {
-    auto customLookAndFeel = dynamic_cast<JUCEAppBasics::CustomLookAndFeel*>(&getLookAndFeel());
-    if (customLookAndFeel)
-    {
-        switch (customLookAndFeel->getPaletteStyle())
-        {
-        case JUCEAppBasics::CustomLookAndFeel::PS_Light:
-            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId, m_controlColour.brighter());
-            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId, m_controlColour);
-            break;
-        case JUCEAppBasics::CustomLookAndFeel::PS_Dark:
-        default:
-            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringPeakColourId, m_controlColour.darker());
-            getLookAndFeel().setColour(JUCEAppBasics::CustomLookAndFeel::ColourIds::MeteringRmsColourId, m_controlColour);
-            break;
-        }
-    }
+    JUCEAppBasics::CustomLookAndFeel::applyAccentColour(getLookAndFeel(), m_controlColour);
 }
 
 void MainComponent::setControlsSize(const Mema::MemaClientControlComponentBase::ControlsSize& ctrlsSize)
 {
     if (m_remoteComponent)
         m_remoteComponent->setControlsSize(ctrlsSize);
-}
-
-void MainComponent::setStatus(const Status& s)
-{
-    m_currentStatus = s;
-    juce::MessageManager::callAsync([safeThis = juce::Component::SafePointer<MainComponent>(this)]() {
-        if (safeThis)
-            safeThis->resized();
-    });
-}
-
-const MainComponent::Status MainComponent::getStatus()
-{
-    return m_currentStatus;
 }
 
 void MainComponent::returnToDiscover()
@@ -752,57 +638,6 @@ void MainComponent::returnToDiscover()
         m_config->triggerConfigurationDump();
 
     setStatus(Status::Discovering);
-}
-
-void MainComponent::connectToMema()
-{
-    m_connectionRejected = false; // a new connection attempt supersedes a pending rejection
-
-    if (m_connectingComponent)
-        m_connectingComponent->setMasterServiceDescription(m_selectedService.description);
-    if (m_discoverComponent)
-        m_discoverComponent->setMasterServiceDescription(m_selectedService.description);
-
-    setStatus(Status::Connecting);
-
-    timerCallback(); // avoid codeclones by manually trigger the timed connection attempt once
-
-    // restart connection attempt after 5s, in case something got stuck...
-    startTimer(5000);
-}
-
-void MainComponent::timerCallback()
-{
-    if (Status::Connecting == getStatus())
-    {
-        auto sl = m_discoverComponent->getAvailableServices();
-        auto const& iter = std::find_if(sl.begin(), sl.end(), [=](const auto& service) { return service.description == m_selectedService.description; });
-        if (iter != sl.end())
-        {
-            if ((m_selectedService.address != iter->address && m_selectedService.port != iter->port && m_selectedService.description != iter->description) || !m_networkConnection->isConnected())
-            {
-                m_selectedService = *iter;
-                if (m_networkConnection)
-                    m_networkConnection->ConnectToSocket(m_selectedService.address.toString(), m_selectedService.port);
-            }
-            else if (m_networkConnection && !m_networkConnection->isConnected())
-                m_networkConnection->RetryConnectToSocket();
-        }
-    }
-    else
-        stopTimer();
-}
-
-bool MainComponent::keyPressed(const juce::KeyPress& key)
-{
-    // Ctrl+F11 on Windows/Linux, Cmd+Ctrl+F on macOS
-    if (key == juce::KeyPress(juce::KeyPress::F11Key, juce::ModifierKeys::ctrlModifier, 0) ||
-        key == juce::KeyPress('f', juce::ModifierKeys::commandModifier | juce::ModifierKeys::ctrlModifier, 0))
-    {
-        toggleFullscreenMode();
-        return true;
-    }
-    return false;
 }
 
 void MainComponent::performConfigurationDump()
@@ -843,7 +678,7 @@ void MainComponent::performConfigurationDump()
         for (int i = MemaReSettingsOption::ControlColour_First; i <= MemaReSettingsOption::ControlColour_Last; i++)
         {
             if (m_settingsItems[i].second == 1)
-                panningColourXmlElmement->addTextElement(juce::String(i));
+                panningColourXmlElmement->addTextElement(JUCEAppBasics::Theme::getAccentName(JUCEAppBasics::Theme::getAccentColourByIndex(i - MemaReSettingsOption::ControlColour_First)));
         }
         visuConfigXmlElement->addChildElement(panningColourXmlElmement.release());
 
@@ -922,8 +757,9 @@ void MainComponent::onConfigUpdated()
         auto controlColourXmlElement = visuConfigState->getChildByName(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::CONTROLCOLOUR));
         if (controlColourXmlElement)
         {
-            auto controlColourSettingsOptionId = controlColourXmlElement->getAllSubText().getIntValue();
-            handleSettingsControlColourMenuResult(controlColourSettingsOptionId);
+            // the accent colour is persisted by name; an unknown value (e.g. a value of an older version) falls back to the default
+            const auto accent = JUCEAppBasics::Theme::findAccentByName(controlColourXmlElement->getAllSubText().trim()).value_or(JUCEAppBasics::Theme::AccentColour::Green);
+            handleSettingsControlColourMenuResult(MemaReSettingsOption::ControlColour_First + static_cast<int>(accent));
         }
 
         auto controlsSizeXmlElmement = visuConfigState->getChildByName(MemaReAppConfiguration::getTagName(MemaReAppConfiguration::TagID::CONTROLSSIZE));
@@ -955,22 +791,5 @@ void MainComponent::onConfigUpdated()
         if (m_remoteComponent)
             m_remoteComponent->setExternalAdmOscSettings(ADMOSCport, ADMOSCremoteIP, ADMOSCremotePort);
     }
-}
-
-bool MainComponent::isFullscreenEnabled()
-{
-#if JUCE_WINDOWS
-    return juce::Desktop::getInstance().getKioskModeComponent() != nullptr;
-#elif JUCE_MAC
-    if (auto* topLevel = getTopLevelComponent())
-        if (auto* peer = topLevel->getPeer())
-            return peer->isFullScreen();
-
-    jassertfalse;
-    return false;
-#else
-    // iOS, Android and Linux always run fullscreen/kiosk (see MainWindow in Main.cpp)
-    return true;
-#endif
 }
 

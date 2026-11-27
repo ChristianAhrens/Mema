@@ -20,9 +20,10 @@
 
 #include <JuceHeader.h>
 
+#include "MemaClientCommon/MemaClientAppConfigurationBase.h"
+
 #include <AppConfigurationBase.h>
 
-#define Mema_CONFIG_VERSION "1.0.0"
 
 
 /**
@@ -38,7 +39,7 @@
  *       them as level meters, 2-D spatial field, waveform, or spectrum.  This configuration
  *       class stores everything Mema.Mo needs to reconnect and restore its last visual state.
  */
-class MemaMoAppConfiguration : public JUCEAppBasics::AppConfigurationBase
+class MemaMoAppConfiguration : public MemaClientAppConfigurationBase
 {
 
 public:
@@ -57,17 +58,17 @@ public:
         switch(ID)
         {
         case CONNECTIONCONFIG:
-            return "CONNECTIONCONFIG";
+            return tagConnectionConfig;
         case SERVICEDESCRIPTION:
-            return "SERVICEDESCRIPTION";
+            return tagServiceDescription;
         case VISUCONFIG:
-            return "VISUCONFIG";
+            return tagVisuConfig;
         case OUTPUTVISUTYPE:
             return "OUTPUTVISUTYPE";
         case METERINGCOLOUR:
             return "METERINGCOLOUR";
         case LOOKANDFEEL:
-            return "LOOKANDFEEL";
+            return tagLookAndFeel;
         default:
             return "INVALID";
         }
@@ -100,17 +101,14 @@ public:
     explicit MemaMoAppConfiguration(const File &file);
     ~MemaMoAppConfiguration() override;
 
-    /** @brief Returns true when the loaded XML contains all required Mema.Mo configuration nodes. */
-    bool isValid() override;
+    /** @brief Bring the instance validation of the base class into scope next to the static variant below. */
+    using MemaClientAppConfigurationBase::isValid;
     /** @brief Static variant — validates an already-parsed XmlElement without a file on disk. */
     static bool isValid(const std::unique_ptr<juce::XmlElement>& xmlConfig);
 
-    /** @brief Resets every configuration value to its factory default and triggers a dump. */
-    bool ResetToDefault();
-
 protected:
-    /** @brief Called when the persisted config version differs from the current app version. */
-    bool HandleConfigVersionConflict(const Version& configVersionFound) override;
+    bool isConfigurationValid(const std::unique_ptr<juce::XmlElement>& xmlConfig) override { return isValid(xmlConfig); }
+    juce::String getDefaultConfigurationXml() override;
 
 private:
 

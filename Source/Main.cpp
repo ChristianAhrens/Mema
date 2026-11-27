@@ -20,7 +20,7 @@
 
 #include "Mema.h"
 #include "MemaUIComponent.h"
-#include "CustomPopupMenuComponent.h"
+#include <CustomAboutItem.h>
 #include "HeadlessCLIMenu.h"
 #include "MemaProcessor/MemaProcessor.h"
 
@@ -257,7 +257,7 @@ public:
             if (Mema::Mema::getInstanceWithoutCreating())
             {
                 juce::PopupMenu setupMenu;
-                setupMenu.addCustomItem(1, std::make_unique<CustomAboutItem>(Mema::Mema::getInstance()->getDeviceSetupComponent(), juce::Rectangle<int>(300, 350)), nullptr, "Audio Device Setup");
+                setupMenu.addCustomItem(1, std::make_unique<JUCEAppBasics::CustomAboutItem>(Mema::Mema::getInstance()->getDeviceSetupComponent(), juce::Rectangle<int>(300, 350)), nullptr, "Audio Device Setup");
                 setupMenu.showMenuAsync(juce::PopupMenu::Options());
             }
         };
@@ -281,8 +281,7 @@ public:
             }
         };
         memaUIComponent->onPaletteStyleChange = [=](const JUCEAppBasics::CustomLookAndFeel::PaletteStyle& paletteStyle) {
-            m_lookAndFeel = std::make_unique<JUCEAppBasics::CustomLookAndFeel>(paletteStyle);
-            juce::Desktop::getInstance().setDefaultLookAndFeel(m_lookAndFeel.get());
+            JUCEAppBasics::CustomLookAndFeel::applyPaletteStyle(m_lookAndFeel, paletteStyle);
         };
         memaUIComponent->onLoadConfig = [=]() {
             Mema::Mema::getInstance()->triggerPromptLoadConfig();
@@ -385,7 +384,7 @@ private:
     std::unique_ptr<Mema::MemaUIComponent>  m_memaUIComponent;
     std::unique_ptr<juce::Component>        m_taskbarComponent;
     std::unique_ptr<juce::TooltipWindow>    m_toolTipWindowInstance;
-    std::unique_ptr<juce::LookAndFeel>      m_lookAndFeel;
+    std::unique_ptr<JUCEAppBasics::CustomLookAndFeel>      m_lookAndFeel;
 
     /** @brief The interactive CLI configuration menu, active only in --headless mode. */
     std::unique_ptr<Mema::HeadlessCLIMenu>  m_cliMenu;

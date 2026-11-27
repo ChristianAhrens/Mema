@@ -17,6 +17,7 @@
  */
 
 #include "AudioSelectComponent.h"
+#include <CustomLookAndFeel.h>
 
 namespace Mema
 {
@@ -62,7 +63,7 @@ void AudioSelectComponent::processAudioSelectionChanges()
 
 void AudioSelectComponent::paint (Graphics& g)
 {
-	g.fillAll(getLookAndFeel().findColour(juce::ResizableWindow::backgroundColourId).darker());
+	g.fillAll(getLookAndFeel().findColour(JUCEAppBasics::CustomLookAndFeel::SurfaceRecessedDeepColourId));
 
 	g.setColour(juce::Colours::grey);
 	g.drawRect(getLocalBounds(), 1);   // draw an outline around the component

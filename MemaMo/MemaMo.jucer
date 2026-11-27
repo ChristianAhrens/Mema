@@ -76,9 +76,9 @@
     </GROUP>
     <GROUP id="{B4C42B10-6A29-1C3A-435D-5CB7A9DE671E}" name="Source">
       <FILE id="wfVH30" name="AboutComponent.cpp" compile="1" resource="0"
-            file="../Source/AboutComponent.cpp"/>
+            file="../submodules/JUCE-AppBasics/Source/AboutComponent.cpp"/>
       <FILE id="vkneaH" name="AboutComponent.h" compile="0" resource="0"
-            file="../Source/AboutComponent.h"/>
+            file="../submodules/JUCE-AppBasics/Source/AboutComponent.h"/>
       <FILE id="j4AVKB" name="AbstractAudioVisualizer.cpp" compile="1" resource="0"
             file="../Source/MemaProcessorEditor/AbstractAudioVisualizer.cpp"/>
       <FILE id="JmJngu" name="AbstractAudioVisualizer.h" compile="0" resource="0"
@@ -87,8 +87,8 @@
             file="../Source/MemaProcessor/AbstractProcessorData.cpp"/>
       <FILE id="b9h1KE" name="AbstractProcessorData.h" compile="0" resource="0"
             file="../Source/MemaProcessor/AbstractProcessorData.h"/>
-      <FILE id="v69CCa" name="CustomPopupMenuComponent.h" compile="0" resource="0"
-            file="../Source/CustomPopupMenuComponent.h"/>
+      <FILE id="v69CCa" name="CustomAboutItem.h" compile="0" resource="0"
+            file="../submodules/JUCE-AppBasics/Source/CustomAboutItem.h"/>
       <FILE id="Y0aPvI" name="Main.cpp" compile="1" resource="0" file="Main.cpp"/>
       <FILE id="ijXJpV" name="MainComponent.cpp" compile="1" resource="0"
             file="MainComponent.cpp"/>
@@ -97,6 +97,14 @@
             resource="0" file="../Source/MemaClientCommon/MemaClientConnectingComponent.cpp"/>
       <FILE id="tOFlwB" name="MemaClientConnectingComponent.h" compile="0"
             resource="0" file="../Source/MemaClientCommon/MemaClientConnectingComponent.h"/>
+      <FILE id="mMcB01" name="MemaClientMainComponentBase.cpp" compile="1"
+            resource="0" file="../Source/MemaClientCommon/MemaClientMainComponentBase.cpp"/>
+      <FILE id="mMcB02" name="MemaClientMainComponentBase.h" compile="0"
+            resource="0" file="../Source/MemaClientCommon/MemaClientMainComponentBase.h"/>
+      <FILE id="mMcA01" name="MemaClientAppConfigurationBase.cpp" compile="1"
+            resource="0" file="../Source/MemaClientCommon/MemaClientAppConfigurationBase.cpp"/>
+      <FILE id="mMcA02" name="MemaClientAppConfigurationBase.h" compile="0"
+            resource="0" file="../Source/MemaClientCommon/MemaClientAppConfigurationBase.h"/>
       <FILE id="Lxh6b5" name="MemaClientDiscoverComponent.cpp" compile="1"
             resource="0" file="../Source/MemaClientCommon/MemaClientDiscoverComponent.cpp"/>
       <FILE id="D4YQYR" name="MemaClientDiscoverComponent.h" compile="0"

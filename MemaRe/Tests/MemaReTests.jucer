@@ -14,6 +14,7 @@
     </GROUP>
     <GROUP id="{9E9E9E9E-0003-0003-0003-000000000002}" name="ProductionSourcesUnderTest">
       <FILE id="mrt8p1" name="ADMOSController.cpp" compile="1" resource="0" file="../../Source/MemaClientCommon/ADMOSController.cpp"/>
+      <FILE id="mrtCB1" name="MemaClientAppConfigurationBase.cpp" compile="1" resource="0" file="../../Source/MemaClientCommon/MemaClientAppConfigurationBase.cpp"/>
       <FILE id="mrt9p2" name="MemaReAppConfiguration.cpp" compile="1" resource="0" file="../MemaReAppConfiguration.cpp"/>
       <FILE id="mrt10p3" name="AppConfigurationBase.cpp" compile="1" resource="0" file="../../submodules/JUCE-AppBasics/Source/AppConfigurationBase.cpp"/>
       <!-- Embedded so MemaReAppConfiguration.cpp's ResetToDefault() resolves

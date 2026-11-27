@@ -20,159 +20,23 @@
 
 #include "MainComponent.h"
 
-#include <CustomLookAndFeel.h>
+#include <ClientApplication.h>
 
- //==============================================================================
-class MainApplication : public juce::JUCEApplication
+//==============================================================================
+/** Traits of this app for the shared client application scaffold (JUCEAppBasics::ClientApplication). */
+struct MemaReAppTraits
 {
-public:
-    //==============================================================================
-    MainApplication() {}
+    using MainComponent = ::MainComponent;
+    static constexpr bool paletteChangeFollowsSystem = false;
 
-    const String getApplicationName() override { return ProjectInfo::projectName; }
-    const String getApplicationVersion() override { return ProjectInfo::versionString; }
-    bool moreThanOneInstanceAllowed() override { return true; }
-
-    //==============================================================================
-    void initialise(const String& commandLine) override
+    static void activateDarkPalette(MainComponent& mainComponent)
     {
-        m_mainWindow.reset(std::make_unique<MainWindow>(getApplicationName(), commandLine).release());
-
-#if JUCE_MAC
-        // Ignore SIGPIPE globally, to prevent occasional unexpected app
-        // termination when Mema.Mo instances disconnect while sending by
-        // writing to socket is ongoing
-        signal(SIGPIPE, SIG_IGN);
-#endif
-
-        // a single instance of tooltip window is required and used by JUCE everywhere a tooltip is required.
-        m_toolTipWindowInstance = std::make_unique<TooltipWindow>();
+        mainComponent.applySettingsOption(MainComponent::MemaReSettingsOption::LookAndFeel_Dark);
     }
+};
 
-    void shutdown() override
-    {
-        m_mainWindow.reset();
-    }
-
-    //==============================================================================
-    void systemRequestedQuit() override
-    {
-        // This is called when the app is being asked to quit: you can ignore this
-        // request and let the app carry on running, or call quit() to allow the app to close.
-        quit();
-    }
-
-    void anotherInstanceStarted(const juce::String& commandLine) override
-    {
-        ignoreUnused(commandLine);
-    }
-
-    //==============================================================================
-    /*
-        This class implements the desktop window that contains an instance of
-        our MainComponent class.
-    */
-    class MainWindow : public juce::DocumentWindow, juce::DarkModeSettingListener
-    {
-    public:
-        MainWindow(const juce::String& name, const juce::String& commandLine) : juce::DocumentWindow(name,
-            juce::Desktop::getInstance().getDefaultLookAndFeel()
-            .findColour(juce::ResizableWindow::backgroundColourId),
-            juce::DocumentWindow::allButtons)
-        {
-            ignoreUnused(commandLine);
-
-            setUsingNativeTitleBar(true);
-            auto mainComponent = std::make_unique<MainComponent>();
-            mainComponent->onPaletteStyleChange = [=](int paletteStyle, bool followLocalStyle) {
-                m_followLocalStyle = followLocalStyle;
-                applyPaletteStyle(static_cast<JUCEAppBasics::CustomLookAndFeel::PaletteStyle>(paletteStyle));
-            };
-            mainComponent->onSetFullscreenWindow = [=](bool fullscreenWindow) { setFullscreenWindow(fullscreenWindow); };
-            setContentOwned(mainComponent.release(), true);
-
-#if JUCE_IOS || JUCE_ANDROID
-            setFullScreen(true);
-            juce::Desktop::getInstance().setScreenSaverEnabled(false);
-#elif JUCE_LINUX
-            juce::Desktop::getInstance().setKioskModeComponent(getTopLevelComponent(), false);
-#else
-            setResizable(true, true);
-            centreWithSize(getWidth(), getHeight());
-#endif
-
-            setVisible(true);
-
-            juce::Desktop::getInstance().addDarkModeSettingListener(this);
-            darkModeSettingChanged(); // initially trigger correct colourscheme
-
-            // use the settings menu item call infrastructure to activate dark mode per default
-            if (auto mc = dynamic_cast<MainComponent*>(getContentComponent()))
-                mc->applySettingsOption(MainComponent::MemaReSettingsOption::LookAndFeel_Dark);
-
-            JUCEAppBasics::AppConfigurationBase::getInstance()->triggerWatcherUpdate();
-        }
-
-        void closeButtonPressed() override
-        {
-            juce::JUCEApplication::getInstance()->systemRequestedQuit();
-        }
-
-        void darkModeSettingChanged() override
-        {
-            if (!m_followLocalStyle)
-                return;
-
-            if (juce::Desktop::getInstance().isDarkModeActive())
-            {
-                // go dark
-                applyPaletteStyle(JUCEAppBasics::CustomLookAndFeel::PS_Dark);
-            }
-            else
-            {
-                // go light
-                applyPaletteStyle(JUCEAppBasics::CustomLookAndFeel::PS_Light);
-            }
-
-            lookAndFeelChanged();
-        }
-
-        void applyPaletteStyle(JUCEAppBasics::CustomLookAndFeel::PaletteStyle paletteStyle)
-        {
-            m_lookAndFeel = std::make_unique<JUCEAppBasics::CustomLookAndFeel>(paletteStyle);
-            juce::Desktop::getInstance().setDefaultLookAndFeel(m_lookAndFeel.get());
-        }
-
-        void setFullscreenWindow(bool fullscreenWindow)
-        {
-#if JUCE_WINDOWS
-            if (fullscreenWindow)
-                juce::Desktop::getInstance().setKioskModeComponent(getTopLevelComponent(), false);
-            else
-                juce::Desktop::getInstance().setKioskModeComponent(nullptr, false);
-#elif JUCE_MAC
-            if (auto* topLevel = getTopLevelComponent())
-            {
-                if (auto* peer = topLevel->getPeer())
-                {
-                    peer->setFullScreen(fullscreenWindow);
-                    return;
-                }
-            }
-            jassertfalse;
-#endif
-        }
-
-    private:
-        std::unique_ptr<juce::LookAndFeel>  m_lookAndFeel;
-        bool m_followLocalStyle = true;
-
-        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainWindow)
-    };
-
-private:
-    std::unique_ptr<MainWindow>             m_mainWindow;
-    std::unique_ptr<juce::TooltipWindow>    m_toolTipWindowInstance;
+class MainApplication : public JUCEAppBasics::ClientApplication<MemaReAppTraits>
+{
 };
 
 //==============================================================================

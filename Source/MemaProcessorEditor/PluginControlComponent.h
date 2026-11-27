@@ -19,6 +19,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include <CustomLookAndFeel.h>
 
 #include "../MemaProcessor/MemaPluginParameterInfo.h"
 
@@ -91,7 +92,7 @@ public:
         if (text.isNotEmpty())
         {
             const auto defaultTextColour = m_owner.findColour(ListBox::textColourId);
-            g.setColour(isBlacklisted ? Colours::red
+            g.setColour(isBlacklisted ? m_owner.findColour(JUCEAppBasics::CustomLookAndFeel::StateErrorColourId)
                 : columnId == nameCol ? defaultTextColour
                 : defaultTextColour.interpolatedWith(Colours::transparentBlack, 0.3f));
             g.setFont(m_owner.withDefaultMetrics(juce::FontOptions((float)height * 0.7f, Font::bold)));

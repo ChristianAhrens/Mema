@@ -53,7 +53,7 @@ void TwoDFieldOutputComponent::paint (juce::Graphics& g)
         paintLevelMeterIndication(g, m_directionlessChannelsArea, m_directionLessChannelTypes);
 
     // draw dBFS
-    g.setFont(9.0f);
+    g.setFont(JUCEAppBasics::Theme::Type::visuCaption);
     g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOffId));
     juce::String rangeText;
     if (getUsesValuesInDB())
@@ -261,7 +261,7 @@ void TwoDFieldOutputComponent::paintLevelMeterIndication(juce::Graphics& g, cons
     auto meterMaxLength = visuArea.getHeight();
     auto meterLeft = levelMeterArea.getX() + 0.5f * meterSpacing;
 
-    g.setFont(14.0f);
+    g.setFont(JUCEAppBasics::Theme::Type::body);
     for (auto const& channelType : channelsToPaint)
     {
         auto level = m_levelData.GetLevel(getChannelNumberForChannelTypeInCurrentConfiguration(channelType));

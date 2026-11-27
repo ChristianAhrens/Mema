@@ -119,7 +119,7 @@ void WaveformAudioComponent::paint(Graphics& g)
     // draw legend, simply number the waveforms from 1..n
     if (m_numVisibleChannels > 0)
     {
-        g.setFont(14.0f);
+        g.setFont(JUCEAppBasics::Theme::Type::body);
         g.setColour(getLookAndFeel().findColour(juce::TextButton::textColourOnId));
         auto singleWaveformHeight = legendArea.getHeight() / m_numVisibleChannels;
         for (int i = 1; i <= m_numVisibleChannels; ++i)

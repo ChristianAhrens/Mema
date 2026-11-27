@@ -19,6 +19,7 @@
       <FILE id="mmt11p4" name="ProcessorAudioSignalData.cpp" compile="1" resource="0" file="../../Source/MemaProcessor/ProcessorAudioSignalData.cpp"/>
       <FILE id="mmt12p5" name="ProcessorDataAnalyzer.cpp" compile="1" resource="0" file="../../Source/MemaProcessor/ProcessorDataAnalyzer.cpp"/>
       <FILE id="mmt13p6" name="MemaServiceData.cpp" compile="1" resource="0" file="../../Source/MemaProcessor/MemaServiceData.cpp"/>
+      <FILE id="mmtCB1" name="MemaClientAppConfigurationBase.cpp" compile="1" resource="0" file="../../Source/MemaClientCommon/MemaClientAppConfigurationBase.cpp"/>
       <FILE id="mmt14p7" name="MemaMoAppConfiguration.cpp" compile="1" resource="0" file="../MemaMoAppConfiguration.cpp"/>
       <FILE id="mmt15p8" name="AppConfigurationBase.cpp" compile="1" resource="0" file="../../submodules/JUCE-AppBasics/Source/AppConfigurationBase.cpp"/>
       <!-- Embedded so MemaMoAppConfiguration.cpp's ResetToDefault() resolves
