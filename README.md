@@ -10,6 +10,12 @@ See [LATEST RELEASE](https://github.com/ChristianAhrens/Mema/releases/latest) fo
 |:-----------------|:-----------------|
 | <img src="Resources/AppStore/MemaMoTestFlightQRCode.png" alt="Mema.Mo TestFlight QR Code" width="40%"> | <img src="Resources/AppStore/MemaReTestFlightQRCode.png" alt="Mema.Re TestFlight QR Code" width="40%"> |
 
+### Releasing
+
+1. Move the `[Unreleased]` entries of `CHANGELOG.md` into a new `[x.y.z] date` section and set `version="x.y.z"` in `Mema.jucer`, `MemaMo/MemaMo.jucer` and `MemaRe/MemaRe.jucer`.
+2. Tag and push: `git tag x.y.z && git push origin x.y.z` (no `v` prefix).
+3. The *Release* workflow builds, tests and uploads all packages to a **draft** release whose text is the CHANGELOG section plus direct download links. Replace the macOS disk images by locally signed and notarized ones, then publish the draft.
+
 
 |Platform|Mema status|Mema.Mo status|Mema.Re status|
 |:----------------|:-----|:-----|:-----|

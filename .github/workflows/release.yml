@@ -1,0 +1,183 @@
+name: Release
+
+# Triggered by pushing a version tag in the form x.y.z (major.minor.fix), without a
+# "v" prefix:  git tag 1.2.3 && git push origin 1.2.3
+# The result is a DRAFT release: review it, swap the macOS disk images for locally signed and
+# notarized ones, then publish it by hand.
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: write
+
+jobs:
+  # CHANGELOG.md is the source of the version and of the release text; the .jucer files carry the
+  # version that ends up in the apps and in the Windows installer names. All must match the tag.
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check that the tag matches CHANGELOG.md and the .jucer versions
+        run: |
+          tag="${{ github.ref_name }}"
+          latest="$(scripts/release-notes.sh --latest)"
+          if [ "$latest" != "$tag" ]; then
+            echo "::error::Tag $tag does not match the latest released section of CHANGELOG.md ($latest). Move the Unreleased entries into a [$tag] section first."
+            exit 1
+          fi
+          for jucer in Mema.jucer MemaMo/MemaMo.jucer MemaRe/MemaRe.jucer; do
+            version="$(sed -n 's/.*jucerFormatVersion="1" version="\([^"]*\)".*/\1/p' "$jucer" | head -n 1)"
+            if [ "$version" != "$tag" ]; then
+              echo "::error::$jucer has version $version, but the tag is $tag."
+              exit 1
+            fi
+          done
+
+      # CHANGELOG section first, then the download list with direct links to the assets. The links
+      # are fixed by tag and file name, so they can be written before the assets are uploaded.
+      - name: Compose the release text
+        run: |
+          scripts/release-notes.sh "${{ github.ref_name }}" > release-notes.md
+          echo >> release-notes.md
+          sed -e "s|@TAG@|${{ github.ref_name }}|g" -e "s|@REPO@|${{ github.repository }}|g" \
+            .github/release-downloads.md >> release-notes.md
+
+      - name: Create draft GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release view "${{ github.ref_name }}" --repo "${{ github.repository }}" ||
+          gh release create "${{ github.ref_name }}"
+          --repo "${{ github.repository }}"
+          --title "v${{ github.ref_name }}"
+          --notes-file release-notes.md
+          --draft
+
+  # Never publish a build nobody verified. (A reusable workflow cannot be picked by a matrix.)
+  tests-mema:
+    needs: create-release
+    uses: ./.github/workflows/ci-mema-tests.yml
+
+  tests-mema-mo:
+    needs: create-release
+    uses: ./.github/workflows/ci-mema-mo-tests.yml
+
+  tests-mema-re:
+    needs: create-release
+    uses: ./.github/workflows/ci-mema-re-tests.yml
+
+  macos:
+    needs: [ tests-mema, tests-mema-mo, tests-mema-re ]
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # makeDmgIcon.sh needs ImageMagick; create-dmg comes with the submodules.
+      - name: Install ImageMagick
+        run: brew install imagemagick
+
+      # Ad-hoc signed and not notarized; replace the assets with locally created ones when publishing.
+      - name: Build disk images
+        run: |
+          cd Resources/Deployment/macOS
+          for app in Mema MemaMo MemaRe; do
+            chmod +x build_${app}_CI.sh create_${app}-diskimage.sh
+            ./build_${app}_CI.sh
+            ./create_${app}-diskimage.sh
+          done
+          cd ../../..
+          for app in Mema MemaMo MemaRe; do
+            mv "$app.dmg" "${app}_v${{ github.ref_name }}.dmg"
+          done
+
+      - name: Upload release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.ref_name }}" --repo "${{ github.repository }}" --clobber *_v${{ github.ref_name }}.dmg
+
+  windows:
+    needs: [ tests-mema, tests-mema-mo, tests-mema-re ]
+    runs-on: windows-2025-vs2026
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Inno Setup if missing
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup -y --no-progress }
+
+      # Each script builds the app and the installer and moves <App>Setup_v<version>.exe to the root.
+      - name: Build installers
+        shell: cmd
+        run: |
+          cd Resources\Deployment\Windows
+          call create_Mema-Installer.bat VS2026
+          call create_MemaMo-Installer.bat VS2026
+          call create_MemaRe-Installer.bat VS2026
+
+      - name: Upload release assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.ref_name }}" --repo "${{ github.repository }}" --clobber *Setup_v${{ github.ref_name }}.exe
+
+  linux-arm:
+    needs: [ tests-mema, tests-mema-mo, tests-mema-re ]
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install JUCE build dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            git build-essential \
+            g++-11 gcc-11 make \
+            libcurl4-openssl-dev \
+            libfreetype6-dev libfontconfig1-dev \
+            libasound2-dev libjack-jackd2-dev \
+            ladspa-sdk \
+            libx11-dev libxcomposite-dev libxcursor-dev libxext-dev libxinerama-dev \
+            libxrandr-dev libxrender-dev libwebkit2gtk-4.1-dev \
+            libglu1-mesa-dev mesa-common-dev
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-11 100 \
+            --slave /usr/bin/g++ g++ /usr/bin/g++-11 \
+            --slave /usr/bin/gcov gcov /usr/bin/gcov-11
+
+      - name: Build
+        run: |
+          cd Resources/Deployment/Linux
+          chmod +x build_all.sh build_Mema.sh build_MemaMo.sh build_MemaRe.sh
+          ./build_all.sh
+
+      # Same package contents as Resources/Deployment/Linux/create_release_packages.sh
+      - name: Package
+        run: |
+          deps=Resources/Deployment/Linux/get_dependencies_RaspberryPIOS.sh
+          package() { # <name> <binary>
+            zip -j "$1_v${{ github.ref_name }}.zip" "$2" CHANGELOG.md LICENSE "$deps"
+          }
+          cp Builds/LinuxMakefile/build/Mema Mema
+          cp MemaMo/Builds/LinuxMakefile/build/Mema MemaMo
+          cp MemaRe/Builds/LinuxMakefile/build/Mema MemaRe
+          package Mema Mema
+          package MemaMo MemaMo
+          package MemaRe MemaRe
+
+      - name: Upload release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.ref_name }}" --repo "${{ github.repository }}" --clobber *_v${{ github.ref_name }}.zip

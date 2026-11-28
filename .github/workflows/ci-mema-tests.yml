@@ -3,6 +3,7 @@ name: CI Mema Tests
 on:
   push:
     branches: [ main, develop ]
+  workflow_call:
   pull_request:
     branches: [ main, develop ]
 
